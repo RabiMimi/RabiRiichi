@@ -11,7 +11,7 @@ namespace RabiRiichiTests.Riichi {
             Assert.AreEqual(Group.S, hai.Gr);
             Assert.AreEqual(false, hai.Akadora);
             Assert.AreEqual(new Hai("3s"), hai);
-            Assert.AreNotEqual(new Hai("!3s"), hai);
+            Assert.AreNotEqual(new Hai("r3s"), hai);
         }
     }
 
