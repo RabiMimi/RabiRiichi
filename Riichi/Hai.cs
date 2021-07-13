@@ -57,7 +57,7 @@ namespace RabiRiichi.Riichi {
         public Hai(string str) {
             Val = 0;
             string original = str;
-            if (str.StartsWith("!")) {
+            if (str.StartsWith("r")) {
                 Akadora = true;
                 str = str[1..];
             }
@@ -78,7 +78,7 @@ namespace RabiRiichi.Riichi {
         public override string ToString() {
             var builder = new StringBuilder();
             if (Akadora)
-                builder.Append('!');
+                builder.Append('r');
             builder.Append(Num);
             builder.Append(Gr.ToChar());
             return builder.ToString();
@@ -138,7 +138,7 @@ namespace RabiRiichi.Riichi {
                 if (isDora) {
                     ThrowInvalidArgument(tiles);
                 }
-                if (c == '!') {
+                if (c == 'r') {
                     isDora = true;
                     continue;
                 }
