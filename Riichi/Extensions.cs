@@ -31,16 +31,14 @@ namespace RabiRiichi.Riichi {
         }
 
         public static string ToUnicode(this Hai hai) {
-            var ret = hai.Gr switch {
+            var ret = hai.Akadora ? "✨" : "";
+            ret += hai.Gr switch {
                 Group.M => char.ConvertFromUtf32(0x1F006 + hai.Num),
                 Group.P => char.ConvertFromUtf32(0x1F018 + hai.Num),
                 Group.S => char.ConvertFromUtf32(0x1F00F + hai.Num),
                 Group.Z => char.ConvertFromUtf32(GetZUnicode(hai.Num)),
                 _ => "🀫",
             };
-            if (hai.Akadora) {
-                ret += "✨";
-            }
             return ret;
         }
 
