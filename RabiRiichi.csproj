@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="RabiRiichiTests\**" />
+    <EmbeddedResource Remove="RabiRiichiTests\**" />
+    <None Remove="RabiRiichiTests\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="HoshinoSharp" Version="0.0.4-pre3" />
+  </ItemGroup>
+
+</Project>
