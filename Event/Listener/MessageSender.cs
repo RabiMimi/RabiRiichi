@@ -1,4 +1,6 @@
-﻿using RabiRiichi.Riichi;
+﻿using HoshinoSharp.Hoshino.Message;
+using RabiRiichi.Riichi;
+using RabiRiichi.Util;
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Event.Listener {
@@ -8,11 +10,11 @@ namespace RabiRiichi.Event.Listener {
         public override async Task<bool> Handle(EventBase ev) {
             var bot = ev.game.hoshino.bot;
             var msgev = ev.game.hoshino.ev;
+            HaisImage haisImage = new HaisImage();
             if (ev is DealHandEvent e) {
-                var unicode = e.hand.ToUnicode();
                 var user = e.game.GetUser(e.player);
-                await bot.SendPrivate(msgev.selfId, user.userId, unicode
-                    + "\n" + e.hand.ToString());
+                MessageSegmentImage hand = new MessageSegmentImage(haisImage.Generate(e.hand));
+                await bot.SendPrivate(msgev.selfId, user.userId, HMessage.From(new MessageSegment[] { hand }));
             }
             return false;
         }
