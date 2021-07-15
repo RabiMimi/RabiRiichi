@@ -10,10 +10,10 @@ namespace RabiRiichi.Event.Listener {
         public override async Task<bool> Handle(EventBase ev) {
             var bot = ev.game.hoshino.bot;
             var msgev = ev.game.hoshino.ev;
-            HaisImage haisImage = new HaisImage();
             if (ev is DealHandEvent e) {
                 var user = e.game.GetUser(e.player);
-                MessageSegmentImage hand = new MessageSegmentImage(haisImage.Generate(e.hand));
+                using var image = HaisImage.V.Generate(e.hand);
+                MessageSegmentImage hand = new MessageSegmentImage(image);
                 await bot.SendPrivate(msgev.selfId, user.userId, HMessage.From(new MessageSegment[] { hand }));
             }
             return false;

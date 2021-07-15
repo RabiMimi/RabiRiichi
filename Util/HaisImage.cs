@@ -1,16 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using RabiRiichi.Riichi;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
+using HUtil = HoshinoSharp.Runtime.Util;
 
 namespace RabiRiichi.Util
 {
     public class HaisImage : IDisposable
     {
+        private static HaisImage mInstance;
+        public static HaisImage V {
+            get {
+                if (mInstance == null)
+                    mInstance = new HaisImage();
+                return mInstance;
+            }
+        }
+
         const int HaiWidth = 80;
         const int HaiHeight = 129;
 
@@ -19,9 +28,9 @@ namespace RabiRiichi.Util
 
         public HaisImage()
         {
-            foreach (var hai in new Hais("123456789m123456789p123456789s1234567z"))
+            foreach (var hai in new Hais("12345r56789m12345r56789p12345r56789s1234567z"))
             {
-                haiImages.Add(hai, Image.Load(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @$"\HaisImage\{hai}.png")));
+                haiImages.Add(hai, Image.Load(Path.Combine(Constants.BASE_DIR, $"HaisImage/{hai}.png")));
             }
         }
 
@@ -30,7 +39,7 @@ namespace RabiRiichi.Util
             Image img = new Image<Rgb24>(HaiWidth * hais.Count, HaiHeight);
             for (int i = 0; i < hais.Count; i++)
             {
-                img.Mutate(x => x.DrawImage(haiImages[hais[i]], new Point(40 + i * HaiWidth), 1));
+                img.Mutate(x => x.DrawImage(haiImages[hais[i]], new Point(i * HaiWidth), 1));
             }
             return img;
         }
