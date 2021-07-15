@@ -62,5 +62,10 @@ namespace RabiRiichiTests.Pattern {
         public void TestSpecial() {
             Assert.IsTrue(Run("6666666666666z", "6z", out _));
         }
+
+        [TestMethod]
+        public void TestKan() {
+            Assert.IsTrue(Run("2z", "2z", out _, "1111s", "1111p", "1111m", "1111z"));
+        }
     }
 }

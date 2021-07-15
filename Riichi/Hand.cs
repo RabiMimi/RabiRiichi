@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace RabiRiichi.Riichi {
@@ -18,7 +19,8 @@ namespace RabiRiichi.Riichi {
         /// <summary> 和 </summary>
         public GameTile ron = null;
         public bool IsRon => ron != null;
-        public int Count => groups.Select(gr => gr.Count).Sum() + hand.Count;
+        /// <summary> 牌的总数，注意：杠会被算作3张牌 </summary>
+        public int Count => groups.Select(gr => Math.Min(3, gr.Count)).Sum() + hand.Count;
         /// <summary> 听牌 </summary>
         public List<GameTiles> tenpai = new List<GameTiles>();
 
