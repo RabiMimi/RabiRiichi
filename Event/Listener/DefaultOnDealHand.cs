@@ -1,6 +1,5 @@
 ﻿using RabiRiichi.Riichi;
 using System.Threading.Tasks;
-using System.Diagnostics;
 
 namespace RabiRiichi.Event.Listener {
     public class DefaultOnDealHand : ListenerBase {

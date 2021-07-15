@@ -131,8 +131,4 @@
     </None>
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Pattern\" />
-  </ItemGroup>
-
 </Project>

@@ -105,6 +105,12 @@ namespace RabiRiichi.Riichi {
             return Akadora.CompareTo(other.Akadora);
         }
 
+        public bool IsMPS => Gr == Group.M || Gr == Group.P || Gr == Group.S;
+
+        public bool IsSame(Tile other) => Gr == other.Gr && Num == other.Num;
+        public bool NextIs(Tile other) => IsMPS && Gr == other.Gr && other.Num == Num + 1;
+        public bool PrevIs(Tile other) => IsMPS && Gr == other.Gr && other.Num == Num - 1;
+
         public static implicit operator byte(Tile t) => t.Val;
         private static void ThrowInvalidArgument(string arg) {
             throw new ArgumentException("Invalid cast to tile: " + arg);
