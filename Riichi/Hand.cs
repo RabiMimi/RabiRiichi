@@ -21,21 +21,31 @@ namespace RabiRiichi.Riichi {
         public int Count => groups.Select(gr => gr.Count).Sum() + hand.Count;
         /// <summary> 听牌 </summary>
         public List<GameTiles> tenpai = new List<GameTiles>();
-        /// <summary> 按牌数量计数 </summary>
-        public byte[] cnt = new byte[256];
 
-        public void Add(GameTile tile) {
+        public Hand Add(GameTile tile) {
             tile.player = player;
             tile.source = TileSource.Hand;
             hand.Add(tile);
-            cnt[tile.tile.Val]++;
+            return this;
         }
 
-        public void Play(GameTile tile) {
+        public Hand Play(GameTile tile) {
             tile.fromPlayer = player;
             tile.source = TileSource.Discard;
             hand.Remove(tile);
-            cnt[tile.tile.Val]--;
+            discarded.Add(tile);
+            return this;
+        }
+
+        public Hand Remove(GameTile tile) {
+            tile.fromPlayer = player;
+            hand.Remove(tile);
+            return this;
+        }
+
+        public Hand AddGroup(GameTiles tiles) {
+            groups.Add(tiles);
+            return this;
         }
     }
 }

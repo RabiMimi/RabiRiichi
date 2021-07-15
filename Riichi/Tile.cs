@@ -18,6 +18,8 @@ namespace RabiRiichi.Riichi {
         /// </summary>
         public byte Val { get; private set; }
 
+        public byte NoDoraVal => (byte) (Val & 0x7f);
+
         public byte Num {
             get => (byte)(Val & 0x0f);
             set => Val = (byte)((Val & ~0x0f) | value);

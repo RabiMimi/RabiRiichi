@@ -47,6 +47,14 @@ namespace RabiRiichi.Pattern {
             }
         }
 
+        private void PrintGroups() {
+            for (int i = 0; i < tileGroups.Length; i++) {
+                if (tileGroups[i].Count > 0) {
+                    Console.WriteLine($"{i}, {tileGroups[i].Count}");
+                }
+            }
+        }
+
         private void DFSPattern(int index, int janCnt) {
             if (index >= tileGroups.Length) {
                 if (janCnt == 1) {
@@ -72,12 +80,13 @@ namespace RabiRiichi.Pattern {
                 if (cur.Count == 0) {
                     DFSPattern(index + 1, janCnt);
                 } else if (index + 2 <= LastMPS.Val) {
+                    int shunCnt = cur.Count;
                     var nxt = tileGroups[index + 1];
                     var nxt2 = tileGroups[index + 2];
-                    if (nxt.Count >= cur.Count && nxt2.Count >= cur.Count) {
+                    if (nxt.Count >= shunCnt && nxt2.Count >= shunCnt) {
                         using var shunHelper = new DFSHelper(this);
-                        for (int i = 0; i < cur.Count; i++) {
-                            shunHelper.Remove(i, i + 1, i + 2);
+                        for (int i = 0; i < shunCnt; i++) {
+                            shunHelper.Remove(index, index + 1, index + 2);
                         }
                         DFSPattern(index + 1, janCnt);
                     }
@@ -106,10 +115,9 @@ namespace RabiRiichi.Pattern {
                     if (++janCnt > 1) {
                         return false;
                     }
-                } else if (group.IsKan || group.IsKou || group.IsShun) {
-                    continue;
+                } else if (!(group.IsKan || group.IsKou || group.IsShun)) {
+                    return false;
                 }
-                return false;
             }
             // DFS output
             output = new List<List<GameTiles>>();
@@ -122,9 +130,8 @@ namespace RabiRiichi.Pattern {
                 tiles.Add(incoming);
             }
             foreach (var tile in tiles) {
-                int index = tile.tile.Val & 0x7f;
-                var list = tileGroups[index];
-                list.Add(tile);
+                int index = tile.tile.NoDoraVal;
+                tileGroups[index].Add(tile);
             }
             current = hand.groups;
             this.output = output;
