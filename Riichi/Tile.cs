@@ -8,8 +8,8 @@ namespace RabiRiichi.Riichi {
         Invalid, M, P, S, Z
     }
 
-    public struct Hai : IComparable<Hai> {
-        public static Hai Empty = new Hai(0);
+    public struct Tile : IComparable<Tile> {
+        public static Tile Empty = new Tile(0);
         /// <summary>
         /// LSB to MSB:
         /// 4 bit digit
@@ -50,11 +50,11 @@ namespace RabiRiichi.Riichi {
 
         public bool IsEmpty => this == Empty;
 
-        public Hai(byte val = 0) {
+        public Tile(byte val = 0) {
             Val = val;
         }
 
-        public Hai(string str) {
+        public Tile(string str) {
             Val = 0;
             string original = str;
             if (str.StartsWith("r")) {
@@ -85,7 +85,7 @@ namespace RabiRiichi.Riichi {
         }
 
         public override bool Equals(object obj) {
-            if (obj is Hai rhs) {
+            if (obj is Tile rhs) {
                 return this == rhs;
             }
             return false;
@@ -95,7 +95,7 @@ namespace RabiRiichi.Riichi {
             return Val;
         }
 
-        public int CompareTo(Hai other) {
+        public int CompareTo(Tile other) {
             int grcmp = Gr.CompareTo(other.Gr);
             if (grcmp != 0)
                 return grcmp;
@@ -105,30 +105,30 @@ namespace RabiRiichi.Riichi {
             return Akadora.CompareTo(other.Akadora);
         }
 
-        public static implicit operator byte(Hai t) => t.Val;
+        public static implicit operator byte(Tile t) => t.Val;
         private static void ThrowInvalidArgument(string arg) {
-            throw new ArgumentException("Invalid cast to hai: " + arg);
+            throw new ArgumentException("Invalid cast to tile: " + arg);
         }
 
-        public static bool operator == (Hai lhs, Hai rhs) {
+        public static bool operator == (Tile lhs, Tile rhs) {
             return lhs.Val == rhs.Val;
         }
-        public static bool operator != (Hai lhs, Hai rhs) {
+        public static bool operator != (Tile lhs, Tile rhs) {
             return lhs.Val != rhs.Val;
         }
     }
 
     /// <summary>
-    /// Stores a list of hais.
+    /// Stores a list of tiles.
     /// </summary>
-    public class Hais : List<Hai> {
-        public Hais(IEnumerable<Hai> tiles) : base(tiles) { }
-        public Hais(string tiles = "") : base() {
+    public class Tiles : List<Tile> {
+        public Tiles(IEnumerable<Tile> tiles) : base(tiles) { }
+        public Tiles(string tiles = "") : base() {
             bool isDora = false;
             foreach (char c in tiles) {
                 if (c > '0' && c <= '9') {
                     byte num = (byte)(c - '0');
-                    Add(new Hai {
+                    Add(new Tile {
                         Num = num,
                         Akadora = isDora,
                     });
@@ -147,30 +147,30 @@ namespace RabiRiichi.Riichi {
                     ThrowInvalidArgument(tiles);
                 }
                 for (int i = Count - 1; i >= 0; i--) {
-                    var hai = this[i];
-                    if (hai.Gr != Group.Invalid) {
+                    var tile = this[i];
+                    if (tile.Gr != Group.Invalid) {
                         break;
                     }
-                    hai.Gr = g;
-                    this[i] = hai;
+                    tile.Gr = g;
+                    this[i] = tile;
                 }
             }
-            if (this.Any(hai => !hai.IsValid)) {
+            if (this.Any(tile => !tile.IsValid)) {
                 ThrowInvalidArgument(tiles);
             }
         }
 
-        public void Remove(IEnumerable<Hai> hais) {
-            foreach (var hai in hais) {
-                Remove(hai);
+        public void Remove(IEnumerable<Tile> tiles) {
+            foreach (var tile in tiles) {
+                Remove(tile);
             }
         }
 
         public override string ToString() {
             var builder = new StringBuilder();
             char group = '\0';
-            foreach (var hai in this) {
-                string str = hai.ToString();
+            foreach (var tile in this) {
+                string str = tile.ToString();
                 if (group != str[^1]) {
                     if (group != '\0') {
                         builder.Append(group);
@@ -189,14 +189,14 @@ namespace RabiRiichi.Riichi {
             throw new ArgumentException("Invalid tiles: " + arg);
         }
 
-        public static Hais All {
+        public static Tiles All {
             get {
-                var ret = new Hais();
+                var ret = new Tiles();
                 for (var g = Group.M; g <= Group.Z; g++) {
                     int maxTile = g == Group.Z ? 7 : 9;
                     for (int i = 1; i <= maxTile; i++) {
                         for (int j = 0; j < 4; j++) {
-                            ret.Add(new Hai {
+                            ret.Add(new Tile {
                                 Gr = g,
                                 Num = (byte)i,
                                 Akadora = maxTile == 9 && i == 5 && j == 0

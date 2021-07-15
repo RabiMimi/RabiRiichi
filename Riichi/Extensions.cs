@@ -30,20 +30,20 @@ namespace RabiRiichi.Riichi {
             return 0x1EFFF + num;
         }
 
-        public static string ToUnicode(this Hai hai) {
-            var ret = hai.Akadora ? "✨" : "";
-            ret += hai.Gr switch {
-                Group.M => char.ConvertFromUtf32(0x1F006 + hai.Num),
-                Group.P => char.ConvertFromUtf32(0x1F018 + hai.Num),
-                Group.S => char.ConvertFromUtf32(0x1F00F + hai.Num),
-                Group.Z => char.ConvertFromUtf32(GetZUnicode(hai.Num)),
+        public static string ToUnicode(this Tile tile) {
+            var ret = tile.Akadora ? "✨" : "";
+            ret += tile.Gr switch {
+                Group.M => char.ConvertFromUtf32(0x1F006 + tile.Num),
+                Group.P => char.ConvertFromUtf32(0x1F018 + tile.Num),
+                Group.S => char.ConvertFromUtf32(0x1F00F + tile.Num),
+                Group.Z => char.ConvertFromUtf32(GetZUnicode(tile.Num)),
                 _ => "🀫",
             };
             return ret;
         }
 
-        public static string ToUnicode(this Hais hais) {
-            return string.Concat(hais.Select(hai => ToUnicode(hai)));
+        public static string ToUnicode(this Tiles tiles) {
+            return string.Concat(tiles.Select(tile => ToUnicode(tile)));
         }
     }
 }

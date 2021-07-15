@@ -7,7 +7,7 @@ namespace RabiRiichi.Event {
         #endregion
 
         #region Reponse
-        public Hais hand;
+        public Tiles hand;
         #endregion
     }
 }

@@ -8,12 +8,12 @@ namespace RabiRiichi.Event.Listener {
 
         public override Task<bool> Handle(EventBase ev) {
             var e = (DealHandEvent) ev;
-            var yama = ev.game.yama;
+            var yama = ev.game.wall;
             if (yama.remaining.Count < Game.HandSize) {
                 ev.Finish();
                 return Task.FromResult(true);
             }
-            e.hand = new Hais(ev.game.rand.Choice(yama.remaining, Game.HandSize));
+            e.hand = new Tiles(ev.game.rand.Choice(yama.remaining, Game.HandSize));
             e.hand.Sort();
             return Task.FromResult(true);
         }

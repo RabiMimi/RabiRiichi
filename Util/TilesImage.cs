@@ -9,50 +9,50 @@ using HUtil = HoshinoSharp.Runtime.Util;
 
 namespace RabiRiichi.Util
 {
-    public class HaisImage : IDisposable
+    public class TilesImage : IDisposable
     {
-        private static HaisImage mInstance;
-        public static HaisImage V {
+        private static TilesImage mInstance;
+        public static TilesImage V {
             get {
                 if (mInstance == null)
-                    mInstance = new HaisImage();
+                    mInstance = new TilesImage();
                 return mInstance;
             }
         }
 
-        const int HaiWidth = 80;
-        const int HaiHeight = 129;
+        const int TileWidth = 80;
+        const int TileHeight = 129;
 
-        private readonly Dictionary<Hai, Image> haiImages = new Dictionary<Hai, Image>();
+        private readonly Dictionary<Tile, Image> tileImages = new Dictionary<Tile, Image>();
         private bool disposedValue;
 
-        public HaisImage()
+        public TilesImage()
         {
-            foreach (var hai in new Hais("12345r56789m12345r56789p12345r56789s1234567z"))
+            foreach (var tile in new Tiles("12345r56789m12345r56789p12345r56789s1234567z"))
             {
-                haiImages.Add(hai, Image.Load(Path.Combine(Constants.BASE_DIR, $"HaisImage/{hai}.png")));
+                tileImages.Add(tile, Image.Load(Path.Combine(Constants.BASE_DIR, $"TilesImage/{tile}.png")));
             }
         }
 
-        public Image Generate(Hais hais)
+        public Image Generate(Tiles tiles)
         {
-            Image img = new Image<Rgb24>(HaiWidth * hais.Count, HaiHeight);
-            for (int i = 0; i < hais.Count; i++)
+            Image img = new Image<Rgb24>(TileWidth * tiles.Count, TileHeight);
+            for (int i = 0; i < tiles.Count; i++)
             {
-                img.Mutate(x => x.DrawImage(haiImages[hais[i]], new Point(i * HaiWidth), 1));
+                img.Mutate(x => x.DrawImage(tileImages[tiles[i]], new Point(i * TileWidth), 1));
             }
             return img;
         }
 
-        public Image Generate(Hais hais, int countPerLine, int yPadding)
+        public Image Generate(Tiles tiles, int countPerLine, int yPadding)
         {
-            int line = hais.Count / countPerLine;
-            int height = line * HaiHeight + (line - 1) * yPadding;
+            int line = tiles.Count / countPerLine;
+            int height = line * TileHeight + (line - 1) * yPadding;
 
             throw new NotImplementedException();
         }
 
-        public Image Generate(Hais hais, List<HaiLayout> haiLayouts)
+        public Image Generate(Tiles tiles, List<TileLayout> tileLayouts)
         {
             throw new NotImplementedException();
         }
@@ -65,7 +65,7 @@ namespace RabiRiichi.Util
                 if (disposing)
                 {
                     // TODO: 释放托管状态(托管对象)
-                    foreach (var img in haiImages.Values)
+                    foreach (var img in tileImages.Values)
                     {
                         img.Dispose();
                     }
@@ -78,7 +78,7 @@ namespace RabiRiichi.Util
         }
 
         // // TODO: 仅当“Dispose(bool disposing)”拥有用于释放未托管资源的代码时才替代终结器
-        // ~HaisImage()
+        // ~TilesImage()
         // {
         //     // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
         //     Dispose(disposing: false);
@@ -92,7 +92,7 @@ namespace RabiRiichi.Util
         }
     }
 
-    public class HaiLayout
+    public class TileLayout
     {
 
     }

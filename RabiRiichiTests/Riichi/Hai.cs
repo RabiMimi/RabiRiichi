@@ -6,12 +6,12 @@ namespace RabiRiichiTests.Riichi {
     public class HaiTest {
         [TestMethod]
         public void TestHai() {
-            var hai = new Hai("3s");
+            var hai = new Tile("3s");
             Assert.AreEqual(3, hai.Num);
             Assert.AreEqual(Group.S, hai.Gr);
             Assert.AreEqual(false, hai.Akadora);
-            Assert.AreEqual(new Hai("3s"), hai);
-            Assert.AreNotEqual(new Hai("r3s"), hai);
+            Assert.AreEqual(new Tile("3s"), hai);
+            Assert.AreNotEqual(new Tile("r3s"), hai);
         }
     }
 
@@ -19,10 +19,10 @@ namespace RabiRiichiTests.Riichi {
     public class HaisTest {
         [TestMethod]
         public void TestHais() {
-            var hais = new Hais("345s678p333m1122z");
+            var hais = new Tiles("345s678p333m1122z");
             Assert.AreEqual(13, hais.Count);
             Assert.AreEqual("345s678p333m1122z", hais.ToString());
-            Assert.AreEqual(new Hai("6p"), hais[3]);
+            Assert.AreEqual(new Tile("6p"), hais[3]);
         }
     }
 }

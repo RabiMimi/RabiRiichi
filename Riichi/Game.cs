@@ -17,7 +17,7 @@ namespace RabiRiichi.Riichi {
         public GameComponent hoshino;
         public Player[] players;
         public EventBus eventBus = new EventBus();
-        public Yama yama = new Yama();
+        public Wall wall = new Wall();
         public Rand rand;
 
         public Game(GameComponent component) {

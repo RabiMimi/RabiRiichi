@@ -15,120 +15,124 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="HaisImage\1m.png">
+    <None Update="TilesImage\1m.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="HaisImage\1p.png">
+    <None Update="TilesImage\1p.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="HaisImage\1s.png">
+    <None Update="TilesImage\1s.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="HaisImage\1z.png">
+    <None Update="TilesImage\1z.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="HaisImage\2m.png">
+    <None Update="TilesImage\2m.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="HaisImage\2p.png">
+    <None Update="TilesImage\2p.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="HaisImage\2s.png">
+    <None Update="TilesImage\2s.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="HaisImage\2z.png">
+    <None Update="TilesImage\2z.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="HaisImage\3m.png">
+    <None Update="TilesImage\3m.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="HaisImage\3p.png">
+    <None Update="TilesImage\3p.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="HaisImage\3s.png">
+    <None Update="TilesImage\3s.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="HaisImage\3z.png">
+    <None Update="TilesImage\3z.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="HaisImage\4m.png">
+    <None Update="TilesImage\4m.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="HaisImage\4p.png">
+    <None Update="TilesImage\4p.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="HaisImage\4s.png">
+    <None Update="TilesImage\4s.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="HaisImage\4z.png">
+    <None Update="TilesImage\4z.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="HaisImage\5m.png">
+    <None Update="TilesImage\5m.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="HaisImage\5p.png">
+    <None Update="TilesImage\5p.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="HaisImage\5s.png">
+    <None Update="TilesImage\5s.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="HaisImage\5z.png">
+    <None Update="TilesImage\5z.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="HaisImage\6m.png">
+    <None Update="TilesImage\6m.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="HaisImage\6p.png">
+    <None Update="TilesImage\6p.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="HaisImage\6s.png">
+    <None Update="TilesImage\6s.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="HaisImage\6z.png">
+    <None Update="TilesImage\6z.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="HaisImage\7m.png">
+    <None Update="TilesImage\7m.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="HaisImage\7p.png">
+    <None Update="TilesImage\7p.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="HaisImage\7s.png">
+    <None Update="TilesImage\7s.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="HaisImage\7z.png">
+    <None Update="TilesImage\7z.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="HaisImage\8m.png">
+    <None Update="TilesImage\8m.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="HaisImage\8p.png">
+    <None Update="TilesImage\8p.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="HaisImage\8s.png">
+    <None Update="TilesImage\8s.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="HaisImage\9m.png">
+    <None Update="TilesImage\9m.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="HaisImage\9p.png">
+    <None Update="TilesImage\9p.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="HaisImage\9s.png">
+    <None Update="TilesImage\9s.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="HaisImage\back.png">
+    <None Update="TilesImage\back.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="HaisImage\r5m.png">
+    <None Update="TilesImage\r5m.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="HaisImage\r5p.png">
+    <None Update="TilesImage\r5p.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="HaisImage\r5s.png">
+    <None Update="TilesImage\r5s.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Pattern\" />
   </ItemGroup>
 
 </Project>

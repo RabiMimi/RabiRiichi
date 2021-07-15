@@ -8,7 +8,7 @@ namespace RabiRiichi.Event.Listener {
 
         public override Task<bool> Handle(EventBase ev) {
             var e = (DealHandEvent) ev;
-            Debug.Assert(e.game.yama.Draw(e.hand));
+            Debug.Assert(e.game.wall.Draw(e.hand));
             return Task.FromResult(false);
         }
     }

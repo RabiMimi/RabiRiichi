@@ -9,12 +9,12 @@ namespace RabiRiichiTests.Riichi {
     public class ExtensionTests {
         [TestMethod]
         public void TestHaiToString() {
-            Assert.AreEqual("🀜", new Hai("4p").ToUnicode());
+            Assert.AreEqual("🀜", new Tile("4p").ToUnicode());
         }
 
         [TestMethod]
         public void TestHaisToString() {
-            Assert.AreEqual("🀈🀒🀜🀆", new Hais("2m3s4p5z").ToUnicode());
+            Assert.AreEqual("🀈🀒🀜🀆", new Tiles("2m3s4p5z").ToUnicode());
         }
     }
 }
