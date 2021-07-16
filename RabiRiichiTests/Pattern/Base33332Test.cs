@@ -51,6 +51,10 @@ namespace RabiRiichiTests.Pattern {
         [TestMethod]
         public void TestFrenqy() {
             Assert.IsTrue(Run("2223344556677s", "2s", out _));
+            Assert.IsTrue(Run("1113335557779s", "9s", out _));
+            Assert.IsTrue(Run("1113335557799s", "9s", out _));
+            Assert.IsTrue(Run("111122334444s1z", "1z", out _));
+            Assert.IsTrue(Run("1111222334444s", "2s", out _));
         }
 
         [TestMethod]
