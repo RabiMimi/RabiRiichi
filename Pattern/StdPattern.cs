@@ -4,7 +4,16 @@ using System.Collections.Generic;
 
 namespace RabiRiichi.Pattern {
     public enum ScoringType {
-        Point, Han, Fu, Yakuman, Ryuukyoku
+        /// <summary> 额外得分，例如本场棒。不含立直棒。 </summary>
+        Point,
+        /// <summary> 番 </summary>
+        Han,
+        /// <summary> 符 </summary>
+        Fu,
+        /// <summary> 役满 </summary>
+        Yakuman,
+        /// <summary> 流局 </summary>
+        Ryuukyoku
     }
     public class Scoring {
         public ScoringType Type;

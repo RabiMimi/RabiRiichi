@@ -12,7 +12,7 @@ namespace RabiRiichi.Pattern {
 
         public int baseScore;
 
-        public bool IsValid => han > 0 || yakuman > 0;
+        public bool IsValid(int minHan) => han % KAZOE_YAKUMAN + yakuman * KAZOE_YAKUMAN >= minHan;
 
         private int GetBaseScore() {
             if (yakuman > 0) {
