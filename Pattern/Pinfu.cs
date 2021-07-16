@@ -17,7 +17,7 @@ namespace RabiRiichi.Pattern {
             var gr = groups.Find(gr => gr.Contains(incoming));
             if (!gr.IsShun)
                 return false;
-            if (gr.Any(tile => tile.tile.Num == 9 || tile.tile.Num == 1))
+            if (gr.Any(tile => tile.tile.Is19))
                 return false;
             gr.Sort();
             if (incoming == gr[1])
