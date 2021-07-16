@@ -52,6 +52,8 @@ namespace RabiRiichi.Riichi {
 
         public bool IsEmpty => this == Empty;
 
+        public bool Is19 => (IsMPS && (Num == 1 || Num == 9)) || Gr == Group.Z;
+
         public Tile(byte val = 0) {
             Val = val;
         }

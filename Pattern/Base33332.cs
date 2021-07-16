@@ -121,18 +121,7 @@ namespace RabiRiichi.Pattern {
             }
             // DFS output
             output = new List<List<GameTiles>>();
-            tileGroups = new GameTiles[128];
-            for (int i = 0; i < tileGroups.Length; i++) {
-                tileGroups[i] = new GameTiles();
-            }
-            var tiles = hand.hand.ToList();
-            if (incoming != null) {
-                tiles.Add(incoming);
-            }
-            foreach (var tile in tiles) {
-                int index = tile.tile.NoDoraVal;
-                tileGroups[index].Add(tile);
-            }
+            tileGroups = GetTileGroups(hand, incoming, false);
             current = hand.groups;
             this.output = output;
             DFSPattern(0, janCnt);
