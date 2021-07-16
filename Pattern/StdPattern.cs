@@ -24,6 +24,8 @@ namespace RabiRiichi.Pattern {
     public abstract class StdPattern {
         protected static Type[] NoDependency = new Type[0];
         protected static Type[] Only33332 = new Type[] { typeof(Base33332) };
+        protected static Type[] Only72 = new Type[] { typeof(Base72) };
+        protected static Type[] Only13_1 = new Type[] { typeof(Base13_1) };
         protected static Type[] AllBasePatterns = new Type[] {
             typeof(Base33332),
             typeof(Base13_1),
