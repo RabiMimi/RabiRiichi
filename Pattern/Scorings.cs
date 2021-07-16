@@ -49,6 +49,9 @@ namespace RabiRiichi.Pattern {
                         point += score.Val;
                         break;
                     case ScoringType.Fu:
+                        if (fu != 0) {
+                            HUtil.Warn("检测到了多个符数计算结果，可能是一个bug");
+                        }
                         fu += score.Val;
                         break;
                     case ScoringType.Han:
@@ -58,10 +61,10 @@ namespace RabiRiichi.Pattern {
                         yakuman += score.Val;
                         break;
                     case ScoringType.Ryuukyoku:
-                        HUtil.Warn($"Ryuukyoku should not be handled in pattern recognition");
+                        HUtil.Warn($"和牌结果中发现了不合法的流局计算结果");
                         break;
                     default:
-                        HUtil.Warn($"Unknown scoring: {score.Type}");
+                        HUtil.Warn($"未知的计分类型: {score.Type}");
                         break;
                 }
             }
