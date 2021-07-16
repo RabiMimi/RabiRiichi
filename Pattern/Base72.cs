@@ -12,6 +12,10 @@ namespace RabiRiichi.Pattern {
             if (hand.Count != (incoming == null ? Game.HandSize + 1 : Game.HandSize)) {
                 return false;
             }
+            // Check groups
+            if (hand.groups.Any(gr => !gr.IsJan)) {
+                return false;
+            }
             // Check hand & groups valid
             var tileGroups = GetTileGroups(hand, incoming, true);
             var ret = new List<GameTiles>();
