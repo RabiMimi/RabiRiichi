@@ -112,6 +112,17 @@ namespace RabiRiichi.Riichi {
         public bool IsSame(Tile other) => Gr == other.Gr && Num == other.Num;
         public bool NextIs(Tile other) => IsMPS && Gr == other.Gr && other.Num == Num + 1;
         public bool PrevIs(Tile other) => IsMPS && Gr == other.Gr && other.Num == Num - 1;
+        public Tile NextDora {
+            get {
+                if (IsMPS) return new Tile { Num = (byte)(Num % 9 + 1), Gr = Gr };
+                if (Gr == Group.Z) {
+                    if (Num <= 4) return new Tile { Num = (byte)(Num % 4 + 1), Gr = Gr };
+                    byte newNum = (byte)(Num == 7 ? 5 : Num + 1);
+                    return new Tile { Num = newNum, Gr = Gr };
+                }
+                return Empty;
+            }
+        }
 
         public static implicit operator byte(Tile t) => t.Val;
         private static void ThrowInvalidArgument(string arg) {

@@ -4,11 +4,14 @@ namespace RabiRiichi.Riichi {
     public class Wall {
         public Tiles drawn;
         public Tiles remaining;
+        public Tiles doraIndicators;
 
-        public Wall(string tiles = "") {
+        public Wall(string tiles = "", string doraInds = "") {
             drawn = new Tiles(tiles);
+            doraIndicators = new Tiles(doraInds);
             remaining = Tiles.All;
             remaining.Remove(drawn);
+            remaining.Remove(doraIndicators);
         }
 
         public bool Draw(Tile tile) {
@@ -18,6 +21,11 @@ namespace RabiRiichi.Riichi {
             remaining.Remove(tile);
             drawn.Add(tile);
             return true;
+        }
+
+        public void RevealDoraIndicator(Tile tile) {
+            doraIndicators.Add(tile);
+            remaining.Remove(tile);
         }
 
         public bool Draw(IEnumerable<Tile> tiles) {

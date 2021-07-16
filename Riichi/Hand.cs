@@ -11,7 +11,8 @@ namespace RabiRiichi.Riichi {
         /// <summary> 牌河 </summary>
         public GameTiles discarded = new GameTiles();
 
-        public sbyte player;
+        public Game game;
+        public sbyte player = -1;
         /// <summary> 立直 </summary>
         public bool riichi = false;
         /// <summary> 门清 </summary>
