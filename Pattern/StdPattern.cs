@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace RabiRiichi.Pattern {
     public enum ScoringType {
-        /// <summary> 额外得分，例如本场棒。不含立直棒。 </summary>
+        /// <summary> 额外得分，不含本场棒/立直棒。 </summary>
         Point,
         /// <summary> 番 </summary>
         Han,
