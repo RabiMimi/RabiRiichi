@@ -17,7 +17,7 @@ namespace RabiRiichi.Pattern {
             var gr = groups.Find(gr => gr.Contains(incoming));
             if (!gr.IsShun)
                 return false;
-            if (gr.Any(tile => tile.tile.Is19 && tile != incoming))
+            if (gr.Any(tile => tile.tile.Is19Z && tile != incoming))
                 return false;
             gr.Sort();
             if (incoming == gr[1])
@@ -25,6 +25,11 @@ namespace RabiRiichi.Pattern {
             scorings.Add(new Scoring {
                 Type = ScoringType.Han,
                 Val = 1,
+                Source = this
+            });
+            scorings.Add(new Scoring {
+                Type = ScoringType.Fu,
+                Val = incoming.IsTsumo ? 20 : 30,
                 Source = this
             });
             return true;

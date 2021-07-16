@@ -18,7 +18,7 @@ namespace RabiRiichi.Pattern {
                 if (gr.Count == 0) {
                     continue;
                 }
-                if (gr.Count > 2 || !gr[0].tile.Is19) {
+                if (gr.Count > 2 || !gr[0].tile.Is19Z) {
                     return false;
                 }
                 if (gr.Count == 2) {

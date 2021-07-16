@@ -12,7 +12,8 @@ namespace RabiRiichi.Riichi {
         public GameTiles discarded = new GameTiles();
 
         public Game game;
-        public sbyte player = -1;
+        /// <summary> 当前玩家 </summary>
+        public int player = -1;
         /// <summary> 立直 </summary>
         public bool riichi = false;
         /// <summary> 门清 </summary>
@@ -48,6 +49,7 @@ namespace RabiRiichi.Riichi {
 
         public Hand AddGroup(GameTiles tiles) {
             groups.Add(tiles);
+            tiles.ForEach(tile => tile.player = player);
             return this;
         }
     }

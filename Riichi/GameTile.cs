@@ -8,20 +8,30 @@ namespace RabiRiichi.Riichi {
     }
     public class GameTile : IComparable<GameTile> {
         public Tile tile = Tile.Empty;
-        public sbyte fromPlayer = -1;
-        public sbyte player = -1;
+        /// <summary> 来自哪个玩家（吃碰杠等） </summary>
+        public int fromPlayer = -1;
+        /// <summary> 当前归属于哪个玩家 </summary>
+        public int player = -1;
+        /// <summary> 是否是公开牌 </summary>
         public bool visible = false;
+        /// <summary> 是否是立直牌 </summary>
         public bool riichi = false;
+        /// <summary> 是否是自摸 </summary>
+        public bool IsTsumo => fromPlayer < 0 || fromPlayer == player;
         public TileSource source = TileSource.Hand;
 
+        /// <summary> 是否是万筒索 </summary>
         public bool IsMPS => tile.IsMPS;
 
         public int CompareTo(GameTile other) {
             return tile.CompareTo(other.tile);
         }
 
+        /// <summary> 是否是相同的牌，赤dora视为相同 </summary>
         public bool IsSame(GameTile other) => tile.IsSame(other.tile);
+        /// <summary> 是否是下一张牌，用于顺子计算 </summary>
         public bool NextIs(GameTile other) => tile.NextIs(other.tile);
+        /// <summary> 是否是上一张牌，用于顺子计算 </summary>
         public bool PrevIs(GameTile other) => tile.PrevIs(other.tile);
     }
     public class GameTiles : List<GameTile> {

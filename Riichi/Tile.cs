@@ -18,18 +18,22 @@ namespace RabiRiichi.Riichi {
         /// </summary>
         public byte Val { get; private set; }
 
+        /// <summary> 不考虑赤宝的值。值一样说明是相同牌 </summary>
         public byte NoDoraVal => (byte) (Val & 0x7f);
 
+        /// <summary> 点数 </summary>
         public byte Num {
             get => (byte)(Val & 0x0f);
             set => Val = (byte)((Val & ~0x0f) | value);
         }
 
+        /// <summary> 种类 </summary>
         public Group Gr {
             get => (Group) ((Val >> 4) & 0x07);
             set => Val = (byte)((Val & ~0x70) | ((byte)value << 4));
         }
 
+        /// <summary> 是否是赤宝牌 </summary>
         public bool Akadora {
             get => (Val & 0x80) != 0;
             set {
@@ -38,6 +42,7 @@ namespace RabiRiichi.Riichi {
             }
         }
 
+        /// <summary> 是否是合法牌 </summary>
         public bool IsValid {
             get {
                 if (Gr == Group.Invalid)
@@ -50,9 +55,11 @@ namespace RabiRiichi.Riichi {
             }
         }
 
+        /// <summary> 是否是空牌（最常见的非法牌，一般用于表示牌背） </summary>
         public bool IsEmpty => this == Empty;
 
-        public bool Is19 => (IsMPS && (Num == 1 || Num == 9)) || Gr == Group.Z;
+        /// <summary> 是否是19牌或字牌 </summary>
+        public bool Is19Z => (IsMPS && (Num == 1 || Num == 9)) || Gr == Group.Z;
 
         public Tile(byte val = 0) {
             Val = val;
@@ -109,10 +116,14 @@ namespace RabiRiichi.Riichi {
             return Akadora.CompareTo(other.Akadora);
         }
 
+        /// <summary> 是否是万筒索 </summary>
         public bool IsMPS => Gr == Group.M || Gr == Group.P || Gr == Group.S;
 
+        /// <summary> 是否是相同的牌，赤dora视为相同 </summary>
         public bool IsSame(Tile other) => Gr == other.Gr && Num == other.Num;
+        /// <summary> 是否是下一张牌，用于顺子计算 </summary>
         public bool NextIs(Tile other) => IsMPS && Gr == other.Gr && other.Num == Num + 1;
+        /// <summary> 是否是上一张牌，用于顺子计算 </summary>
         public bool PrevIs(Tile other) => IsMPS && Gr == other.Gr && other.Num == Num - 1;
         public Tile NextDora {
             get {
@@ -210,6 +221,7 @@ namespace RabiRiichi.Riichi {
             throw new ArgumentException("Invalid tiles: " + arg);
         }
 
+        /// <summary> 所有牌 </summary>
         public static Tiles All {
             get {
                 var ret = new Tiles();
