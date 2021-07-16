@@ -20,8 +20,8 @@ namespace RabiRiichi.Util
             }
         }
 
-        const int TileWidth = 80;
-        const int TileHeight = 129;
+        const int TileWidth = 40;
+        const int TileHeight = 65;
 
         private readonly Dictionary<Tile, Image> tileImages = new Dictionary<Tile, Image>();
         private bool disposedValue;
