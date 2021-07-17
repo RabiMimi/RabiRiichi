@@ -30,11 +30,12 @@ namespace RabiRiichi.Pattern {
         /// <summary>
         /// 计算向听数
         /// </summary>
-        /// <param name="incoming">
-        /// 若incoming为null，输出可以让向听数-1的进张<br/>
-        /// 若incoming不为null，输出打出哪些牌可以让向听数-1
+        /// <param name="incoming">进张</param>
+        /// <param name="output">
+        /// 若incoming为null，输出有效进张列表
+        /// 否则，输出打哪些牌向听数最少
         /// </param>
-        /// <returns>向听数</returns>
-        //public abstract int Shanten(Hand hand, GameTile incoming, out List<GameTiles> output);
+        /// <returns>向听数，-1为和</returns>
+        public abstract int Shanten(Hand hand, GameTile incoming, out Tiles output);
     }
 }

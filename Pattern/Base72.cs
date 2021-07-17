@@ -31,5 +31,9 @@ namespace RabiRiichi.Pattern {
             output = new List<List<GameTiles>> { ret };
             return true;
         }
+
+        public override int Shanten(Hand hand, GameTile incoming, out Tiles output) {
+            throw new NotImplementedException();
+        }
     }
 }

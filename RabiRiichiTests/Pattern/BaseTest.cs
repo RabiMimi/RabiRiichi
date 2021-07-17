@@ -6,12 +6,17 @@ namespace RabiRiichiTests.Pattern {
     public class BaseTest {
         protected virtual BasePattern V { get; set; }
 
-        protected bool Run(string hand, string incoming, out List<List<GameTiles>> output, params string[] groups) {
-            var handV = TestHelper.CreateHand(hand);
-            foreach (var group in groups) {
-                handV.AddGroup(new GameTiles(new Tiles(group)), TileSource.Chi);
-            }
+        protected bool Resolve(string hand, string incoming, out List<List<GameTiles>> output, params string[] groups) {
+            var handV = TestHelper.CreateHand(hand, groups);
             return V.Resolve(handV, string.IsNullOrEmpty(incoming)
+                ? null : new GameTile {
+                    tile = new Tile(incoming)
+                }, out output);
+        }
+
+        protected int Shanten(string hand, string incoming, out Tiles output, params string[] groups) {
+            var handV = TestHelper.CreateHand(hand, groups);
+            return V.Shanten(handV, string.IsNullOrEmpty(incoming)
                 ? null : new GameTile {
                     tile = new Tile(incoming)
                 }, out output);
