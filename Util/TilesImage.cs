@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using RabiRiichi.Riichi;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -44,16 +45,14 @@ namespace RabiRiichi.Util
             return img;
         }
 
-        public Image Generate(Tiles tiles, int countPerLine, int yPadding)
+        public Image Generate(Dictionary<Tile, TileLayout> tileLayouts)
         {
-            int line = tiles.Count / countPerLine;
-            int height = line * TileHeight + (line - 1) * yPadding;
+            var newLineLayout = tileLayouts.Where(x => x.Value.newLine);
+            int newLineCount = newLineLayout.Count();
+            int height = TileHeight * (newLineCount + 1) + newLineLayout.Select(x => x.Value.yPadding).Sum();
 
-            throw new NotImplementedException();
-        }
+            // TODO:计算最大宽度 @Findstr
 
-        public Image Generate(Tiles tiles, List<TileLayout> tileLayouts)
-        {
             throw new NotImplementedException();
         }
 
@@ -94,6 +93,19 @@ namespace RabiRiichi.Util
 
     public class TileLayout
     {
+        public static TileLayout Default => new TileLayout();
+        public static TileLayout Back => new TileLayout { back = true };
+        public static TileLayout Hidden => new TileLayout { hidden = true };
+        public static TileLayout NewLine(int yPadding = 0) => new TileLayout { yPadding = yPadding };
+        public static TileLayout RightPadding(int padding = 0) => new TileLayout { rightPadding = padding };
+        public static Dictionary<Tile, TileLayout> CreateLayout(Tiles tiles) => tiles.ToDictionary(x => x, x => Default);
+
+        public bool newLine = false;
+        public bool back = false;
+        public bool hidden = false;
+
+        public int rightPadding = 0;
+        public int yPadding = 0;
 
     }
 }
