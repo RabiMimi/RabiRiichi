@@ -22,6 +22,19 @@ namespace RabiRiichi.Pattern {
             return tileGroups;
         }
 
+        /// <summary>
+        /// 计算是否和牌，输出所有和牌的组合
+        /// </summary>
         public abstract bool Resolve(Hand hand, GameTile incoming, out List<List<GameTiles>> output);
+
+        /// <summary>
+        /// 计算向听数
+        /// </summary>
+        /// <param name="incoming">
+        /// 若incoming为null，输出可以让向听数-1的进张<br/>
+        /// 若incoming不为null，输出打出哪些牌可以让向听数-1
+        /// </param>
+        /// <returns>向听数</returns>
+        //public abstract int Shanten(Hand hand, GameTile incoming, out List<GameTiles> output);
     }
 }

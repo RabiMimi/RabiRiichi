@@ -49,7 +49,7 @@ namespace RabiRiichi.Riichi {
                     return false;
                 if (Num < 1 || Num > 9)
                     return false;
-                if (Gr == Group.Z && Num > 7)
+                if (IsZ && Num > 7)
                     return false;
                 return true;
             }
@@ -59,7 +59,8 @@ namespace RabiRiichi.Riichi {
         public bool IsEmpty => this == Empty;
 
         /// <summary> 是否是19牌或字牌 </summary>
-        public bool Is19Z => (IsMPS && (Num == 1 || Num == 9)) || Gr == Group.Z;
+        public bool Is19Z => (IsMPS && (Num == 1 || Num == 9)) || IsZ;
+        public bool IsZ => Gr == Group.Z;
 
         public Tile(byte val = 0) {
             Val = val;
@@ -122,13 +123,27 @@ namespace RabiRiichi.Riichi {
         /// <summary> 是否是相同的牌，赤dora视为相同 </summary>
         public bool IsSame(Tile other) => Gr == other.Gr && Num == other.Num;
         /// <summary> 是否是下一张牌，用于顺子计算 </summary>
-        public bool NextIs(Tile other) => IsMPS && Gr == other.Gr && other.Num == Num + 1;
+        public bool IsNext(Tile other) => IsMPS && Gr == other.Gr && other.Num == Num + 1;
         /// <summary> 是否是上一张牌，用于顺子计算 </summary>
-        public bool PrevIs(Tile other) => IsMPS && Gr == other.Gr && other.Num == Num - 1;
+        public bool IsPrev(Tile other) => IsMPS && Gr == other.Gr && other.Num == Num - 1;
+        /// <summary> 上一张牌，用于顺子计算 </summary>
+        public Tile Prev => IsMPS ? new Tile {
+            Num = (byte)(Num - 1),
+            Gr = Gr,
+            Akadora = false
+        } : Empty;
+        /// <summary> 下一张牌，用于顺子计算 </summary>
+        public Tile Next => IsMPS ? new Tile {
+            Num = (byte)(Num + 1),
+            Gr = Gr,
+            Akadora = false
+        } : Empty;
+
+        /// <summary> 下一张牌，用于宝牌指示牌计算 </summary>
         public Tile NextDora {
             get {
                 if (IsMPS) return new Tile { Num = (byte)(Num % 9 + 1), Gr = Gr };
-                if (Gr == Group.Z) {
+                if (IsZ) {
                     if (Num <= 4) return new Tile { Num = (byte)(Num % 4 + 1), Gr = Gr };
                     byte newNum = (byte)(Num == 7 ? 5 : Num + 1);
                     return new Tile { Num = newNum, Gr = Gr };
@@ -220,6 +235,28 @@ namespace RabiRiichi.Riichi {
         private static void ThrowInvalidArgument(string arg) {
             throw new ArgumentException("Invalid tiles: " + arg);
         }
+
+        public bool IsKou => Count == 3
+            && this[0].IsSame(this[1]) && this[1].IsSame(this[2]);
+        public bool IsKan {
+            get {
+                if (Count != 4) return false;
+                for (int i = 1; i < Count; i++) {
+                    if (!this[i - 1].IsSame(this[i]))
+                        return false;
+                }
+                return true;
+            }
+        }
+        public bool IsShun {
+            get {
+                if (Count != 3) return false;
+                var list = this.ToList();
+                list.Sort();
+                return list[0].IsNext(list[1]) && list[1].IsNext(list[2]);
+            }
+        }
+        public bool IsJan => Count == 2 && this[0].IsSame(this[1]);
 
         /// <summary> 所有牌 </summary>
         public static Tiles All {

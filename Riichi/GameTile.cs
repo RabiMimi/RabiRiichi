@@ -30,9 +30,9 @@ namespace RabiRiichi.Riichi {
         /// <summary> 是否是相同的牌，赤dora视为相同 </summary>
         public bool IsSame(GameTile other) => tile.IsSame(other.tile);
         /// <summary> 是否是下一张牌，用于顺子计算 </summary>
-        public bool NextIs(GameTile other) => tile.NextIs(other.tile);
+        public bool NextIs(GameTile other) => tile.IsNext(other.tile);
         /// <summary> 是否是上一张牌，用于顺子计算 </summary>
-        public bool PrevIs(GameTile other) => tile.PrevIs(other.tile);
+        public bool PrevIs(GameTile other) => tile.IsPrev(other.tile);
     }
     public class GameTiles : List<GameTile> {
         public TileSource source = TileSource.Hand;
@@ -64,5 +64,15 @@ namespace RabiRiichi.Riichi {
             }
         }
         public bool IsJan => Count == 2 && this[0].IsSame(this[1]);
+
+        /// <summary> 判定是否有给出的牌，赤宝牌视为相同牌 </summary>
+        public bool HasTile(Tile tile) {
+            return this.Any(t => t.tile.IsSame(tile));
+        }
+        public override string ToString() {
+            var ret = new Tiles(this.Select(tile => tile.tile));
+            ret.Sort();
+            return ret.ToString();
+        }
     }
 }

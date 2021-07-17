@@ -14,6 +14,8 @@ namespace RabiRiichi.Riichi {
         public Game game;
         /// <summary> 当前玩家 </summary>
         public int player = -1;
+        public int PrevPlayer => game.PrevPlayer(player);
+        public int NextPlayer => game.NextPlayer(player);
         /// <summary> 立直 </summary>
         public bool riichi = false;
         /// <summary> 门清 </summary>
@@ -47,9 +49,12 @@ namespace RabiRiichi.Riichi {
             return this;
         }
 
-        public Hand AddGroup(GameTiles tiles) {
+        public Hand AddGroup(GameTiles tiles, TileSource source) {
             groups.Add(tiles);
-            tiles.ForEach(tile => tile.player = player);
+            tiles.ForEach(tile => {
+                tile.player = player;
+                tile.source = source;
+            });
             return this;
         }
     }

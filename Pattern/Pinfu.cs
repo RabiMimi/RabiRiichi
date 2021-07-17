@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace RabiRiichi.Pattern {
     public class Pinfu : StdPattern {
-        public override Type[] basePatterns => Only33332;
+        public override Type[] dependOnPatterns => Only33332;
 
         public override bool Resolve(List<GameTiles> groups, Hand hand, GameTile incoming, Scorings scorings) {
             if (!hand.menzen || groups.Any(gr => gr.IsKan || gr.IsKou))

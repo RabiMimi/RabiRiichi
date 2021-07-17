@@ -14,7 +14,7 @@ namespace RabiRiichi.Event.Listener {
                 var user = e.game.GetUser(e.player);
                 using var image = TilesImage.V.Generate(e.hand);
                 MessageSegmentImage hand = new MessageSegmentImage(image);
-                await bot.SendPrivate(msgev.selfId, user.userId, HMessage.From(new MessageSegment[] { hand }));
+                await bot.SendPrivate(msgev.selfId, user.userId, HMessage.From(hand));
             }
             return false;
         }

@@ -22,7 +22,7 @@ namespace RabiRiichi.Pattern {
     }
 
     public abstract class StdPattern {
-        protected static Type[] NoDependency = new Type[0];
+        protected static Type[] NoPattern = new Type[0];
         protected static Type[] Only33332 = new Type[] { typeof(Base33332) };
         protected static Type[] Only72 = new Type[] { typeof(Base72) };
         protected static Type[] Only13_1 = new Type[] { typeof(Base13_1) };
@@ -32,8 +32,10 @@ namespace RabiRiichi.Pattern {
             typeof(Base72)
         };
 
-        public abstract Type[] basePatterns { get; }
-        public virtual Type[] dependOnPatterns => NoDependency;
+        /// <summary> 满足这些pattern后，才会计算该pattern </summary>
+        public abstract Type[] dependOnPatterns { get; }
+        /// <summary> 计算这些pattern后，才会计算该pattern。不保证这些pattern一定被满足 </summary>
+        public virtual Type[] afterPatterns => NoPattern;
         public abstract bool Resolve(List<GameTiles> groups, Hand hand, GameTile incoming, Scorings scorings);
     }
 }

@@ -77,5 +77,13 @@ namespace RabiRiichi.Pattern {
         public int CompareTo(Scorings other) {
             return baseScore.CompareTo(other.baseScore);
         }
+
+        public static bool operator < (Scorings lhs, Scorings rhs) {
+            return lhs.CompareTo(rhs) < 0;
+        }
+
+        public static bool operator > (Scorings lhs, Scorings rhs) {
+            return lhs.CompareTo(rhs) > 0;
+        }
     }
 }

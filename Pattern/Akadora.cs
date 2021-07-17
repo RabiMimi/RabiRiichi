@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace RabiRiichi.Pattern {
-    public class Akadora : BonusPattern {
-        public override Type[] basePatterns => AllBasePatterns;
+    public class Akadora : StdPattern {
+        public override Type[] dependOnPatterns => AllBasePatterns;
 
         public override bool Resolve(List<GameTiles> groups, Hand hand, GameTile incoming, Scorings scorings) {
             int count = groups.SelectMany(tile => tile.ToTiles()).Count(tile => tile.Akadora);
