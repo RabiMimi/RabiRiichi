@@ -100,6 +100,20 @@ namespace RabiRiichiTests.Pattern {
 
         [TestMethod]
         public void TestShantenFrenqy() {
+            Assert.AreEqual(-1, Shanten("1113335557779s", "9s", out tiles));
+            tiles.AssertEq("");
+
+            Assert.AreEqual(0, Shanten("1113335557799s", null, out tiles));
+            tiles.AssertEq("79s");
+
+            Assert.AreEqual(5, Shanten("1246m1p2688s1257z", "2m", out tiles));
+            tiles.AssertEq("126m268s1p1257z");
+
+            Assert.AreEqual(1, Shanten("1224r5p56668889p", "7p", out tiles));
+            tiles.AssertEq("12456789p");
+
+            Assert.AreEqual(6, Shanten("348m247p159s1234z", "5z", out tiles));
+            tiles.AssertEq("12345z159s8m7p");
         }
     }
 }
