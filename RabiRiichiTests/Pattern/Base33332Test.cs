@@ -6,6 +6,7 @@ namespace RabiRiichiTests.Pattern {
     [TestClass]
     public class Base33332Test : BaseTest {
         protected override BasePattern V { get; set; } = new Base33332();
+        private Tiles tiles;
 
         [TestMethod]
         public void TestInvalid() {
@@ -62,7 +63,6 @@ namespace RabiRiichiTests.Pattern {
 
         [TestMethod]
         public void TestShanten() {
-            Tiles tiles;
 
             Assert.AreEqual(-1, Shanten("2233445566778s", "8s", out tiles));
             tiles.AssertEq("");
@@ -87,6 +87,19 @@ namespace RabiRiichiTests.Pattern {
 
             Assert.AreEqual(6, Shanten("25569m2589p5s357z", null, out tiles));
             tiles.AssertEq("123456789m1234567p34567s357z");
+        }
+
+        [TestMethod]
+        public void TestShantenSpecial() {
+            Assert.AreEqual(0, Shanten("6666666666666z", "7z", out tiles));
+            tiles.AssertEq("67z");
+
+            Assert.AreEqual(0, Shanten("6666666666666z", null, out tiles));
+            tiles.AssertEq("6z");
+        }
+
+        [TestMethod]
+        public void TestShantenFrenqy() {
         }
     }
 }
