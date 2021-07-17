@@ -199,7 +199,7 @@ namespace RabiRiichi.Pattern {
                 output = null;
                 return int.MaxValue;
             }
-            // 滚动数组dp，dp[i][j2,j1,k,l]表示：
+            // 动态规划，dp[i][j2,j1,k,l]表示：
             // 当前在编号为i的牌
             // i-1有j2张未匹配
             // i有j1张未匹配

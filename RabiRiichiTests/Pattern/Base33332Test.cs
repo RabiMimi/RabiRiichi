@@ -81,6 +81,12 @@ namespace RabiRiichiTests.Pattern {
 
             Assert.AreEqual(8, Shanten("159s159p159m1234z", null, out tiles));
             tiles.AssertEq("123456789s123456789p123456789m1234z");
+
+            Assert.AreEqual(5, Shanten("25569m2589p5s357z", "3s", out tiles));
+            tiles.AssertEq("2569m25p357z");
+
+            Assert.AreEqual(6, Shanten("25569m2589p5s357z", null, out tiles));
+            tiles.AssertEq("123456789m1234567p34567s357z");
         }
     }
 }
