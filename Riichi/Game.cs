@@ -125,7 +125,7 @@ namespace RabiRiichi.Riichi {
             }
 
             // 游戏逻辑
-            while (!eventBus.Empty) {
+            while (!eventBus.Empty || hoshino.ListenerCount > 0) {
                 await eventBus.Process();
             }
 

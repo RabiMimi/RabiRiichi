@@ -135,6 +135,10 @@ namespace RabiRiichi.Resolver {
             if (hand.furiten && !incoming.IsTsumo) {
                 return Reject(out output);
             }
+            if (hand.player == incoming.fromPlayer) {
+                // 自己打出来的
+                return Reject(out output);
+            }
             var maxScore = GetMaxScore(hand, incoming, false);
             if (maxScore.IsValid(MinHan)) {
                 output = new PlayerActions {

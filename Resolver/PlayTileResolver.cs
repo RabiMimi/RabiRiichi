@@ -14,7 +14,7 @@ namespace RabiRiichi.Resolver {
             if (!hand.riichi) {
                 tiles.AddRange(hand.hand.ToTiles());
             }
-            if (tiles.Count <= 0) {
+            if (tiles.Count <= 0 || !incoming.IsTsumo) {
                 return Reject(out output);
             }
             var tileStr = tiles.Select(tile => tile.ToString()).ToList();

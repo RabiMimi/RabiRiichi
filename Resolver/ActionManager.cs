@@ -37,6 +37,9 @@ namespace RabiRiichi.Resolver {
             if (TryGetResolver<RonResolver>(out var resolver3)) {
                 yield return resolver3;
             }
+            if (TryGetResolver<KanResolver>(out var resolver4)) {
+                yield return resolver4;
+            }
         }
 
         private IEnumerable<ResolverBase> OnDiscardTileResolvers() {
@@ -64,9 +67,15 @@ namespace RabiRiichi.Resolver {
                 }
             }
             Debug.Assert(actions.Count > 0);
-            var msg = $"{hand.hand} +{incoming}\n{actions.GetMessage(hand.player)}";
-            await hand.game.SendPrivate(hand.player, msg);
-            hand.game.RegisterListener(actions);
+            bool forceAction = actions.Count == 1 && actions[0].options.Count == 1;
+            if (forceAction) {
+                actions[0].choice = 0;
+                actions[0].trigger(actions[0]);
+            } else {
+                var msg = $"{hand.hand} +{incoming}\n{actions.GetMessage(hand.player)}";
+                await hand.game.SendPrivate(hand.player, msg);
+                hand.game.RegisterListener(actions);
+            }
         }
 
         public async Task OnDiscardTile(Hand hand, GameTile discard) {

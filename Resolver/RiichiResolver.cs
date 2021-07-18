@@ -75,7 +75,7 @@ namespace RabiRiichi.Resolver {
             if (hand.game.wall.NumRemaining < 4) {
                 return Reject(out output);
             }
-            if (hand.riichi || !hand.menzen) {
+            if (hand.riichi || !hand.menzen || !incoming.IsTsumo) {
                 return Reject(out output);
             }
             Tiles riichiTiles = new Tiles();

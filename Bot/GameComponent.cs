@@ -17,6 +17,8 @@ namespace RabiRiichi.Bot {
 
         private List<PlayerActions> listeners = new List<PlayerActions>();
 
+        public int ListenerCount => listeners.Count;
+
         public void RegisterListener(PlayerActions actions) {
             listeners.Add(actions);
         }

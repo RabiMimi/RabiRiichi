@@ -35,6 +35,10 @@ namespace RabiRiichi.Resolver {
             if (hand.game.wall.IsFinished) {
                 return Reject(out output);
             }
+            if (hand.player == incoming.fromPlayer) {
+                // 自己打出来的
+                return Reject(out output);
+            }
             var tile = incoming.tile.WithoutDora;
             // 暗杠/明杠
             var current = new List<GameTile> { incoming };

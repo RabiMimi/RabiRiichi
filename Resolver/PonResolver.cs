@@ -22,7 +22,7 @@ namespace RabiRiichi.Resolver {
             if (hand.game.wall.IsFinished) {
                 return Reject(out output);
             }
-            if (hand.riichi || incoming.IsTsumo) {
+            if (hand.riichi || incoming.IsTsumo || hand.player == incoming.fromPlayer) {
                 return Reject(out output);
             }
             var tile = incoming.tile.WithoutDora;
