@@ -19,8 +19,7 @@ namespace RabiRiichi.Resolver {
 
         public override bool ResolveAction(Hand hand, GameTile incoming, out PlayerActions output) {
             if (hand.riichi || incoming.IsTsumo || incoming.tile.IsZ || incoming.fromPlayer != hand.PrevPlayer) {
-                output = null;
-                return false;
+                return Reject(out output);
             }
             int num = incoming.tile.Num;
             var current = new List<GameTile> { incoming };
@@ -29,8 +28,7 @@ namespace RabiRiichi.Resolver {
             CheckCombo(hand.hand, result, current, incoming.tile.Prev, incoming.tile.Next);
             CheckCombo(hand.hand, result, current, incoming.tile.Next, incoming.tile.Next.Next);
             if (result.Count == 0) {
-                output = null;
-                return false;
+                return Reject(out output);
             }
             output = new PlayerActions();
             for (int i = 0; i < result.Count; i++) {

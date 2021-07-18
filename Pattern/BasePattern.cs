@@ -41,7 +41,7 @@ namespace RabiRiichi.Pattern {
         /// <returns>向听数，-1为和</returns>
         public abstract int Shanten(Hand hand, GameTile incoming, out Tiles output, int maxShanten = int.MaxValue);
 
-        protected Tiles GetHand(GameTiles tiles, GameTile incoming, bool keepDora = false) {
+        public static Tiles GetHand(GameTiles tiles, GameTile incoming, bool keepDora = false) {
             var ret = tiles.ToTiles();
             if (incoming != null) {
                 ret.Add(incoming.tile);
@@ -52,7 +52,7 @@ namespace RabiRiichi.Pattern {
             return ret;
         }
 
-        protected int Reject(out Tiles output) {
+        protected static int Reject(out Tiles output) {
             output = null;
             return int.MaxValue;
         }

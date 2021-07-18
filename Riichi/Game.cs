@@ -6,6 +6,9 @@ using RabiRiichi.Pattern;
 using RabiRiichi.Resolver;
 using RabiRiichi.Util;
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Riichi {
@@ -83,6 +86,7 @@ namespace RabiRiichi.Riichi {
             wall = new Wall();
             actionManager = new ActionManager();
             rand = new Rand((int)(DateTimeOffset.Now.ToUnixTimeSeconds() & 0xffffffff));
+            roundTime = 0;
         }
 
         public async Task Start() {
@@ -123,6 +127,21 @@ namespace RabiRiichi.Riichi {
         }
         public int PrevPlayer(int id) {
             return id == 0 ? players.Length - 1 : id - 1;
+        }
+        public IEnumerable<GameTile> AllDiscardedTiles =>
+            players.SelectMany(player => player.hand.discarded);
+        #endregion
+
+        #region Timer
+        private int roundTime;
+
+        /// <summary>
+        /// （进入下一个时间点并）返回当前时间
+        /// </summary>
+        /// <param name="advance">是否进入下一个时间点</param>
+        /// <returns></returns>
+        public int Time(bool advance = true) {
+            return advance ? ++roundTime : roundTime;
         }
         #endregion
     }

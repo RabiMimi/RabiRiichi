@@ -20,16 +20,14 @@ namespace RabiRiichi.Resolver {
 
         public override bool ResolveAction(Hand hand, GameTile incoming, out PlayerActions output) {
             if (hand.riichi || incoming.IsTsumo) {
-                output = null;
-                return false;
+                return Reject(out output);
             }
             var tile = incoming.tile.WithoutDora;
             var current = new List<GameTile> { incoming };
             var result = new List<GameTiles>();
             CheckCombo(hand.hand, result, current, tile, tile);
             if (result.Count == 0) {
-                output = null;
-                return false;
+                return Reject(out output);
             }
             output = new PlayerActions();
             for (int i = 0; i < result.Count; i++) {

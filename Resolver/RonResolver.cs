@@ -132,6 +132,9 @@ namespace RabiRiichi.Resolver {
         }
 
         public override bool ResolveAction(Hand hand, GameTile incoming, out PlayerActions output) {
+            if (hand.furiten && !incoming.IsTsumo) {
+                return Reject(out output);
+            }
             var maxScore = GetMaxScore(hand, incoming, false);
             if (maxScore.IsValid(MinHan)) {
                 output = new PlayerActions {
@@ -146,8 +149,7 @@ namespace RabiRiichi.Resolver {
                 };
                 return true;
             } else {
-                output = null;
-                return false;
+                return Reject(out output);
             }
         }
     }

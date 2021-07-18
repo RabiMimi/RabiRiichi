@@ -12,12 +12,14 @@ namespace RabiRiichi.Riichi {
         public int fromPlayer = -1;
         /// <summary> 当前归属于哪个玩家 </summary>
         public int player = -1;
+        /// <summary> 弃牌的时间戳 </summary>
+        public int discardTime = -1;
         /// <summary> 是否是公开牌 </summary>
         public bool visible = false;
         /// <summary> 是否是立直牌 </summary>
         public bool riichi = false;
         /// <summary> 是否是自摸 </summary>
-        public bool IsTsumo => fromPlayer < 0 || fromPlayer == player;
+        public bool IsTsumo => fromPlayer < 0;
         public TileSource source = TileSource.Hand;
 
         /// <summary> 是否是万筒索 </summary>

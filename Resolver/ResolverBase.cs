@@ -56,7 +56,8 @@ namespace RabiRiichi.Resolver {
             bool success = false;
             for (int i = handIndex; i < hand.Count; i++) {
                 var cur = hand[i];
-                if (!cur.tile.IsSame(tile)) {
+                if (!cur.tile.IsSame(tile) ||
+                    (i > handIndex && cur.tile == hand[i-1].tile)) {
                     continue;
                 }
                 current.Add(cur);
@@ -76,6 +77,11 @@ namespace RabiRiichi.Resolver {
             tileList.Sort();
             hand.Sort();
             return CheckComboDfs(current, output, hand, 0, tileList, 0);
+        }
+
+        public static bool Reject<T>(out T output) where T: class {
+            output = null;
+            return false;
         }
     }
 }

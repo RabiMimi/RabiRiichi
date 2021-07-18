@@ -51,6 +51,9 @@ namespace RabiRiichi.Resolver {
             foreach (var gr in result) {
                 GenerateAction(output, gr, "杠", tot <= 1);
             }
+            if (output.Count == 0) {
+                return Reject(out output);
+            }
             return true;
         }
     }

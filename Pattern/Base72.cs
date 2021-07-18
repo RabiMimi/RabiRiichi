@@ -44,10 +44,6 @@ namespace RabiRiichi.Pattern {
                 .Where(tiles => tiles.Count == 1)
                 .Select(tiles => tiles[0].tile.WithoutDora)
                 .ToArray();
-            if (existingPairs.Length == 7) {
-                output = new Tiles();
-                return -1;
-            }
             int requiredSingle = 7 - existingPairs.Length;
             int ret = Game.HandSize
                 - existingPairs.Length * 2
