@@ -194,20 +194,17 @@ namespace RabiRiichi.Pattern {
         public override int Shanten(Hand hand, GameTile incoming, out Tiles output, int maxShanten = 8) {
             maxShanten++;
             if (maxShanten < 0) {
-                output = null;
-                return int.MaxValue;
+                return Reject(out output);
             }
             if (maxShanten == 0 && incoming == null) {
-                output = null;
-                return int.MaxValue;
+                return Reject(out output);
             }
             tileGroups = GetTileGroups(hand, incoming, false);
             M = Math.Min(9, maxShanten);
             // 是否有雀头
             int janCnt = hand.groups.Count(gr => gr.IsJan);
             if (janCnt > 1) {
-                output = null;
-                return int.MaxValue;
+                return Reject(out output);
             }
             // 动态规划，dp[i][j2,j1,k,l]表示：
             // 当前在编号为i的牌
@@ -289,8 +286,7 @@ namespace RabiRiichi.Pattern {
             DpLoc destLoc = (0, 0, 1, (byte)(incoming == null ? M + 1 : M));
             var dest = dpPre[destLoc.Item1, destLoc.Item2, destLoc.Item3, destLoc.Item4];
             if (dest == null || dest.dist > M) {
-                output = null;
-                return int.MaxValue;
+                return Reject(out output);
             }
 
             // 反向寻路

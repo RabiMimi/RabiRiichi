@@ -19,7 +19,9 @@ namespace RabiRiichi.Riichi {
         public byte Val { get; private set; }
 
         /// <summary> 不考虑赤宝的值。值一样说明是相同牌 </summary>
-        public byte NoDoraVal => (byte) (Val & 0x7f);
+        public byte NoDoraVal => (byte)(Val & 0x7f);
+        /// <summary> 去掉赤宝标记后的牌 </summary>
+        public Tile NoDora => new Tile(NoDoraVal);
 
         /// <summary> 点数 </summary>
         public byte Num {
@@ -277,5 +279,14 @@ namespace RabiRiichi.Riichi {
                 return ret;
             }
         }
+
+        /// <summary>
+        /// 所有19牌和字牌
+        /// </summary>
+        public static Tiles T19Z => new Tiles("19m19p19s1234567z");
+        /// <summary>
+        /// 所有19牌
+        /// </summary>
+        public static Tiles T19 => new Tiles("19m19p19s");
     }
 }

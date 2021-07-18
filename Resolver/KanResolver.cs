@@ -32,9 +32,7 @@ namespace RabiRiichi.Resolver {
         }
 
         public override bool ResolveAction(Hand hand, GameTile incoming, out PlayerActions output) {
-            var tile = new Tile(incoming.tile.Val) {
-                Akadora = false
-            };
+            var tile = incoming.tile.NoDora;
             // 暗杠/明杠
             var current = new List<GameTile> { incoming };
             var result = new List<GameTiles>();

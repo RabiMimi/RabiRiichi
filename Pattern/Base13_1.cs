@@ -1,9 +1,14 @@
 ﻿using RabiRiichi.Riichi;
+using RabiRiichi.Util;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace RabiRiichi.Pattern {
 
     public class Base13_1 : BasePattern {
+        private static readonly Tiles T19Z = Tiles.T19Z;
+
         public override bool Resolve(Hand hand, GameTile incoming, out List<List<GameTiles>> output) {
             output = null;
             // Check tile count
@@ -33,8 +38,47 @@ namespace RabiRiichi.Pattern {
             return true;
         }
 
-        public override int Shanten(Hand hand, GameTile incoming, out Tiles output, int maxShanten) {
-            throw new System.NotImplementedException();
+        public override int Shanten(Hand hand, GameTile incoming, out Tiles output, int maxShanten = 13) {
+            if (hand.groups.Count > 1 ||
+                hand.groups.Any(gr => !gr.IsJan || !gr.All(t => t.tile.Is19Z))) {
+                return Reject(out output);
+            }
+            
+            var tileGroups = GetTileGroups(hand, incoming, true);
+            var existing = new Tiles();
+            int multiCnt = 0;
+            foreach (var tile in T19Z) {
+                int cnt = tileGroups[tile.NoDoraVal].Count;
+                if (cnt > 0) {
+                    existing.Add(tile);
+                    multiCnt += (cnt > 1).ToInt();
+                }
+            }
+            int ret = T19Z.Count - existing.Count - Math.Min(1, multiCnt);
+            if (ret > maxShanten) {
+                return Reject(out output);
+            }
+            if (incoming == null) {
+                // 13张，计算有效进张
+                if (multiCnt > 0) {
+                    output = new Tiles(T19Z);
+                    foreach (var t in existing) {
+                        output.Remove(t);
+                    }
+                } else {
+                    output = new Tiles(T19Z);
+                }
+            } else {
+                // 14张，计算切牌
+                var tiles = hand.hand.ToTiles();
+                if (incoming != null) {
+                    tiles.Add(incoming.tile);
+                }
+                output = new Tiles(tiles.Where(
+                    t => !t.Is19Z || tileGroups[t.NoDoraVal].Count > (multiCnt > 1 ? 1 : 2)
+                    ).Distinct());
+            }
+            return ret;
         }
     }
 }

@@ -40,5 +40,10 @@ namespace RabiRiichi.Pattern {
         /// </param>
         /// <returns>向听数，-1为和</returns>
         public abstract int Shanten(Hand hand, GameTile incoming, out Tiles output, int maxShanten = int.MaxValue);
+
+        protected int Reject(out Tiles output) {
+            output = null;
+            return int.MaxValue;
+        }
     }
 }

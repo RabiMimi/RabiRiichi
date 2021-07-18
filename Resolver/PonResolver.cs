@@ -23,9 +23,7 @@ namespace RabiRiichi.Resolver {
                 output = null;
                 return false;
             }
-            var tile = new Tile(incoming.tile.Val) {
-                Akadora = false
-            };
+            var tile = incoming.tile.NoDora;
             var current = new List<GameTile> { incoming };
             var result = new List<GameTiles>();
             CheckCombo(hand.hand, result, current, tile, tile);

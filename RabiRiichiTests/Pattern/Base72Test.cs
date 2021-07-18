@@ -8,19 +8,19 @@ namespace RabiRiichiTests.Pattern {
 
         [TestMethod]
         public void TestInvalid() {
-            Assert.IsFalse(Resolve("1112233557799s", "1s", out _));
-            Assert.IsFalse(Resolve("12233557799s", "1s", out _, "11s"));
-            Assert.IsFalse(Resolve("11335577s1133557p", "7p", out _));
-            Assert.IsFalse(Resolve("1s", "1s", out _));
-            Assert.IsFalse(Resolve("1133445p", "5p", out _, "567s", "567s"));
-            Assert.IsFalse(Resolve("113344p1s2233z", "1s", out _, "5555s"));
+            Assert.IsFalse(Resolve("1112233557799s", "1s"));
+            Assert.IsFalse(Resolve("12233557799s", "1s", "11s"));
+            Assert.IsFalse(Resolve("11335577s1133557p", "7p"));
+            Assert.IsFalse(Resolve("1s", "1s"));
+            Assert.IsFalse(Resolve("1133445p", "5p", "567s", "567s"));
+            Assert.IsFalse(Resolve("113344p1s2233z", "1s", "5555s"));
         }
 
         [TestMethod]
         public void TestValid() {
-            Assert.IsTrue(Resolve("1122334455667p", "7p", out _));
-            Assert.IsTrue(Resolve("11335r577p11335r5z", null, out _));
-            Assert.IsTrue(Resolve("119p1199m1199s22z", "9p", out _));
+            Assert.IsTrue(Resolve("1122334455667p", "7p"));
+            Assert.IsTrue(Resolve("11335r577p11335r5z", null));
+            Assert.IsTrue(Resolve("119p1199m1199s22z", "9p"));
         }
 
         [TestMethod]
@@ -30,7 +30,7 @@ namespace RabiRiichiTests.Pattern {
 
         [TestMethod]
         public void TestZ() {
-            Assert.IsTrue(Resolve("1123344556677z", "2z", out _));
+            Assert.IsTrue(Resolve("1123344556677z", "2z"));
         }
     }
 }
