@@ -19,6 +19,9 @@ namespace RabiRiichi.Resolver {
         }
 
         public override bool ResolveAction(Hand hand, GameTile incoming, out PlayerActions output) {
+            if (hand.game.wall.IsFinished) {
+                return Reject(out output);
+            }
             if (hand.riichi || incoming.IsTsumo) {
                 return Reject(out output);
             }

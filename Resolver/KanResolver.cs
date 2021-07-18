@@ -32,6 +32,9 @@ namespace RabiRiichi.Resolver {
         }
 
         public override bool ResolveAction(Hand hand, GameTile incoming, out PlayerActions output) {
+            if (hand.game.wall.IsFinished) {
+                return Reject(out output);
+            }
             var tile = incoming.tile.WithoutDora;
             // 暗杠/明杠
             var current = new List<GameTile> { incoming };

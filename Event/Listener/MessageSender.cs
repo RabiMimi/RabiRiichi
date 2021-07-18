@@ -12,7 +12,7 @@ namespace RabiRiichi.Event.Listener {
             var msgev = ev.game.hoshino.ev;
             if (ev is DealHandEvent e) {
                 var user = e.game.GetUser(e.player);
-                using var image = TilesImage.V.Generate(e.hand);
+                using var image = TilesImage.V.Generate(e.tiles);
                 MessageSegmentImage hand = new MessageSegmentImage(image);
                 await bot.SendPrivate(msgev.selfId, user.userId, HMessage.From(hand));
             }

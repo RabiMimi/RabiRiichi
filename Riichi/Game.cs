@@ -36,17 +36,23 @@ namespace RabiRiichi.Riichi {
 
         #region Start
         protected virtual void RegisterEventListeners() {
-            eventBus.Register<DealHandEvent>(Phase.On, new DefaultOnDealHand());
-            eventBus.Register<DealHandEvent>(Phase.Finalize, new DefaultFinalizeDealHand());
+            eventBus.Register<DealHandEvent>(Phase.On, new DftOnDealHand());
+            eventBus.Register<DealHandEvent>(Phase.Post, new DftPostDealHand());
             eventBus.Register<EventBase>(Phase.Finalize, new MessageSender());
         }
 
         protected virtual void RegisterResolvers() {
-            actionManager.RegisterResolver(new RonResolver());
-            actionManager.RegisterResolver(new RiichiResolver());
-            actionManager.RegisterResolver(new ChiResolver());
-            actionManager.RegisterResolver(new KanResolver());
-            actionManager.RegisterResolver(new PonResolver());
+            var resolvers = new ResolverBase[] {
+                new RonResolver(),
+                new RiichiResolver(),
+                new ChiResolver(),
+                new KanResolver(),
+                new PonResolver(),
+                new PlayTileResolver(),
+            };
+            foreach (var resolver in resolvers) {
+                actionManager.RegisterResolver(resolver);
+            }
         }
 
         protected virtual void RegisterPatterns() {
@@ -103,7 +109,9 @@ namespace RabiRiichi.Riichi {
             for (int i = 0; i < players.Length; i++) {
                 players[i] = new Player {
                     id = i,
-                    wind = (Wind)i
+                    wind = (Wind)i,
+                    game = this,
+                    nickname = hoshino.players[i].nickname
                 };
             }
 
@@ -113,7 +121,12 @@ namespace RabiRiichi.Riichi {
                     game = this,
                     player = i,
                 };
-                await eventBus.Process(ev);
+                eventBus.Queue(ev);
+            }
+
+            // 游戏逻辑
+            while (!eventBus.Empty) {
+                await eventBus.Process();
             }
 
             // End game
@@ -144,5 +157,18 @@ namespace RabiRiichi.Riichi {
             return advance ? ++roundTime : roundTime;
         }
         #endregion
+
+        #region Message
+        public Task SendPrivate(int player, string msg) {
+            long id = hoshino.players[player].userId;
+            return hoshino.bot.SendPrivate(hoshino.ev.selfId, id, msg);
+        }
+        public Task SendPublic(string msg) {
+            return hoshino.bot.Send(hoshino.ev, msg);
+        }
+        public void RegisterListener(PlayerActions actions) {
+            hoshino.RegisterListener(actions);
+        }
+        #endregion Message
     }
 }

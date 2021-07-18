@@ -2,9 +2,17 @@
 
 namespace RabiRiichi.Riichi {
     public class Wall {
+        /// <summary>
+        /// 王牌数量
+        /// </summary>
+        public const int NUM_WANPAI = 14;
+
         public Tiles drawn;
         public Tiles remaining;
         public Tiles doraIndicators;
+
+        public int NumRemaining => remaining.Count + doraIndicators.Count - NUM_WANPAI;
+        public bool IsFinished => NumRemaining <= 0;
 
         public Wall(string tiles = "", string doraInds = "") {
             drawn = new Tiles(tiles);

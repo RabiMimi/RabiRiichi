@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Event.Listener {
-    public class DefaultOnDealHand : ListenerBase {
+    public class DftOnDealHand : ListenerBase {
         public override uint CanListen(EventBase ev) => Priority.Low;
 
         public override Task<bool> Handle(EventBase ev) {
@@ -12,8 +12,8 @@ namespace RabiRiichi.Event.Listener {
                 ev.Finish();
                 return Task.FromResult(true);
             }
-            e.hand = new Tiles(ev.game.rand.Choice(yama.remaining, Game.HandSize));
-            e.hand.Sort();
+            e.tiles = new Tiles(ev.game.rand.Choice(yama.remaining, Game.HandSize));
+            e.tiles.Sort();
             return Task.FromResult(true);
         }
     }

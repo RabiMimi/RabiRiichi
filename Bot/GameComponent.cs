@@ -1,6 +1,8 @@
 ﻿using HoshinoSharp.Hoshino;
 using HoshinoSharp.Runtime;
+using RabiRiichi.Resolver;
 using RabiRiichi.Riichi;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Bot {
@@ -13,8 +15,35 @@ namespace RabiRiichi.Bot {
 
         public bool IsReady => players.Count >= NumPlayers;
 
+        private List<PlayerActions> listeners = new List<PlayerActions>();
+
+        public void RegisterListener(PlayerActions actions) {
+            listeners.Add(actions);
+        }
+
+        public Task OnMessage(HEvent ev, HBot bot) {
+            var str = ev.message.ExtractPlainText();
+            if (str.Trim() == "有无") {
+                return AddPlayer(ev, bot);
+            }
+
+            // 触发监听器
+            if (game.phase == GamePhase.Running) {
+                int index = players.FindIndex(player => player.userId == ev.userId);
+                if (index != -1) {
+                    var tempListeners = listeners.ToArray();
+                    foreach (var listener in tempListeners) {
+                        if (listener.OnMessage(index, ev.message)) {
+                            listeners.Remove(listener);
+                        }
+                    }
+                }
+            }
+        }
+
         public void Reset() {
             players.Clear();
+            listeners.Clear();
             game = new Game(this);
             ev = null;
             bot = null;

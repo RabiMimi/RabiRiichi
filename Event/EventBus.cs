@@ -11,6 +11,11 @@ namespace RabiRiichi.Event {
         private readonly List<(uint, ListenerBase)> cachedListeners =
             new List<(uint, ListenerBase)>();
 
+        private readonly List<EventBase> queue = new List<EventBase>();
+
+        public int Count => queue.Count;
+        public bool Empty => Count == 0;
+
         public void Register<T>(Phase phase, ListenerBase listener)
             where T : EventBase {
             var key = (typeof(T), phase);
@@ -21,7 +26,18 @@ namespace RabiRiichi.Event {
             list.Add(listener);
         }
 
-        public async Task Process(EventBase ev) {
+        public void Queue(EventBase ev) {
+            queue.Add(ev);
+        }
+
+        public async Task Process() {
+            var evs = queue.ToArray();
+            foreach (var ev in evs) {
+                await Process(ev);
+            }
+        }
+
+        private async Task Process(EventBase ev) {
             if (ev.phase != Phase.Inactive) {
                 HUtil.Warn($"Invalid event phase: {ev}");
                 return;

@@ -3,6 +3,7 @@
 namespace RabiRiichi.Event {
     public static class Priority {
         public const uint Never = 0;
+        public const uint Last = 1;
         public const uint MessageSender = (uint)1e3;
         public const uint Low = (uint)1e6;
         public const uint Medium = (uint)2e6;
@@ -22,10 +23,12 @@ namespace RabiRiichi.Event {
         /// A special phase because only the top priority listener will be activated.
         /// </summary>
         On,
-        /// <summary> After the event is handled </summary>
-        Post,
         /// <summary>
         /// Actually apply the event to the game instance.
+        /// </summary>
+        Post,
+        /// <summary>
+        /// After the event is handled.
         /// Should never change event data.
         /// </summary>
         Finalize,

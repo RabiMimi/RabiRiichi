@@ -72,6 +72,9 @@ namespace RabiRiichi.Resolver {
         }
 
         public override bool ResolveAction(Hand hand, GameTile incoming, out PlayerActions output) {
+            if (hand.game.wall.NumRemaining < 4) {
+                return Reject(out output);
+            }
             if (hand.riichi || !hand.menzen) {
                 return Reject(out output);
             }

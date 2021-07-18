@@ -8,6 +8,8 @@ namespace RabiRiichi.Resolver {
     public class PlayerAction {
         public enum Priority {
             NONE,
+            SKIP,
+            PLAY,
             CHI,
             PON,
             KAN,
@@ -22,20 +24,51 @@ namespace RabiRiichi.Resolver {
         public List<string> options;
         /// <summary> 显示给用户的消息 </summary>
         public HMessage msg;
-        /// <summary> 参数是触发动作的options下标 </summary>
-        public Action<int> trigger;
+        /// <summary> 触发动作的options下标 </summary>
+        public int choice = -1;
+        /// <summary> 参数是this </summary>
+        public Action<PlayerAction> trigger;
     }
 
     public class PlayerActions: List<PlayerAction> {
-        public string GetMessage() {
-            return string.Join("\n", this.Select(action => action.msg.ToString()));
+        private List<PlayerAction> confirmed = new List<PlayerAction>();
+        public string GetMessage(int playerId) {
+            return string.Join("\n", this
+                .Where(action => action.player == playerId)
+                .Select(action => action.msg.ToString()));
         }
-        public bool OnMessage(string msg) {
-            msg = msg.Trim().ToLower();
-            foreach (var action in this) {
-                int index = action.options.FindIndex((option) => option.ToLower() == msg);
+        /// <summary>
+        /// 监听消息
+        /// </summary>
+        /// <returns>是否移除该监听器</returns>
+        public bool OnMessage(int player, HMessage msg) {
+            var str = msg.ExtractPlainText();
+            var actions = this.Where(action => action.player == player).ToArray();
+            bool suc = false;
+            foreach (var action in actions) {
+                int index = action.options.FindIndex((option) => option.ToLower() == str);
                 if (index >= 0) {
-                    action.trigger(index);
+                    action.choice = index;
+                    confirmed.Add(action);
+                    suc = true;
+                    break;
+                }
+            }
+            if (suc) {
+                foreach (var action in actions) {
+                    Remove(action);
+                }
+                var maxConfirmed = confirmed
+                    .Select(action => action.priority)
+                    .DefaultIfEmpty(PlayerAction.Priority.NONE)
+                    .Max();
+                var maxUnconfirmed = this
+                    .Select(action => action.priority)
+                    .DefaultIfEmpty(PlayerAction.Priority.NONE)
+                    .Max();
+                if (maxConfirmed >= maxUnconfirmed) {
+                    var action = confirmed.Find(action => action.priority == maxConfirmed);
+                    action.trigger(action);
                     return true;
                 }
             }

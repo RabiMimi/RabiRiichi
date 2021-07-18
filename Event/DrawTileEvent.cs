@@ -1,13 +1,13 @@
 ﻿using RabiRiichi.Riichi;
 
 namespace RabiRiichi.Event {
-    class DealHandEvent : EventBase {
+    class DrawTileEvent : EventBase {
         #region Request
         public int player;
         #endregion
 
         #region Response
-        public Tiles tiles;
+        public Tile tile;
         #endregion
     }
 }

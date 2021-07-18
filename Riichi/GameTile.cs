@@ -35,6 +35,10 @@ namespace RabiRiichi.Riichi {
         public bool NextIs(GameTile other) => tile.IsNext(other.tile);
         /// <summary> 是否是上一张牌，用于顺子计算 </summary>
         public bool PrevIs(GameTile other) => tile.IsPrev(other.tile);
+
+        public override string ToString() {
+            return tile.ToString();
+        }
     }
     public class GameTiles : List<GameTile> {
         public TileSource source = TileSource.Hand;
