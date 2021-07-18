@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using HUtil = HoshinoSharp.Runtime.Util;
 
 namespace RabiRiichi.Event.Listener {
     class DftPostDrawTile : ListenerBase {

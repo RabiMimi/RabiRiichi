@@ -1,4 +1,5 @@
 ﻿using HoshinoSharp.Hoshino;
+using HoshinoSharp.Hoshino.Message;
 using RabiRiichi.Bot;
 using RabiRiichi.Event;
 using RabiRiichi.Event.Listener;
@@ -38,6 +39,16 @@ namespace RabiRiichi.Riichi {
         protected virtual void RegisterEventListeners() {
             eventBus.Register<DealHandEvent>(Phase.On, new DftOnDealHand());
             eventBus.Register<DealHandEvent>(Phase.Post, new DftPostDealHand());
+
+            eventBus.Register<DrawTileEvent>(Phase.On, new DftOnDrawTile());
+            eventBus.Register<DrawTileEvent>(Phase.Post, new DftPostDrawTile());
+
+            eventBus.Register<GetTileEvent>(Phase.Pre, new DftTriggerUpdate());
+            eventBus.Register<GetTileEvent>(Phase.Post, new DftPostGetTile());
+
+            eventBus.Register<PlayTileEvent>(Phase.Post, new DftPostPlayTile());
+            eventBus.Register<PlayTileEvent>(Phase.Finalize, new DftFinPlayTile());
+
             eventBus.Register<EventBase>(Phase.Finalize, new MessageSender());
         }
 
@@ -107,10 +118,8 @@ namespace RabiRiichi.Riichi {
             // Init players
             players = new Player[hoshino.players.Count];
             for (int i = 0; i < players.Length; i++) {
-                players[i] = new Player {
-                    id = i,
+                players[i] = new Player(i, this) {
                     wind = (Wind)i,
-                    game = this,
                     nickname = hoshino.players[i].nickname
                 };
             }
@@ -131,7 +140,11 @@ namespace RabiRiichi.Riichi {
 
             // 游戏逻辑
             while (!eventBus.Empty || hoshino.ListenerCount > 0) {
-                await eventBus.Process();
+                if (eventBus.Empty) {
+                    await Task.Delay(100);
+                } else {
+                    await eventBus.Process();
+                }
             }
 
             // End game
@@ -168,9 +181,13 @@ namespace RabiRiichi.Riichi {
             long id = hoshino.players[player].userId;
             return hoshino.bot.SendPrivate(hoshino.ev.selfId, id, msg);
         }
+        public Task SendPrivate(int player, HMessage msg) => SendPrivate(player, msg.ToString());
+
         public Task SendPublic(string msg) {
             return hoshino.bot.Send(hoshino.ev, msg);
         }
+        public Task SendPublic(HMessage msg) => SendPublic(msg.ToString());
+
         public void RegisterListener(PlayerActions actions) {
             hoshino.RegisterListener(actions);
         }

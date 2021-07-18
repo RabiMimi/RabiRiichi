@@ -4,18 +4,19 @@ using RabiRiichi.Resolver;
 using RabiRiichi.Riichi;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using HUtil = HoshinoSharp.Runtime.Util;
 
 namespace RabiRiichi.Bot {
     public class GameComponent : HoshinoComponent {
-        public const int NumPlayers = 2;
+        public const int NUM_PLAYERS = 1;
         public UserList players = new UserList();
         public Game game;
         public HEvent ev;
         public HBot bot;
 
-        public bool IsReady => players.Count >= NumPlayers;
+        public bool IsReady => players.Count >= NUM_PLAYERS;
 
-        private List<PlayerActions> listeners = new List<PlayerActions>();
+        private readonly List<PlayerActions> listeners = new List<PlayerActions>();
 
         public int ListenerCount => listeners.Count;
 
@@ -66,7 +67,7 @@ namespace RabiRiichi.Bot {
             if (IsReady) {
                 await StartGame(ev, bot);
             } else {
-                await bot.Send(ev, $"人数：{players.Count}/{NumPlayers}");
+                await bot.Send(ev, $"人数：{players.Count}/{NUM_PLAYERS}");
             }
             return;
         }
@@ -75,7 +76,7 @@ namespace RabiRiichi.Bot {
             this.bot = bot;
             this.ev = ev;
             game.phase = GamePhase.Running;
-            await bot.Send(ev, $"人数：{players.Count}/{NumPlayers}，正在开始游戏……");
+            await bot.Send(ev, $"人数：{players.Count}/{NUM_PLAYERS}，正在开始游戏……");
             await Task.Delay(1000);
             await game.Start();
             await Task.Delay(1000);

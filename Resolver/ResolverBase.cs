@@ -33,7 +33,7 @@ namespace RabiRiichi.Resolver {
     }
 
     public class PlayerActions: List<PlayerAction> {
-        private List<PlayerAction> confirmed = new List<PlayerAction>();
+        private readonly List<PlayerAction> confirmed = new List<PlayerAction>();
         public bool Finished { get; private set; } = false;
 
         public async Task Wait() {

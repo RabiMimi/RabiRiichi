@@ -5,6 +5,7 @@ namespace RabiRiichi.Event {
         #region Request
         public TileSource source;
         public int player;
+        public GameTile incoming;
         public GameTiles group;
         #endregion
 

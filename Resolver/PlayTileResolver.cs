@@ -21,6 +21,8 @@ namespace RabiRiichi.Resolver {
             if (tiles.Count <= 0 || !incoming.IsTsumo) {
                 return Reject(out output);
             }
+            tiles = new Tiles(tiles.Distinct());
+            tiles.Sort();
             var tileStr = tiles.Select(tile => tile.ToString()).ToList();
             var str = string.Join("/", tileStr);
             output = new PlayerActions() {

@@ -19,7 +19,7 @@ namespace RabiRiichi.Resolver {
             yield return "杠" + suffix;
         }
 
-        private PlayerAction GenerateAction(Hand hand, PlayerActions output, GameTiles group, string desc, bool onlyOne, bool close) {
+        private PlayerAction GenerateAction(Hand hand, GameTile incoming, PlayerActions output, GameTiles group, string desc, bool onlyOne, bool close) {
             string str = onlyOne ? "" : (output.Count + 1).ToString(); 
             var ret = new PlayerAction {
                 priority = PlayerAction.Priority.KAN,
@@ -30,6 +30,7 @@ namespace RabiRiichi.Resolver {
                     hand.game.eventBus.Queue(new GetTileEvent {
                         game = hand.game,
                         source = TileSource.Kan,
+                        incoming = incoming,
                         player = hand.player,
                         group = group,
                     });
@@ -65,11 +66,11 @@ namespace RabiRiichi.Resolver {
                     gr => gr.IsKou && gr[0].IsSame(incoming)).ToList();
                 tot += resultExtra.Count;
                 foreach (var gr in resultExtra) {
-                    GenerateAction(hand, output, gr, "加杠", tot <= 1, true);
+                    GenerateAction(hand, incoming, output, gr, "加杠", tot <= 1, true);
                 }
             }
             foreach (var gr in result) {
-                GenerateAction(hand, output, gr, "杠", tot <= 1, incoming.IsTsumo);
+                GenerateAction(hand, incoming, output, gr, "杠", tot <= 1, incoming.IsTsumo);
             }
             if (output.Count == 0) {
                 return Reject(out output);

@@ -12,6 +12,13 @@
         /// <summary> 手牌 </summary>
         public Hand hand = new Hand();
 
+        public Player(int id, Game game) {
+            this.id = id;
+            this.game = game;
+            hand.game = game;
+            hand.player = id;
+        }
+
         public int NextPlayer => game.NextPlayer(id);
         public int PrevPlayer => game.PrevPlayer(id);
     }

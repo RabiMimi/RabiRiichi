@@ -140,7 +140,7 @@ namespace RabiRiichi.Resolver {
                 return Reject(out output);
             }
             var maxScore = GetMaxScore(hand, incoming, false);
-            if (maxScore.IsValid(MinHan)) {
+            if (maxScore != null && maxScore.IsValid(MinHan)) {
                 output = new PlayerActions {
                     new PlayerAction {
                         priority = PlayerAction.Priority.RON,

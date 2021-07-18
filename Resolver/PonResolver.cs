@@ -46,6 +46,7 @@ namespace RabiRiichi.Resolver {
                         hand.game.eventBus.Queue(new GetTileEvent {
                             game = hand.game,
                             source = TileSource.Pon,
+                            incoming = incoming,
                             player = hand.player,
                             group = result[i],
                         });

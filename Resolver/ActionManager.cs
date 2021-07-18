@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace RabiRiichi.Resolver {
     public class ActionManager {
-        public readonly List<ResolverBase> Resolvers;
+        public readonly List<ResolverBase> Resolvers = new List<ResolverBase>();
 
         public void RegisterResolver(ResolverBase resolver) {
             Resolvers.Add(resolver);

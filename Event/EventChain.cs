@@ -6,7 +6,7 @@ namespace RabiRiichi.Event {
         /// <summary>
         /// 来源事件
         /// </summary>
-        public EventBase source;
+        public EventBase source = null;
         #endregion
 
         #region Response

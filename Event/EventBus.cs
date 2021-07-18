@@ -49,6 +49,7 @@ namespace RabiRiichi.Event {
             }
 
             while (ev.NextPhase()) {
+                HUtil.Log("Processing: " + ev);
                 if (ev.IsFinished) continue;
                 cachedListeners.Clear();
                 foreach (var (key, value) in Listeners) {
