@@ -139,6 +139,8 @@ namespace RabiRiichi.Resolver {
             if (maxScore.IsValid(MinHan)) {
                 output = new PlayerActions {
                     new PlayerAction {
+                        priority = PlayerAction.Priority.RON,
+                        player = hand.player,
                         options = new List<string> {"ron", "r", "和", "hu", "he", "h"},
                         msg = new HMessage("r：和！"),
                         trigger = (_) => {

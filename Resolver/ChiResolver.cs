@@ -35,6 +35,8 @@ namespace RabiRiichi.Resolver {
                 var res = result[i];
                 var str = result.Count <= 1 ? "" : (i + 1).ToString();
                 output.Add(new PlayerAction {
+                    priority = PlayerAction.Priority.CHI,
+                    player = hand.player,
                     options = GenerateChi(str).ToList(),
                     msg = new HMessage($"c{str}：吃{res}"),
                     trigger = (_) => {

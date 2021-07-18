@@ -54,6 +54,10 @@ namespace RabiRiichi.Resolver {
             if (output.Count == 0) {
                 return Reject(out output);
             }
+            foreach (var action in output) {
+                action.priority = PlayerAction.Priority.KAN;
+                action.player = hand.player;
+            }
             return true;
         }
     }

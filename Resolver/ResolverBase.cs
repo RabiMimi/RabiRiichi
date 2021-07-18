@@ -6,6 +6,18 @@ using System.Linq;
 
 namespace RabiRiichi.Resolver {
     public class PlayerAction {
+        public enum Priority {
+            NONE,
+            CHI,
+            PON,
+            KAN,
+            RIICHI,
+            RON,
+        }
+        /// <summary> 优先级，最高优先级的操作才会触发 </summary>
+        public Priority priority;
+        /// <summary> 需要操作的用户 </summary>
+        public int player;
         /// <summary> 选项，全小写 </summary>
         public List<string> options;
         /// <summary> 显示给用户的消息 </summary>

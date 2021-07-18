@@ -104,6 +104,8 @@ namespace RabiRiichi.Resolver {
                 Debug.Assert(tenpai.Count > 0);
                 hand.hand.Add(gameTile);
                 output.Add(new PlayerAction {
+                    priority = PlayerAction.Priority.RIICHI,
+                    player = hand.player,
                     options = GenerateRiichi(str).ToList(),
                     msg = new HMessage($"rc{str}：打{tile}立直，听{tenpai}"),
                     trigger = (_) => {

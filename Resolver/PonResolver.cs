@@ -34,6 +34,8 @@ namespace RabiRiichi.Resolver {
                 var res = result[i];
                 var str = result.Count <= 1 ? "" : (i + 1).ToString();
                 output.Add(new PlayerAction {
+                    priority = PlayerAction.Priority.PON,
+                    player = hand.player,
                     options = GeneratePon(str).ToList(),
                     msg = new HMessage($"p{str}：碰{res}"),
                     trigger = (_) => {
