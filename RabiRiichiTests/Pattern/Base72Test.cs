@@ -32,5 +32,94 @@ namespace RabiRiichiTests.Pattern {
         public void TestZ() {
             Assert.IsTrue(Resolve("1123344556677z", "2z"));
         }
+
+        [TestMethod]
+        public void TestShanten() {
+            Assert.AreEqual(-1, Shanten("2233445566778s", "8s"));
+            tiles.AssertEq("");
+
+            Assert.AreEqual(0, Shanten("2233445566778s", null));
+            tiles.AssertEq("8s");
+
+            Assert.AreEqual(5, Shanten("2222333344445s", "5s"));
+            tiles.AssertEq("234s");
+
+            Assert.AreEqual(6, Shanten("2222333344445s", null));
+            tiles.AssertEq("156789s123456789p123456789m1234567z");
+
+            Assert.AreEqual(5, Shanten("2223333444455s", "5s"));
+            tiles.AssertEq("2345s");
+
+            Assert.AreEqual(5, Shanten("2223333444455s", null));
+            tiles.AssertEq("16789s123456789p123456789m1234567z");
+
+            Assert.AreEqual(6, Shanten("123456789s1234p", "5p"));
+            tiles.AssertEq("123456789s12345p");
+
+            Assert.AreEqual(5, Shanten("123456789s1234p", "4p"));
+            tiles.AssertEq("123456789s123p");
+
+            Assert.AreEqual(6, Shanten("123456789s1234p", null));
+            tiles.AssertEq("123456789s1234p");
+        }
+
+        [TestMethod]
+        public void TestShantenMax() {
+            Assert.AreEqual(5, Shanten("2222333344445s", "5s", 5));
+            tiles.AssertEq("234s");
+
+            Assert.AreEqual(6, Shanten("2222333344445s", null, 6));
+            tiles.AssertEq("156789s123456789p123456789m1234567z");
+
+            Assert.AreEqual(int.MaxValue, Shanten("2222333344445s", "5s", 4));
+            Assert.IsNull(tiles);
+
+            Assert.AreEqual(int.MaxValue, Shanten("2222333344445s", null, 5));
+            Assert.IsNull(tiles);
+        }
+
+
+        [TestMethod]
+        public void TestShantenGroups() {
+            Assert.AreEqual(int.MaxValue, Shanten("3333444455s", "5s", 7, "222s"));
+            Assert.IsNull(tiles);
+
+            Assert.AreEqual(5, Shanten("33334444555s", "5s", 7, "22s"));
+            tiles.AssertEq("345s");
+
+            Assert.AreEqual(5, Shanten("33334444555s", null, 7, "22s"));
+            tiles.AssertEq("16789s123456789m123456789p1234567z");
+
+            Assert.AreEqual(5, Shanten("22333344445s", "5s", 7, "22s"));
+            tiles.AssertEq("234s");
+
+            Assert.AreEqual(6, Shanten("22333344445s", null, 7, "22s"));
+            tiles.AssertEq("156789s123456789m123456789p1234567z");
+
+            Assert.AreEqual(1, Shanten("2s", "2s", 7, 
+                "22s", "33s", "44s", "55s", "66s", "77s"));
+            tiles.AssertEq("2s");
+
+            Assert.AreEqual(1, Shanten("2s", null, 7,
+                "22s", "33s", "44s", "55s", "66s", "77s"));
+            tiles.AssertEq("189s123456789m123456789p1234567z");
+
+            Assert.AreEqual(0, Shanten("1s", "2s", 7,
+                "22s", "33s", "44s", "55s", "66s", "77s"));
+            tiles.AssertEq("2s");
+
+            Assert.AreEqual(0, Shanten("1s", null, 7,
+                "22s", "33s", "44s", "55s", "66s", "77s"));
+            tiles.AssertEq("1s");
+        }
+
+        [TestMethod]
+        public void TestShantenSpecial() {
+            Assert.AreEqual(11, Shanten("6666666666666z", "6z"));
+            tiles.AssertEq("6z");
+
+            Assert.AreEqual(11, Shanten("6666666666666z", null));
+            tiles.AssertEq("123456789m123456789p123456789s123457z");
+        }
     }
 }

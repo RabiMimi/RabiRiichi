@@ -192,7 +192,9 @@ namespace RabiRiichi.Pattern {
         }
 
         public override int Shanten(Hand hand, GameTile incoming, out Tiles output, int maxShanten = 8) {
-            maxShanten++;
+            if (maxShanten <= Game.HandSize) {
+                maxShanten++;
+            }
             if (maxShanten < 0) {
                 return Reject(out output);
             }

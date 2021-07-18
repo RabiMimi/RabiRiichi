@@ -70,13 +70,10 @@ namespace RabiRiichi.Pattern {
                 }
             } else {
                 // 14张，计算切牌
-                var tiles = hand.hand.ToTiles();
-                if (incoming != null) {
-                    tiles.Add(incoming.tile);
-                }
-                output = new Tiles(tiles.Where(
-                    t => !t.Is19Z || tileGroups[t.NoDoraVal].Count > (multiCnt > 1 ? 1 : 2)
-                    ).Distinct());
+                var tiles = GetHand(hand.hand, incoming);
+                output = new Tiles(tiles
+                    .Where(t => !t.Is19Z || tileGroups[t.NoDoraVal].Count > (multiCnt > 1 ? 1 : 2))
+                    .Distinct());
             }
             return ret;
         }

@@ -1,4 +1,5 @@
 ﻿using RabiRiichi.Riichi;
+using RabiRiichi.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,8 +33,51 @@ namespace RabiRiichi.Pattern {
             return true;
         }
 
-        public override int Shanten(Hand hand, GameTile incoming, out Tiles output, int maxShanten) {
-            throw new NotImplementedException();
+        public override int Shanten(Hand hand, GameTile incoming, out Tiles output, int maxShanten = 13) {
+            if (hand.groups.Any(gr => !gr.IsJan)) {
+                return Reject(out output);
+            }
+
+            var tileGroups = GetTileGroups(hand, incoming, true);
+            var existingPairs = tileGroups.Where(tiles => tiles.Count >= 2).ToArray();
+            var singleTiles = tileGroups
+                .Where(tiles => tiles.Count == 1)
+                .Select(tiles => tiles[0].tile.WithoutDora)
+                .ToArray();
+            if (existingPairs.Length == 7) {
+                output = new Tiles();
+                return -1;
+            }
+            int requiredSingle = 7 - existingPairs.Length;
+            int ret = Game.HandSize
+                - existingPairs.Length * 2
+                - Math.Min(requiredSingle, singleTiles.Length);
+            if (ret > maxShanten) {
+                return Reject(out output);
+            }
+            if (incoming == null) {
+                // 13张，计算进张
+                if (singleTiles.Length >= requiredSingle) {
+                    output = new Tiles(singleTiles);
+                } else {
+                    output = Tiles.AllDistinct;
+                    foreach (var pair in existingPairs) {
+                        output.Remove(pair[0].tile.WithoutDora);
+                    }
+                }
+            } else {
+                // 14张，计算切牌
+                var tiles = GetHand(hand.hand, incoming);
+                output = new Tiles(tiles.Where(tile => {
+                    int cnt = tileGroups[tile.NoDoraVal].Count;
+                    if (singleTiles.Length > requiredSingle) {
+                        return cnt > 2 || cnt == 1;
+                    } else {
+                        return cnt > 2;
+                    }
+                }).Distinct());
+            }
+            return ret;
         }
     }
 }

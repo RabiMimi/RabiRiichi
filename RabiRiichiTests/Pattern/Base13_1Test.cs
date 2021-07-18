@@ -100,6 +100,27 @@ namespace RabiRiichiTests.Pattern {
 
             Assert.AreEqual(int.MaxValue, Shanten("1199m11s999p", null, 13, "11p", "99s"));
             Assert.IsNull(tiles);
+
+            Assert.AreEqual(0, Shanten("19m19s19p12345z", "6z", 13, "11p"));
+            tiles.AssertEq("1p");
+
+            Assert.AreEqual(1, Shanten("19m19s19p12345z", null, 13, "11p"));
+            tiles.AssertEq("67z");
+
+            Assert.AreEqual(0, Shanten("19m119s9p12345z", "6z", 13, "11p"));
+            tiles.AssertEq("1s");
+
+            Assert.AreEqual(1, Shanten("19m119s9p12345z", null, 13, "11p"));
+            tiles.AssertEq("67z");
+        }
+
+        [TestMethod]
+        public void TestShantenSpecial() {
+            Assert.AreEqual(11, Shanten("6666666666666z", "6z"));
+            tiles.AssertEq("6z");
+
+            Assert.AreEqual(11, Shanten("6666666666666z", null));
+            tiles.AssertEq("19m19s19p123457z");
         }
     }
 }

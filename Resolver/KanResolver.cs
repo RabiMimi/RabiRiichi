@@ -32,7 +32,7 @@ namespace RabiRiichi.Resolver {
         }
 
         public override bool ResolveAction(Hand hand, GameTile incoming, out PlayerActions output) {
-            var tile = incoming.tile.NoDora;
+            var tile = incoming.tile.WithoutDora;
             // 暗杠/明杠
             var current = new List<GameTile> { incoming };
             var result = new List<GameTiles>();

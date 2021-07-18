@@ -21,7 +21,7 @@ namespace RabiRiichi.Riichi {
         /// <summary> 不考虑赤宝的值。值一样说明是相同牌 </summary>
         public byte NoDoraVal => (byte)(Val & 0x7f);
         /// <summary> 去掉赤宝标记后的牌 </summary>
-        public Tile NoDora => new Tile(NoDoraVal);
+        public Tile WithoutDora => new Tile(NoDoraVal);
 
         /// <summary> 点数 </summary>
         public byte Num {
@@ -279,6 +279,9 @@ namespace RabiRiichi.Riichi {
                 return ret;
             }
         }
+
+        /// <summary> 所有牌（不重复，无赤宝） </summary>
+        public static Tiles AllDistinct => new Tiles("123456789m123456789p123456789s1234567z");
 
         /// <summary>
         /// 所有19牌和字牌
