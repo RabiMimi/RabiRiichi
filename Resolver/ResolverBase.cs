@@ -1,8 +1,10 @@
 ﻿using HoshinoSharp.Hoshino.Message;
 using RabiRiichi.Riichi;
+using RabiRiichi.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace RabiRiichi.Resolver {
     public class PlayerAction {
@@ -32,6 +34,14 @@ namespace RabiRiichi.Resolver {
 
     public class PlayerActions: List<PlayerAction> {
         private List<PlayerAction> confirmed = new List<PlayerAction>();
+        public bool Finished { get; private set; } = false;
+
+        public async Task Wait() {
+            while (!Finished) {
+                await Task.Yield();
+            }
+        }
+
         public string GetMessage(int playerId) {
             return string.Join("\n", this
                 .Where(action => action.player == playerId)
@@ -41,9 +51,12 @@ namespace RabiRiichi.Resolver {
         /// 监听消息
         /// </summary>
         /// <returns>是否移除该监听器</returns>
-        public bool OnMessage(int player, HMessage msg) {
+        public async Task<bool> OnMessage(Game game, int player, HMessage msg) {
             var str = msg.ExtractPlainText();
             var actions = this.Where(action => action.player == player).ToArray();
+            if (actions.Length == 0) {
+                return false;
+            }
             bool suc = false;
             foreach (var action in actions) {
                 int index = action.options.FindIndex((option) => option.ToLower() == str);
@@ -66,11 +79,16 @@ namespace RabiRiichi.Resolver {
                     .Select(action => action.priority)
                     .DefaultIfEmpty(PlayerAction.Priority.NONE)
                     .Max();
-                if (maxConfirmed >= maxUnconfirmed) {
-                    var action = confirmed.Find(action => action.priority == maxConfirmed);
-                    action.trigger(action);
+                if (maxConfirmed > maxUnconfirmed -
+                    (maxConfirmed != PlayerAction.Priority.RON).ToInt()) {
+                    foreach (var action in confirmed
+                        .Where(action => action.priority == maxConfirmed)) {
+                        action.trigger(action);
+                    }
                     return true;
                 }
+            } else {
+                await game.SendPrivate(player, "不懂");
             }
             return false;
         }

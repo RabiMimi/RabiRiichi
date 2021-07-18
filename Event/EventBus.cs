@@ -1,4 +1,5 @@
 ﻿using RabiRiichi.Event.Listener;
+using RabiRiichi.Riichi;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -6,6 +7,8 @@ using HUtil = HoshinoSharp.Runtime.Util;
 
 namespace RabiRiichi.Event {
     public class EventBus {
+        public Game game;
+
         public readonly Dictionary<(Type, Phase), List<ListenerBase>> Listeners =
             new Dictionary<(Type, Phase), List<ListenerBase>>();
         private readonly List<(uint, ListenerBase)> cachedListeners =
@@ -27,11 +30,13 @@ namespace RabiRiichi.Event {
         }
 
         public void Queue(EventBase ev) {
+            ev.game = game;
             queue.Add(ev);
         }
 
         public async Task Process() {
             var evs = queue.ToArray();
+            queue.Clear();
             foreach (var ev in evs) {
                 await Process(ev);
             }

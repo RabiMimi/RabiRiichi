@@ -11,5 +11,8 @@
         public int riichiStick = 0;
         /// <summary> 手牌 </summary>
         public Hand hand = new Hand();
+
+        public int NextPlayer => game.NextPlayer(id);
+        public int PrevPlayer => game.PrevPlayer(id);
     }
 }

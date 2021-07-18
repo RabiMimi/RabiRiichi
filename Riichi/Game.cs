@@ -88,7 +88,7 @@ namespace RabiRiichi.Riichi {
 
         protected virtual void Init() {
             players = null;
-            eventBus = new EventBus();
+            eventBus = new EventBus { game = this };
             wall = new Wall();
             actionManager = new ActionManager();
             rand = new Rand((int)(DateTimeOffset.Now.ToUnixTimeSeconds() & 0xffffffff));
@@ -123,6 +123,11 @@ namespace RabiRiichi.Riichi {
                 };
                 eventBus.Queue(ev);
             }
+            eventBus.Queue(new DrawTileEvent {
+                game = this,
+                type = DrawTileType.Wall,
+                player = 0
+            });
 
             // 游戏逻辑
             while (!eventBus.Empty || hoshino.ListenerCount > 0) {
@@ -170,5 +175,23 @@ namespace RabiRiichi.Riichi {
             hoshino.RegisterListener(actions);
         }
         #endregion Message
+
+        #region Update
+        public void OnUpdate() {
+            // 更新振听状态
+            var resolver = actionManager.GetResolver<RiichiResolver>();
+            foreach (var player in players) {
+                player.hand.furiten = resolver.IsFuriten(player.hand);
+            }
+        }
+
+        public void DrawNext(int player) {
+            eventBus.Queue(new DrawTileEvent {
+                game = this,
+                type = DrawTileType.Wall,
+                player = NextPlayer(player),
+            });
+        }
+        #endregion
     }
 }

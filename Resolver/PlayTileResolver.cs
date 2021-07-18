@@ -1,4 +1,5 @@
 ﻿using HoshinoSharp.Hoshino.Message;
+using RabiRiichi.Event;
 using RabiRiichi.Pattern;
 using RabiRiichi.Riichi;
 using System;
@@ -10,8 +11,11 @@ namespace RabiRiichi.Resolver {
     /// </summary>
     public class PlayTileResolver : ResolverBase {
         public override bool ResolveAction(Hand hand, GameTile incoming, out PlayerActions output) {
-            var tiles = new Tiles { incoming.tile };
-            if (!hand.riichi) {
+            var tiles = new Tiles();
+            if (incoming != null) {
+                tiles.Add(incoming.tile);
+            }
+            if (incoming == null || !hand.riichi) {
                 tiles.AddRange(hand.hand.ToTiles());
             }
             if (tiles.Count <= 0 || !incoming.IsTsumo) {
@@ -25,8 +29,12 @@ namespace RabiRiichi.Resolver {
                     player = hand.player,
                     options = tileStr,
                     msg = new HMessage($"{str}：切牌"),
-                    trigger = (_) => {
-                        // TODO(Frenqy)
+                    trigger = (PlayerAction action) => {
+                        hand.game.eventBus.Queue(new PlayTileEvent {
+                            player = hand.player,
+                            tile = hand.GetTile(tiles[action.choice]),
+                            riichi = false,
+                        });
                     }
                 }
             };

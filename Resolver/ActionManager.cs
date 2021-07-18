@@ -27,9 +27,12 @@ namespace RabiRiichi.Resolver {
             "s", "skip", "跳过"
         };
 
-        private IEnumerable<ResolverBase> OnDrawTileResolvers() {
+        private IEnumerable<ResolverBase> OnDrawTileResolvers(bool selectOnly) {
             if (TryGetResolver<PlayTileResolver>(out var resolver1)) {
                 yield return resolver1;
+            }
+            if (selectOnly) {
+                yield break;
             }
             if (TryGetResolver<RiichiResolver>(out var resolver2)) {
                 yield return resolver2;
@@ -59,9 +62,9 @@ namespace RabiRiichi.Resolver {
 
         #endregion
 
-        public async Task OnDrawTile(Hand hand, GameTile incoming) {
+        public async Task OnDrawTile(Hand hand, GameTile incoming, bool selectOnly) {
             var actions = new PlayerActions();
-            foreach (var resolver in OnDrawTileResolvers()) {
+            foreach (var resolver in OnDrawTileResolvers(selectOnly)) {
                 if (resolver.ResolveAction(hand, incoming, out var output)) {
                     actions.AddRange(output);
                 }
@@ -72,13 +75,14 @@ namespace RabiRiichi.Resolver {
                 actions[0].choice = 0;
                 actions[0].trigger(actions[0]);
             } else {
-                var msg = $"{hand.hand} +{incoming}\n{actions.GetMessage(hand.player)}";
+                string strIncoming = incoming == null ? "" : $" +{incoming}";
+                var msg = $"{hand.hand}{strIncoming}\n{actions.GetMessage(hand.player)}";
                 await hand.game.SendPrivate(hand.player, msg);
                 hand.game.RegisterListener(actions);
             }
         }
 
-        public async Task OnDiscardTile(Hand hand, GameTile discard) {
+        public async Task<bool> OnDiscardTile(Hand hand, GameTile discard) {
             var actions = new PlayerActions();
             var resolvers = OnDiscardTileResolvers().ToArray();
             var currentPlayer = hand.game.GetPlayer(hand.player);
@@ -104,7 +108,12 @@ namespace RabiRiichi.Resolver {
                     await hand.game.SendPrivate(player.id, msg);
                 }
             }
-            hand.game.RegisterListener(actions);
+            if (actions.Count > 0) {
+                hand.game.RegisterListener(actions);
+                return true;
+            } else {
+                return false;
+            }
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using HoshinoSharp.Hoshino.Message;
+using RabiRiichi.Event;
 using RabiRiichi.Riichi;
 using System.Collections.Generic;
 using System.Linq;
@@ -43,7 +44,12 @@ namespace RabiRiichi.Resolver {
                     options = GenerateChi(str).ToList(),
                     msg = new HMessage($"c{str}：吃{res}"),
                     trigger = (_) => {
-                        // TODO(Frenqy)
+                        hand.game.eventBus.Queue(new GetTileEvent {
+                            game = hand.game,
+                            source = TileSource.Chi,
+                            player = hand.player,
+                            group = result[i],
+                        });
                     }
                 });
             }

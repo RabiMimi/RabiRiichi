@@ -6,7 +6,7 @@ namespace RabiRiichi.Event {
         public const uint Last = 1;
         public const uint MessageSender = (uint)1e3;
         public const uint Low = (uint)1e6;
-        public const uint Medium = (uint)2e6;
+        public const uint Default = (uint)2e6;
         public const uint High = (uint)3e6;
     }
 

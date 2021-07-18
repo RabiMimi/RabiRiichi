@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace RabiRiichi.Riichi {
     public enum TileSource {
-        OpenDora, Wall, Hand, Discard, Chi, Pon, Kan, Ron
+        None, Wanpai, Wall, Hand, Discard, Chi, Pon, Kan, Ron
     }
     public class GameTile : IComparable<GameTile> {
         public Tile tile = Tile.Empty;

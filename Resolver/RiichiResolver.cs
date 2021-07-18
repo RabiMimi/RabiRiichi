@@ -1,4 +1,5 @@
 ﻿using HoshinoSharp.Hoshino.Message;
+using RabiRiichi.Event;
 using RabiRiichi.Pattern;
 using RabiRiichi.Riichi;
 using System;
@@ -112,7 +113,11 @@ namespace RabiRiichi.Resolver {
                     options = GenerateRiichi(str).ToList(),
                     msg = new HMessage($"rc{str}：打{tile}立直，听{tenpai}"),
                     trigger = (_) => {
-                        // TODO(Frenqy)
+                        hand.game.eventBus.Queue(new PlayTileEvent {
+                            player = hand.player,
+                            tile = gameTile,
+                            riichi = true,
+                        });
                     }
                 });
             }

@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace RabiRiichi.Event.Listener {
     class DftPostDealHand : ListenerBase {
-        public override uint CanListen(EventBase ev) => Priority.Last;
+        public override uint CanListen(EventBase ev) => Priority.Default;
 
         public override Task<bool> Handle(EventBase ev) {
             var e = (DealHandEvent) ev;

@@ -17,8 +17,10 @@ namespace RabiRiichi.Riichi {
         public int player = -1;
         public int PrevPlayer => game.PrevPlayer(player);
         public int NextPlayer => game.NextPlayer(player);
-        /// <summary> 第一个立直牌 </summary>
+        /// <summary> 第一个立直宣告牌 </summary>
         public GameTile riichiTile = null;
+        /// <summary> 立直宣告牌 </summary>
+        public GameTile riichiIndicator = null;
         /// <summary> 立直 </summary>
         public bool riichi = false;
         /// <summary> 门清 </summary>
@@ -30,6 +32,20 @@ namespace RabiRiichi.Riichi {
         public bool IsRon => ron != null;
         /// <summary> 牌的总数，注意：杠会被算作3张牌 </summary>
         public int Count => groups.Select(gr => Math.Min(3, gr.Count)).Sum() + hand.Count;
+
+        public GameTile GetTile(Tile tile) => hand.Find(t => t.tile == tile);
+        public GameTiles GetTiles(Tiles tiles) {
+            var tmp = new Tiles(tiles);
+            var ret = new GameTiles();
+            foreach (var tile in hand) {
+                if (tmp.Contains(tile.tile)) {
+                    ret.Add(tile);
+                    tmp.Remove(tile.tile);
+                }
+            }
+            Debug.Assert(ret.Count == tiles.Count);
+            return ret;
+        }
 
         public Hand Add(GameTile tile) {
             tile.player = player;
@@ -50,14 +66,21 @@ namespace RabiRiichi.Riichi {
                 if (!this.riichi) {
                     this.riichi = true;
                     riichiTile = tile;
+                    riichiIndicator = tile;
                 }
+            }
+            if (this.riichi && riichiIndicator.source != TileSource.Discard) {
+                riichiIndicator = tile;
+                tile.riichi = true;
             }
             return this;
         }
 
         public Hand Remove(GameTile tile) {
-            tile.fromPlayer = player;
-            hand.Remove(tile);
+            if (hand.Contains(tile)) {
+                tile.fromPlayer = player;
+                hand.Remove(tile);
+            }
             return this;
         }
 
@@ -66,6 +89,8 @@ namespace RabiRiichi.Riichi {
             tiles.ForEach(tile => {
                 tile.player = player;
                 tile.source = source;
+                tile.riichi = false;
+                Remove(tile);
             });
             return this;
         }

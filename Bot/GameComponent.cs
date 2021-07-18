@@ -23,10 +23,11 @@ namespace RabiRiichi.Bot {
             listeners.Add(actions);
         }
 
-        public Task OnMessage(HEvent ev, HBot bot) {
+        public async Task OnMessage(HEvent ev, HBot bot) {
             var str = ev.message.ExtractPlainText();
             if (str.Trim() == "有无") {
-                return AddPlayer(ev, bot);
+                await AddPlayer(ev, bot);
+                return;
             }
 
             // 触发监听器
@@ -35,7 +36,7 @@ namespace RabiRiichi.Bot {
                 if (index != -1) {
                     var tempListeners = listeners.ToArray();
                     foreach (var listener in tempListeners) {
-                        if (listener.OnMessage(index, ev.message)) {
+                        if (await listener.OnMessage(game, index, ev.message)) {
                             listeners.Remove(listener);
                         }
                     }

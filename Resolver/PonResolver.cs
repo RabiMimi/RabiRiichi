@@ -1,4 +1,5 @@
 ﻿using HoshinoSharp.Hoshino.Message;
+using RabiRiichi.Event;
 using RabiRiichi.Riichi;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,7 +43,12 @@ namespace RabiRiichi.Resolver {
                     options = GeneratePon(str).ToList(),
                     msg = new HMessage($"p{str}：碰{res}"),
                     trigger = (_) => {
-                        // TODO(Frenqy)
+                        hand.game.eventBus.Queue(new GetTileEvent {
+                            game = hand.game,
+                            source = TileSource.Pon,
+                            player = hand.player,
+                            group = result[i],
+                        });
                     }
                 });
             }
