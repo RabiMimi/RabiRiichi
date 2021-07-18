@@ -14,12 +14,12 @@ namespace RabiRiichiTests.Pattern {
                 }, out output);
         }
 
-        protected int Shanten(string hand, string incoming, out Tiles output, params string[] groups) {
+        protected int Shanten(string hand, string incoming, out Tiles output, int maxShanten = 8, params string[] groups) {
             var handV = TestHelper.CreateHand(hand, groups);
             return V.Shanten(handV, string.IsNullOrEmpty(incoming)
                 ? null : new GameTile {
                     tile = new Tile(incoming)
-                }, out output);
+                }, out output, maxShanten);
         }
     }
 }

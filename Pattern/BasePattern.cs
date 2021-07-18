@@ -35,7 +35,10 @@ namespace RabiRiichi.Pattern {
         /// 若incoming为null，输出有效进张列表
         /// 否则，输出打哪些牌向听数最少
         /// </param>
+        /// <param name="maxShanten">
+        /// 最大向听数，超过该数目将会返回int.MaxValue，较小数目可能能加快算法速度
+        /// </param>
         /// <returns>向听数，-1为和</returns>
-        public abstract int Shanten(Hand hand, GameTile incoming, out Tiles output);
+        public abstract int Shanten(Hand hand, GameTile incoming, out Tiles output, int maxShanten = int.MaxValue);
     }
 }

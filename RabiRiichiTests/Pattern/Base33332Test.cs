@@ -90,6 +90,15 @@ namespace RabiRiichiTests.Pattern {
         }
 
         [TestMethod]
+        public void TestShantenMax() {
+            Assert.AreEqual(5, Shanten("25569m2589p5s357z", "3s", out tiles, 5));
+            tiles.AssertEq("2569m25p357z");
+
+            Assert.AreEqual(int.MaxValue, Shanten("25569m2589p5s357z", null, out tiles, 5));
+            Assert.IsNull(tiles);
+        }
+
+        [TestMethod]
         public void TestShantenSpecial() {
             Assert.AreEqual(0, Shanten("6666666666666z", "7z", out tiles));
             tiles.AssertEq("67z");

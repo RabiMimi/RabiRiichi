@@ -31,7 +31,6 @@ namespace RabiRiichi.Pattern {
                 return 2000;
             }
             int score = fu * (1 << (han + 2));
-            score = (score + 99) / 100 * 100;
             return Math.Min(2000, score);
         }
 

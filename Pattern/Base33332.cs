@@ -7,7 +7,7 @@ namespace RabiRiichi.Pattern {
     using DpLoc = ValueTuple<byte, byte, byte, byte>;
 
     public class Base33332 : BasePattern {
-        private const int M = 10;
+        private int M;
         private static readonly Tile LastMPS = new Tile("9s");
         private List<GameTiles> current;
         private List<List<GameTiles>> output;
@@ -151,7 +151,7 @@ namespace RabiRiichi.Pattern {
             }
         }
 
-        private static DpVal[,,,] CreateDpSubArray() => new DpVal[5, 5, 2, M * 2];
+        private DpVal[,,,] CreateDpSubArray() => new DpVal[5, 5, 2, M * 2 + 1];
         private static void AddToList(ref DpVal list, int dist, DpLoc loc) {
             if (list == null) {
                 list = new DpVal();
@@ -191,8 +191,18 @@ namespace RabiRiichi.Pattern {
             return dist;
         }
 
-        public override int Shanten(Hand hand, GameTile incoming, out Tiles output) {
+        public override int Shanten(Hand hand, GameTile incoming, out Tiles output, int maxShanten = 8) {
+            maxShanten++;
+            if (maxShanten < 0) {
+                output = null;
+                return int.MaxValue;
+            }
+            if (maxShanten == 0 && incoming == null) {
+                output = null;
+                return int.MaxValue;
+            }
             tileGroups = GetTileGroups(hand, incoming, false);
+            M = Math.Min(9, maxShanten);
             // 是否有雀头
             int janCnt = hand.groups.Count(gr => gr.IsJan);
             if (janCnt > 1) {
@@ -278,7 +288,7 @@ namespace RabiRiichi.Pattern {
             // 检查非法输入
             DpLoc destLoc = (0, 0, 1, (byte)(incoming == null ? M + 1 : M));
             var dest = dpPre[destLoc.Item1, destLoc.Item2, destLoc.Item3, destLoc.Item4];
-            if (dest == null || dest.dist == int.MaxValue) {
+            if (dest == null || dest.dist > M) {
                 output = null;
                 return int.MaxValue;
             }

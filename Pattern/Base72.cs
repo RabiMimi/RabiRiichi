@@ -32,7 +32,7 @@ namespace RabiRiichi.Pattern {
             return true;
         }
 
-        public override int Shanten(Hand hand, GameTile incoming, out Tiles output) {
+        public override int Shanten(Hand hand, GameTile incoming, out Tiles output, int maxShanten) {
             throw new NotImplementedException();
         }
     }
