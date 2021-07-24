@@ -22,8 +22,6 @@ namespace RabiRiichi.Event.Listener {
                 using var image = TilesImage.V.Generate(dhe.tiles);
                 MessageSegmentImage hand = new MessageSegmentImage(image);
                 await game.SendPrivate(dhe.player, HMessage.From(hand));
-            } else if (ev is DrawTileEvent dte) {
-                await game.SendPrivate(dte.player, $"进张：{dte.tile}");
             } else if (ev is PlayTileEvent pte) {
                 var player = game.GetPlayer(pte.player);
                 var str = $"{player.nickname}打出了{pte.tile}";
