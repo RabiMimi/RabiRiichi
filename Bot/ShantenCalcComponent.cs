@@ -32,7 +32,7 @@ namespace RabiRiichi.Bot {
         }
 
         private async Task StartGame(HEvent ev, HBot bot) {
-            var tiles = new Tiles(rand.Choice(Tiles.All, Game.HandSize + 1));
+            var tiles = new Tiles(rand.Choice(Tiles.All, Game.HandSize + 1).Select(tile => tile.WithoutDora));
             tiles.Sort();
             var image = TilesImage.V.Generate(tiles);
             var incoming = new GameTile { tile = tiles[0] };
@@ -52,7 +52,9 @@ namespace RabiRiichi.Bot {
                 }
                 answerTiles.AddRange(tiles);
             }
-            answerTiles = new Tiles(answerTiles.Distinct());
+            answerTiles = new Tiles(answerTiles
+                .Select(tile => tile.WithoutDora)
+                .Distinct());
             answerTiles.Sort();
             var msg = new HMessage {
                 new MessageSegmentImage(image),

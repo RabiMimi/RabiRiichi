@@ -29,6 +29,7 @@ namespace RabiRiichi.Util
 
         public TilesImage()
         {
+            tileImages.Add(Tile.Empty, Image.Load(Path.Combine(Constants.BASE_DIR, $"Resource/TilesImage/back.png")));
             foreach (var tile in new Tiles("12345r56789m12345r56789p12345r56789s1234567z"))
             {
                 tileImages.Add(tile, Image.Load(Path.Combine(Constants.BASE_DIR, $"Resource/TilesImage/{tile}.png")));
@@ -40,7 +41,11 @@ namespace RabiRiichi.Util
             Image img = new Image<Rgb24>(TileWidth * tiles.Count, TileHeight);
             for (int i = 0; i < tiles.Count; i++)
             {
-                img.Mutate(x => x.DrawImage(tileImages[tiles[i]], new Point(i * TileWidth), 1));
+                var tile = tiles[i];
+                if (!tileImages.ContainsKey(tile)) {
+                    tile = Tile.Empty;
+                }
+                img.Mutate(x => x.DrawImage(tileImages[tile], new Point(i * TileWidth), 1));
             }
             return img;
         }

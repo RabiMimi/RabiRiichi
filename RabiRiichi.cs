@@ -16,7 +16,7 @@ namespace RabiRiichi {
             var ev = ctx.GetComponent<HEvent>();
             var pmCtx = ctx.GetComponent<HoshinoContext>(key: scopeKey);
             //var game = pmCtx.EnsureComponent<GameComponent>();
-            var game = pmCtx.EnsureComponent<ShantenCalcComponent>();
+            var game = pmCtx.EnsureComponent<RonCalcComponent>();
             return game.OnMessage(ev, bot);
         }
 
