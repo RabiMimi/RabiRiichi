@@ -31,7 +31,7 @@ namespace RabiRiichi.Util
         {
             foreach (var tile in new Tiles("12345r56789m12345r56789p12345r56789s1234567z"))
             {
-                tileImages.Add(tile, Image.Load(Path.Combine(Constants.BASE_DIR, $"TilesImage/{tile}.png")));
+                tileImages.Add(tile, Image.Load(Path.Combine(Constants.BASE_DIR, $"Resource/TilesImage/{tile}.png")));
             }
         }
 

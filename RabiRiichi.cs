@@ -11,26 +11,28 @@ using System.Threading.Tasks;
 namespace RabiRiichi {
     [Service(Constants.SERVICE_NAME)]
     public class RabiRiichi : HoshinoService {
+        private Task StartGame(HoshinoContext ctx, string scopeKey) {
+            var bot = ctx.GetComponent<HBot>();
+            var ev = ctx.GetComponent<HEvent>();
+            var pmCtx = ctx.GetComponent<HoshinoContext>(key: scopeKey);
+            //var game = pmCtx.EnsureComponent<GameComponent>();
+            var game = pmCtx.EnsureComponent<ShantenCalcComponent>();
+            return game.OnMessage(ev, bot);
+        }
 
         [OnMessage]
         [GroupFilter(scope = ContextScope.Service)]
         public Task StartGame(HoshinoContext ctx) {
-            var bot = ctx.GetComponent<HBot>();
             var ev = ctx.GetComponent<HEvent>();
-            var pmCtx = ctx.GetComponent<HoshinoContext>(key: ev.GroupKey);
-            var game = pmCtx.EnsureComponent<GameComponent>();
-            return game.OnMessage(ev, bot);
+            return StartGame(ctx, ev.GroupKey);
         }
 
         // 私聊测试用
         [OnMessage]
         [PMFilter(scope = ContextScope.Service)]
         public Task StartGamePM(HoshinoContext ctx) {
-            var bot = ctx.GetComponent<HBot>();
             var ev = ctx.GetComponent<HEvent>();
-            var pmCtx = ctx.GetComponent<HoshinoContext>(key: ev.PMKey);
-            var game = pmCtx.EnsureComponent<GameComponent>();
-            return game.OnMessage(ev, bot);
+            return StartGame(ctx, ev.PMKey);
         }
     }
 }

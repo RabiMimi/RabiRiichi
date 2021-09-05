@@ -16,118 +16,121 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="TilesImage\1m.png">
+    <None Update="Resource\Meme\kanbudong.jpg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TilesImage\1p.png">
+    <None Update="Resource\TilesImage\1m.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TilesImage\1s.png">
+    <None Update="Resource\TilesImage\1p.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TilesImage\1z.png">
+    <None Update="Resource\TilesImage\1s.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TilesImage\2m.png">
+    <None Update="Resource\TilesImage\1z.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TilesImage\2p.png">
+    <None Update="Resource\TilesImage\2m.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TilesImage\2s.png">
+    <None Update="Resource\TilesImage\2p.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TilesImage\2z.png">
+    <None Update="Resource\TilesImage\2s.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TilesImage\3m.png">
+    <None Update="Resource\TilesImage\2z.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TilesImage\3p.png">
+    <None Update="Resource\TilesImage\3m.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TilesImage\3s.png">
+    <None Update="Resource\TilesImage\3p.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TilesImage\3z.png">
+    <None Update="Resource\TilesImage\3s.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TilesImage\4m.png">
+    <None Update="Resource\TilesImage\3z.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TilesImage\4p.png">
+    <None Update="Resource\TilesImage\4m.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TilesImage\4s.png">
+    <None Update="Resource\TilesImage\4p.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TilesImage\4z.png">
+    <None Update="Resource\TilesImage\4s.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TilesImage\5m.png">
+    <None Update="Resource\TilesImage\4z.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TilesImage\5p.png">
+    <None Update="Resource\TilesImage\5m.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TilesImage\5s.png">
+    <None Update="Resource\TilesImage\5p.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TilesImage\5z.png">
+    <None Update="Resource\TilesImage\5s.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TilesImage\6m.png">
+    <None Update="Resource\TilesImage\5z.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TilesImage\6p.png">
+    <None Update="Resource\TilesImage\6m.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TilesImage\6s.png">
+    <None Update="Resource\TilesImage\6p.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TilesImage\6z.png">
+    <None Update="Resource\TilesImage\6s.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TilesImage\7m.png">
+    <None Update="Resource\TilesImage\6z.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TilesImage\7p.png">
+    <None Update="Resource\TilesImage\7m.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TilesImage\7s.png">
+    <None Update="Resource\TilesImage\7p.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TilesImage\7z.png">
+    <None Update="Resource\TilesImage\7s.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TilesImage\8m.png">
+    <None Update="Resource\TilesImage\7z.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TilesImage\8p.png">
+    <None Update="Resource\TilesImage\8m.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TilesImage\8s.png">
+    <None Update="Resource\TilesImage\8p.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TilesImage\9m.png">
+    <None Update="Resource\TilesImage\8s.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TilesImage\9p.png">
+    <None Update="Resource\TilesImage\9m.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TilesImage\9s.png">
+    <None Update="Resource\TilesImage\9p.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TilesImage\back.png">
+    <None Update="Resource\TilesImage\9s.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TilesImage\r5m.png">
+    <None Update="Resource\TilesImage\back.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TilesImage\r5p.png">
+    <None Update="Resource\TilesImage\r5m.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TilesImage\r5s.png">
+    <None Update="Resource\TilesImage\r5p.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resource\TilesImage\r5s.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
