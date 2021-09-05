@@ -14,7 +14,7 @@ using HUtil = HoshinoSharp.Runtime.Util;
 
 namespace RabiRiichi.Bot {
     class RonCalcComponent : HoshinoComponent {
-        private bool HIDE_TILE = false;
+        private int numHiddenTiles = 0;
         private readonly Hand hand = new Hand();
         private readonly Rand rand = new Rand(Environment.TickCount);
         private readonly BasePattern[] basePatterns = new BasePattern[] {
@@ -24,7 +24,7 @@ namespace RabiRiichi.Bot {
         };
 
         private Tiles answerTiles = null;
-        private GameTile hiddenTile;
+        private GameTiles hiddenTiles;
         private bool inGame = false;
         private CancellationTokenSource waitGameEnd = new CancellationTokenSource();
 
@@ -57,7 +57,7 @@ namespace RabiRiichi.Bot {
 
         private bool InitGame() {
             var wall = new Wall();
-            var group = HIDE_TILE ? Group.Invalid : (Group)rand.Next(0, 5);
+            var group = numHiddenTiles > 1 ? Group.Invalid : (Group)rand.Next(0, 5);
             wall.remaining = new Tiles(wall.remaining
                 .Where(tile => group == Group.Invalid ? true : tile.Gr == group)
                 .Select(tile => tile.WithoutDora));
@@ -86,27 +86,25 @@ namespace RabiRiichi.Bot {
                 hand.hand.RemoveAt(hand.hand.FindIndex(gTile => gTile.tile.IsSame(tile)));
                 hand.hand.Sort();
             }
-            hiddenTile = HIDE_TILE ? rand.Choice(hand.hand) : null;
+            hiddenTiles = new GameTiles(rand.Choice(hand.hand, numHiddenTiles));
             return true;
         }
 
         private async Task StartGame(HEvent ev, HBot bot) {
-            HIDE_TILE = rand.Next(0, 2) == 0;
+            numHiddenTiles = rand.Next(0, 4);
             await bot.Send(ev, "正在洗牌……");
             while (!InitGame()) {
                 await Task.Yield();
             }
             var displayTiles = hand.hand
-                .Where(tile => tile != hiddenTile)
-                .Select(tile => tile.tile);
-            if (hiddenTile != null) {
-                displayTiles = displayTiles.Append(Tile.Empty);
-            }
+                .Where(tile => !hiddenTiles.Contains(tile))
+                .Select(tile => tile.tile)
+                .Concat(Enumerable.Repeat(Tile.Empty, numHiddenTiles));
             var image = TilesImage.V.Generate(new Tiles(displayTiles));
             var msg = new HMessage {
                 new MessageSegmentImage(image),
-                new MessageSegmentText(hiddenTile != null
-                    ? "有一张牌看不清。猜猜听哪些牌？（30秒）"
+                new MessageSegmentText(numHiddenTiles > 0
+                    ? "有些牌看不清。猜猜听哪些牌？（30秒）"
                     : "听哪些牌？（30秒）")
             };
             await bot.Send(ev, msg);
@@ -120,8 +118,8 @@ namespace RabiRiichi.Bot {
             }
             inGame = false;
             image = TilesImage.V.Generate(answerTiles);
-            Image hiddenImage = hiddenTile == null ? null
-                : TilesImage.V.Generate(new Tiles { hiddenTile.tile });
+            Image hiddenImage = numHiddenTiles == 0 ? null
+                : TilesImage.V.Generate(hiddenTiles.ToTiles());
             msg.Clear();
             if (hiddenImage != null) {
                 msg.Add(new MessageSegmentText("没有人答对，藏起来的牌是"));
@@ -140,7 +138,7 @@ namespace RabiRiichi.Bot {
         private void EndGame() {
             inGame = false;
             answerTiles = null;
-            hiddenTile = null;
+            hiddenTiles = null;
             waitGameEnd.Cancel();
             waitGameEnd.Dispose();
             waitGameEnd = new CancellationTokenSource();
@@ -162,8 +160,8 @@ namespace RabiRiichi.Bot {
             if (answerTiles.ToString() != tiles.ToString()) {
                 return;
             }
-            Image hiddenImage = hiddenTile == null ? null
-                : TilesImage.V.Generate(new Tiles { hiddenTile.tile });
+            Image hiddenImage = numHiddenTiles == 0 ? null
+                : TilesImage.V.Generate(hiddenTiles.ToTiles());
             EndGame();
 
             var msg = new HMessage();
