@@ -168,7 +168,7 @@ namespace RabiRiichi.Riichi {
     }
 
     /// <summary>
-    /// Stores a list of tiles.
+    /// 一堆牌。
     /// </summary>
     public class Tiles : List<Tile> {
         public Tiles(IEnumerable<Tile> tiles) : base(tiles) { }

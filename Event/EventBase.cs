@@ -45,6 +45,8 @@ namespace RabiRiichi.Event {
 
         public bool IsActive => phase != Phase.Inactive && phase != Phase.Finished;
         public bool IsFinished => phase == Phase.Finished;
+
+        /// <summary> 切换到下一个 phase </summary>
         public bool NextPhase() {
             if (phase == Phase.Finished)
                 return false;
@@ -52,6 +54,7 @@ namespace RabiRiichi.Event {
             return true;
         }
 
+        /// <summary> 强制结束该事件 </summary>
         public void Finish() {
             phase = Phase.Finished;
         }

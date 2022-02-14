@@ -3,12 +3,22 @@ using System.Collections.Generic;
 
 namespace RabiRiichi.Pattern {
     public class Scorings: List<Scoring>, IComparable<Scorings> {
+        /// <summary> 累计役满需要番数 </summary>
         public const int KAZOE_YAKUMAN = 13;
+
+        /// <summary> 番 </summary>
         public int han;
+
+        /// <summary> 符 </summary>
         public int fu;
+
+        /// <summary> 役满数 </summary>
         public int yakuman;
+
+        /// <summary> 基本点变动 </summary>
         public int point;
 
+        /// <summary> 基本点 </summary>
         public int baseScore;
 
         public bool IsValid(int minHan) => han % KAZOE_YAKUMAN + yakuman * KAZOE_YAKUMAN >= minHan;
