@@ -3,7 +3,7 @@
 namespace RabiRiichi.Event {
     class PlayTileEvent : EventBase {
         #region Request
-        public int player;
+        public Player player;
         public GameTile tile;
         public bool riichi;
         #endregion

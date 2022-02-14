@@ -1,5 +1,4 @@
-﻿using HoshinoSharp.Hoshino.Message;
-using RabiRiichi.Riichi;
+﻿using RabiRiichi.Riichi;
 using RabiRiichi.Util;
 using System;
 using System.Collections.Generic;
@@ -21,11 +20,9 @@ namespace RabiRiichi.Resolver {
         /// <summary> 优先级，最高优先级的操作才会触发 </summary>
         public Priority priority;
         /// <summary> 需要操作的用户 </summary>
-        public int player;
+        public Player player;
         /// <summary> 选项，全小写 </summary>
         public List<string> options;
-        /// <summary> 显示给用户的消息 </summary>
-        public HMessage msg;
         /// <summary> 触发动作的options下标 </summary>
         public int choice = -1;
         /// <summary> 参数是this </summary>
@@ -42,24 +39,21 @@ namespace RabiRiichi.Resolver {
             }
         }
 
-        public string GetMessage(int playerId) {
-            return string.Join("\n", this
-                .Where(action => action.player == playerId)
-                .Select(action => action.msg.ToString()));
-        }
         /// <summary>
         /// 监听消息
         /// </summary>
         /// <returns>是否移除该监听器</returns>
-        public async Task<bool> OnMessage(Game game, int player, HMessage msg) {
-            var str = msg.ExtractPlainText();
+        public async Task<bool> OnMessage(Game game, int player) {
+            return true;
+            // TODO: Fix this
+            /*
             var actions = this.Where(action => action.player == player).ToArray();
             if (actions.Length == 0) {
                 return false;
             }
             bool suc = false;
             foreach (var action in actions) {
-                int index = action.options.FindIndex((option) => option.ToLower() == str);
+                int index = action.options.FindIndex((option) => true);
                 if (index >= 0) {
                     action.choice = index;
                     confirmed.Add(action);
@@ -87,10 +81,8 @@ namespace RabiRiichi.Resolver {
                     }
                     return true;
                 }
-            } else {
-                await game.SendPrivate(player, "不懂");
             }
-            return false;
+            return false;*/
         }
     }
 

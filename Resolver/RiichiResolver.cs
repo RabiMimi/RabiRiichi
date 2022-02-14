@@ -1,12 +1,10 @@
-﻿using HoshinoSharp.Hoshino.Message;
-using RabiRiichi.Event;
+﻿using RabiRiichi.Event;
 using RabiRiichi.Pattern;
 using RabiRiichi.Riichi;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using HUtil = HoshinoSharp.Runtime.Util;
 
 namespace RabiRiichi.Resolver {
     /// <summary>
@@ -111,7 +109,6 @@ namespace RabiRiichi.Resolver {
                     priority = PlayerAction.Priority.RIICHI,
                     player = hand.player,
                     options = GenerateRiichi(str).ToList(),
-                    msg = new HMessage($"rc{str}：打{tile}立直，听{tenpai}"),
                     trigger = (_) => {
                         hand.game.eventBus.Queue(new PlayTileEvent {
                             player = hand.player,

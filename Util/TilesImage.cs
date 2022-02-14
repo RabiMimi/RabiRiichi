@@ -1,4 +1,5 @@
-﻿using System;
+﻿/*
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -6,7 +7,6 @@ using RabiRiichi.Riichi;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
-using HUtil = HoshinoSharp.Runtime.Util;
 
 namespace RabiRiichi.Util
 {
@@ -114,3 +114,4 @@ namespace RabiRiichi.Util
 
     }
 }
+*/

@@ -3,7 +3,6 @@ using RabiRiichi.Riichi;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using HUtil = HoshinoSharp.Runtime.Util;
 
 namespace RabiRiichi.Event {
     public class EventBus {
@@ -44,12 +43,14 @@ namespace RabiRiichi.Event {
 
         private async Task Process(EventBase ev) {
             if (ev.phase != Phase.Inactive) {
-                HUtil.Warn($"Invalid event phase: {ev}");
+                // TODO: Log
+                // HUtil.Warn($"Invalid event phase: {ev}");
                 return;
             }
 
             while (ev.NextPhase()) {
-                HUtil.Log("Processing: " + ev);
+                // TODO: Log
+                // HUtil.Log("Processing: " + ev);
                 if (ev.IsFinished) continue;
                 cachedListeners.Clear();
                 foreach (var (key, value) in Listeners) {

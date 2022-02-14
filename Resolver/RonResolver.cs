@@ -1,10 +1,7 @@
-﻿using HoshinoSharp.Hoshino.Message;
-using RabiRiichi.Pattern;
+﻿using RabiRiichi.Pattern;
 using RabiRiichi.Riichi;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using HUtil = HoshinoSharp.Runtime.Util;
 
 namespace RabiRiichi.Resolver {
     /// <summary>
@@ -89,7 +86,8 @@ namespace RabiRiichi.Resolver {
                 var stdPattern = stdPatterns.Find(ptn => ptn.GetType().Equals(ancestor));
                 if (stdPattern == null) {
                     // 没有找到依赖的pattern
-                    HUtil.Warn("未知的役种：" + ancestor.Name);
+                    // TODO: Log
+                    // HUtil.Warn("未知的役种：" + ancestor.Name);
                     continue;
                 }
                 ResolveStdPatternRecursive(stdPattern, scorings);
@@ -146,10 +144,10 @@ namespace RabiRiichi.Resolver {
                         priority = PlayerAction.Priority.RON,
                         player = hand.player,
                         options = new List<string> {"ron", "r", "和", "hu", "he", "h"},
-                        msg = new HMessage("r：和！"),
                         trigger = (_) => {
-                            // TODO(Frenqy)
-                            HUtil.Log("和了");
+                            // TODO: (Frenqy)
+                            // TODO: Log
+                            // HUtil.Log("和了");
                         }
                     }
                 };

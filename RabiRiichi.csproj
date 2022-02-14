@@ -1,20 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Platforms>AnyCPU;x86</Platforms>
   </PropertyGroup>
-
   <ItemGroup>
-    <Compile Remove="RabiRiichiTests\**" />
-    <EmbeddedResource Remove="RabiRiichiTests\**" />
-    <None Remove="RabiRiichiTests\**" />
+    <Compile Remove="RabiRiichiTests\**"/>
+    <EmbeddedResource Remove="RabiRiichiTests\**"/>
+    <None Remove="RabiRiichiTests\**"/>
   </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="HoshinoSharp" Version="0.0.4-pre6" />
-  </ItemGroup>
-
   <ItemGroup>
     <None Update="Resource\Meme\kanbudong.jpg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -134,5 +127,4 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-
 </Project>

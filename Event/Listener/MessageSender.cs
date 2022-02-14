@@ -1,6 +1,4 @@
-﻿using HoshinoSharp.Hoshino.Message;
-using RabiRiichi.Riichi;
-using RabiRiichi.Util;
+﻿using RabiRiichi.Riichi;
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Event.Listener {
@@ -17,6 +15,7 @@ namespace RabiRiichi.Event.Listener {
         }
 
         public override async Task<bool> Handle(EventBase ev) {
+            /*
             var game = ev.game;
             if (ev is DealHandEvent dhe) {
                 using var image = TilesImage.V.Generate(dhe.tiles);
@@ -38,7 +37,7 @@ namespace RabiRiichi.Event.Listener {
                 }
                 str += gte.group.ToString();
                 await game.SendPublic(str);
-            }
+            }*/
             return false;
         }
     }

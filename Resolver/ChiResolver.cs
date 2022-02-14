@@ -1,5 +1,4 @@
-﻿using HoshinoSharp.Hoshino.Message;
-using RabiRiichi.Event;
+﻿using RabiRiichi.Event;
 using RabiRiichi.Riichi;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,7 +21,7 @@ namespace RabiRiichi.Resolver {
             if (hand.game.wall.IsFinished) {
                 return Reject(out output);
             }
-            if (hand.riichi || incoming.IsTsumo || incoming.tile.IsZ || incoming.fromPlayer != hand.PrevPlayer) {
+            if (hand.riichi || incoming.IsTsumo || incoming.tile.IsZ || incoming.fromPlayer != hand.player.PrevPlayer) {
                 return Reject(out output);
             }
             int num = incoming.tile.Num;
@@ -42,7 +41,6 @@ namespace RabiRiichi.Resolver {
                     priority = PlayerAction.Priority.CHI,
                     player = hand.player,
                     options = GenerateChi(str).ToList(),
-                    msg = new HMessage($"c{str}：吃{res}"),
                     trigger = (_) => {
                         hand.game.eventBus.Queue(new GetTileEvent {
                             game = hand.game,

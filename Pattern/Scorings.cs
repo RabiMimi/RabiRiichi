@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using HUtil = HoshinoSharp.Runtime.Util;
 
 namespace RabiRiichi.Pattern {
     public class Scorings: List<Scoring>, IComparable<Scorings> {
@@ -49,7 +48,8 @@ namespace RabiRiichi.Pattern {
                         break;
                     case ScoringType.Fu:
                         if (fu != 0) {
-                            HUtil.Warn("检测到了多个符数计算结果，可能是一个bug");
+                            // TODO: Log
+                            // HUtil.Warn("检测到了多个符数计算结果，可能是一个bug");
                         }
                         fu += score.Val;
                         break;
@@ -60,10 +60,12 @@ namespace RabiRiichi.Pattern {
                         yakuman += score.Val;
                         break;
                     case ScoringType.Ryuukyoku:
-                        HUtil.Warn($"和牌结果中发现了不合法的流局计算结果");
+                        // TODO: Log
+                        // HUtil.Warn($"和牌结果中发现了不合法的流局计算结果");
                         break;
                     default:
-                        HUtil.Warn($"未知的计分类型: {score.Type}");
+                        // TODO: Log
+                        // HUtil.Warn($"未知的计分类型: {score.Type}");
                         break;
                 }
             }

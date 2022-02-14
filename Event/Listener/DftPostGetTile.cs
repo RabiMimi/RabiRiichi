@@ -8,7 +8,7 @@ namespace RabiRiichi.Event.Listener {
 
         public override async Task<bool> Handle(EventBase ev) {
             var e = (GetTileEvent) ev;
-            var player = e.game.GetPlayer(e.player);
+            var player = e.player;
             player.hand.AddGroup(e.group, e.source);
             await e.game.actionManager.OnDrawTile(player.hand, null, true);
             return false;

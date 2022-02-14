@@ -9,9 +9,9 @@ namespace RabiRiichi.Riichi {
     public class GameTile : IComparable<GameTile> {
         public Tile tile = Tile.Empty;
         /// <summary> 来自哪个玩家（吃碰杠等） </summary>
-        public int fromPlayer = -1;
+        public Player fromPlayer;
         /// <summary> 当前归属于哪个玩家 </summary>
-        public int player = -1;
+        public Player player;
         /// <summary> 弃牌的时间戳 </summary>
         public int discardTime = -1;
         /// <summary> 是否是公开牌 </summary>
@@ -19,7 +19,7 @@ namespace RabiRiichi.Riichi {
         /// <summary> 是否是立直牌 </summary>
         public bool riichi = false;
         /// <summary> 是否是自摸 </summary>
-        public bool IsTsumo => fromPlayer < 0;
+        public bool IsTsumo => fromPlayer == null;
         public TileSource source = TileSource.Hand;
 
         /// <summary> 是否是万筒索 </summary>
@@ -49,8 +49,10 @@ namespace RabiRiichi.Riichi {
         public Tiles ToTiles() {
             return new Tiles(this.Select(gameTile => gameTile.tile));
         }
+        /// <summary> 是否是刻子 </summary>
         public bool IsKou => Count == 3
             && this[0].IsSame(this[1]) && this[1].IsSame(this[2]);
+        /// <summary> 是否是杠子 </summary>
         public bool IsKan {
             get {
                 if (Count != 4) return false;
@@ -61,6 +63,7 @@ namespace RabiRiichi.Riichi {
                 return true;
             }
         }
+        /// <summary> 是否是顺子 </summary>
         public bool IsShun {
             get {
                 if (Count != 3) return false;
@@ -69,6 +72,7 @@ namespace RabiRiichi.Riichi {
                 return list[0].NextIs(list[1]) && list[1].NextIs(list[2]);
             }
         }
+        /// <summary> 是否是雀头 </summary>
         public bool IsJan => Count == 2 && this[0].IsSame(this[1]);
 
         /// <summary> 判定是否有给出的牌，赤宝牌视为相同牌 </summary>

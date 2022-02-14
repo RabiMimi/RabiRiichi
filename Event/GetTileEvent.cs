@@ -4,7 +4,7 @@ namespace RabiRiichi.Event {
     class GetTileEvent : EventBase {
         #region Request
         public TileSource source;
-        public int player;
+        public Player player;
         public GameTile incoming;
         public GameTiles group;
         #endregion

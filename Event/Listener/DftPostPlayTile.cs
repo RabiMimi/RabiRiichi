@@ -8,7 +8,7 @@ namespace RabiRiichi.Event.Listener {
 
         public override async Task<bool> Handle(EventBase ev) {
             var e = (PlayTileEvent) ev;
-            var player = e.game.GetPlayer(e.player);
+            var player = e.player;
             player.hand.Play(e.tile);
             if (await e.game.actionManager.OnDiscardTile(player.hand, e.tile)) {
                 e.waitAction = true;
@@ -16,7 +16,7 @@ namespace RabiRiichi.Event.Listener {
                 e.game.eventBus.Queue(new DrawTileEvent {
                     game = e.game,
                     type = DrawTileType.Wall,
-                    player = player.hand.NextPlayer,
+                    player = player.NextPlayer,
                 });
             }
             return false;

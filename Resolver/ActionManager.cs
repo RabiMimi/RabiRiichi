@@ -1,5 +1,4 @@
-﻿using HoshinoSharp.Hoshino.Message;
-using RabiRiichi.Riichi;
+﻿using RabiRiichi.Riichi;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -76,16 +75,15 @@ namespace RabiRiichi.Resolver {
                 actions[0].trigger(actions[0]);
             } else {
                 string strIncoming = incoming == null ? "" : $" +{incoming}";
-                var msg = $"{hand.hand}{strIncoming}\n{actions.GetMessage(hand.player)}";
-                await hand.game.SendPrivate(hand.player, msg);
-                hand.game.RegisterListener(actions);
+                // var msg = $"{hand.hand}{strIncoming}\n{actions.GetMessage(hand.player)}";
+                // Send message
             }
         }
 
         public async Task<bool> OnDiscardTile(Hand hand, GameTile discard) {
             var actions = new PlayerActions();
             var resolvers = OnDiscardTileResolvers().ToArray();
-            var currentPlayer = hand.game.GetPlayer(hand.player);
+            var currentPlayer = hand.player;
             foreach (var player in hand.game.players) {
                 bool suc = false;
                 foreach (var resolver in resolvers) {
@@ -97,19 +95,17 @@ namespace RabiRiichi.Resolver {
                 if (suc) {
                     actions.Add(new PlayerAction {
                         priority = PlayerAction.Priority.SKIP,
-                        player = player.id,
+                        player = player,
                         options = SKIP_OPTIONS,
-                        msg = new HMessage($"s：跳过"),
                         trigger = (_) => {
                             // TODO(Frenqy)
                         }
                     });
-                    var msg = $"{player.hand.hand} +{discard} ({currentPlayer.nickname})\n{actions.GetMessage(player.id)}";
-                    await hand.game.SendPrivate(player.id, msg);
+                    // var msg = $"{player.hand.hand} +{discard} ({currentPlayer.id})\n{actions.GetMessage(player.id)}";
+                    // Send message
                 }
             }
             if (actions.Count > 0) {
-                hand.game.RegisterListener(actions);
                 return true;
             } else {
                 return false;

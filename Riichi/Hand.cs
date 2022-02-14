@@ -12,11 +12,10 @@ namespace RabiRiichi.Riichi {
         /// <summary> 牌河 </summary>
         public GameTiles discarded = new GameTiles();
 
-        public Game game;
         /// <summary> 当前玩家 </summary>
-        public int player = -1;
-        public int PrevPlayer => game.PrevPlayer(player);
-        public int NextPlayer => game.NextPlayer(player);
+        public Player player;
+        /// <summary> 当前游戏实例 </summary>
+        public Game game => player.game;
         /// <summary> 第一个立直宣告牌 </summary>
         public GameTile riichiTile = null;
         /// <summary> 立直宣告牌 </summary>
@@ -58,7 +57,7 @@ namespace RabiRiichi.Riichi {
             tile.fromPlayer = player;
             tile.source = TileSource.Discard;
             hand.Remove(tile);
-            tile.discardTime = game.Time();
+            tile.discardTime = player.game.Time();
             discarded.Add(tile);
             if (riichi) {
                 Debug.Assert(menzen);

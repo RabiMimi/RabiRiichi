@@ -1,7 +1,4 @@
-﻿using HoshinoSharp.Hoshino;
-using HoshinoSharp.Hoshino.Message;
-using RabiRiichi.Bot;
-using RabiRiichi.Event;
+﻿using RabiRiichi.Event;
 using RabiRiichi.Event.Listener;
 using RabiRiichi.Pattern;
 using RabiRiichi.Resolver;
@@ -16,11 +13,19 @@ namespace RabiRiichi.Riichi {
     public enum GamePhase {
         Pending, Running, Finished
     }
+
+    public class GameInfo {
+        public GamePhase phase = GamePhase.Pending;
+        public int playerCount = 2;
+        public Wind wind = Wind.E;
+        public int round = 0;
+        public int honba = 0;
+    }
+
     public class Game {
         public const int HandSize = 13;
 
-        public GamePhase phase = GamePhase.Pending;
-        public GameComponent hoshino;
+        public GameInfo gameInfo;
         public Player[] players;
 
         public EventBus eventBus;
@@ -28,11 +33,10 @@ namespace RabiRiichi.Riichi {
         public ActionManager actionManager;
         public Rand rand;
 
-        public Game(GameComponent component) {
-            hoshino = component;
+        public Game(GameInfo info) {
+            gameInfo = info;
         }
 
-        public UserInfo GetUser(int index) => hoshino.players[index];
         public Player GetPlayer(int index) => players[index];
 
         #region Start
@@ -116,11 +120,10 @@ namespace RabiRiichi.Riichi {
             RegisterPatterns();
 
             // Init players
-            players = new Player[hoshino.players.Count];
+            players = new Player[gameInfo.playerCount];
             for (int i = 0; i < players.Length; i++) {
                 players[i] = new Player(i, this) {
                     wind = (Wind)i,
-                    nickname = hoshino.players[i].nickname
                 };
             }
 
@@ -135,30 +138,28 @@ namespace RabiRiichi.Riichi {
             eventBus.Queue(new DrawTileEvent {
                 game = this,
                 type = DrawTileType.Wall,
-                player = 0
+                player = GetPlayer(0)
             });
 
             // 游戏逻辑
-            while (!eventBus.Empty || hoshino.ListenerCount > 0) {
-                if (eventBus.Empty) {
-                    await Task.Delay(100);
-                } else {
-                    await eventBus.Process();
-                }
+            while (!eventBus.Empty) {
+                await eventBus.Process();
             }
 
             // End game
-            phase = GamePhase.Finished;
+            gameInfo.phase = GamePhase.Finished;
         }
         #endregion
 
         #region Player
-        public int NextPlayer(int id) {
-            return id == players.Length - 1 ? 0 : id + 1;
-        }
-        public int PrevPlayer(int id) {
-            return id == 0 ? players.Length - 1 : id - 1;
-        }
+        public int NextPlayerId(int id) => id == players.Length - 1 ? 0 : id + 1;
+
+        public int PrevPlayerId(int id) => id == 0 ? players.Length - 1 : id - 1;
+
+        public Player NextPlayer(int id) => players[NextPlayerId(id)];
+
+        public Player PrevPlayer(int id) => players[PrevPlayerId(id)];
+
         public IEnumerable<GameTile> AllDiscardedTiles =>
             players.SelectMany(player => player.hand.discarded);
         #endregion
@@ -175,23 +176,6 @@ namespace RabiRiichi.Riichi {
             return advance ? ++roundTime : roundTime;
         }
         #endregion
-
-        #region Message
-        public Task SendPrivate(int player, string msg) {
-            long id = hoshino.players[player].userId;
-            return hoshino.bot.SendPrivate(hoshino.ev.selfId, id, msg);
-        }
-        public Task SendPrivate(int player, HMessage msg) => SendPrivate(player, msg.ToString());
-
-        public Task SendPublic(string msg) {
-            return hoshino.bot.Send(hoshino.ev, msg);
-        }
-        public Task SendPublic(HMessage msg) => SendPublic(msg.ToString());
-
-        public void RegisterListener(PlayerActions actions) {
-            hoshino.RegisterListener(actions);
-        }
-        #endregion Message
 
         #region Update
         public void OnUpdate() {

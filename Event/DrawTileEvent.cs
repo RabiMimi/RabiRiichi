@@ -12,7 +12,7 @@ namespace RabiRiichi.Event {
         /// 是否摸岭上牌
         /// </summary>
         public DrawTileType type;
-        public int player;
+        public Player player;
         #endregion
 
         #region Response

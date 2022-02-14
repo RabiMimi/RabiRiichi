@@ -1,8 +1,5 @@
-﻿using HoshinoSharp.Hoshino.Message;
-using RabiRiichi.Event;
-using RabiRiichi.Pattern;
+﻿using RabiRiichi.Event;
 using RabiRiichi.Riichi;
-using System;
 using System.Linq;
 
 namespace RabiRiichi.Resolver {
@@ -30,7 +27,6 @@ namespace RabiRiichi.Resolver {
                     priority = PlayerAction.Priority.PLAY,
                     player = hand.player,
                     options = tileStr,
-                    msg = new HMessage($"{str}：切牌"),
                     trigger = (PlayerAction action) => {
                         hand.game.eventBus.Queue(new PlayTileEvent {
                             player = hand.player,

@@ -1,5 +1,4 @@
-﻿using HoshinoSharp.Hoshino.Message;
-using RabiRiichi.Event;
+﻿using RabiRiichi.Event;
 using RabiRiichi.Riichi;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,7 +24,6 @@ namespace RabiRiichi.Resolver {
                 priority = PlayerAction.Priority.KAN,
                 player = hand.player,
                 options = GenerateKan(str).ToList(),
-                msg = new HMessage($"k{str}：{desc}{group}"),
                 trigger = (_) => {
                     hand.game.eventBus.Queue(new GetTileEvent {
                         game = hand.game,
