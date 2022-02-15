@@ -1,0 +1,126 @@
+using System;
+using System.Collections.Generic;
+using RabiRiichi.Riichi;
+
+namespace RabiRiichi.Pattern {
+    public class PatternResolver {
+        public readonly List<BasePattern> basePatterns = new();
+        public readonly List<StdPattern> stdPatterns = new();
+        public readonly List<BonusPattern> bonusPatterns = new();
+
+        public void RegisterBasePattern(BasePattern pattern) {
+            basePatterns.Add(pattern);
+        }
+
+        public void RegisterStdPattern(StdPattern pattern) {
+            stdPatterns.Add(pattern);
+        }
+
+        public void RegisterBonusPattern(BonusPattern pattern) {
+            bonusPatterns.Add(pattern);
+        }
+
+        private class ResolveContext {
+            public List<GameTiles> group;
+            public Hand hand;
+            public GameTile incoming;
+            public Scorings scorings;
+            public readonly HashSet<Type> baseSuccess = new();
+            public readonly HashSet<Type> stdSuccess = new();
+            public readonly HashSet<Type> stdFailure = new();
+        }
+
+        private bool ResolveStdPattern(ResolveContext context, StdPattern pattern, Scorings scorings) {
+            var pType = pattern.GetType();
+            if (pattern.Resolve(context.group, context.hand, context.incoming, scorings)) {
+                context.stdSuccess.Add(pType);
+                return true;
+            } else {
+                context.stdFailure.Add(pType);
+                return false;
+            }
+        }
+
+        private bool ResolveStdPatternRecursive(ResolveContext context, StdPattern pattern, Scorings scorings) {
+            var pType = pattern.GetType();
+            if (context.stdSuccess.Contains(pType))
+                return true;
+            if (context.stdFailure.Contains(pType))
+                return false;
+            // 检查依赖
+            foreach (var dependency in pattern.dependOnPatterns) {
+                var basePattern = basePatterns.Find(ptn => ptn.GetType().Equals(dependency));
+                if (basePattern != null) {
+                    // 检查底和
+                    if (!context.baseSuccess.Contains(dependency)) {
+                        // 不满足依赖
+                        context.stdFailure.Add(pType);
+                        return false;
+                    }
+                    continue;
+                }
+                var stdPattern = stdPatterns.Find(ptn => ptn.GetType().Equals(dependency));
+                if (stdPattern != null) {
+                    // 检查役种
+                    if (!ResolveStdPatternRecursive(context, stdPattern, scorings)) {
+                        // 不满足依赖
+                        context.stdFailure.Add(pType);
+                        return false;
+                    }
+                }
+                // 没有找到依赖的pattern
+                context.stdFailure.Add(pType);
+                return false;
+            }
+            // 计算非必须的依赖
+            foreach (var ancestor in pattern.afterPatterns) {
+                var stdPattern = stdPatterns.Find(ptn => ptn.GetType().Equals(ancestor));
+                if (stdPattern == null) {
+                    // 没有找到依赖的pattern
+                    // TODO: Log
+                    // HUtil.Warn("未知的役种：" + ancestor.Name);
+                    continue;
+                }
+                ResolveStdPatternRecursive(context, stdPattern, scorings);
+            }
+            return ResolveStdPattern(context, pattern, scorings);
+        }
+
+        public Scorings ResolveMaxScore(Hand hand, GameTile incoming, bool applyBonus) {
+            var groupList = new List<List<GameTiles>>();
+            var context = new ResolveContext {
+                hand = hand,
+                incoming = incoming,
+                scorings = new Scorings()
+            };
+
+            foreach (var pattern in basePatterns) {
+                if (pattern.Resolve(hand, incoming, out var groups)) {
+                    context.baseSuccess.Add(pattern.GetType());
+                    groupList.AddRange(groups);
+                }
+            }
+
+            Scorings maxScore = null;
+            foreach (var group in groupList) {
+                context.stdSuccess.Clear();
+                context.stdFailure.Clear();
+                context.group = group;
+                var scorings = new Scorings();
+                foreach (var pattern in stdPatterns) {
+                    ResolveStdPatternRecursive(context, pattern, scorings);
+                }
+                if (applyBonus) {
+                    foreach (var pattern in bonusPatterns) {
+                        ResolveStdPatternRecursive(context, pattern, scorings);
+                    }
+                }
+                if (maxScore == null || maxScore < scorings) {
+                    maxScore = scorings;
+                }
+            }
+            return maxScore;
+        }
+
+    }
+}

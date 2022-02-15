@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace RabiRiichi.Resolver {
     public class ActionManager {
         public static ResolverBase[] resolvers = new ResolverBase[] {
-            new RonResolver(),
+            // new RonResolver(),
             new RiichiResolver(),
             new ChiResolver(),
             new KanResolver(),
@@ -18,7 +18,7 @@ namespace RabiRiichi.Resolver {
             Resolvers.Add(resolver);
         }
 
-        public bool TryGetResolver<T>(out T ret) where T: ResolverBase {
+        public bool TryGetResolver<T>(out T ret) where T : ResolverBase {
             ret = Resolvers.Find(resolver => resolver is T) as T;
             return ret != null;
         }
@@ -63,57 +63,57 @@ namespace RabiRiichi.Resolver {
 
         #endregion
         // TODO: Use event driven logic
-/*
-        public async Task OnDrawTile(Hand hand, GameTile incoming, bool selectOnly) {
-            var actions = new PlayerActions();
-            foreach (var resolver in OnDrawTileResolvers(selectOnly)) {
-                if (resolver.ResolveAction(hand, incoming, out var output)) {
-                    actions.AddRange(output);
-                }
-            }
-            Debug.Assert(actions.Count > 0);
-            bool forceAction = actions.Count == 1 && actions[0].options.Count == 1;
-            if (forceAction) {
-                actions[0].choice = 0;
-                actions[0].trigger(actions[0]);
-            } else {
-                string strIncoming = incoming == null ? "" : $" +{incoming}";
-                // var msg = $"{hand.hand}{strIncoming}\n{actions.GetMessage(hand.player)}";
-                // Send message
-            }
-        }
-
-        public async Task<bool> OnDiscardTile(Hand hand, GameTile discard) {
-            var actions = new PlayerActions();
-            var resolvers = OnDiscardTileResolvers().ToArray();
-            var currentPlayer = hand.player;
-            foreach (var player in hand.game.players) {
-                bool suc = false;
-                foreach (var resolver in resolvers) {
-                    if (resolver.ResolveAction(player.hand, discard, out var output)) {
-                        suc = true;
-                        actions.AddRange(output);
+        /*
+                public async Task OnDrawTile(Hand hand, GameTile incoming, bool selectOnly) {
+                    var actions = new PlayerActions();
+                    foreach (var resolver in OnDrawTileResolvers(selectOnly)) {
+                        if (resolver.ResolveAction(hand, incoming, out var output)) {
+                            actions.AddRange(output);
+                        }
+                    }
+                    Debug.Assert(actions.Count > 0);
+                    bool forceAction = actions.Count == 1 && actions[0].options.Count == 1;
+                    if (forceAction) {
+                        actions[0].choice = 0;
+                        actions[0].trigger(actions[0]);
+                    } else {
+                        string strIncoming = incoming == null ? "" : $" +{incoming}";
+                        // var msg = $"{hand.hand}{strIncoming}\n{actions.GetMessage(hand.player)}";
+                        // Send message
                     }
                 }
-                if (suc) {
-                    actions.Add(new PlayerAction {
-                        priority = PlayerAction.Priority.SKIP,
-                        player = player,
-                        options = SKIP_OPTIONS,
-                        trigger = (_) => {
-                            // TODO(Frenqy)
+
+                public async Task<bool> OnDiscardTile(Hand hand, GameTile discard) {
+                    var actions = new PlayerActions();
+                    var resolvers = OnDiscardTileResolvers().ToArray();
+                    var currentPlayer = hand.player;
+                    foreach (var player in hand.game.players) {
+                        bool suc = false;
+                        foreach (var resolver in resolvers) {
+                            if (resolver.ResolveAction(player.hand, discard, out var output)) {
+                                suc = true;
+                                actions.AddRange(output);
+                            }
                         }
-                    });
-                    // var msg = $"{player.hand.hand} +{discard} ({currentPlayer.id})\n{actions.GetMessage(player.id)}";
-                    // Send message
+                        if (suc) {
+                            actions.Add(new PlayerAction {
+                                priority = PlayerAction.Priority.SKIP,
+                                player = player,
+                                options = SKIP_OPTIONS,
+                                trigger = (_) => {
+                                    // TODO(Frenqy)
+                                }
+                            });
+                            // var msg = $"{player.hand.hand} +{discard} ({currentPlayer.id})\n{actions.GetMessage(player.id)}";
+                            // Send message
+                        }
+                    }
+                    if (actions.Count > 0) {
+                        return true;
+                    } else {
+                        return false;
+                    }
                 }
-            }
-            if (actions.Count > 0) {
-                return true;
-            } else {
-                return false;
-            }
-        }
-*/
+        */
     }
 }
