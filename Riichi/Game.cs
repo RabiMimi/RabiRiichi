@@ -24,8 +24,11 @@ namespace RabiRiichi.Riichi {
         public Rand rand;
 
         public Game(GameConfig config) {
+            rand = new Rand((int)(DateTimeOffset.Now.ToUnixTimeSeconds() & 0xffffffff));
             var serviceCollection = new ServiceCollection();
             serviceCollection.AddSingleton(this);
+            serviceCollection.AddSingleton(rand);
+            serviceCollection.AddSingleton(gameInfo);
             serviceCollection.AddSingleton(config);
             serviceCollection.AddSingleton<Wall>();
             serviceCollection.AddSingleton<EventBus>();
@@ -47,6 +50,7 @@ namespace RabiRiichi.Riichi {
 
         #region Start
 
+/*
         protected virtual void RegisterResolvers() {
             var resolvers = new ResolverBase[] {
                 new RonResolver(),
@@ -61,7 +65,6 @@ namespace RabiRiichi.Riichi {
             }
         }
 
-/*
         protected virtual void RegisterPatterns() {
             if (actionManager.TryGetResolver<RonResolver>(out var ronResolver)) {
                 ronResolver.SetMinHan(1);
@@ -83,21 +86,7 @@ namespace RabiRiichi.Riichi {
         }
 */
 
-        protected virtual void Init() {
-            wall = new Wall();
-            actionManager = new ActionManager();
-            rand = new Rand((int)(DateTimeOffset.Now.ToUnixTimeSeconds() & 0xffffffff));
-            roundTime = 0;
-        }
-
         public async Task Start() {
-            // Initialize rand
-            Init();
-
-            // Register
-            RegisterResolvers();
-            // RegisterPatterns();
-
             // Init players
             players = new Player[gameInfo.config.playerCount];
             for (int i = 0; i < players.Length; i++) {
@@ -132,19 +121,6 @@ namespace RabiRiichi.Riichi {
 
         public IEnumerable<GameTile> AllDiscardedTiles =>
             players.SelectMany(player => player.hand.discarded);
-        #endregion
-
-        #region Timer
-        private int roundTime;
-
-        /// <summary>
-        /// （进入下一个时间点并）返回当前时间
-        /// </summary>
-        /// <param name="advance">是否进入下一个时间点</param>
-        /// <returns></returns>
-        public int Time(bool advance = true) {
-            return advance ? ++roundTime : roundTime;
-        }
         #endregion
 
         #region Update

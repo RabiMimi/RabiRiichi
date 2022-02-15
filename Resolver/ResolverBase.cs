@@ -135,7 +135,7 @@ namespace RabiRiichi.Resolver {
             return CheckComboDfs(current, output, hand, 0, tileList, 0);
         }
 
-        /// <summary> 拒绝Resolve的语法糖 </summary>
+        /// <summary> 语法糖 </summary>
         public static bool Reject<T>(out T output) where T: class {
             output = null;
             return false;

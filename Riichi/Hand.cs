@@ -56,7 +56,7 @@ namespace RabiRiichi.Riichi {
             tile.fromPlayer = player;
             tile.source = TileSource.Discard;
             hand.Remove(tile);
-            tile.discardTime = player.game.Time();
+            tile.discardTime = player.game.gameInfo.Time();
             discarded.Add(tile);
             if (riichi) {
                 Debug.Assert(menzen);

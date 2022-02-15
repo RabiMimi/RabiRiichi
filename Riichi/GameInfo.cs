@@ -17,6 +17,11 @@ namespace RabiRiichi.Riichi {
         public int round = 0;
         /// <summary> 本场 </summary>
         public int honba = 0;
+
+        /// <summary> 游戏内用时间戳 </summary>
+        public int timeStamp = 0;
+        public int Time(bool advance = true) => timeStamp += advance ? 1 : 0;
+
         /// <summary> 庄家 </summary>
         public int Banker => ((int)wind + round) % config.playerCount;
 
