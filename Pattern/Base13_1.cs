@@ -43,7 +43,7 @@ namespace RabiRiichi.Pattern {
                 hand.groups.Any(gr => !gr.IsJan || !gr.All(t => t.tile.Is19Z))) {
                 return Reject(out output);
             }
-            
+
             var tileGroups = GetTileGroups(hand, incoming, true);
             var existing = new Tiles();
             int multiCnt = 0;
@@ -70,7 +70,7 @@ namespace RabiRiichi.Pattern {
                 }
             } else {
                 // 14张，计算切牌
-                var tiles = GetHand(hand.allTiles, incoming);
+                var tiles = GetHand(hand.freeTiles, incoming);
                 output = new Tiles(tiles
                     .Where(t => !t.Is19Z || tileGroups[t.NoDoraVal].Count > (multiCnt > 1 ? 1 : 2))
                     .Distinct());

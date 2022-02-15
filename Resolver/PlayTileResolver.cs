@@ -14,7 +14,7 @@ namespace RabiRiichi.Resolver {
                 tiles.Add(incoming);
             }
             if (!hand.riichi) {
-                tiles.AddRange(hand.allTiles);
+                tiles.AddRange(hand.freeTiles);
             }
             if (tiles.Count == 0) {
                 return false;

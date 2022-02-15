@@ -20,7 +20,7 @@ namespace RabiRiichi.Resolver {
             var tile = incoming.tile.WithoutDora;
             var current = new List<GameTile> { incoming };
             var result = new List<GameTiles>();
-            CheckCombo(hand.allTiles, result, current, tile, tile, tile);
+            CheckCombo(hand.freeTiles, result, current, tile, tile, tile);
             if (result.Count == 0) {
                 return false;
             }

@@ -20,7 +20,7 @@ namespace RabiRiichi.Resolver {
                 int shanten = pattern.Shanten(hand, incoming, out var tiles, 0);
                 if (shanten < 0) {
                     // 和
-                    riichiTiles = BasePattern.GetHand(hand.allTiles, incoming);
+                    riichiTiles = BasePattern.GetHand(hand.freeTiles, incoming);
                     break;
                 }
                 if (shanten > 0) {
@@ -32,7 +32,7 @@ namespace RabiRiichi.Resolver {
                 return false;
             }
             riichiTiles.Sort();
-            var handRiichiTiles = hand.allTiles.Where(t => riichiTiles.Contains(t.tile.WithoutDora)).ToList();
+            var handRiichiTiles = hand.freeTiles.Where(t => riichiTiles.Contains(t.tile.WithoutDora)).ToList();
             output.Add(new RiichiAction(hand.player, handRiichiTiles));
             return true;
         }

@@ -6,29 +6,37 @@ using RabiRiichi.Pattern;
 
 namespace RabiRiichi.Riichi {
     public class Hand {
-        /// <summary> 所有手牌 </summary>
-        public GameTiles allTiles = new GameTiles();
+        /// <summary> 手牌（不包含副露） </summary>
+        public GameTiles freeTiles = new GameTiles();
+
         /// <summary> 吃碰杠 </summary>
         public List<GameTiles> groups = new List<GameTiles>();
+
         /// <summary> 牌河 </summary>
         public GameTiles discarded = new GameTiles();
+
         /// <summary> 当前玩家 </summary>
         public Player player;
+
         /// <summary> 当前游戏实例 </summary>
         public Game game => player.game;
+
         /// <summary> 第一个立直宣告牌 </summary>
         public GameTile firstRiichiTile = null;
+
         /// <summary> 立直 </summary>
         public bool riichi = false;
+
         /// <summary> 门清 </summary>
         public bool menzen = true;
+
         /// <summary> 获取听的牌 </summary>
         /// <param name="hand">必须是13张</param>
         /// <returns>听牌列表，无赤宝牌</returns>
         public Tiles GetTenpai {
             get {
                 var ret = new Tiles();
-                allTiles.Sort();
+                freeTiles.Sort();
                 foreach (var pattern in Patterns.BasePatterns) {
                     int shanten = pattern.Shanten(this, null, out var tiles, 0);
                     Debug.Assert(shanten >= 0);
@@ -72,13 +80,13 @@ namespace RabiRiichi.Riichi {
         public GameTile ron = null;
         public bool IsRon => ron != null;
         /// <summary> 牌的总数，注意：杠会被算作3张牌 </summary>
-        public int Count => groups.Select(gr => Math.Min(3, gr.Count)).Sum() + allTiles.Count;
+        public int Count => groups.Select(gr => Math.Min(3, gr.Count)).Sum() + freeTiles.Count;
 
-        public GameTile GetTile(Tile tile) => allTiles.Find(t => t.tile == tile);
+        public GameTile GetTile(Tile tile) => freeTiles.Find(t => t.tile == tile);
         public GameTiles GetTiles(Tiles tiles) {
             var tmp = new Tiles(tiles);
             var ret = new GameTiles();
-            foreach (var tile in allTiles) {
+            foreach (var tile in freeTiles) {
                 if (tmp.Contains(tile.tile)) {
                     ret.Add(tile);
                     tmp.Remove(tile.tile);
@@ -91,14 +99,14 @@ namespace RabiRiichi.Riichi {
         public Hand Add(GameTile tile) {
             tile.player = player;
             tile.source = TileSource.Hand;
-            allTiles.Add(tile);
+            freeTiles.Add(tile);
             return this;
         }
 
         public Hand Play(GameTile tile, bool riichi = false) {
             tile.fromPlayer = player;
             tile.source = TileSource.Discard;
-            allTiles.Remove(tile);
+            freeTiles.Remove(tile);
             tile.discardTime = player.game.gameInfo.Time();
             discarded.Add(tile);
             if (riichi) {
@@ -113,9 +121,9 @@ namespace RabiRiichi.Riichi {
         }
 
         public Hand Remove(GameTile tile) {
-            if (allTiles.Contains(tile)) {
+            if (freeTiles.Contains(tile)) {
                 tile.fromPlayer = player;
-                allTiles.Remove(tile);
+                freeTiles.Remove(tile);
             }
             return this;
         }

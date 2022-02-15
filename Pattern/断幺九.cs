@@ -9,7 +9,7 @@ namespace RabiRiichi.Pattern {
         public override Type[] dependOnPatterns => AllBasePatterns;
 
         public override bool Resolve(List<GameTiles> groups, Hand hand, GameTile incoming, Scorings scorings) {
-            if (hand.allTiles.Any(tile => tile.tile.Is19Z) || incoming.tile.Is19Z)
+            if (groups.SelectMany(gr => gr).Any(tile => tile.tile.Is19Z))
                 return false;
             scorings.Add(new Scoring(ScoringType.Han, 1, this));
             return true;

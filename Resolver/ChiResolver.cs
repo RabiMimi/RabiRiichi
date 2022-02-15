@@ -17,9 +17,9 @@ namespace RabiRiichi.Resolver {
             }
             var current = new List<GameTile> { incoming };
             var result = new List<GameTiles>();
-            CheckCombo(hand.allTiles, result, current, incoming.tile.Prev.Prev, incoming.tile.Prev);
-            CheckCombo(hand.allTiles, result, current, incoming.tile.Prev, incoming.tile.Next);
-            CheckCombo(hand.allTiles, result, current, incoming.tile.Next, incoming.tile.Next.Next);
+            CheckCombo(hand.freeTiles, result, current, incoming.tile.Prev.Prev, incoming.tile.Prev);
+            CheckCombo(hand.freeTiles, result, current, incoming.tile.Prev, incoming.tile.Next);
+            CheckCombo(hand.freeTiles, result, current, incoming.tile.Next, incoming.tile.Next.Next);
             if (result.Count == 0) {
                 return false;
             }
