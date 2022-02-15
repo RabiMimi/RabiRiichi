@@ -1,7 +1,5 @@
-namespace RabiRiichi.Pattern
-{
-    public static class Patterns
-    {
+namespace RabiRiichi.Pattern {
+    public static class Patterns {
         // TODO: 注入Pattern管理
         public static BasePattern[] BasePatterns = new BasePattern[] {
             new Base33332(),
@@ -10,7 +8,7 @@ namespace RabiRiichi.Pattern
         };
         public static StdPattern[] StdPatterns = new StdPattern[] {
             // 一番
-            new Pinfu(),
+            new 平和(),
             new 断幺九(),
             new 役牌场风(),
             new 役牌自风(),
@@ -19,7 +17,7 @@ namespace RabiRiichi.Pattern
             new 役牌中(),
         };
         public static StdPattern[] BonusPatterns = new StdPattern[] {
-            new Akadora(),
+            new 赤宝牌(),
         };
     }
 }

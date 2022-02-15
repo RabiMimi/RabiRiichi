@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace RabiRiichi.Pattern {
-    public class Akadora : StdPattern {
+    public class 赤宝牌 : StdPattern {
         public override Type[] dependOnPatterns => AllBasePatterns;
 
         public override bool Resolve(List<GameTiles> groups, Hand hand, GameTile incoming, Scorings scorings) {
