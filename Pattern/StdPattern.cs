@@ -19,6 +19,12 @@ namespace RabiRiichi.Pattern {
         public ScoringType Type;
         public int Val;
         public StdPattern Source;
+
+        public Scoring(ScoringType type, int val, StdPattern source) {
+            Type = type;
+            Val = val;
+            Source = source;
+        }
     }
 
     public abstract class StdPattern {
