@@ -8,6 +8,12 @@ namespace RabiRiichi.Pattern {
         };
         public static StdPattern[] StdPatterns = new StdPattern[] {
             new Pinfu(),
+            new 断幺九(),
+            new 役牌场风(),
+            new 役牌自风(),
+            new 役牌白(),
+            new 役牌发(),
+            new 役牌中(),
         };
         public static StdPattern[] BonusPatterns = new StdPattern[] {
             new Akadora(),
