@@ -1,4 +1,5 @@
 ﻿using RabiRiichi.Pattern;
+using RabiRiichi.Action;
 using RabiRiichi.Riichi;
 using System;
 using System.Collections.Generic;
@@ -8,6 +9,7 @@ namespace RabiRiichi.Resolver {
     /// 判定是否可以和牌
     /// </summary>
     public class RonResolver : ResolverBase {
+        // TODO: Move pattern resolvers to another class
         public readonly List<BasePattern> basePatterns = new List<BasePattern>();
         public readonly List<StdPattern> stdPatterns = new List<StdPattern>();
         public readonly List<StdPattern> bonusPatterns = new List<StdPattern>();
@@ -129,32 +131,20 @@ namespace RabiRiichi.Resolver {
             return maxScore;
         }
 
-        public override bool ResolveAction(Hand hand, GameTile incoming, out PlayerActions output) {
-            if (hand.furiten && !incoming.IsTsumo) {
-                return Reject(out output);
+        public override bool ResolveAction(Hand hand, GameTile incoming, MultiPlayerAction output) {
+            if (hand.IsFuriten && !incoming.IsTsumo) {
+                return false;
             }
             if (hand.player == incoming.fromPlayer) {
                 // 自己打出来的
-                return Reject(out output);
+                return false;
             }
             var maxScore = GetMaxScore(hand, incoming, false);
             if (maxScore != null && maxScore.IsValid(MinHan)) {
-                output = new PlayerActions {
-                    new PlayerAction {
-                        priority = PlayerAction.Priority.RON,
-                        player = hand.player,
-                        options = new List<string> {"ron", "r", "和", "hu", "he", "h"},
-                        trigger = (_) => {
-                            // TODO: (Frenqy)
-                            // TODO: Log
-                            // HUtil.Log("和了");
-                        }
-                    }
-                };
+                output.Add(new RonAction(hand.player));
                 return true;
-            } else {
-                return Reject(out output);
             }
+            return false;
         }
     }
 }

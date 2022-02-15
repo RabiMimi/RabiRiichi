@@ -70,7 +70,7 @@ namespace RabiRiichi.Pattern {
                 }
             } else {
                 // 14张，计算切牌
-                var tiles = GetHand(hand.hand, incoming);
+                var tiles = GetHand(hand.allTiles, incoming);
                 output = new Tiles(tiles
                     .Where(t => !t.Is19Z || tileGroups[t.NoDoraVal].Count > (multiCnt > 1 ? 1 : 2))
                     .Distinct());

@@ -46,6 +46,7 @@ namespace RabiRiichi.Riichi {
             return tile.IsSangen || tile.IsSame(Tile.From(gameInfo.wind));
         }
         public Player GetPlayer(int index) => players[index];
+        public int Time => gameInfo.timeStamp;
         #endregion
 
         #region Start
@@ -121,16 +122,6 @@ namespace RabiRiichi.Riichi {
 
         public IEnumerable<GameTile> AllDiscardedTiles =>
             players.SelectMany(player => player.hand.discarded);
-        #endregion
-
-        #region Update
-        public void OnUpdate() {
-            // 更新振听状态
-            var resolver = actionManager.GetResolver<RiichiResolver>();
-            foreach (var player in players) {
-                player.hand.furiten = resolver.IsFuriten(player.hand);
-            }
-        }
         #endregion
     }
 }

@@ -1,4 +1,5 @@
-﻿using RabiRiichi.Event;
+﻿using System.Collections.Generic;
+using RabiRiichi.Action;
 using RabiRiichi.Riichi;
 using System.Linq;
 
@@ -7,36 +8,19 @@ namespace RabiRiichi.Resolver {
     /// 生成切牌表
     /// </summary>
     public class PlayTileResolver : ResolverBase {
-        public override bool ResolveAction(Hand hand, GameTile incoming, out PlayerActions output) {
-            var tiles = new Tiles();
+        public override bool ResolveAction(Hand hand, GameTile incoming, MultiPlayerAction output) {
+            var tiles = new List<GameTile>();
             if (incoming != null) {
-                tiles.Add(incoming.tile);
+                tiles.Add(incoming);
             }
-            if (incoming == null || !hand.riichi) {
-                tiles.AddRange(hand.hand.ToTiles());
+            if (!hand.riichi) {
+                tiles.AddRange(hand.allTiles);
             }
-            if (tiles.Count <= 0 || !incoming.IsTsumo) {
-                return Reject(out output);
+            if (tiles.Count == 0) {
+                return false;
             }
-            tiles = new Tiles(tiles.Distinct());
             tiles.Sort();
-            var tileStr = tiles.Select(tile => tile.ToString()).ToList();
-            var str = string.Join("/", tileStr);
-            output = new PlayerActions() {
-                new PlayerAction {
-                    priority = PlayerAction.Priority.PLAY,
-                    player = hand.player,
-                    options = tileStr,
-                    trigger = (PlayerAction action) => {
-                        /*
-                        hand.game.eventBus.Queue(new PlayTileEvent {
-                            player = hand.player,
-                            tile = hand.GetTile(tiles[action.choice]),
-                            riichi = false,
-                        });*/
-                    }
-                }
-            };
+            output.Add(new ChooseTileAction(hand.player, tiles));
             return true;
         }
     }

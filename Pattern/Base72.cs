@@ -63,7 +63,7 @@ namespace RabiRiichi.Pattern {
                 }
             } else {
                 // 14张，计算切牌
-                var tiles = GetHand(hand.hand, incoming);
+                var tiles = GetHand(hand.allTiles, incoming);
                 output = new Tiles(tiles.Where(tile => {
                     int cnt = tileGroups[tile.NoDoraVal].Count;
                     if (singleTiles.Length > requiredSingle) {

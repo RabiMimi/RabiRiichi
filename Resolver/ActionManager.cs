@@ -1,8 +1,5 @@
 ﻿using RabiRiichi.Riichi;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace RabiRiichi.Resolver {
     public class ActionManager {
@@ -65,7 +62,8 @@ namespace RabiRiichi.Resolver {
         }
 
         #endregion
-
+        // TODO: Use event driven logic
+/*
         public async Task OnDrawTile(Hand hand, GameTile incoming, bool selectOnly) {
             var actions = new PlayerActions();
             foreach (var resolver in OnDrawTileResolvers(selectOnly)) {
@@ -98,7 +96,6 @@ namespace RabiRiichi.Resolver {
                     }
                 }
                 if (suc) {
-                    /*
                     actions.Add(new PlayerAction {
                         priority = PlayerAction.Priority.SKIP,
                         player = player,
@@ -106,7 +103,7 @@ namespace RabiRiichi.Resolver {
                         trigger = (_) => {
                             // TODO(Frenqy)
                         }
-                    });*/
+                    });
                     // var msg = $"{player.hand.hand} +{discard} ({currentPlayer.id})\n{actions.GetMessage(player.id)}";
                     // Send message
                 }
@@ -117,5 +114,6 @@ namespace RabiRiichi.Resolver {
                 return false;
             }
         }
+*/
     }
 }

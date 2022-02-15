@@ -1,94 +1,13 @@
 ﻿using RabiRiichi.Riichi;
-using RabiRiichi.Util;
-using System;
+using RabiRiichi.Action;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace RabiRiichi.Resolver {
-    public class PlayerAction {
-        public enum Priority {
-            NONE,
-            SKIP,
-            PLAY,
-            CHI,
-            PON,
-            KAN,
-            RIICHI,
-            RON,
-        }
-        /// <summary> 优先级，最高优先级的操作才会触发 </summary>
-        public Priority priority;
-        /// <summary> 需要操作的用户 </summary>
-        public Player player;
-        /// <summary> 选项，全小写 </summary>
-        public List<string> options;
-        /// <summary> 触发动作的options下标 </summary>
-        public int choice = -1;
-        /// <summary> 参数是this </summary>
-        public Action<PlayerAction> trigger;
-    }
-
-    public class PlayerActions: List<PlayerAction> {
-        private readonly List<PlayerAction> confirmed = new List<PlayerAction>();
-        public bool Finished { get; private set; } = false;
-
-        public async Task Wait() {
-            while (!Finished) {
-                await Task.Yield();
-            }
-        }
-
-        /// <summary>
-        /// 监听消息
-        /// </summary>
-        /// <returns>是否移除该监听器</returns>
-        public async Task<bool> OnMessage(Game game, int player) {
-            return true;
-            // TODO: Fix this
-            /*
-            var actions = this.Where(action => action.player == player).ToArray();
-            if (actions.Length == 0) {
-                return false;
-            }
-            bool suc = false;
-            foreach (var action in actions) {
-                int index = action.options.FindIndex((option) => true);
-                if (index >= 0) {
-                    action.choice = index;
-                    confirmed.Add(action);
-                    suc = true;
-                    break;
-                }
-            }
-            if (suc) {
-                foreach (var action in actions) {
-                    Remove(action);
-                }
-                var maxConfirmed = confirmed
-                    .Select(action => action.priority)
-                    .DefaultIfEmpty(PlayerAction.Priority.NONE)
-                    .Max();
-                var maxUnconfirmed = this
-                    .Select(action => action.priority)
-                    .DefaultIfEmpty(PlayerAction.Priority.NONE)
-                    .Max();
-                if (maxConfirmed > maxUnconfirmed -
-                    (maxConfirmed != PlayerAction.Priority.RON).ToInt()) {
-                    foreach (var action in confirmed
-                        .Where(action => action.priority == maxConfirmed)) {
-                        action.trigger(action);
-                    }
-                    return true;
-                }
-            }
-            return false;*/
-        }
-    }
 
     public abstract class ResolverBase {
 
-        public abstract bool ResolveAction(Hand hand, GameTile incoming, out PlayerActions output);
+        public abstract bool ResolveAction(Hand hand, GameTile incoming, MultiPlayerAction output);
 
         private static bool CheckComboDfs(
             List<GameTile> current,
@@ -133,12 +52,6 @@ namespace RabiRiichi.Resolver {
             tileList.Sort();
             hand.Sort();
             return CheckComboDfs(current, output, hand, 0, tileList, 0);
-        }
-
-        /// <summary> 语法糖 </summary>
-        public static bool Reject<T>(out T output) where T: class {
-            output = null;
-            return false;
         }
     }
 }

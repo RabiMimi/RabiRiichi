@@ -1,4 +1,4 @@
-﻿using RabiRiichi.Event;
+﻿using RabiRiichi.Action;
 using RabiRiichi.Riichi;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,51 +8,22 @@ namespace RabiRiichi.Resolver {
     /// 判定是否能吃
     /// </summary>
     public class ChiResolver : ResolverBase {
-        private IEnumerable<string> GenerateChi(string suffix = "") {
-            if (!string.IsNullOrEmpty(suffix) && suffix.StartsWith(" ")) {
-                GenerateChi(" " + suffix);
-            }
-            yield return "chi" + suffix;
-            yield return "c" + suffix;
-            yield return "吃" + suffix;
-        }
-
-        public override bool ResolveAction(Hand hand, GameTile incoming, out PlayerActions output) {
+        public override bool ResolveAction(Hand hand, GameTile incoming, MultiPlayerAction output) {
             if (hand.game.wall.IsFinished) {
-                return Reject(out output);
+                return false;
             }
             if (hand.riichi || incoming.IsTsumo || incoming.tile.IsZ || incoming.fromPlayer != hand.player.PrevPlayer) {
-                return Reject(out output);
+                return false;
             }
-            int num = incoming.tile.Num;
             var current = new List<GameTile> { incoming };
             var result = new List<GameTiles>();
-            CheckCombo(hand.hand, result, current, incoming.tile.Prev.Prev, incoming.tile.Prev);
-            CheckCombo(hand.hand, result, current, incoming.tile.Prev, incoming.tile.Next);
-            CheckCombo(hand.hand, result, current, incoming.tile.Next, incoming.tile.Next.Next);
+            CheckCombo(hand.allTiles, result, current, incoming.tile.Prev.Prev, incoming.tile.Prev);
+            CheckCombo(hand.allTiles, result, current, incoming.tile.Prev, incoming.tile.Next);
+            CheckCombo(hand.allTiles, result, current, incoming.tile.Next, incoming.tile.Next.Next);
             if (result.Count == 0) {
-                return Reject(out output);
+                return false;
             }
-            output = new PlayerActions();
-            for (int i = 0; i < result.Count; i++) {
-                var res = result[i];
-                var str = result.Count <= 1 ? "" : (i + 1).ToString();
-                output.Add(new PlayerAction {
-                    priority = PlayerAction.Priority.CHI,
-                    player = hand.player,
-                    options = GenerateChi(str).ToList(),
-                    trigger = (_) => {
-                        /*
-                        hand.game.eventBus.Queue(new GetTileEvent {
-                            game = hand.game,
-                            source = TileSource.Chi,
-                            incoming = incoming,
-                            player = hand.player,
-                            group = result[i],
-                        });*/
-                    }
-                });
-            }
+            output.Add(new ChiAction(hand.player, result));
             return true;
         }
     }

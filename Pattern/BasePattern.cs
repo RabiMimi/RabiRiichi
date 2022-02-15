@@ -10,8 +10,8 @@ namespace RabiRiichi.Pattern {
                 tileGroups[i] = new GameTiles();
             }
             var tiles = (includeGroups
-                ? hand.hand.Concat(hand.groups.SelectMany(gr => gr))
-                : hand.hand).ToList();
+                ? hand.allTiles.Concat(hand.groups.SelectMany(gr => gr))
+                : hand.allTiles).ToList();
             if (incoming != null) {
                 tiles.Add(incoming);
             }
