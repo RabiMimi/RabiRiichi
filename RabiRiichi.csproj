@@ -1,12 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <Platforms>AnyCPU;x86</Platforms>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="RabiRiichiTests\**"/>
-    <EmbeddedResource Remove="RabiRiichiTests\**"/>
-    <None Remove="RabiRiichiTests\**"/>
+    <Compile Remove="RabiRiichiTests\**" />
+    <EmbeddedResource Remove="RabiRiichiTests\**" />
+    <None Remove="RabiRiichiTests\**" />
   </ItemGroup>
   <ItemGroup>
     <None Update="Resource\Meme\kanbudong.jpg">
@@ -128,6 +128,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0"/>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
   </ItemGroup>
 </Project>
