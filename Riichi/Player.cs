@@ -16,7 +16,7 @@
             this.game = game;
             hand.player = this;
         }
-        
+
         public int NextPlayerId => game.NextPlayerId(id);
         public int PrevPlayerId => game.PrevPlayerId(id);
         public Player NextPlayer => game.GetPlayer(NextPlayerId);

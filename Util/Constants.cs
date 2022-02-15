@@ -9,7 +9,7 @@ namespace RabiRiichi.Util {
 
         static Constants() {
             BASE_DIR = Path.GetDirectoryName(
-                new System.Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+                new System.Uri(Assembly.GetExecutingAssembly().Location).LocalPath);
         }
     }
 }

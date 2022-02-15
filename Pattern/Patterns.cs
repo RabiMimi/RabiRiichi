@@ -1,5 +1,7 @@
-namespace RabiRiichi.Pattern {
-    public static class Patterns {
+namespace RabiRiichi.Pattern
+{
+    public static class Patterns
+    {
         // TODO: 注入Pattern管理
         public static BasePattern[] BasePatterns = new BasePattern[] {
             new Base33332(),
