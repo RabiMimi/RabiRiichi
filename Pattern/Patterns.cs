@@ -7,6 +7,7 @@ namespace RabiRiichi.Pattern {
             new Base13_1()
         };
         public static StdPattern[] StdPatterns = new StdPattern[] {
+            // 一番
             new Pinfu(),
             new 断幺九(),
             new 役牌场风(),

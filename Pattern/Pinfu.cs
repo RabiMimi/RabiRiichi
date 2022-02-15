@@ -25,11 +25,6 @@ namespace RabiRiichi.Pattern {
                 Val = 1,
                 Source = this
             });
-            scorings.Add(new Scoring {
-                Type = ScoringType.Fu,
-                Val = incoming.IsTsumo ? 20 : 30,
-                Source = this
-            });
             return true;
         }
     }

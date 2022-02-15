@@ -12,7 +12,7 @@ namespace RabiRiichi.Pattern
 
         public override bool Resolve(List<GameTiles> groups, Hand hand, GameTile incoming, Scorings scorings)
         {
-            if (hand.allTiles.Any(tile => tile.tile.Is19Z) && incoming.tile.Is19Z)
+            if (hand.allTiles.Any(tile => tile.tile.Is19Z) || incoming.tile.Is19Z)
                 return false;
             scorings.Add(new Scoring
             {

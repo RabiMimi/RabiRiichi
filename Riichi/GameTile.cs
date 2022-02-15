@@ -75,12 +75,30 @@ namespace RabiRiichi.Riichi {
         /// <summary> 是否是雀头 </summary>
         public bool IsJan => Count == 2 && this[0].IsSame(this[1]);
 
+        /// <summary> 判定两个搭子是否相同，赤宝牌视为相同牌 </summary>
+        public bool IsSame(GameTiles other)
+        {
+            if (this.Count != other.Count)
+                return false;
+
+            var thisTiles = this.ToTiles();
+            var otherTiles = other.ToTiles();
+            thisTiles.Sort();
+            otherTiles.Sort();
+            for (int i = 0; i < thisTiles.Count; i++)
+            {
+                if (!thisTiles[i].IsSame(otherTiles[i]))
+                    return false;
+            }
+            return true;
+        }
+
         /// <summary> 判定是否有给出的牌，赤宝牌视为相同牌 </summary>
         public bool HasTile(Tile tile) {
             return this.Any(t => t.tile.IsSame(tile));
         }
         public override string ToString() {
-            var ret = new Tiles(this.Select(tile => tile.tile));
+            var ret = this.ToTiles();
             ret.Sort();
             return ret.ToString();
         }
