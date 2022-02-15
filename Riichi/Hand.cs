@@ -32,22 +32,13 @@ namespace RabiRiichi.Riichi {
 
         /// <summary> 获取听的牌 </summary>
         /// <param name="hand">必须是13张</param>
-        /// <returns>听牌列表，无赤宝牌</returns>
-        public Tiles GetTenpai {
+        /// <returns>听牌列表，无赤宝牌。不听牌时返回null</returns>
+        public Tiles Tenpai {
             get {
-                var ret = new Tiles();
-                freeTiles.Sort();
-                foreach (var pattern in Patterns.BasePatterns) {
-                    int shanten = pattern.Shanten(this, null, out var tiles, 0);
-                    Debug.Assert(shanten >= 0);
-                    if (shanten > 0) {
-                        continue;
-                    }
-                    ret.AddRange(tiles);
+                if (game.patternResolver.ResolveShanten(this, null, out var tiles, 0) == 0) {
+                    return tiles;
                 }
-                ret = new Tiles(ret.Distinct());
-                ret.Sort();
-                return ret;
+                return null;
             }
         }
 
@@ -57,7 +48,7 @@ namespace RabiRiichi.Riichi {
                 // TODO: 选择一个实现：
                 // 1. 在所有玩家操作以后再将牌加入弃牌列表
                 // 2. 在玩家打出牌时即将其加入弃牌表，但是在判定振听时忽略
-                var tenpai = GetTenpai;
+                var tenpai = Tenpai;
                 // 摸切振听
                 if (discarded.Any(tile => tenpai.Contains(tile.tile.WithoutDora))) {
                     return true;

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using RabiRiichi.Riichi;
 
@@ -86,6 +87,9 @@ namespace RabiRiichi.Pattern {
             return ResolveStdPattern(context, pattern, scorings);
         }
 
+        /// <summary>
+        /// 检查是否和牌并计算得分最高的牌型
+        /// </summary>
         public Scorings ResolveMaxScore(Hand hand, GameTile incoming, bool applyBonus) {
             var groupList = new List<List<GameTiles>>();
             var context = new ResolveContext {
@@ -122,5 +126,30 @@ namespace RabiRiichi.Pattern {
             return maxScore;
         }
 
+        /// <summary>
+        /// 获取手牌的向听数，并返回听牌或切牌
+        /// <param name="hand">手牌</param>
+        /// <param name="incoming">进张，若为null则计算听牌，否则计算切牌</param>
+        /// <param name="maxShanten">不计算超过该向听数的结果以加速</param>
+        /// </summary>
+        public int ResolveShanten(Hand hand, GameTile incoming, out Tiles tiles, int maxShanten = int.MaxValue) {
+            int retShanten = int.MaxValue;
+            tiles = new Tiles();
+            foreach (var pattern in Patterns.BasePatterns) {
+                int shanten = pattern.Shanten(hand, incoming, out var curTiles, maxShanten);
+                if (shanten > retShanten || shanten == int.MaxValue) {
+                    continue;
+                }
+                if (shanten == retShanten) {
+                    tiles.AddRange(curTiles);
+                    continue;
+                }
+                retShanten = shanten;
+                tiles = curTiles;
+            }
+            tiles = new Tiles(tiles.Distinct().ToList());
+            tiles.Sort();
+            return retShanten;
+        }
     }
 }

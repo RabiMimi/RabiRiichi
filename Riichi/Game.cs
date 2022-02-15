@@ -21,6 +21,7 @@ namespace RabiRiichi.Riichi {
         public EventBus eventBus;
         public Wall wall;
         public ActionManager actionManager;
+        public PatternResolver patternResolver;
         public Rand rand;
 
         public Game(GameConfig config) {
@@ -34,11 +35,13 @@ namespace RabiRiichi.Riichi {
             serviceCollection.AddSingleton<EventBus>();
             serviceCollection.AddSingleton<GameInfo>();
             serviceCollection.AddSingleton<ActionManager>();
+            serviceCollection.AddSingleton<PatternResolver>();
             diContainer = serviceCollection.BuildServiceProvider();
             eventBus = diContainer.GetService<EventBus>();
             gameInfo = diContainer.GetService<GameInfo>();
             actionManager = diContainer.GetService<ActionManager>();
             wall = diContainer.GetService<Wall>();
+            patternResolver = diContainer.GetService<PatternResolver>();
         }
 
         #region GameUtil
@@ -50,42 +53,6 @@ namespace RabiRiichi.Riichi {
         #endregion
 
         #region Start
-
-/*
-        protected virtual void RegisterResolvers() {
-            var resolvers = new ResolverBase[] {
-                new RonResolver(),
-                new RiichiResolver(),
-                new ChiResolver(),
-                new KanResolver(),
-                new PonResolver(),
-                new PlayTileResolver(),
-            };
-            foreach (var resolver in resolvers) {
-                actionManager.RegisterResolver(resolver);
-            }
-        }
-
-        protected virtual void RegisterPatterns() {
-            if (actionManager.TryGetResolver<RonResolver>(out var ronResolver)) {
-                ronResolver.SetMinHan(1);
-                foreach (var pattern in basePatterns) {
-                    ronResolver.RegisterBasePattern(pattern);
-                }
-                foreach (var pattern in stdPatterns) {
-                    ronResolver.RegisterStdPattern(pattern);
-                }
-                foreach (var pattern in bonusPatterns) {
-                    ronResolver.RegisterBonusPattern(pattern);
-                }
-            }
-            if (actionManager.TryGetResolver<RiichiResolver>(out var riichiResolver)) {
-                foreach (var pattern in basePatterns) {
-                    riichiResolver.RegisterBasePattern(pattern);
-                }
-            }
-        }
-*/
 
         public async Task Start() {
             // Init players
