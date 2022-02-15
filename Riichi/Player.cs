@@ -21,6 +21,11 @@
         public int PrevPlayerId => game.PrevPlayerId(id);
         public Player NextPlayer => game.GetPlayer(NextPlayerId);
         public Player PrevPlayer => game.GetPlayer(PrevPlayerId);
-        public bool samePlayer(Player rhs) => id == rhs.id;
+        
+        /// <summary> 是否是同一个玩家 </summary>
+        public bool SamePlayer(Player rhs) => id == rhs.id;
+
+        /// <summary> 是否是役牌 </summary>
+        public bool IsYaku(Tile tile) => game.IsYaku(tile) || tile.IsSame(Tile.From(wind));
     }
 }

@@ -41,6 +41,7 @@ namespace RabiRiichi.Resolver {
                     player = hand.player,
                     options = GeneratePon(str).ToList(),
                     trigger = (_) => {
+                        /*
                         hand.game.eventBus.Queue(new GetTileEvent {
                             game = hand.game,
                             source = TileSource.Pon,
@@ -48,6 +49,7 @@ namespace RabiRiichi.Resolver {
                             player = hand.player,
                             group = result[i],
                         });
+                        */
                     }
                 });
             }

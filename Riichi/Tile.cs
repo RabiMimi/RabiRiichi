@@ -62,11 +62,24 @@ namespace RabiRiichi.Riichi {
 
         /// <summary> 是否是19牌或字牌 </summary>
         public bool Is19Z => (IsMPS && (Num == 1 || Num == 9)) || IsZ;
+
+        /// <summary> 是否是字牌 </summary>
         public bool IsZ => Gr == Group.Z;
 
-        public Tile(byte val = 0) {
-            Val = val;
+        /// <summary> 是否是万筒索 </summary>
+        public bool IsMPS => Gr == Group.M || Gr == Group.P || Gr == Group.S;
+
+        /// <summary> 是否是三元牌 </summary>
+        public bool IsSangen => IsZ && Num >= 5 && Num <= 7;
+
+        public Tile(byte val = 0) { Val = val; }
+        public Tile(Group gr, int num, bool isAkadora = false) {
+            Val = 0;
+            Gr = gr;
+            Num = (byte)num;
+            Akadora = isAkadora;
         }
+        public static Tile From(Wind wind) => new Tile(Group.Z, (int)wind + 1);
 
         public Tile(string str) {
             Val = 0;
@@ -118,9 +131,6 @@ namespace RabiRiichi.Riichi {
                 return numcmp;
             return Akadora.CompareTo(other.Akadora);
         }
-
-        /// <summary> 是否是万筒索 </summary>
-        public bool IsMPS => Gr == Group.M || Gr == Group.P || Gr == Group.S;
 
         /// <summary> 是否是相同的牌，赤dora视为相同 </summary>
         public bool IsSame(Tile other) => Gr == other.Gr && Num == other.Num;
@@ -291,13 +301,10 @@ namespace RabiRiichi.Riichi {
         /// <summary> 所有牌（不重复，无赤宝） </summary>
         public static Tiles AllDistinct => new Tiles("123456789m123456789p123456789s1234567z");
 
-        /// <summary>
-        /// 所有19牌和字牌
-        /// </summary>
+        /// <summary> 所有19牌和字牌 </summary>
         public static Tiles T19Z => new Tiles("19m19p19s1234567z");
-        /// <summary>
-        /// 所有19牌
-        /// </summary>
+
+        /// <summary> 所有19牌 </summary>
         public static Tiles T19 => new Tiles("19m19p19s");
     }
 }

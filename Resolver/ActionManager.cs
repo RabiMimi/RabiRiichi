@@ -6,6 +6,15 @@ using System.Threading.Tasks;
 
 namespace RabiRiichi.Resolver {
     public class ActionManager {
+        public static ResolverBase[] resolvers = new ResolverBase[] {
+            new RonResolver(),
+            new RiichiResolver(),
+            new ChiResolver(),
+            new KanResolver(),
+            new PonResolver(),
+            new PlayTileResolver(),
+        };
+
         public readonly List<ResolverBase> Resolvers = new List<ResolverBase>();
 
         public void RegisterResolver(ResolverBase resolver) {
@@ -22,10 +31,6 @@ namespace RabiRiichi.Resolver {
         }
 
         #region Generators
-        private static readonly List<string> SKIP_OPTIONS = new List<string> {
-            "s", "skip", "跳过"
-        };
-
         private IEnumerable<ResolverBase> OnDrawTileResolvers(bool selectOnly) {
             if (TryGetResolver<PlayTileResolver>(out var resolver1)) {
                 yield return resolver1;
@@ -93,6 +98,7 @@ namespace RabiRiichi.Resolver {
                     }
                 }
                 if (suc) {
+                    /*
                     actions.Add(new PlayerAction {
                         priority = PlayerAction.Priority.SKIP,
                         player = player,
@@ -100,7 +106,7 @@ namespace RabiRiichi.Resolver {
                         trigger = (_) => {
                             // TODO(Frenqy)
                         }
-                    });
+                    });*/
                     // var msg = $"{player.hand.hand} +{discard} ({currentPlayer.id})\n{actions.GetMessage(player.id)}";
                     // Send message
                 }

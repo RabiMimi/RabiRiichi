@@ -351,3 +351,6 @@ MigrationBackup/
 
 # VSCode configuration
 .vscode/
+
+# Development directory
+dev/

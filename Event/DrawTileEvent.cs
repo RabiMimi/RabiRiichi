@@ -19,5 +19,10 @@ namespace RabiRiichi.Event {
         public Tile tile;
         public Tile doraIndicator = Tile.Empty;
         #endregion
+
+        public DrawTileEvent(Game game, Player player, DrawTileType type): base(game) {
+            this.player = player;
+            this.type = type;
+        }
     }
 }

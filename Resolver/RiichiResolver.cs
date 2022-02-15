@@ -110,11 +110,13 @@ namespace RabiRiichi.Resolver {
                     player = hand.player,
                     options = GenerateRiichi(str).ToList(),
                     trigger = (_) => {
+                        /*
                         hand.game.eventBus.Queue(new PlayTileEvent {
                             player = hand.player,
                             tile = gameTile,
                             riichi = true,
                         });
+                        */
                     }
                 });
             }

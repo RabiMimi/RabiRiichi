@@ -11,7 +11,6 @@ namespace RabiRiichi.Riichi {
         public List<GameTiles> groups = new List<GameTiles>();
         /// <summary> 牌河 </summary>
         public GameTiles discarded = new GameTiles();
-
         /// <summary> 当前玩家 </summary>
         public Player player;
         /// <summary> 当前游戏实例 </summary>

@@ -42,13 +42,14 @@ namespace RabiRiichi.Resolver {
                     player = hand.player,
                     options = GenerateChi(str).ToList(),
                     trigger = (_) => {
+                        /*
                         hand.game.eventBus.Queue(new GetTileEvent {
                             game = hand.game,
                             source = TileSource.Chi,
                             incoming = incoming,
                             player = hand.player,
                             group = result[i],
-                        });
+                        });*/
                     }
                 });
             }

@@ -4,26 +4,16 @@ using RabiRiichi.Pattern;
 using RabiRiichi.Resolver;
 using RabiRiichi.Util;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace RabiRiichi.Riichi {
-    public enum GamePhase {
-        Pending, Running, Finished
-    }
-
-    public class GameInfo {
-        public GamePhase phase = GamePhase.Pending;
-        public int playerCount = 2;
-        public Wind wind = Wind.E;
-        public int round = 0;
-        public int honba = 0;
-    }
 
     public class Game {
         public const int HandSize = 13;
+        public ServiceProvider diContainer;
 
         public GameInfo gameInfo;
         public Player[] players;
@@ -33,28 +23,29 @@ namespace RabiRiichi.Riichi {
         public ActionManager actionManager;
         public Rand rand;
 
-        public Game(GameInfo info) {
-            gameInfo = info;
+        public Game(GameConfig config) {
+            var serviceCollection = new ServiceCollection();
+            serviceCollection.AddSingleton(this);
+            serviceCollection.AddSingleton(config);
+            serviceCollection.AddSingleton<Wall>();
+            serviceCollection.AddSingleton<EventBus>();
+            serviceCollection.AddSingleton<GameInfo>();
+            serviceCollection.AddSingleton<ActionManager>();
+            diContainer = serviceCollection.BuildServiceProvider();
+            eventBus = diContainer.GetService<EventBus>();
+            gameInfo = diContainer.GetService<GameInfo>();
+            actionManager = diContainer.GetService<ActionManager>();
+            wall = diContainer.GetService<Wall>();
         }
 
+        #region GameUtil
+        public bool IsYaku(Tile tile) {
+            return tile.IsSangen || tile.IsSame(Tile.From(gameInfo.wind));
+        }
         public Player GetPlayer(int index) => players[index];
+        #endregion
 
         #region Start
-        protected virtual void RegisterEventListeners() {
-            eventBus.Register<DealHandEvent>(Phase.On, new DftOnDealHand());
-            eventBus.Register<DealHandEvent>(Phase.Post, new DftPostDealHand());
-
-            eventBus.Register<DrawTileEvent>(Phase.On, new DftOnDrawTile());
-            eventBus.Register<DrawTileEvent>(Phase.Post, new DftPostDrawTile());
-
-            eventBus.Register<GetTileEvent>(Phase.Pre, new DftTriggerUpdate());
-            eventBus.Register<GetTileEvent>(Phase.Post, new DftPostGetTile());
-
-            eventBus.Register<PlayTileEvent>(Phase.Post, new DftPostPlayTile());
-            eventBus.Register<PlayTileEvent>(Phase.Finalize, new DftFinPlayTile());
-
-            eventBus.Register<EventBase>(Phase.Finalize, new MessageSender());
-        }
 
         protected virtual void RegisterResolvers() {
             var resolvers = new ResolverBase[] {
@@ -70,18 +61,8 @@ namespace RabiRiichi.Riichi {
             }
         }
 
+/*
         protected virtual void RegisterPatterns() {
-            var basePatterns = new BasePattern[] {
-                new Base33332(),
-                new Base72(),
-                new Base13_1()
-            };
-            var stdPatterns = new StdPattern[] {
-                new Pinfu(),
-            };
-            var bonusPatterns = new StdPattern[] {
-                new Akadora(),
-            };
             if (actionManager.TryGetResolver<RonResolver>(out var ronResolver)) {
                 ronResolver.SetMinHan(1);
                 foreach (var pattern in basePatterns) {
@@ -100,10 +81,9 @@ namespace RabiRiichi.Riichi {
                 }
             }
         }
+*/
 
         protected virtual void Init() {
-            players = null;
-            eventBus = new EventBus { game = this };
             wall = new Wall();
             actionManager = new ActionManager();
             rand = new Rand((int)(DateTimeOffset.Now.ToUnixTimeSeconds() & 0xffffffff));
@@ -115,12 +95,11 @@ namespace RabiRiichi.Riichi {
             Init();
 
             // Register
-            RegisterEventListeners();
             RegisterResolvers();
-            RegisterPatterns();
+            // RegisterPatterns();
 
             // Init players
-            players = new Player[gameInfo.playerCount];
+            players = new Player[gameInfo.config.playerCount];
             for (int i = 0; i < players.Length; i++) {
                 players[i] = new Player(i, this) {
                     wind = (Wind)i,
@@ -128,23 +107,14 @@ namespace RabiRiichi.Riichi {
             }
 
             // Deal cards
-            for (int i = 0; i < players.Length; i++) {
-                var ev = new DealHandEvent {
-                    game = this,
-                    player = i,
-                };
+            foreach (var player in players) {
+                var ev = new DealHandEvent(this, player);
                 eventBus.Queue(ev);
             }
-            eventBus.Queue(new DrawTileEvent {
-                game = this,
-                type = DrawTileType.Wall,
-                player = GetPlayer(0)
-            });
+            eventBus.Queue(new DrawTileEvent(this, GetPlayer(this.gameInfo.Banker), DrawTileType.Wall));
 
             // 游戏逻辑
-            while (!eventBus.Empty) {
-                await eventBus.Process();
-            }
+            await eventBus.ProcessQueue();
 
             // End game
             gameInfo.phase = GamePhase.Finished;
@@ -184,14 +154,6 @@ namespace RabiRiichi.Riichi {
             foreach (var player in players) {
                 player.hand.furiten = resolver.IsFuriten(player.hand);
             }
-        }
-
-        public void DrawNext(int player) {
-            eventBus.Queue(new DrawTileEvent {
-                game = this,
-                type = DrawTileType.Wall,
-                player = NextPlayer(player),
-            });
         }
         #endregion
     }

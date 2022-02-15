@@ -16,7 +16,7 @@ namespace RabiRiichi.Riichi {
         public int discardTime = -1;
         /// <summary> 是否是公开牌 </summary>
         public bool visible = false;
-        /// <summary> 是否是立直牌 </summary>
+        /// <summary> 是否是立直宣告牌 </summary>
         public bool riichi = false;
         /// <summary> 是否是自摸 </summary>
         public bool IsTsumo => fromPlayer == null;

@@ -2,8 +2,8 @@
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Event.Listener {
-    public class MessageSender : ListenerBase {
-        public override uint CanListen(EventBase ev) => Priority.MessageSender;
+    public class MessageSender {
+        public uint CanListen(EventBase ev) => Priority.MessageSender;
 
         public static string ToString(TileSource source) {
             switch (source) {
@@ -14,7 +14,7 @@ namespace RabiRiichi.Event.Listener {
             }
         }
 
-        public override async Task<bool> Handle(EventBase ev) {
+        public Task<bool> Handle(EventBase ev) {
             /*
             var game = ev.game;
             if (ev is DealHandEvent dhe) {
@@ -38,7 +38,7 @@ namespace RabiRiichi.Event.Listener {
                 str += gte.group.ToString();
                 await game.SendPublic(str);
             }*/
-            return false;
+            return Task.FromResult(true);
         }
     }
 }

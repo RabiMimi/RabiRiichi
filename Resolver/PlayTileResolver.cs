@@ -28,11 +28,12 @@ namespace RabiRiichi.Resolver {
                     player = hand.player,
                     options = tileStr,
                     trigger = (PlayerAction action) => {
+                        /*
                         hand.game.eventBus.Queue(new PlayTileEvent {
                             player = hand.player,
                             tile = hand.GetTile(tiles[action.choice]),
                             riichi = false,
-                        });
+                        });*/
                     }
                 }
             };

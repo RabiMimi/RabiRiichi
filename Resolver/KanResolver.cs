@@ -25,6 +25,7 @@ namespace RabiRiichi.Resolver {
                 player = hand.player,
                 options = GenerateKan(str).ToList(),
                 trigger = (_) => {
+                    /*
                     hand.game.eventBus.Queue(new GetTileEvent {
                         game = hand.game,
                         source = TileSource.Kan,
@@ -37,6 +38,7 @@ namespace RabiRiichi.Resolver {
                         type = close ? DrawTileType.CloseRinshan : DrawTileType.OpenRinshan,
                         player = hand.player,
                     });
+                    */
                 }
             };
             output.Add(ret);
