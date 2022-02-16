@@ -9,7 +9,7 @@ namespace RabiRiichi.Pattern {
         /// </summary>
         public static GameTileBucket GetTileGroups(Hand hand, GameTile incoming, bool includeGroups) {
             var tiles = (includeGroups
-                ? hand.freeTiles.Concat(hand.groups.SelectMany(gr => gr))
+                ? hand.freeTiles.Concat(hand.fuuro.SelectMany(gr => gr))
                 : hand.freeTiles).ToList();
             if (incoming != null) {
                 tiles.Add(incoming);

@@ -19,7 +19,9 @@ namespace RabiRiichi.Pattern {
             gr.Sort();
             if (incoming == gr[1])
                 return false;
-            // TODO：确认雀头没有+符
+            var jantou = groups.Find(gr => gr is Jantou);
+            if (jantou == null || hand.player.IsYaku(jantou[0].tile))
+                return false;
             scorings.Add(new Scoring(ScoringType.Han, 1, this));
             return true;
         }

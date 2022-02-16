@@ -10,7 +10,7 @@ namespace RabiRiichi.Riichi {
         public GameTiles freeTiles = new GameTiles();
 
         /// <summary> 副露的面子 </summary>
-        public List<MenOrJantou> groups = new List<MenOrJantou>();
+        public List<MenOrJantou> fuuro = new List<MenOrJantou>();
 
         /// <summary> 牌河 </summary>
         public GameTiles discarded = new GameTiles();
@@ -69,7 +69,7 @@ namespace RabiRiichi.Riichi {
         public GameTile ron = null;
         public bool IsRon => ron != null;
         /// <summary> 牌的总数，注意：杠会被算作3张牌 </summary>
-        public int Count => groups.Select(gr => Math.Min(3, gr.Count)).Sum() + freeTiles.Count;
+        public int Count => fuuro.Select(gr => Math.Min(3, gr.Count)).Sum() + freeTiles.Count;
 
         public GameTile GetTile(Tile tile) => freeTiles.Find(t => t.tile == tile);
         public GameTiles GetTiles(Tiles tiles) {
@@ -118,7 +118,7 @@ namespace RabiRiichi.Riichi {
         }
 
         public Hand AddGroup(MenOrJantou tiles, TileSource source) {
-            groups.Add(tiles);
+            fuuro.Add(tiles);
             tiles.ForEach(tile => {
                 tile.player = player;
                 tile.source = source;

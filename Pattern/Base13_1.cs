@@ -36,8 +36,8 @@ namespace RabiRiichi.Pattern {
         }
 
         public override int Shanten(Hand hand, GameTile incoming, out Tiles output, int maxShanten = 13) {
-            if (hand.groups.Count > 1 ||
-                hand.groups.Any(gr => !(gr is Jantou) || !gr.All(t => t.tile.Is19Z))) {
+            if (hand.fuuro.Count > 1 ||
+                hand.fuuro.Any(gr => !(gr is Jantou) || !gr.All(t => t.tile.Is19Z))) {
                 return Reject(out output);
             }
 

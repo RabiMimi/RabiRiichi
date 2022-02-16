@@ -26,6 +26,10 @@ namespace RabiRiichi.Riichi {
         /// <summary> 是否是万筒索 </summary>
         public bool IsMPS => tile.IsMPS;
 
+        public GameTile(Tile tile) {
+            this.tile = tile;
+        }
+
         public int CompareTo(GameTile other) {
             return tile.CompareTo(other.tile);
         }
@@ -47,7 +51,7 @@ namespace RabiRiichi.Riichi {
         public GameTiles() { }
         public GameTiles(IEnumerable<GameTile> tiles) : base(tiles) { }
         public GameTiles(IEnumerable<Tile> tiles)
-            : base(tiles.Select(tile => new GameTile { tile = tile })) { }
+            : base(tiles.Select(tile => new GameTile(tile))) { }
         public Tiles ToTiles() {
             return new Tiles(this.Select(gameTile => gameTile.tile));
         }
