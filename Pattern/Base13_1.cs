@@ -16,13 +16,10 @@ namespace RabiRiichi.Pattern {
                 return false;
             }
             // Check hand & groups valid
-            var tileGroups = GetTileGroups(hand, incoming, true);
+            var buckets = GetTileGroups(hand, incoming, true).GetAllBuckets();
             List<MenOrJantou> ret = new List<MenOrJantou>();
             bool has2 = false;
-            foreach (var gr in tileGroups) {
-                if (gr.Count == 0) {
-                    continue;
-                }
+            foreach (var gr in buckets) {
                 if (gr.Count > 2 || !gr[0].tile.Is19Z) {
                     return false;
                 }
@@ -44,11 +41,11 @@ namespace RabiRiichi.Pattern {
                 return Reject(out output);
             }
 
-            var tileGroups = GetTileGroups(hand, incoming, true);
+            var buckets = GetTileGroups(hand, incoming, true);
             var existing = new Tiles();
             int multiCnt = 0;
             foreach (var tile in T19Z) {
-                int cnt = tileGroups[tile.NoDoraVal].Count;
+                int cnt = buckets.GetBucket(tile).Count;
                 if (cnt > 0) {
                     existing.Add(tile);
                     multiCnt += (cnt > 1).ToInt();
@@ -72,7 +69,7 @@ namespace RabiRiichi.Pattern {
                 // 14张，计算切牌
                 var tiles = GetHand(hand.freeTiles, incoming);
                 output = new Tiles(tiles
-                    .Where(t => !t.Is19Z || tileGroups[t.NoDoraVal].Count > (multiCnt > 1 ? 1 : 2))
+                    .Where(t => !t.Is19Z || buckets.GetBucket(t).Count > (multiCnt > 1 ? 1 : 2))
                     .Distinct());
             }
             return ret;

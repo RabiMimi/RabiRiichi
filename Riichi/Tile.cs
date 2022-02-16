@@ -31,7 +31,7 @@ namespace RabiRiichi.Riichi {
 
         /// <summary> 种类 </summary>
         public Group Gr {
-            get => (Group) ((Val >> 4) & 0x07);
+            get => (Group)((Val >> 4) & 0x07);
             set => Val = (byte)((Val & ~0x70) | ((byte)value << 4));
         }
 
@@ -39,15 +39,17 @@ namespace RabiRiichi.Riichi {
         public bool Akadora {
             get => (Val & 0x80) != 0;
             set {
-                if (value) Val |= 0x80;
-                else Val &= 0x7f;
+                if (value)
+                    Val |= 0x80;
+                else
+                    Val &= 0x7f;
             }
         }
 
         /// <summary> 是否是合法牌 </summary>
         public bool IsValid {
             get {
-                if (Gr == Group.Invalid)
+                if (Gr == Group.Invalid || Gr > Group.Z)
                     return false;
                 if (Num < 1 || Num > 9)
                     return false;
@@ -154,9 +156,11 @@ namespace RabiRiichi.Riichi {
         /// <summary> 下一张牌，用于宝牌指示牌计算 </summary>
         public Tile NextDora {
             get {
-                if (IsMPS) return new Tile { Num = (byte)(Num % 9 + 1), Gr = Gr };
+                if (IsMPS)
+                    return new Tile { Num = (byte)(Num % 9 + 1), Gr = Gr };
                 if (IsZ) {
-                    if (Num <= 4) return new Tile { Num = (byte)(Num % 4 + 1), Gr = Gr };
+                    if (Num <= 4)
+                        return new Tile { Num = (byte)(Num % 4 + 1), Gr = Gr };
                     byte newNum = (byte)(Num == 7 ? 5 : Num + 1);
                     return new Tile { Num = newNum, Gr = Gr };
                 }
@@ -169,10 +173,10 @@ namespace RabiRiichi.Riichi {
             throw new ArgumentException("Invalid cast to tile: " + arg);
         }
 
-        public static bool operator == (Tile lhs, Tile rhs) {
+        public static bool operator ==(Tile lhs, Tile rhs) {
             return lhs.Val == rhs.Val;
         }
-        public static bool operator != (Tile lhs, Tile rhs) {
+        public static bool operator !=(Tile lhs, Tile rhs) {
             return lhs.Val != rhs.Val;
         }
     }
@@ -260,7 +264,8 @@ namespace RabiRiichi.Riichi {
             && this[0].IsSame(this[1]) && this[1].IsSame(this[2]);
         public bool IsKan {
             get {
-                if (Count != 4) return false;
+                if (Count != 4)
+                    return false;
                 for (int i = 1; i < Count; i++) {
                     if (!this[i - 1].IsSame(this[i]))
                         return false;
@@ -270,7 +275,8 @@ namespace RabiRiichi.Riichi {
         }
         public bool IsShun {
             get {
-                if (Count != 3) return false;
+                if (Count != 3)
+                    return false;
                 var list = this.ToList();
                 list.Sort();
                 return list[0].IsNext(list[1]) && list[1].IsNext(list[2]);

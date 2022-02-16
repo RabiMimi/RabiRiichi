@@ -30,9 +30,7 @@ namespace RabiRiichi.Riichi {
         /// <summary> 门清 </summary>
         public bool menzen = true;
 
-        /// <summary> 获取听的牌 </summary>
-        /// <param name="hand">必须是13张</param>
-        /// <returns>听牌列表，无赤宝牌。不听牌时返回null</returns>
+        /// <summary> 听牌列表，无赤宝牌。不听牌时返回null </summary>
         public Tiles Tenpai {
             get {
                 if (game.patternResolver.ResolveShanten(this, null, out var tiles, 0) == 0) {

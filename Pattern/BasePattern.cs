@@ -7,23 +7,14 @@ namespace RabiRiichi.Pattern {
         /// <summary>
         /// 将手牌和进张合并，并按值分组，忽略红宝牌
         /// </summary>
-        // TODO: 应该只需要64个组？
-        public static GameTiles[] GetTileGroups(Hand hand, GameTile incoming, bool includeGroups) {
-            var tileGroups = new GameTiles[128];
-            for (int i = 0; i < tileGroups.Length; i++) {
-                tileGroups[i] = new GameTiles();
-            }
+        public static GameTileBucket GetTileGroups(Hand hand, GameTile incoming, bool includeGroups) {
             var tiles = (includeGroups
                 ? hand.freeTiles.Concat(hand.groups.SelectMany(gr => gr))
                 : hand.freeTiles).ToList();
             if (incoming != null) {
                 tiles.Add(incoming);
             }
-            foreach (var tile in tiles) {
-                int index = tile.tile.NoDoraVal;
-                tileGroups[index].Add(tile);
-            }
-            return tileGroups;
+            return new GameTileBucket(tiles);
         }
 
         /// <summary>

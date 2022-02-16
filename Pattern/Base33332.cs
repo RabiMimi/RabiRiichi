@@ -8,33 +8,32 @@ namespace RabiRiichi.Pattern {
 
     public class Base33332 : BasePattern {
         private int M;
-        private static readonly Tile LastMPS = new Tile("9s");
         private List<MenOrJantou> current;
         private List<List<MenOrJantou>> output;
-        private GameTiles[] tileGroups;
+        private GameTileBucket tileBucket;
 
         #region Resolve
         private class DFSHelper : IDisposable {
             private Base33332 instance;
-            private Stack<(int, GameTile)> removed = new Stack<(int, GameTile)>();
+            private Stack<GameTile> removed = new();
             private int groupNum = 0;
 
             public DFSHelper(Base33332 instance) {
                 this.instance = instance;
             }
 
-            public GameTile Remove(int index) {
-                var group = instance.tileGroups[index];
-                var cnt = group.Count - 1;
-                var ret = group[cnt];
-                group.RemoveAt(cnt);
-                removed.Push((index, ret));
+            public GameTile Remove(Tile tile) {
+                var bucket = instance.tileBucket.GetBucket(tile);
+                var cnt = bucket.Count - 1;
+                var ret = bucket[cnt];
+                bucket.RemoveAt(cnt);
+                removed.Push(ret);
                 return ret;
             }
 
-            public GameTiles Remove(params int[] indexes) {
-                var gr = new GameTiles(indexes.Select(index => Remove(index)));
-                instance.current.Add(MenOrJantou.From(gr));
+            public MenOrJantou Remove(params Tile[] indexes) {
+                var gr = MenOrJantou.From(indexes.Select(index => Remove(index)).ToList());
+                instance.current.Add(gr);
                 groupNum++;
                 return gr;
             }
@@ -42,7 +41,7 @@ namespace RabiRiichi.Pattern {
             public void Dispose() {
                 while (removed.Count > 0) {
                     var item = removed.Pop();
-                    instance.tileGroups[item.Item1].Add(item.Item2);
+                    instance.tileBucket.Add(item);
                 }
                 for (int i = 0; i < groupNum; i++) {
                     instance.current.RemoveAt(instance.current.Count - 1);
@@ -51,54 +50,70 @@ namespace RabiRiichi.Pattern {
         }
 
         private void PrintGroups() {
-            for (int i = 0; i < tileGroups.Length; i++) {
-                if (tileGroups[i].Count > 0) {
-                    Console.WriteLine($"{i}, {tileGroups[i].Count}");
+            foreach (var (group, groupIndex) in tileBucket.GetAll()) {
+                foreach (var (bucket, index) in group) {
+                    Console.WriteLine($"{groupIndex} {index} {bucket.Count}");
                 }
             }
         }
 
-        private void DFSPattern(int index, int janCnt) {
-            if (index >= tileGroups.Length) {
+        private void DFSPattern(Tile curTile, int janCnt) {
+            if (!curTile.IsValid) {
                 if (janCnt == 1) {
                     output.Add(current.ToList());
                 }
                 return;
             }
-            var cur = tileGroups[index];
-            if (cur.Count == 0) {
-                DFSPattern(index + 1, janCnt);
+
+            // 计算下一张牌
+            Tile nextTile = new Tile(curTile.Gr, curTile.Num + 1);
+            if (!nextTile.IsValid) {
+                nextTile = new Tile(curTile.Gr + 1, 1);
+            }
+
+            // 获取当前牌桶
+            var bucket = tileBucket.GetBucket(curTile);
+            if (bucket.Count == 0) {
+                DFSPattern(nextTile, janCnt);
                 return;
             }
-            if (cur.Count >= 2 && janCnt < 1) {
+            if (bucket.Count >= 2 && janCnt < 1) {
                 // 雀头
                 using var helper = new DFSHelper(this);
-                helper.Remove(index, index);
-                DFSPattern(index, janCnt + 1);
+                helper.Remove(curTile, curTile);
+                DFSPattern(curTile, janCnt + 1);
+            }
+            // 先存下来后面两张牌用于顺子计算
+            var nxt1 = curTile.Next;
+            var nxt2 = nxt1.Next;
+            GameTiles bucket1 = null;
+            GameTiles bucket2 = null;
+            if (nxt2.IsValid) {
+                bucket1 = tileBucket.GetBucket(nxt1.Gr, nxt1.Num);
+                bucket2 = tileBucket.GetBucket(nxt2.Gr, nxt2.Num);
             }
             // 枚举刻子数量
             var helpers = new Stack<DFSHelper>();
             while (true) {
                 // 检查顺子
-                if (cur.Count == 0) {
-                    DFSPattern(index + 1, janCnt);
-                } else if (index + 2 <= LastMPS.Val) {
-                    int shunCnt = cur.Count;
-                    var nxt = tileGroups[index + 1];
-                    var nxt2 = tileGroups[index + 2];
-                    if (nxt.Count >= shunCnt && nxt2.Count >= shunCnt) {
+                if (bucket.Count == 0) {
+                    DFSPattern(nextTile, janCnt);
+                } else if (nxt2.IsValid) {
+                    int shunCnt = bucket.Count;
+                    if (bucket1.Count >= shunCnt && bucket2.Count >= shunCnt) {
                         using var shunHelper = new DFSHelper(this);
                         for (int i = 0; i < shunCnt; i++) {
-                            shunHelper.Remove(index, index + 1, index + 2);
+                            shunHelper.Remove(curTile, nxt1, nxt2);
                         }
-                        DFSPattern(index + 1, janCnt);
+                        DFSPattern(nextTile, janCnt);
                     }
                 }
-                if (cur.Count < 3) break;
+                if (bucket.Count < 3)
+                    break;
                 // 移除刻子
                 var helper = new DFSHelper(this);
                 helpers.Push(helper);
-                helper.Remove(index, index, index);
+                helper.Remove(curTile, curTile, curTile);
             }
             while (helpers.Count > 0) {
                 helpers.Pop().Dispose();
@@ -124,10 +139,10 @@ namespace RabiRiichi.Pattern {
             }
             // DFS output
             output = new List<List<MenOrJantou>>();
-            tileGroups = GetTileGroups(hand, incoming, false);
+            tileBucket = GetTileGroups(hand, incoming, false);
             current = hand.groups;
             this.output = output;
-            DFSPattern(0, janCnt);
+            DFSPattern(new Tile(Group.M, 1), janCnt);
             return output.Count > 0;
         }
         #endregion Resolve
@@ -159,34 +174,36 @@ namespace RabiRiichi.Pattern {
             list.Update(dist, loc);
         }
 
-        private DpVal[][,,,] dp;
-        private Dictionary<DpLoc, int>[] visitedDp;
+        private DpVal[,][,,,] dp;
+        private Dictionary<DpLoc, int>[,] visitedDp;
 
-        private int ShantenDfs(int i, DpLoc loc, Tiles output) {
-            if (i < 0) {
+        private int ShantenDfs(Tile tile, DpLoc loc, Tiles output) {
+            if (!tile.IsValid) {
                 return 0;
             }
-            if (visitedDp[i].TryGetValue(loc, out int dist)) {
+            int gr = (int)tile.Gr, num = tile.Num;
+            Tile prev = new Tile(tile.Gr, num - 1);
+            if (!prev.IsValid) {
+                prev = new Tile(tile.Gr - 1, 9);
+            }
+            if (visitedDp[gr, num].TryGetValue(loc, out int dist)) {
                 return dist;
             }
-            if (dp[i] == null) {
-                dist = ShantenDfs(i - 1, loc, output);
-                visitedDp[i].Add(loc, dist);
+            if (dp[gr, num] == null) {
+                dist = ShantenDfs(prev, loc, output);
+                visitedDp[gr, num].Add(loc, dist);
                 return dist;
             }
-            var cur = dp[i][loc.Item1, loc.Item2, loc.Item3, loc.Item4];
+            var cur = dp[gr, num][loc.Item1, loc.Item2, loc.Item3, loc.Item4];
             dist = cur.dist;
-            visitedDp[i].Add(loc, dist);
+            visitedDp[gr, num].Add(loc, dist);
             bool shouldAdd = false;
             foreach (var pre in cur) {
-                var preDist = ShantenDfs(i - 1, pre, output);
+                var preDist = ShantenDfs(prev, pre, output);
                 shouldAdd |= preDist < dist;
             }
-            if (shouldAdd) {
-                var tile = new Tile((byte)i);
-                if (!output.Contains(tile)) {
-                    output.Add(tile);
-                }
+            if (shouldAdd && !output.Contains(tile)) {
+                output.Add(tile);
             }
             return dist;
         }
@@ -201,87 +218,86 @@ namespace RabiRiichi.Pattern {
             if (maxShanten == 0 && incoming == null) {
                 return Reject(out output);
             }
-            tileGroups = GetTileGroups(hand, incoming, false);
+            tileBucket = GetTileGroups(hand, incoming, false);
             M = Math.Min(9, maxShanten);
             // 是否有雀头
             int janCnt = hand.groups.Count(gr => gr is Jantou);
             if (janCnt > 1) {
                 return Reject(out output);
             }
-            // 动态规划，dp[i][j2,j1,k,l]表示：
-            // 当前在编号为i的牌
-            // i-1有j2张未匹配
-            // i有j1张未匹配
+            // 动态规划，dp[i1,i2][j2,j1,k,l]表示：
+            // 当前在i1组编号为i2的牌
+            // 上一张有j2张未匹配
+            // 当前张有j1张未匹配
             // k表示是否匹配了雀头
             // l表示牌数-4
             // dp值表示前驱
-            dp = new DpVal[tileGroups.Length][,,,];
+            dp = new DpVal[5, 10][,,,];
+            visitedDp = new Dictionary<DpLoc, int>[5, 10];
             // 初始化dp值
             var dpPre = CreateDpSubArray();
-            dp[0] = dpPre;
+            dp[0, 9] = dpPre;
             dpPre[0, 0, janCnt, M] = new DpVal(0) { (0, 0, 0, 0) };
-            int lasti = 0;
             int Lj = dpPre.GetLength(0);
             int Lk = dpPre.GetLength(2);
             int Ll = dpPre.GetLength(3);
 
             // 计算dp
-            for (int i = 1; i < tileGroups.Length; i++) {
-                var tile = new Tile((byte)i);
-                if (!tile.IsValid) {
-                    // 不合法
-                    continue;
-                }
-                dp[i] = CreateDpSubArray();
-                int N = tileGroups[i].Count;
-                bool prevValid = tile.Prev.IsValid;
-                // 枚举上一个状态
-                for (int j2 = 0; j2 < Lj; j2++) {
-                    // 至少要和j2一样多，否则无法全部用完
-                    for (int j1 = j2; j1 < Lj; j1++) {
-                        for (int k = 0; k < Lk; k++) {
-                            for (int l = 0; l < Ll; l++) {
-                                if (!prevValid) {
-                                    // 无法连成顺子，禁止从上一个转移
-                                    if (j2 > 0 || j1 > 0) {
+            for (Group i1 = Group.M; i1 <= Group.Z; i1++) {
+                for (int i2 = 1; i2 <= (i1 == Group.Z ? 7 : 9); i2++) {
+                    var tile = new Tile(i1, i2);
+                    var dpCur = CreateDpSubArray();
+                    dp[(int)i1, i2] = dpCur;
+                    visitedDp[(int)i1, i2] = new Dictionary<DpLoc, int>();
+                    int N = tileBucket.GetBucket(tile).Count;
+                    bool prevValid = tile.Prev.IsValid;
+                    // 枚举上一个状态
+                    for (int j2 = 0; j2 < Lj; j2++) {
+                        // 至少要和j2一样多，否则无法全部用完
+                        for (int j1 = j2; j1 < Lj; j1++) {
+                            for (int k = 0; k < Lk; k++) {
+                                for (int l = 0; l < Ll; l++) {
+                                    if (!prevValid) {
+                                        // 无法连成顺子，禁止从上一个转移
+                                        if (j2 > 0 || j1 > 0) {
+                                            continue;
+                                        }
+                                    }
+                                    var prevList = dpPre[j2, j1, k, l];
+                                    if (prevList == null || prevList.Count == 0) {
                                         continue;
                                     }
-                                }
-                                var prevList = dpPre[j2, j1, k, l];
-                                if (prevList == null || prevList.Count == 0) {
-                                    continue;
-                                }
-                                // 枚举减少Tile还是增加Tile
-                                for (int newJ1 = 0; newJ1 < Lj; newJ1++) {
-                                    // i-2的所有顺子必须用完
-                                    int newJ2 = j1 - j2;
-                                    for (int newK = k; newK < Lk; newK++) {
-                                        int deltaN = newJ1 + (newK - k) * 2 + j2 - N;
-                                        if (deltaN < 0) {
-                                            deltaN %= 3;
-                                        }
-                                        // deltaN < 0说明剩余牌比原先少，可能是打出去或刻子
-                                        // deltaN > 0时一定是摸牌最优，不分情况
-                                        for (int newL = l + deltaN + (deltaN < 0 ? 3 : 0);
-                                            newL >= l + deltaN; newL -= 3) {
-                                            if (newL < 0 || newL >= Ll) {
-                                                continue;
+                                    // 枚举减少Tile还是增加Tile
+                                    for (int newJ1 = 0; newJ1 < Lj; newJ1++) {
+                                        // i-2的所有顺子必须用完
+                                        int newJ2 = j1 - j2;
+                                        for (int newK = k; newK < Lk; newK++) {
+                                            int deltaN = newJ1 + (newK - k) * 2 + j2 - N;
+                                            if (deltaN < 0) {
+                                                deltaN %= 3;
                                             }
-                                            AddToList(ref dp[i][newJ2, newJ1, newK, newL],
-                                                prevList.dist + (incoming == null
-                                                    ? Math.Max(0, newL - l)
-                                                    : Math.Max(0, l - newL)),
-                                                ((byte)j2, (byte)j1, (byte)k, (byte)l));
+                                            // deltaN < 0说明剩余牌比原先少，可能是打出去或刻子
+                                            // deltaN > 0时一定是摸牌最优，不分情况
+                                            for (int newL = l + deltaN + (deltaN < 0 ? 3 : 0);
+                                                newL >= l + deltaN; newL -= 3) {
+                                                if (newL < 0 || newL >= Ll) {
+                                                    continue;
+                                                }
+                                                AddToList(ref dpCur[newJ2, newJ1, newK, newL],
+                                                    prevList.dist + (incoming == null
+                                                        ? Math.Max(0, newL - l)
+                                                        : Math.Max(0, l - newL)),
+                                                    ((byte)j2, (byte)j1, (byte)k, (byte)l));
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
                     }
-                }
 
-                dpPre = dp[i];
-                lasti = i;
+                    dpPre = dpCur;
+                }
             }
 
             // 检查非法输入
@@ -293,11 +309,7 @@ namespace RabiRiichi.Pattern {
 
             // 反向寻路
             output = new Tiles();
-            visitedDp = new Dictionary<DpLoc, int>[lasti + 1];
-            for (int i = 0; i <= lasti; i++) {
-                visitedDp[i] = new Dictionary<DpLoc, int>();
-            }
-            ShantenDfs(lasti, destLoc, output);
+            ShantenDfs(new Tile("7z"), destLoc, output);
             output.Sort();
             return dest.dist - 1;
         }

@@ -20,10 +20,7 @@ namespace RabiRiichi.Pattern {
             // Check hand & groups valid
             var tileGroups = GetTileGroups(hand, incoming, true);
             var ret = new List<MenOrJantou>();
-            foreach (var gr in tileGroups) {
-                if (gr.Count == 0) {
-                    continue;
-                }
+            foreach (var gr in tileGroups.GetAllBuckets()) {
                 if (gr.Count != 2) {
                     return false;
                 }
@@ -38,9 +35,10 @@ namespace RabiRiichi.Pattern {
                 return Reject(out output);
             }
 
-            var tileGroups = GetTileGroups(hand, incoming, true);
-            var existingPairs = tileGroups.Where(tiles => tiles.Count >= 2).ToArray();
-            var singleTiles = tileGroups
+            var buckets = GetTileGroups(hand, incoming, true);
+            var allBuckets = buckets.GetAllBuckets().ToArray();
+            var existingPairs = allBuckets.Where(tiles => tiles.Count >= 2).ToArray();
+            var singleTiles = allBuckets
                 .Where(tiles => tiles.Count == 1)
                 .Select(tiles => tiles[0].tile.WithoutDora)
                 .ToArray();
@@ -65,7 +63,7 @@ namespace RabiRiichi.Pattern {
                 // 14张，计算切牌
                 var tiles = GetHand(hand.freeTiles, incoming);
                 output = new Tiles(tiles.Where(tile => {
-                    int cnt = tileGroups[tile.NoDoraVal].Count;
+                    int cnt = buckets.GetBucket(tile).Count;
                     if (singleTiles.Length > requiredSingle) {
                         return cnt > 2 || cnt == 1;
                     } else {
