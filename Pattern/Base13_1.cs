@@ -9,7 +9,7 @@ namespace RabiRiichi.Pattern {
     public class Base13_1 : BasePattern {
         private static readonly Tiles T19Z = Tiles.T19Z;
 
-        public override bool Resolve(Hand hand, GameTile incoming, out List<List<GameTiles>> output) {
+        public override bool Resolve(Hand hand, GameTile incoming, out List<List<MenOrJantou>> output) {
             output = null;
             // Check tile count
             if (hand.Count != (incoming == null ? Game.HandSize + 1 : Game.HandSize)) {
@@ -17,7 +17,7 @@ namespace RabiRiichi.Pattern {
             }
             // Check hand & groups valid
             var tileGroups = GetTileGroups(hand, incoming, true);
-            List<GameTiles> ret = new List<GameTiles>();
+            List<MenOrJantou> ret = new List<MenOrJantou>();
             bool has2 = false;
             foreach (var gr in tileGroups) {
                 if (gr.Count == 0) {
@@ -32,15 +32,15 @@ namespace RabiRiichi.Pattern {
                     }
                     has2 = true;
                 }
-                ret.Add(gr);
+                ret.Add(MenOrJantou.From(gr));
             }
-            output = new List<List<GameTiles>> { ret };
+            output = new List<List<MenOrJantou>>() { ret };
             return true;
         }
 
         public override int Shanten(Hand hand, GameTile incoming, out Tiles output, int maxShanten = 13) {
             if (hand.groups.Count > 1 ||
-                hand.groups.Any(gr => !gr.IsJan || !gr.All(t => t.tile.Is19Z))) {
+                hand.groups.Any(gr => !(gr is Jantou) || !gr.All(t => t.tile.Is19Z))) {
                 return Reject(out output);
             }
 

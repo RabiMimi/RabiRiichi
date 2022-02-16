@@ -27,16 +27,25 @@ namespace RabiRiichi.Riichi {
         public Game(GameConfig config) {
             rand = new Rand((int)(DateTimeOffset.Now.ToUnixTimeSeconds() & 0xffffffff));
             var serviceCollection = new ServiceCollection();
+
+            // Existing instances
             serviceCollection.AddSingleton(this);
             serviceCollection.AddSingleton(rand);
-            serviceCollection.AddSingleton(gameInfo);
             serviceCollection.AddSingleton(config);
-            serviceCollection.AddSingleton<Wall>();
+
+            // Core utils
             serviceCollection.AddSingleton<EventBus>();
+
+            // Game related
+            serviceCollection.AddSingleton<Wall>();
             serviceCollection.AddSingleton<GameInfo>();
             serviceCollection.AddSingleton<ActionManager>();
             serviceCollection.AddSingleton<PatternResolver>();
+
+            // Build DI container
             diContainer = serviceCollection.BuildServiceProvider();
+
+            // Get instances
             eventBus = diContainer.GetService<EventBus>();
             gameInfo = diContainer.GetService<GameInfo>();
             actionManager = diContainer.GetService<ActionManager>();

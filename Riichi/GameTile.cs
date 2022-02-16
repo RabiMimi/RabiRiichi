@@ -6,6 +6,7 @@ namespace RabiRiichi.Riichi {
     public enum TileSource {
         None, Wanpai, Wall, Hand, Discard, Chi, Pon, Kan, Ron
     }
+
     public class GameTile : IComparable<GameTile> {
         public Tile tile = Tile.Empty;
         /// <summary> 来自哪个玩家（吃碰杠等） </summary>
@@ -40,6 +41,7 @@ namespace RabiRiichi.Riichi {
             return tile.ToString();
         }
     }
+
     public class GameTiles : List<GameTile> {
         public TileSource source = TileSource.Hand;
         public GameTiles() { }
@@ -49,35 +51,9 @@ namespace RabiRiichi.Riichi {
         public Tiles ToTiles() {
             return new Tiles(this.Select(gameTile => gameTile.tile));
         }
-        /// <summary> 是否是刻子 </summary>
-        public bool IsKou => Count == 3
-            && this[0].IsSame(this[1]) && this[1].IsSame(this[2]);
-        /// <summary> 是否是杠子 </summary>
-        public bool IsKan {
-            get {
-                if (Count != 4) return false;
-                for (int i = 1; i < Count; i++) {
-                    if (!this[i - 1].IsSame(this[i]))
-                        return false;
-                }
-                return true;
-            }
-        }
-        /// <summary> 是否是顺子 </summary>
-        public bool IsShun {
-            get {
-                if (Count != 3) return false;
-                var list = this.ToList();
-                list.Sort();
-                return list[0].NextIs(list[1]) && list[1].NextIs(list[2]);
-            }
-        }
-        /// <summary> 是否是雀头 </summary>
-        public bool IsJan => Count == 2 && this[0].IsSame(this[1]);
 
         /// <summary> 判定两个搭子是否相同，赤宝牌视为相同牌 </summary>
-        public bool IsSame(GameTiles other)
-        {
+        public virtual bool IsSame(GameTiles other) {
             if (this.Count != other.Count)
                 return false;
 
@@ -85,8 +61,7 @@ namespace RabiRiichi.Riichi {
             var otherTiles = other.ToTiles();
             thisTiles.Sort();
             otherTiles.Sort();
-            for (int i = 0; i < thisTiles.Count; i++)
-            {
+            for (int i = 0; i < thisTiles.Count; i++) {
                 if (!thisTiles[i].IsSame(otherTiles[i]))
                     return false;
             }
@@ -97,6 +72,7 @@ namespace RabiRiichi.Riichi {
         public bool HasTile(Tile tile) {
             return this.Any(t => t.tile.IsSame(tile));
         }
+
         public override string ToString() {
             var ret = this.ToTiles();
             ret.Sort();

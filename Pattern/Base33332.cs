@@ -9,8 +9,8 @@ namespace RabiRiichi.Pattern {
     public class Base33332 : BasePattern {
         private int M;
         private static readonly Tile LastMPS = new Tile("9s");
-        private List<GameTiles> current;
-        private List<List<GameTiles>> output;
+        private List<MenOrJantou> current;
+        private List<List<MenOrJantou>> output;
         private GameTiles[] tileGroups;
 
         #region Resolve
@@ -34,7 +34,7 @@ namespace RabiRiichi.Pattern {
 
             public GameTiles Remove(params int[] indexes) {
                 var gr = new GameTiles(indexes.Select(index => Remove(index)));
-                instance.current.Add(gr);
+                instance.current.Add(MenOrJantou.From(gr));
                 groupNum++;
                 return gr;
             }
@@ -105,7 +105,7 @@ namespace RabiRiichi.Pattern {
             }
         }
 
-        public override bool Resolve(Hand hand, GameTile incoming, out List<List<GameTiles>> output) {
+        public override bool Resolve(Hand hand, GameTile incoming, out List<List<MenOrJantou>> output) {
             output = null;
             // Check tile count
             if (hand.Count != (incoming == null ? Game.HandSize + 1 : Game.HandSize)) {
@@ -114,16 +114,16 @@ namespace RabiRiichi.Pattern {
             // Check groups valid
             int janCnt = 0;
             foreach (var group in hand.groups) {
-                if (group.IsJan) {
+                if (group is Jantou) {
                     if (++janCnt > 1) {
                         return false;
                     }
-                } else if (!(group.IsKan || group.IsKou || group.IsShun)) {
+                } else if (!(group is Kan || group is Kou || group is Shun)) {
                     return false;
                 }
             }
             // DFS output
-            output = new List<List<GameTiles>>();
+            output = new List<List<MenOrJantou>>();
             tileGroups = GetTileGroups(hand, incoming, false);
             current = hand.groups;
             this.output = output;
@@ -204,7 +204,7 @@ namespace RabiRiichi.Pattern {
             tileGroups = GetTileGroups(hand, incoming, false);
             M = Math.Min(9, maxShanten);
             // 是否有雀头
-            int janCnt = hand.groups.Count(gr => gr.IsJan);
+            int janCnt = hand.groups.Count(gr => gr is Jantou);
             if (janCnt > 1) {
                 return Reject(out output);
             }

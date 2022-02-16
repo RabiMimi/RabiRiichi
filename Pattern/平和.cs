@@ -7,11 +7,11 @@ namespace RabiRiichi.Pattern {
     public class 平和 : StdPattern {
         public override Type[] dependOnPatterns => Only33332;
 
-        public override bool Resolve(List<GameTiles> groups, Hand hand, GameTile incoming, Scorings scorings) {
-            if (!hand.menzen || groups.Any(gr => gr.IsKan || gr.IsKou))
+        public override bool Resolve(List<MenOrJantou> groups, Hand hand, GameTile incoming, Scorings scorings) {
+            if (!hand.menzen || groups.Any(gr => gr is Jantou || gr is Kou))
                 return false;
             var gr = groups.Find(gr => gr.Contains(incoming));
-            if (!gr.IsShun)
+            if (!(gr is Shun))
                 return false;
             // 确认两面听
             if (gr.Any(tile => tile.tile.Is19Z && tile != incoming))

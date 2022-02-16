@@ -8,10 +8,10 @@ namespace RabiRiichi.Pattern {
     public class 一杯口 : StdPattern {
         public override Type[] dependOnPatterns => Only33332;
 
-        public override bool Resolve(List<GameTiles> groups, Hand hand, GameTile incoming, Scorings scorings) {
+        public override bool Resolve(List<MenOrJantou> groups, Hand hand, GameTile incoming, Scorings scorings) {
             if (!hand.menzen)
                 return false;
-            var gr = groups.Where(tiles => tiles.IsShun).ToList();
+            var gr = groups.Where(tiles => tiles is Shun).ToList();
             if (gr.Count < 2)
                 return false;
             for (int i = 0; i < gr.Count; i++) {

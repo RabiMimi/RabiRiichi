@@ -29,7 +29,7 @@ namespace RabiRiichi.Pattern {
         /// <summary>
         /// 计算是否和牌，输出所有和牌的组合
         /// </summary>
-        public abstract bool Resolve(Hand hand, GameTile incoming, out List<List<GameTiles>> output);
+        public abstract bool Resolve(Hand hand, GameTile incoming, out List<List<MenOrJantou>> output);
 
         /// <summary>
         /// 计算向听数

@@ -43,7 +43,7 @@ namespace RabiRiichi.Pattern {
         public abstract Type[] dependOnPatterns { get; }
         /// <summary> 计算这些pattern后，才会计算该pattern。不保证这些pattern一定被满足 </summary>
         public virtual Type[] afterPatterns => NoPattern;
-        public abstract bool Resolve(List<GameTiles> groups, Hand hand, GameTile incoming, Scorings scorings);
+        public abstract bool Resolve(List<MenOrJantou> groups, Hand hand, GameTile incoming, Scorings scorings);
     }
 
     /// <summary>

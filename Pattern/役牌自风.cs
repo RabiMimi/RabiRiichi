@@ -8,7 +8,7 @@ namespace RabiRiichi.Pattern {
         protected override Tile YakuTile => yakuTile;
         private Tile yakuTile;
 
-        public override bool Resolve(List<GameTiles> groups, Hand hand, GameTile incoming, Scorings scorings) {
+        public override bool Resolve(List<MenOrJantou> groups, Hand hand, GameTile incoming, Scorings scorings) {
             yakuTile = Tile.From(hand.player.wind);
             return base.Resolve(groups, hand, incoming, scorings);
         }

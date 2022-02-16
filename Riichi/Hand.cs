@@ -9,8 +9,8 @@ namespace RabiRiichi.Riichi {
         /// <summary> 手牌（不包含副露） </summary>
         public GameTiles freeTiles = new GameTiles();
 
-        /// <summary> 吃碰杠 </summary>
-        public List<GameTiles> groups = new List<GameTiles>();
+        /// <summary> 副露的面子 </summary>
+        public List<MenOrJantou> groups = new List<MenOrJantou>();
 
         /// <summary> 牌河 </summary>
         public GameTiles discarded = new GameTiles();
@@ -119,7 +119,7 @@ namespace RabiRiichi.Riichi {
             return this;
         }
 
-        public Hand AddGroup(GameTiles tiles, TileSource source) {
+        public Hand AddGroup(MenOrJantou tiles, TileSource source) {
             groups.Add(tiles);
             tiles.ForEach(tile => {
                 tile.player = player;
