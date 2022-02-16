@@ -43,7 +43,7 @@ namespace RabiRiichiTests.Pattern {
             return this;
         }
 
-        public StdTestBuilder AddFreeGroup(string tiles) {
+        public StdTestBuilder AddFree(string tiles) {
             var gameTiles = Create(tiles, -1);
             groups.Add(gameTiles);
             freeTiles.AddRange(gameTiles);

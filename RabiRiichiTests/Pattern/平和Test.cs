@@ -9,10 +9,10 @@ namespace RabiRiichiTests.Pattern {
         [TestMethod]
         public void TestResolved() {
             new StdTestBuilder(V)
-                .AddFreeGroup("123s")
-                .AddFreeGroup("456s")
-                .AddFreeGroup("789s")
-                .AddFreeGroup("11m")
+                .AddFree("123s")
+                .AddFree("456s")
+                .AddFree("789s")
+                .AddFree("11m")
                 .AddAgari("23s", "1s")
                 .Resolve(true)
                 .ExpectScoring(ScoringType.Han, 1);
@@ -21,10 +21,10 @@ namespace RabiRiichiTests.Pattern {
         [TestMethod]
         public void TestFailed() {
             new StdTestBuilder(V)
-                .AddFreeGroup("123s")
-                .AddFreeGroup("456s")
-                .AddFreeGroup("789s")
-                .AddFreeGroup("11m")
+                .AddFree("123s")
+                .AddFree("456s")
+                .AddFree("789s")
+                .AddFree("11m")
                 .AddAgari("12s", "3s")
                 .Resolve(false);
         }
