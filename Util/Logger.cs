@@ -12,7 +12,7 @@ namespace RabiRiichi.Util {
 
         public static void Assert(bool condition, string message) {
             if (!condition) {
-                Log(message);
+                throw new ArgumentException(message);
             }
         }
     }

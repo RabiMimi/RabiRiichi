@@ -7,26 +7,32 @@ namespace RabiRiichi.Riichi {
 
     /// <summary> 面子或雀头 </summary>
     public abstract class MenOrJantou : GameTiles {
-        /// <summary> 无赤宝的代表牌，对于顺子来说是第一张 </summary>
-        public Tile Value { get; protected set; }
+        /// <summary> 唯一确定该面子的值（忽略赤宝） </summary>
+        public ulong Value { get; protected set; }
 
         /// <summary> 明暗 </summary>
         public bool IsClose { get; protected set; }
 
-        public MenOrJantou() { }
-        public MenOrJantou(IEnumerable<GameTile> tiles) : base(tiles) {
+        private void Init() {
             Sort();
-            Value = this[0].tile.WithoutDora;
-            IsClose = this.All(t => t.IsTsumo);
-        }
-        public MenOrJantou(IEnumerable<Tile> tiles) : base(tiles) {
-            Sort();
-            Value = this[0].tile.WithoutDora;
+            Value = 0;
+            foreach (var tile in this) {
+                Value = (Value << 8) | tile.tile.NoDoraVal;
+            }
             IsClose = this.All(t => t.IsTsumo);
         }
 
+        public MenOrJantou() { }
+        public MenOrJantou(IEnumerable<GameTile> tiles) : base(tiles) {
+            Init();
+        }
+        public MenOrJantou(IEnumerable<Tile> tiles) : base(tiles) {
+            Init();
+        }
+
         public static bool IsShun(List<GameTile> tiles) {
-            if (tiles.Count != 3) return false;
+            if (tiles.Count != 3)
+                return false;
             tiles.Sort();
             return tiles[0].NextIs(tiles[1]) && tiles[1].NextIs(tiles[2]);
         }
@@ -51,7 +57,8 @@ namespace RabiRiichi.Riichi {
         }
 
         public static bool IsKan(List<GameTile> tiles) {
-            if (tiles.Count != 4) return false;
+            if (tiles.Count != 4)
+                return false;
             return IsKou(tiles, true);
         }
 

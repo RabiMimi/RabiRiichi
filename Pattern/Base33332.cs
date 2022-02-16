@@ -1,4 +1,5 @@
 ﻿using RabiRiichi.Riichi;
+using RabiRiichi.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -49,11 +50,34 @@ namespace RabiRiichi.Pattern {
             }
         }
 
-        private void PrintGroups() {
-            foreach (var (group, groupIndex) in tileBucket.GetAll()) {
-                foreach (var (bucket, index) in group) {
-                    Console.WriteLine($"{groupIndex} {index} {bucket.Count}");
+        /// <summary> 和了牌算进哪一组会影响符数计算，因此需要生成不同组合 </summary>
+        private static void GenerateOtherPatterns(List<MenOrJantou> group, GameTile incoming, List<List<MenOrJantou>> output) {
+            // TODO:(Frenqy) 写test
+            var existingMentsu = new List<ulong>();
+            var incomingGroup = group.Find(gr => gr.Contains(incoming));
+            Logger.Assert(incomingGroup != null, "无法在分组中找到和了牌位置");
+            existingMentsu.Add(incomingGroup.Value);
+            foreach (var gr in group) {
+                if (existingMentsu.Contains(gr.Value)) {
+                    continue;
                 }
+                var toExchange = gr.Find(t => t.tile.IsSame(incoming.tile));
+                if (toExchange == null) {
+                    continue;
+                }
+                existingMentsu.Add(gr.Value);
+                var newGroup = group.Select(
+                    g => MenOrJantou.From(g.Select(t => {
+                        if (t == toExchange) {
+                            return incoming;
+                        }
+                        if (t == incoming) {
+                            return toExchange;
+                        }
+                        return t;
+                    }).ToList())
+                ).ToList();
+                output.Add(newGroup);
             }
         }
 
@@ -139,10 +163,15 @@ namespace RabiRiichi.Pattern {
             }
             // DFS output
             output = new List<List<MenOrJantou>>();
+            var extraOutput = new List<List<MenOrJantou>>();
             tileBucket = GetTileGroups(hand, incoming, false);
             current = hand.groups;
             this.output = output;
             DFSPattern(new Tile(Group.M, 1), janCnt);
+            foreach (var gr in output) {
+                GenerateOtherPatterns(gr, incoming, extraOutput);
+            }
+            output.AddRange(extraOutput);
             return output.Count > 0;
         }
         #endregion Resolve
