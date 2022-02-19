@@ -4,28 +4,23 @@ using System.Linq;
 
 namespace RabiRiichi.Pattern {
     public abstract class BasePattern {
-        public static GameTiles[] GetTileGroups(Hand hand, GameTile incoming, bool includeGroups) {
-            var tileGroups = new GameTiles[128];
-            for (int i = 0; i < tileGroups.Length; i++) {
-                tileGroups[i] = new GameTiles();
-            }
+        /// <summary>
+        /// 将手牌和进张合并，并按值分组，忽略红宝牌
+        /// </summary>
+        public static GameTileBucket GetTileGroups(Hand hand, GameTile incoming, bool includeGroups) {
             var tiles = (includeGroups
-                ? hand.hand.Concat(hand.groups.SelectMany(gr => gr))
-                : hand.hand).ToList();
+                ? hand.freeTiles.Concat(hand.fuuro.SelectMany(gr => gr))
+                : hand.freeTiles).ToList();
             if (incoming != null) {
                 tiles.Add(incoming);
             }
-            foreach (var tile in tiles) {
-                int index = tile.tile.NoDoraVal;
-                tileGroups[index].Add(tile);
-            }
-            return tileGroups;
+            return new GameTileBucket(tiles);
         }
 
         /// <summary>
         /// 计算是否和牌，输出所有和牌的组合
         /// </summary>
-        public abstract bool Resolve(Hand hand, GameTile incoming, out List<List<GameTiles>> output);
+        public abstract bool Resolve(Hand hand, GameTile incoming, out List<List<MenOrJantou>> output);
 
         /// <summary>
         /// 计算向听数
@@ -41,7 +36,7 @@ namespace RabiRiichi.Pattern {
         /// <returns>向听数，-1为和</returns>
         public abstract int Shanten(Hand hand, GameTile incoming, out Tiles output, int maxShanten = int.MaxValue);
 
-        protected Tiles GetHand(GameTiles tiles, GameTile incoming, bool keepDora = false) {
+        public static Tiles GetHand(GameTiles tiles, GameTile incoming, bool keepDora = false) {
             var ret = tiles.ToTiles();
             if (incoming != null) {
                 ret.Add(incoming.tile);
@@ -52,7 +47,7 @@ namespace RabiRiichi.Pattern {
             return ret;
         }
 
-        protected int Reject(out Tiles output) {
+        protected static int Reject(out Tiles output) {
             output = null;
             return int.MaxValue;
         }

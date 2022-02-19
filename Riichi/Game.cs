@@ -1,129 +1,103 @@
-﻿using HoshinoSharp.Hoshino;
-using RabiRiichi.Bot;
-using RabiRiichi.Event;
+﻿using RabiRiichi.Event;
 using RabiRiichi.Event.Listener;
 using RabiRiichi.Pattern;
 using RabiRiichi.Resolver;
 using RabiRiichi.Util;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace RabiRiichi.Riichi {
-    public enum GamePhase {
-        Pending, Running, Finished
-    }
+
     public class Game {
         public const int HandSize = 13;
+        public ServiceProvider diContainer;
 
-        public GamePhase phase = GamePhase.Pending;
-        public GameComponent hoshino;
+        public GameInfo gameInfo;
         public Player[] players;
 
         public EventBus eventBus;
         public Wall wall;
         public ActionManager actionManager;
+        public PatternResolver patternResolver;
         public Rand rand;
 
-        public Game(GameComponent component) {
-            hoshino = component;
+        public Game(GameConfig config) {
+            rand = new Rand((int)(DateTimeOffset.Now.ToUnixTimeSeconds() & 0xffffffff));
+            var serviceCollection = new ServiceCollection();
+
+            // Existing instances
+            serviceCollection.AddSingleton(this);
+            serviceCollection.AddSingleton(rand);
+            serviceCollection.AddSingleton(config);
+
+            // Core utils
+            serviceCollection.AddSingleton<EventBus>();
+
+            // Game related
+            serviceCollection.AddSingleton<Wall>();
+            serviceCollection.AddSingleton<GameInfo>();
+            serviceCollection.AddSingleton<ActionManager>();
+            serviceCollection.AddSingleton<PatternResolver>();
+
+            // Build DI container
+            diContainer = serviceCollection.BuildServiceProvider();
+
+            // Get instances
+            eventBus = diContainer.GetService<EventBus>();
+            gameInfo = diContainer.GetService<GameInfo>();
+            actionManager = diContainer.GetService<ActionManager>();
+            wall = diContainer.GetService<Wall>();
+            patternResolver = diContainer.GetService<PatternResolver>();
         }
 
-        public UserInfo GetUser(int index) => hoshino.players[index];
+        #region GameUtil
+        public bool IsYaku(Tile tile) {
+            return tile.IsSangen || tile.IsSame(Tile.From(gameInfo.wind));
+        }
         public Player GetPlayer(int index) => players[index];
+        public int Time => gameInfo.timeStamp;
+        #endregion
 
         #region Start
-        protected virtual void RegisterEventListeners() {
-            eventBus.Register<DealHandEvent>(Phase.On, new DefaultOnDealHand());
-            eventBus.Register<DealHandEvent>(Phase.Finalize, new DefaultFinalizeDealHand());
-            eventBus.Register<EventBase>(Phase.Finalize, new MessageSender());
-        }
-
-        protected virtual void RegisterResolvers() {
-            actionManager.RegisterResolver(new RonResolver());
-            actionManager.RegisterResolver(new RiichiResolver());
-            actionManager.RegisterResolver(new ChiResolver());
-            actionManager.RegisterResolver(new KanResolver());
-            actionManager.RegisterResolver(new PonResolver());
-        }
-
-        protected virtual void RegisterPatterns() {
-            var basePatterns = new BasePattern[] {
-                new Base33332(),
-                new Base72(),
-                new Base13_1()
-            };
-            var stdPatterns = new StdPattern[] {
-                new Pinfu(),
-            };
-            var bonusPatterns = new StdPattern[] {
-                new Akadora(),
-            };
-            if (actionManager.TryGetResolver<RonResolver>(out var ronResolver)) {
-                ronResolver.SetMinHan(1);
-                foreach (var pattern in basePatterns) {
-                    ronResolver.RegisterBasePattern(pattern);
-                }
-                foreach (var pattern in stdPatterns) {
-                    ronResolver.RegisterStdPattern(pattern);
-                }
-                foreach (var pattern in bonusPatterns) {
-                    ronResolver.RegisterBonusPattern(pattern);
-                }
-            }
-            if (actionManager.TryGetResolver<RiichiResolver>(out var riichiResolver)) {
-                foreach (var pattern in basePatterns) {
-                    riichiResolver.RegisterBasePattern(pattern);
-                }
-            }
-        }
-
-        protected virtual void Init() {
-            players = null;
-            eventBus = new EventBus();
-            wall = new Wall();
-            actionManager = new ActionManager();
-            rand = new Rand((int)(DateTimeOffset.Now.ToUnixTimeSeconds() & 0xffffffff));
-        }
 
         public async Task Start() {
-            // Initialize rand
-            Init();
-
-            // Register
-            RegisterEventListeners();
-            RegisterResolvers();
-            RegisterPatterns();
-
             // Init players
-            players = new Player[hoshino.players.Count];
+            players = new Player[gameInfo.config.playerCount];
             for (int i = 0; i < players.Length; i++) {
-                players[i] = new Player {
-                    id = i,
-                    wind = (Wind)i
+                players[i] = new Player(i, this) {
+                    wind = (Wind)i,
                 };
             }
 
             // Deal cards
-            for (int i = 0; i < players.Length; i++) {
-                var ev = new DealHandEvent {
-                    game = this,
-                    player = i,
-                };
-                await eventBus.Process(ev);
+            foreach (var player in players) {
+                var ev = new DealHandEvent(this, player);
+                eventBus.Queue(ev);
             }
+            eventBus.Queue(new DrawTileEvent(this, GetPlayer(this.gameInfo.Banker), DrawTileType.Wall));
+
+            // 游戏逻辑
+            await eventBus.ProcessQueue();
 
             // End game
-            phase = GamePhase.Finished;
+            gameInfo.phase = GamePhase.Finished;
         }
         #endregion
 
         #region Player
-        public int NextPlayer(int id) {
-            return id == players.Length - 1 ? 0 : id + 1;
-        }
-        public int PrevPlayer(int id) {
-            return id == 0 ? players.Length - 1 : id - 1;
-        }
+        public int NextPlayerId(int id) => id == players.Length - 1 ? 0 : id + 1;
+
+        public int PrevPlayerId(int id) => id == 0 ? players.Length - 1 : id - 1;
+
+        public Player NextPlayer(int id) => players[NextPlayerId(id)];
+
+        public Player PrevPlayer(int id) => players[PrevPlayerId(id)];
+
+        public IEnumerable<GameTile> AllDiscardedTiles =>
+            players.SelectMany(player => player.hand.discarded);
         #endregion
     }
 }

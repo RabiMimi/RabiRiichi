@@ -1,22 +1,36 @@
 ﻿using System;
 using System.Collections.Generic;
-using HUtil = HoshinoSharp.Runtime.Util;
 
 namespace RabiRiichi.Pattern {
-    public class Scorings: List<Scoring>, IComparable<Scorings> {
+    public class Scorings : List<Scoring>, IComparable<Scorings> {
+        /// <summary> 累计役满需要番数 </summary>
         public const int KAZOE_YAKUMAN = 13;
+
+        /// <summary> 番 </summary>
         public int han;
+
+        /// <summary> 符 </summary>
         public int fu;
+
+        /// <summary> 役满数 </summary>
         public int yakuman;
+        public bool IsKazoeYakuman => han >= KAZOE_YAKUMAN;
+        public bool IsYakuman => yakuman > 0 || IsKazoeYakuman;
+
+        /// <summary> 基本点变动 </summary>
         public int point;
 
+        /// <summary> 基本点 </summary>
         public int baseScore;
 
-        public bool IsValid(int minHan) => han % KAZOE_YAKUMAN + yakuman * KAZOE_YAKUMAN >= minHan;
+        public bool IsValid(int minHan) => han + yakuman * KAZOE_YAKUMAN >= minHan;
 
         private int GetBaseScore() {
-            if (yakuman > 0) {
+            if (IsYakuman) {
                 return yakuman * 8000;
+            }
+            if (IsKazoeYakuman) {
+                return 8000;
             }
             if (han >= 11) {
                 return 6000;
@@ -35,7 +49,7 @@ namespace RabiRiichi.Pattern {
         }
 
         public Scorings() { }
-        public Scorings(IEnumerable<Scoring> scores): base(scores) { }
+        public Scorings(IEnumerable<Scoring> scores) : base(scores) { }
         public void Calc() {
             han = 0;
             fu = 0;
@@ -49,7 +63,8 @@ namespace RabiRiichi.Pattern {
                         break;
                     case ScoringType.Fu:
                         if (fu != 0) {
-                            HUtil.Warn("检测到了多个符数计算结果，可能是一个bug");
+                            // TODO: Log
+                            // HUtil.Warn("检测到了多个符数计算结果，可能是一个bug");
                         }
                         fu += score.Val;
                         break;
@@ -60,28 +75,33 @@ namespace RabiRiichi.Pattern {
                         yakuman += score.Val;
                         break;
                     case ScoringType.Ryuukyoku:
-                        HUtil.Warn($"和牌结果中发现了不合法的流局计算结果");
+                        // TODO: Log
+                        // HUtil.Warn($"和牌结果中发现了不合法的流局计算结果");
                         break;
                     default:
-                        HUtil.Warn($"未知的计分类型: {score.Type}");
+                        // TODO: Log
+                        // HUtil.Warn($"未知的计分类型: {score.Type}");
                         break;
                 }
-            }
-            if (han >= KAZOE_YAKUMAN) {
-                yakuman += han / KAZOE_YAKUMAN;
             }
             baseScore = GetBaseScore() + point;
         }
 
         public int CompareTo(Scorings other) {
-            return baseScore.CompareTo(other.baseScore);
+            if (baseScore != other.baseScore) {
+                return baseScore.CompareTo(other.baseScore);
+            }
+            if (han != other.han) {
+                return han.CompareTo(other.han);
+            }
+            return fu.CompareTo(other.fu);
         }
 
-        public static bool operator < (Scorings lhs, Scorings rhs) {
+        public static bool operator <(Scorings lhs, Scorings rhs) {
             return lhs.CompareTo(rhs) < 0;
         }
 
-        public static bool operator > (Scorings lhs, Scorings rhs) {
+        public static bool operator >(Scorings lhs, Scorings rhs) {
             return lhs.CompareTo(rhs) > 0;
         }
     }

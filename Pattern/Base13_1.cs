@@ -9,20 +9,17 @@ namespace RabiRiichi.Pattern {
     public class Base13_1 : BasePattern {
         private static readonly Tiles T19Z = Tiles.T19Z;
 
-        public override bool Resolve(Hand hand, GameTile incoming, out List<List<GameTiles>> output) {
+        public override bool Resolve(Hand hand, GameTile incoming, out List<List<MenOrJantou>> output) {
             output = null;
             // Check tile count
             if (hand.Count != (incoming == null ? Game.HandSize + 1 : Game.HandSize)) {
                 return false;
             }
             // Check hand & groups valid
-            var tileGroups = GetTileGroups(hand, incoming, true);
-            List<GameTiles> ret = new List<GameTiles>();
+            var buckets = GetTileGroups(hand, incoming, true).GetAllBuckets();
+            List<MenOrJantou> ret = new List<MenOrJantou>();
             bool has2 = false;
-            foreach (var gr in tileGroups) {
-                if (gr.Count == 0) {
-                    continue;
-                }
+            foreach (var gr in buckets) {
                 if (gr.Count > 2 || !gr[0].tile.Is19Z) {
                     return false;
                 }
@@ -32,23 +29,23 @@ namespace RabiRiichi.Pattern {
                     }
                     has2 = true;
                 }
-                ret.Add(gr);
+                ret.Add(MenOrJantou.From(gr));
             }
-            output = new List<List<GameTiles>> { ret };
+            output = new List<List<MenOrJantou>>() { ret };
             return true;
         }
 
         public override int Shanten(Hand hand, GameTile incoming, out Tiles output, int maxShanten = 13) {
-            if (hand.groups.Count > 1 ||
-                hand.groups.Any(gr => !gr.IsJan || !gr.All(t => t.tile.Is19Z))) {
+            if (hand.fuuro.Count > 1 ||
+                hand.fuuro.Any(gr => !(gr is Jantou) || !gr.All(t => t.tile.Is19Z))) {
                 return Reject(out output);
             }
-            
-            var tileGroups = GetTileGroups(hand, incoming, true);
+
+            var buckets = GetTileGroups(hand, incoming, true);
             var existing = new Tiles();
             int multiCnt = 0;
             foreach (var tile in T19Z) {
-                int cnt = tileGroups[tile.NoDoraVal].Count;
+                int cnt = buckets.GetBucket(tile).Count;
                 if (cnt > 0) {
                     existing.Add(tile);
                     multiCnt += (cnt > 1).ToInt();
@@ -70,9 +67,9 @@ namespace RabiRiichi.Pattern {
                 }
             } else {
                 // 14张，计算切牌
-                var tiles = GetHand(hand.hand, incoming);
+                var tiles = GetHand(hand.freeTiles, incoming);
                 output = new Tiles(tiles
-                    .Where(t => !t.Is19Z || tileGroups[t.NoDoraVal].Count > (multiCnt > 1 ? 1 : 2))
+                    .Where(t => !t.Is19Z || buckets.GetBucket(t).Count > (multiCnt > 1 ? 1 : 2))
                     .Distinct());
             }
             return ret;

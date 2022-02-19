@@ -1,58 +1,84 @@
 ﻿using RabiRiichi.Event.Listener;
+using RabiRiichi.Riichi;
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Threading.Tasks;
-using HUtil = HoshinoSharp.Runtime.Util;
 
 namespace RabiRiichi.Event {
-    public class EventBus {
-        public readonly Dictionary<(Type, Phase), List<ListenerBase>> Listeners =
-            new Dictionary<(Type, Phase), List<ListenerBase>>();
-        private readonly List<(uint, ListenerBase)> cachedListeners =
-            new List<(uint, ListenerBase)>();
 
-        public void Register<T>(Phase phase, ListenerBase listener)
-            where T : EventBase {
-            var key = (typeof(T), phase);
-            if (!Listeners.TryGetValue(key, out var list)) {
-                list = new List<ListenerBase>();
-                Listeners.Add(key, list);
+    public class EventBus {
+        private class EventListener {
+            public uint priority;
+            public Func<EventBase, Task> listener;
+            public EventListener(Func<EventBase, Task> listener, uint priority) {
+                this.priority = priority;
+                this.listener = listener;
             }
-            list.Add(listener);
+        }
+
+        private Game game;
+
+        public EventBus(Game game) {
+            this.game = game;
+        }
+
+        private readonly Dictionary<Type, List<EventListener>> listeners =
+            new Dictionary<Type, List<EventListener>>();
+
+        private readonly BlockingCollection<EventBase> queue = new BlockingCollection<EventBase>();
+        public int Count => queue.Count;
+        public bool Empty => Count == 0;
+
+        public void Register<T>(Func<EventBase, Task> listener, uint priority)
+            where T : EventBase {
+            var type = typeof(T);
+            if (!listeners.TryGetValue(type, out var list)) {
+                list = new List<EventListener>();
+                listeners.Add(type, list);
+            }
+            list.Add(new EventListener(listener, priority));
+        }
+
+        public void Queue(EventBase ev) {
+            queue.Add(ev);
+        }
+
+        public async Task ProcessQueue() {
+            while (true) {
+                var ev = queue.Take();
+                await Process(ev);
+            }
         }
 
         public async Task Process(EventBase ev) {
-            if (ev.phase != Phase.Inactive) {
-                HUtil.Warn($"Invalid event phase: {ev}");
+            if (ev == null || ev.IsFinished) {
                 return;
             }
 
-            while (ev.NextPhase()) {
-                if (ev.IsFinished) continue;
-                cachedListeners.Clear();
-                foreach (var (key, value) in Listeners) {
-                    if (key.Item2 != ev.phase)
-                        continue;
-                    if (!key.Item1.IsAssignableFrom(ev.GetType()))
-                        continue;
-                    value.RemoveAll((listener) => listener.IsDisposed);
-                    foreach (var listener in value) {
-                        uint priority = listener.CanListen(ev);
-                        if (priority != Priority.Never) {
-                            cachedListeners.Add((priority, listener));
-                        }
-                    }
-                }
-                cachedListeners.Sort((lhs, rhs) => rhs.Item1.CompareTo(lhs.Item1));
-                foreach (var (_, listener) in cachedListeners) {
-                    if (listener.IsDisposed)
-                        continue;
-                    if (await listener.Handle(ev))
-                        break;
-                    if (ev.IsFinished)
-                        break;
+            // 监听该事件及所有子类
+            var list = new List<EventListener>();
+            foreach (var (key, value) in listeners) {
+                if (key.IsAssignableFrom(ev.GetType())) {
+                    list.AddRange(value);
                 }
             }
+
+            // 按priority从大到小排序
+            list.Sort((a, b) => b.priority.CompareTo(a.priority));
+
+            foreach (var listener in list) {
+                await listener.listener(ev);
+                if (ev.IsFinished) {
+                    break;
+                }
+                ev.phase = listener.priority;
+            }
+        }
+
+        public void RegisterGameEvents() {
+            DefaultDealHand.Register(this);
+            DefaultDrawTile.Register(this);
         }
     }
 }

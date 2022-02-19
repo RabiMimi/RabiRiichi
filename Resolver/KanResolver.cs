@@ -1,4 +1,4 @@
-﻿using HoshinoSharp.Hoshino.Message;
+﻿using RabiRiichi.Action;
 using RabiRiichi.Riichi;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,48 +9,22 @@ namespace RabiRiichi.Resolver {
     /// </summary>
     public class KanResolver : ResolverBase {
 
-        private IEnumerable<string> GenerateKan(string suffix = "") {
-            if (!string.IsNullOrEmpty(suffix) && suffix.StartsWith(" ")) {
-                GenerateKan(" " + suffix);
+        public override bool ResolveAction(Hand hand, GameTile incoming, MultiPlayerAction output) {
+            if (hand.game.wall.IsFinished) {
+                return false;
             }
-            yield return "kan" + suffix;
-            yield return "k" + suffix;
-            yield return "杠" + suffix;
-        }
-
-        private PlayerAction GenerateAction(PlayerActions output, GameTiles group, string desc, bool onlyOne) {
-            string str = onlyOne ? "" : (output.Count + 1).ToString(); 
-            var ret = new PlayerAction {
-                options = GenerateKan(str).ToList(),
-                msg = new HMessage($"k{str}：{desc}{group}"),
-                trigger = (_) => {
-                    // TODO(Frenqy)
-                }
-            };
-            output.Add(ret);
-            return ret;
-        }
-
-        public override bool ResolveAction(Hand hand, GameTile incoming, out PlayerActions output) {
+            if (hand.player == incoming.fromPlayer) {
+                // 自己打出来的
+                return false;
+            }
             var tile = incoming.tile.WithoutDora;
-            // 暗杠/明杠
             var current = new List<GameTile> { incoming };
             var result = new List<GameTiles>();
-            CheckCombo(hand.hand, result, current, tile, tile, tile);
-            output = new PlayerActions();
-            int tot = result.Count;
-            if (incoming.IsTsumo) {
-                // 加杠
-                var resultExtra = hand.groups.Where(
-                    gr => gr.IsKou && gr[0].IsSame(incoming)).ToList();
-                tot += resultExtra.Count;
-                foreach (var gr in resultExtra) {
-                    GenerateAction(output, gr, "加杠", tot <= 1);
-                }
+            CheckCombo(hand.freeTiles, result, current, tile, tile, tile);
+            if (result.Count == 0) {
+                return false;
             }
-            foreach (var gr in result) {
-                GenerateAction(output, gr, "杠", tot <= 1);
-            }
+            output.Add(new KanAction(hand.player, result));
             return true;
         }
     }

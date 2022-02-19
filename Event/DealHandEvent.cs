@@ -3,11 +3,15 @@
 namespace RabiRiichi.Event {
     class DealHandEvent : EventBase {
         #region Request
-        public int player;
+        public Player player;
         #endregion
 
-        #region Reponse
-        public Tiles hand;
+        #region Response
+        public Tiles tiles;
         #endregion
+
+        public DealHandEvent(Game game, Player player): base(game) {
+            this.player = player;
+        }
     }
 }

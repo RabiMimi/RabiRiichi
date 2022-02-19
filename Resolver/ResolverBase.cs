@@ -1,38 +1,13 @@
-﻿using HoshinoSharp.Hoshino.Message;
-using RabiRiichi.Riichi;
-using System;
+﻿using RabiRiichi.Riichi;
+using RabiRiichi.Action;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace RabiRiichi.Resolver {
-    public class PlayerAction {
-        /// <summary> 选项，全小写 </summary>
-        public List<string> options;
-        /// <summary> 显示给用户的消息 </summary>
-        public HMessage msg;
-        /// <summary> 参数是触发动作的options下标 </summary>
-        public Action<int> trigger;
-    }
-
-    public class PlayerActions: List<PlayerAction> {
-        public string GetMessage() {
-            return string.Join("\n", this.Select(action => action.msg.ToString()));
-        }
-        public bool OnMessage(string msg) {
-            msg = msg.Trim().ToLower();
-            foreach (var action in this) {
-                int index = action.options.FindIndex((option) => option.ToLower() == msg);
-                if (index >= 0) {
-                    action.trigger(index);
-                    return true;
-                }
-            }
-            return false;
-        }
-    }
 
     public abstract class ResolverBase {
-        public abstract bool ResolveAction(Hand hand, GameTile incoming, out PlayerActions output);
+
+        public abstract bool ResolveAction(Hand hand, GameTile incoming, MultiPlayerAction output);
 
         private static bool CheckComboDfs(
             List<GameTile> current,
@@ -56,7 +31,8 @@ namespace RabiRiichi.Resolver {
             bool success = false;
             for (int i = handIndex; i < hand.Count; i++) {
                 var cur = hand[i];
-                if (!cur.tile.IsSame(tile)) {
+                if (!cur.tile.IsSame(tile) ||
+                    (i > handIndex && cur.tile == hand[i-1].tile)) {
                     continue;
                 }
                 current.Add(cur);

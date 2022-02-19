@@ -1,29 +1,40 @@
-﻿using HoshinoSharp.Hoshino.Message;
+﻿using RabiRiichi.Action;
 using RabiRiichi.Pattern;
 using RabiRiichi.Riichi;
-using System;
-using System.Collections.Generic;
-using HUtil = HoshinoSharp.Runtime.Util;
+using System.Linq;
 
 namespace RabiRiichi.Resolver {
     /// <summary>
     /// 判定是否可以立直
     /// </summary>
     public class RiichiResolver : ResolverBase {
-        public readonly List<BasePattern> basePatterns = new List<BasePattern>();
-
-        public void RegisterBasePattern(BasePattern pattern) {
-            basePatterns.Add(pattern);
-        }
-
-        public override bool ResolveAction(Hand hand, GameTile incoming, out PlayerActions output) {
-            if (hand.riichi || !hand.menzen) {
-                output = null;
+        public override bool ResolveAction(Hand hand, GameTile incoming, MultiPlayerAction output) {
+            if (hand.game.wall.NumRemaining < hand.game.gameInfo.config.playerCount) {
                 return false;
             }
-            // TODO(Frenqy)
-            output = null;
-            return false;
+            if (hand.riichi || !hand.menzen || !incoming.IsTsumo) {
+                return false;
+            }
+            Tiles riichiTiles = new Tiles();
+            foreach (var pattern in Patterns.BasePatterns) {
+                int shanten = pattern.Shanten(hand, incoming, out var tiles, 0);
+                if (shanten < 0) {
+                    // 和
+                    riichiTiles = BasePattern.GetHand(hand.freeTiles, incoming);
+                    break;
+                }
+                if (shanten > 0) {
+                    continue;
+                }
+                riichiTiles.AddRange(tiles);
+            }
+            if (riichiTiles.Count == 0) {
+                return false;
+            }
+            riichiTiles.Sort();
+            var handRiichiTiles = hand.freeTiles.Where(t => riichiTiles.Contains(t.tile.WithoutDora)).ToList();
+            output.Add(new RiichiAction(hand.player, handRiichiTiles));
+            return true;
         }
     }
 }

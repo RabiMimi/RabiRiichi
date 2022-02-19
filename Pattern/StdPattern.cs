@@ -19,8 +19,15 @@ namespace RabiRiichi.Pattern {
         public ScoringType Type;
         public int Val;
         public StdPattern Source;
+
+        public Scoring(ScoringType type, int val, StdPattern source) {
+            Type = type;
+            Val = val;
+            Source = source;
+        }
     }
 
+    /// <summary> 标准役种 </summary>
     public abstract class StdPattern {
         protected static Type[] NoPattern = new Type[0];
         protected static Type[] Only33332 = new Type[] { typeof(Base33332) };
@@ -36,6 +43,12 @@ namespace RabiRiichi.Pattern {
         public abstract Type[] dependOnPatterns { get; }
         /// <summary> 计算这些pattern后，才会计算该pattern。不保证这些pattern一定被满足 </summary>
         public virtual Type[] afterPatterns => NoPattern;
-        public abstract bool Resolve(List<GameTiles> groups, Hand hand, GameTile incoming, Scorings scorings);
+        public abstract bool Resolve(List<MenOrJantou> groups, Hand hand, GameTile incoming, Scorings scorings);
     }
+
+    /// <summary>
+    /// 奖励役种，仅包含算番不算役的，例如宝牌
+    /// 是StdPattern的子类
+    /// </summary>
+    public abstract class BonusPattern : StdPattern { }
 }
