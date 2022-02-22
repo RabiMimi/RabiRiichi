@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace RabiRiichi.Pattern {
     public class 门清自摸和 : StdPattern {
-        public override Type[] dependOnPatterns => AllBasePatterns;
+        public override Type[] basePatterns => AllBasePatterns;
 
         public override bool Resolve(List<MenOrJantou> groups, Hand hand, GameTile incoming, Scorings scorings) {
             if (hand.menzen && incoming.IsTsumo) {

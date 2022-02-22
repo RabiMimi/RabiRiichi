@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace RabiRiichi.Pattern {
     public class 赤宝牌 : BonusPattern {
-        public override Type[] dependOnPatterns => AllBasePatterns;
+        public override Type[] basePatterns => AllBasePatterns;
 
         public override bool Resolve(List<MenOrJantou> groups, Hand hand, GameTile incoming, Scorings scorings) {
             int count = groups.SelectMany(tile => tile.ToTiles()).Count(tile => tile.Akadora);

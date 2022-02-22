@@ -6,7 +6,7 @@ using RabiRiichi.Riichi;
 
 namespace RabiRiichi.Pattern {
     public abstract class 役牌 : StdPattern {
-        public override sealed Type[] dependOnPatterns => Only33332;
+        public override sealed Type[] basePatterns => Only33332;
 
         protected abstract Tile YakuTile { get; }
 

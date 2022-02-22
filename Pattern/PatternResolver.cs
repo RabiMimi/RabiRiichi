@@ -21,7 +21,7 @@ namespace RabiRiichi.Pattern {
             bonusPatterns.Add(pattern);
         }
 
-        private class ResolveContext {
+        private class ResolutionContext {
             public List<MenOrJantou> group;
             public Hand hand;
             public GameTile incoming;
@@ -31,7 +31,7 @@ namespace RabiRiichi.Pattern {
             public readonly HashSet<Type> stdFailure = new();
         }
 
-        private bool ResolveStdPattern(ResolveContext context, StdPattern pattern, Scorings scorings) {
+        private bool ResolveStdPattern(ResolutionContext context, StdPattern pattern, Scorings scorings) {
             var pType = pattern.GetType();
             if (pattern.Resolve(context.group, context.hand, context.incoming, scorings)) {
                 context.stdSuccess.Add(pType);
@@ -42,24 +42,20 @@ namespace RabiRiichi.Pattern {
             }
         }
 
-        private bool ResolveStdPatternRecursive(ResolveContext context, StdPattern pattern, Scorings scorings) {
+        private bool ResolveStdPatternRecursive(ResolutionContext context, StdPattern pattern, Scorings scorings) {
             var pType = pattern.GetType();
             if (context.stdSuccess.Contains(pType))
                 return true;
             if (context.stdFailure.Contains(pType))
                 return false;
+            // 检查底和
+            if (!pattern.basePatterns.Any((basePattern) => context.baseSuccess.Contains(basePattern))) {
+                // 不满足依赖
+                context.stdFailure.Add(pType);
+                return false;
+            }
             // 检查依赖
             foreach (var dependency in pattern.dependOnPatterns) {
-                var basePattern = basePatterns.Find(ptn => ptn.GetType().Equals(dependency));
-                if (basePattern != null) {
-                    // 检查底和
-                    if (!context.baseSuccess.Contains(dependency)) {
-                        // 不满足依赖
-                        context.stdFailure.Add(pType);
-                        return false;
-                    }
-                    continue;
-                }
                 var stdPattern = stdPatterns.Find(ptn => ptn.GetType().Equals(dependency));
                 if (stdPattern != null) {
                     // 检查役种
@@ -92,7 +88,7 @@ namespace RabiRiichi.Pattern {
         /// </summary>
         public Scorings ResolveMaxScore(Hand hand, GameTile incoming, bool applyBonus) {
             var groupList = new List<List<MenOrJantou>>();
-            var context = new ResolveContext {
+            var context = new ResolutionContext {
                 hand = hand,
                 incoming = incoming,
                 scorings = new Scorings()

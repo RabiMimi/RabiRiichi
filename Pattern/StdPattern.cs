@@ -40,7 +40,11 @@ namespace RabiRiichi.Pattern {
         };
 
         /// <summary> 满足这些pattern后，才会计算该pattern </summary>
-        public abstract Type[] dependOnPatterns { get; }
+        public virtual Type[] dependOnPatterns => NoPattern;
+
+        /// <summary> 可以触发该役种的底和 </summary>
+        public abstract Type[] basePatterns { get; }
+
         /// <summary> 计算这些pattern后，才会计算该pattern。不保证这些pattern一定被满足 </summary>
         public virtual Type[] afterPatterns => NoPattern;
         public abstract bool Resolve(List<MenOrJantou> groups, Hand hand, GameTile incoming, Scorings scorings);
