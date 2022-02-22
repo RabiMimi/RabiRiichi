@@ -14,6 +14,7 @@ namespace RabiRiichi.Riichi {
         public Tiles uradoras;
 
         public int NumRemaining => remaining.Count + doras.Count + uradoras.Count - NUM_WANPAI;
+        /// <summary> 是否到了海底 </summary>
         public bool IsHaitei => NumRemaining <= 0;
 
         public Wall(string tiles = "", string doras = "", string uradoras = "") {
