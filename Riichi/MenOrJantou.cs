@@ -71,7 +71,7 @@ namespace RabiRiichi.Riichi {
             if (IsJan(tiles)) {
                 return new Jantou(tiles);
             } else if (IsKan(tiles)) {
-                return new Kan(tiles);
+                return new Kan(tiles, false);
             } else if (IsKou(tiles)) {
                 return new Kou(tiles);
             } else if (IsShun(tiles)) {
@@ -124,11 +124,15 @@ namespace RabiRiichi.Riichi {
 
     /// <summary> 杠子 </summary>
     public class Kan : MenOrJantou {
-        public Kan(IEnumerable<Tile> tiles) : base(tiles) {
+        /// <summary> 是否是加杠 </summary>
+        public bool IsKakan { get; set; }
+        public Kan(IEnumerable<Tile> tiles, bool isKakan) : base(tiles) {
             Logger.Assert(IsKan(this), "杠子必须是杠子");
+            IsKakan = isKakan;
         }
-        public Kan(IEnumerable<GameTile> tiles) : base(tiles) {
+        public Kan(IEnumerable<GameTile> tiles, bool isKakan) : base(tiles) {
             Logger.Assert(IsKan(this), "杠子必须是杠子");
+            IsKakan = isKakan;
         }
 
         /// <summary> 判定是否相同，赤宝牌视为相同牌，杠和刻视为相同 </summary>

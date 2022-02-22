@@ -8,14 +8,17 @@ namespace RabiRiichi.Action {
         [JsonInclude]
         public readonly string tile;
         [JsonInclude]
-        public readonly int fromPlayer;
+        public readonly int from;
         [JsonInclude]
         public readonly int player;
+        [JsonInclude]
+        public readonly string source;
 
         public ActionTileInfo(GameTile tile) {
             this.tile = tile.ToString();
-            fromPlayer = tile.fromPlayer?.id ?? -1;
+            from = tile.fromPlayer?.id ?? -1;
             player = tile.player?.id ?? -1;
+            source = tile.source.ToString();
         }
     }
 

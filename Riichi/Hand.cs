@@ -85,14 +85,14 @@ namespace RabiRiichi.Riichi {
             return ret;
         }
 
-        public Hand Add(GameTile tile) {
+        public void Add(GameTile tile) {
             tile.player = player;
             tile.source = TileSource.Hand;
             freeTiles.Add(tile);
-            return this;
         }
 
-        public Hand Play(GameTile tile, bool riichi = false) {
+        public void Play(GameTile tile, bool riichi = false) {
+            tile.player = null;
             tile.fromPlayer = player;
             tile.source = TileSource.Discard;
             freeTiles.Remove(tile);
@@ -106,18 +106,15 @@ namespace RabiRiichi.Riichi {
                     firstRiichiTile = tile;
                 }
             }
-            return this;
         }
 
-        public Hand Remove(GameTile tile) {
+        public void Remove(GameTile tile) {
             if (freeTiles.Contains(tile)) {
-                tile.fromPlayer = player;
                 freeTiles.Remove(tile);
             }
-            return this;
         }
 
-        public Hand AddGroup(MenOrJantou tiles, TileSource source) {
+        public void AddGroup(MenOrJantou tiles, TileSource source) {
             fuuro.Add(tiles);
             tiles.ForEach(tile => {
                 tile.player = player;
@@ -125,7 +122,26 @@ namespace RabiRiichi.Riichi {
                 tile.riichi = false;
                 Remove(tile);
             });
-            return this;
+        }
+
+        public void AddChi(Shun tiles) {
+            AddGroup(tiles, TileSource.Chi);
+        }
+
+        public void AddPon(Kou tiles) {
+            AddGroup(tiles, TileSource.Pon);
+        }
+
+        public void AddKan(Kan tiles) {
+            AddGroup(tiles, TileSource.Kan);
+        }
+
+        public void KaKan(Kan tiles) {
+            tiles.IsKakan = true;
+            var original = fuuro.Find(gr => gr is Kou && (gr.Contains(tiles[0]) || gr.Contains(tiles[1]))) as Kou;
+            Debug.Assert(original != null, "加杠了个空气");
+            fuuro.Remove(original);
+            AddGroup(tiles, TileSource.Kan);
         }
     }
 }

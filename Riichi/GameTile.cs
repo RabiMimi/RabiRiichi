@@ -4,7 +4,23 @@ using System.Linq;
 
 namespace RabiRiichi.Riichi {
     public enum TileSource {
-        None, Wanpai, Wall, Hand, Discard, Chi, Pon, Kan, Ron
+        None,
+        /// <summary> 王牌 </summary>
+        Wanpai,
+        /// <summary> 牌山 </summary>
+        Wall,
+        /// <summary> 手牌 </summary>
+        Hand,
+        /// <summary> 弃牌 </summary>
+        Discard,
+        /// <summary> 吃 </summary>
+        Chi,
+        /// <summary> 碰 </summary>
+        Pon,
+        /// <summary> 杠 </summary>
+        Kan,
+        /// <summary> 和 </summary>
+        Ron
     }
 
     public class GameTile : IComparable<GameTile> {
