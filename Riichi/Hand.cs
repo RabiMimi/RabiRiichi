@@ -10,7 +10,7 @@ namespace RabiRiichi.Riichi {
         public GameTiles freeTiles = new GameTiles();
 
         /// <summary> 巡目 </summary>
-        public int jun = 1;
+        public int jun = 0;
 
         /// <summary> 副露的面子 </summary>
         public List<MenOrJantou> fuuro = new List<MenOrJantou>();
@@ -28,7 +28,7 @@ namespace RabiRiichi.Riichi {
         public GameTile firstRiichiTile = null;
 
         /// <summary> 立直 </summary>
-        public bool riichi = false;
+        public bool riichi => firstRiichiTile != null;
 
         /// <summary> 一发 </summary>
         public bool ippatsu = false;
@@ -98,6 +98,8 @@ namespace RabiRiichi.Riichi {
         }
 
         public void Play(GameTile tile, bool riichi = false) {
+            jun++;
+            ippatsu = false;
             tile.player = null;
             tile.fromPlayer = player;
             tile.source = TileSource.Discard;
@@ -105,12 +107,10 @@ namespace RabiRiichi.Riichi {
             tile.discardTime = player.game.gameInfo.Time();
             discarded.Add(tile);
             if (riichi) {
-                Debug.Assert(menzen);
+                Debug.Assert(menzen && !riichi);
                 tile.riichi = true;
-                if (!this.riichi) {
-                    this.riichi = true;
-                    firstRiichiTile = tile;
-                }
+                ippatsu = true;
+                firstRiichiTile = tile;
             }
         }
 
