@@ -21,8 +21,6 @@ namespace RabiRiichi.Riichi {
         public bool riichi = false;
         /// <summary> 是否是自摸 </summary>
         public bool IsTsumo => fromPlayer == null;
-        /// <summary> 是否刚刚摸到 </summary>
-        public bool IsJustDrawn => player == null;
         public TileSource source = TileSource.Hand;
 
         /// <summary> 是否是万筒索 </summary>
