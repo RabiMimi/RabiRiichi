@@ -9,6 +9,9 @@ namespace RabiRiichi.Riichi {
         /// <summary> 手牌（不包含副露） </summary>
         public GameTiles freeTiles = new GameTiles();
 
+        /// <summary> 巡目 </summary>
+        public int jun = 1;
+
         /// <summary> 副露的面子 </summary>
         public List<MenOrJantou> fuuro = new List<MenOrJantou>();
 
@@ -26,6 +29,9 @@ namespace RabiRiichi.Riichi {
 
         /// <summary> 立直 </summary>
         public bool riichi = false;
+
+        /// <summary> 一发 </summary>
+        public bool ippatsu = false;
 
         /// <summary> 门清 </summary>
         public bool menzen = true;

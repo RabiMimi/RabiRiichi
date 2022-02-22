@@ -104,5 +104,14 @@ namespace RabiRiichi.Riichi {
         public IEnumerable<GameTile> AllDiscardedTiles =>
             players.SelectMany(player => player.hand.discarded);
         #endregion
+
+        #region
+        public void ResetIppatsu() {
+            foreach (var player in players) {
+                // TODO: Send an event instead
+                player.hand.ippatsu = false;
+            }
+        }
+        #endregion
     }
 }
