@@ -30,6 +30,9 @@ namespace RabiRiichi.Riichi {
         /// <summary> 立直 </summary>
         public bool riichi => firstRiichiTile != null;
 
+        /// <summary> W立直 </summary>
+        public bool wRiichi = false;
+
         /// <summary> 一发 </summary>
         public bool ippatsu = false;
 
@@ -98,7 +101,6 @@ namespace RabiRiichi.Riichi {
         }
 
         public void Play(GameTile tile, bool riichi = false) {
-            jun++;
             ippatsu = false;
             tile.player = null;
             tile.fromPlayer = player;

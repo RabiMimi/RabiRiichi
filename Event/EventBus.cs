@@ -40,6 +40,15 @@ namespace RabiRiichi.Event {
             list.Add(new EventListener(listener, priority));
         }
 
+        public void Unregister<T>(Func<EventBase, Task> listener)
+            where T : EventBase {
+            var type = typeof(T);
+            if (!listeners.TryGetValue(type, out var list)) {
+                return;
+            }
+            list.RemoveAll(l => l.listener == listener);
+        }
+
         public void Queue(EventBase ev) {
             queue.Add(ev);
         }

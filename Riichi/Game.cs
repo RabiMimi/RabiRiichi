@@ -105,7 +105,7 @@ namespace RabiRiichi.Riichi {
             players.SelectMany(player => player.hand.discarded);
         #endregion
 
-        #region
+        #region Game Turns
         public void ResetIppatsu() {
             foreach (var player in players) {
                 // TODO: Send an event instead

@@ -28,6 +28,9 @@ namespace RabiRiichi.Riichi {
         /// <summary> 庄家 </summary>
         public int Banker => ((int)wind + round) % config.playerCount;
 
+        /// <summary> 是否是本局第一巡，用于判定天地和和W立 </summary>
+        public bool firstJun = true;
+
         public GameInfo(GameConfig config) {
             this.config = config;
         }
