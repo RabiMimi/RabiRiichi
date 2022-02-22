@@ -1,5 +1,4 @@
 ﻿using RabiRiichi.Event;
-using RabiRiichi.Event.Listener;
 using RabiRiichi.Pattern;
 using RabiRiichi.Resolver;
 using RabiRiichi.Util;
@@ -42,6 +41,9 @@ namespace RabiRiichi.Riichi {
             serviceCollection.AddSingleton<ActionManager>();
             serviceCollection.AddSingleton<PatternResolver>();
 
+            // Custom setup
+            config.setup.Inject(this, serviceCollection);
+
             // Build DI container
             diContainer = serviceCollection.BuildServiceProvider();
 
@@ -51,6 +53,9 @@ namespace RabiRiichi.Riichi {
             actionManager = diContainer.GetService<ActionManager>();
             wall = diContainer.GetService<Wall>();
             patternResolver = diContainer.GetService<PatternResolver>();
+
+            // Custom setup
+            config.setup.Setup(this, diContainer);
         }
 
         #region GameUtil

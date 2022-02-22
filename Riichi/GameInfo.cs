@@ -1,6 +1,9 @@
+using RabiRiichi.Setup;
+
 namespace RabiRiichi.Riichi {
     public class GameConfig {
         public int playerCount = 2;
+        public BaseSetup setup = new RiichiSetup();
     }
 
     public enum GamePhase {

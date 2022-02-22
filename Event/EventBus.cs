@@ -48,8 +48,11 @@ namespace RabiRiichi.Event {
         public async Task ProcessQueue() {
             while (true) {
                 var ev = queue.Take();
-                await Process(ev);
-                // TODO：创建一个特殊事件用于终止Event Bus
+                if (await Process(ev)) {
+                    if (ev is StopGameEvent) {
+                        break;
+                    }
+                }
             }
         }
 
@@ -84,11 +87,6 @@ namespace RabiRiichi.Event {
             ev.phase = Priority.Finished;
 
             return true;
-        }
-
-        public void RegisterGameEvents() {
-            DefaultDealHand.Register(this);
-            DefaultDrawTile.Register(this);
         }
     }
 }
