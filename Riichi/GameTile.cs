@@ -17,10 +17,14 @@ namespace RabiRiichi.Riichi {
         Chi,
         /// <summary> 碰 </summary>
         Pon,
-        /// <summary> 杠 </summary>
-        Kan,
+        /// <summary> 加杠 </summary>
+        KaKan,
+        /// <summary> 暗杠 </summary>
+        AnKan,
+        /// <summary> 明杠 </summary>
+        MinKan,
         /// <summary> 和 </summary>
-        Ron
+        Ron,
     }
 
     public class GameTile : IComparable<GameTile> {

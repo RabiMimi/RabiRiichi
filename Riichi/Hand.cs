@@ -133,7 +133,7 @@ namespace RabiRiichi.Riichi {
         }
 
         public void AddKan(Kan tiles) {
-            AddGroup(tiles, TileSource.Kan);
+            AddGroup(tiles, tiles.IsClose ? TileSource.AnKan : TileSource.MinKan);
         }
 
         public void KaKan(Kan tiles) {
@@ -141,7 +141,7 @@ namespace RabiRiichi.Riichi {
             var original = fuuro.Find(gr => gr is Kou && (gr.Contains(tiles[0]) || gr.Contains(tiles[1]))) as Kou;
             Debug.Assert(original != null, "加杠了个空气");
             fuuro.Remove(original);
-            AddGroup(tiles, TileSource.Kan);
+            AddGroup(tiles, TileSource.KaKan);
         }
     }
 }

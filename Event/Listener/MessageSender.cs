@@ -7,10 +7,13 @@ namespace RabiRiichi.Event.Listener {
 
         public static string ToString(TileSource source) {
             switch (source) {
-                case TileSource.Chi: return "吃";
-                case TileSource.Pon: return "碰";
-                case TileSource.Kan: return "杠";
-                default: return "";
+                case TileSource.Chi:
+                    return "吃";
+                case TileSource.Pon:
+                    return "碰";
+                // case TileSource.Kan: return "杠";
+                default:
+                    return "";
             }
         }
 
