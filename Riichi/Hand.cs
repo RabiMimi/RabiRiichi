@@ -71,8 +71,8 @@ namespace RabiRiichi.Riichi {
         /// <summary> 牌的总数，注意：杠会被算作3张牌 </summary>
         public int Count => fuuro.Select(gr => Math.Min(3, gr.Count)).Sum() + freeTiles.Count;
 
-        public GameTile GetTile(Tile tile) => freeTiles.Find(t => t.tile == tile);
-        public GameTiles GetTiles(Tiles tiles) {
+        public GameTile FindTile(Tile tile) => freeTiles.Find(t => t.tile == tile);
+        public GameTiles FindTiles(Tiles tiles) {
             var tmp = new Tiles(tiles);
             var ret = new GameTiles();
             foreach (var tile in freeTiles) {

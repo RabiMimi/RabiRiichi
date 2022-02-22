@@ -9,9 +9,9 @@ namespace RabiRiichi.Riichi {
 
     public class GameTile : IComparable<GameTile> {
         public Tile tile = Tile.Empty;
-        /// <summary> 来自哪个玩家（吃碰杠等） </summary>
+        /// <summary> 来自哪个玩家（吃碰杠等）对于刚摸的牌为null </summary>
         public Player fromPlayer;
-        /// <summary> 当前归属于哪个玩家 </summary>
+        /// <summary> 当前归属于哪个玩家，摸切或副露时会被设置 </summary>
         public Player player;
         /// <summary> 弃牌的时间戳 </summary>
         public int discardTime = -1;
@@ -21,6 +21,8 @@ namespace RabiRiichi.Riichi {
         public bool riichi = false;
         /// <summary> 是否是自摸 </summary>
         public bool IsTsumo => fromPlayer == null;
+        /// <summary> 是否刚刚摸到 </summary>
+        public bool IsJustDrawn => player == null;
         public TileSource source = TileSource.Hand;
 
         /// <summary> 是否是万筒索 </summary>
