@@ -9,7 +9,7 @@ namespace RabiRiichi.Resolver {
     /// </summary>
     public class PonResolver : ResolverBase {
         public override bool ResolveAction(Hand hand, GameTile incoming, MultiPlayerAction output) {
-            if (hand.game.wall.IsFinished) {
+            if (hand.game.wall.IsHaitei) {
                 return false;
             }
             if (hand.riichi || incoming.IsTsumo || hand.player == incoming.fromPlayer) {

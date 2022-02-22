@@ -9,7 +9,7 @@ namespace RabiRiichi.Resolver {
     /// </summary>
     public class ChiResolver : ResolverBase {
         public override bool ResolveAction(Hand hand, GameTile incoming, MultiPlayerAction output) {
-            if (hand.game.wall.IsFinished) {
+            if (hand.game.wall.IsHaitei) {
                 return false;
             }
             if (hand.riichi || incoming.IsTsumo || incoming.tile.IsZ || incoming.fromPlayer != hand.player.PrevPlayer) {

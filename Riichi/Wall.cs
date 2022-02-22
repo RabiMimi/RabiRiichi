@@ -14,7 +14,7 @@ namespace RabiRiichi.Riichi {
         public Tiles uradoras;
 
         public int NumRemaining => remaining.Count + doras.Count + uradoras.Count - NUM_WANPAI;
-        public bool IsFinished => NumRemaining <= 0;
+        public bool IsHaitei => NumRemaining <= 0;
 
         public Wall(string tiles = "", string doras = "", string uradoras = "") {
             drawn = new Tiles(tiles);

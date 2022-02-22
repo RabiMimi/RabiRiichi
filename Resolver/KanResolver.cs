@@ -10,7 +10,7 @@ namespace RabiRiichi.Resolver {
     public class KanResolver : ResolverBase {
 
         public override bool ResolveAction(Hand hand, GameTile incoming, MultiPlayerAction output) {
-            if (hand.game.wall.IsFinished) {
+            if (hand.game.wall.IsHaitei) {
                 return false;
             }
             if (hand.player == incoming.fromPlayer) {
