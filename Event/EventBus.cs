@@ -9,15 +9,15 @@ namespace RabiRiichi.Event {
 
     public class EventBus {
         private class EventListener {
-            public uint priority;
+            public int priority;
             public Func<EventBase, Task> listener;
-            public EventListener(Func<EventBase, Task> listener, uint priority) {
+            public EventListener(Func<EventBase, Task> listener, int priority) {
                 this.priority = priority;
                 this.listener = listener;
             }
         }
 
-        private Game game;
+        private readonly Game game;
 
         public EventBus(Game game) {
             this.game = game;
@@ -30,7 +30,7 @@ namespace RabiRiichi.Event {
         public int Count => queue.Count;
         public bool Empty => Count == 0;
 
-        public void Register<T>(Func<EventBase, Task> listener, uint priority)
+        public void Register<T>(Func<EventBase, Task> listener, int priority)
             where T : EventBase {
             var type = typeof(T);
             if (!listeners.TryGetValue(type, out var list)) {
@@ -44,16 +44,22 @@ namespace RabiRiichi.Event {
             queue.Add(ev);
         }
 
+        /// <summary> 开始处理事件队列 </summary>
         public async Task ProcessQueue() {
             while (true) {
                 var ev = queue.Take();
                 await Process(ev);
+                // TODO：创建一个特殊事件用于终止Event Bus
             }
         }
 
-        public async Task Process(EventBase ev) {
+        /// <summary>
+        /// 直接处理一个事件
+        /// <returns>是否处理成功</returns>
+        /// </summary>
+        public async Task<bool> Process(EventBase ev) {
             if (ev == null || ev.IsFinished) {
-                return;
+                return false;
             }
 
             // 监听该事件及所有子类
@@ -69,11 +75,15 @@ namespace RabiRiichi.Event {
 
             foreach (var listener in list) {
                 await listener.listener(ev);
-                if (ev.IsFinished) {
-                    break;
+                if (ev.IsCancelled) {
+                    return false;
                 }
                 ev.phase = listener.priority;
             }
+
+            ev.phase = Priority.Finished;
+
+            return true;
         }
 
         public void RegisterGameEvents() {
