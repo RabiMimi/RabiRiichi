@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace RabiRiichi.Riichi {
     public class Wall {
@@ -9,17 +10,20 @@ namespace RabiRiichi.Riichi {
 
         public Tiles drawn;
         public Tiles remaining;
-        public Tiles doraIndicators;
+        public Tiles doras;
+        public Tiles uradoras;
 
-        public int NumRemaining => remaining.Count + doraIndicators.Count - NUM_WANPAI;
+        public int NumRemaining => remaining.Count + doras.Count + uradoras.Count - NUM_WANPAI;
         public bool IsFinished => NumRemaining <= 0;
 
-        public Wall(string tiles = "", string doraInds = "") {
+        public Wall(string tiles = "", string doras = "", string uradoras = "") {
             drawn = new Tiles(tiles);
-            doraIndicators = new Tiles(doraInds);
+            this.doras = new Tiles(doras);
+            this.uradoras = new Tiles(uradoras);
             remaining = Tiles.All;
             remaining.Remove(drawn);
-            remaining.Remove(doraIndicators);
+            remaining.Remove(this.doras);
+            remaining.Remove(this.uradoras);
         }
 
         public bool Draw(Tile tile) {
@@ -31,9 +35,11 @@ namespace RabiRiichi.Riichi {
             return true;
         }
 
-        public void RevealDoraIndicator(Tile tile) {
-            doraIndicators.Add(tile);
+        public void RevealDora(Tile tile, Tile uraDora) {
+            doras.Add(tile);
+            uradoras.Add(uraDora);
             remaining.Remove(tile);
+            remaining.Remove(uraDora);
         }
 
         public bool Draw(IEnumerable<Tile> tiles) {
@@ -42,6 +48,16 @@ namespace RabiRiichi.Riichi {
                     return false;
             }
             return true;
+        }
+
+        /// <summary> 计算tile算几番宝牌（不考虑里宝牌/红宝牌）。非宝牌返回0 </summary>
+        public int CountDora(Tile tile) {
+            return doras.Count(dora => dora.NextDora.IsSame(tile));
+        }
+
+        /// <summary> 计算tile中几番里宝牌。非里宝牌返回0 </summary>
+        public int CountUradora(Tile tile) {
+            return uradoras.Count(uradora => uradora.NextDora.IsSame(tile));
         }
     }
 }

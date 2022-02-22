@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Event.Listener {
+    /// TODO: 写的啥东西 等会儿鲨了重写
     public static class DefaultDrawTile {
         public static Task PrepareTile(EventBase ev) {
             var e = (DrawTileEvent)ev;
@@ -29,7 +30,7 @@ namespace RabiRiichi.Event.Listener {
             };
             player.hand.Add(incoming);
             if (e.doraIndicator.IsValid) {
-                e.game.wall.RevealDoraIndicator(e.doraIndicator);
+                // e.game.wall.RevealDora(e.doraIndicator);
                 if (e.type == DrawTileType.CloseRinshan) {
                     // TODO: Log
                     // await e.game.SendPublic($"新的宝牌指示牌：{e.doraIndicator}");
