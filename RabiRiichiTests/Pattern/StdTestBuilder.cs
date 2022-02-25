@@ -68,6 +68,7 @@ namespace RabiRiichiTests.Pattern {
                 player = currentPlayer.Object,
                 freeTiles = freeTiles,
                 fuuro = fuuro,
+                menzen = fuuro.Count == 0,
             }, incoming, scorings);
             if (shouldResolve) {
                 Assert.IsTrue(ret, "Expect resolve but failed");
