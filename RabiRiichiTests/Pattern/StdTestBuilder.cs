@@ -13,6 +13,7 @@ namespace RabiRiichiTests.Pattern {
         protected GameTiles freeTiles = new();
         protected GameTile incoming;
         protected Scorings scorings = new();
+        protected bool? forceMenzen = null;
         public Mock<Player> currentPlayer = new Mock<Player>(MockBehavior.Default, 0, null);
         public Mock<Player> anotherPlayer = new Mock<Player>(MockBehavior.Default, 1, null);
 
@@ -43,6 +44,14 @@ namespace RabiRiichiTests.Pattern {
             return this;
         }
 
+        /// <summary>
+        /// 计算门清情况
+        /// </summary>
+        public StdTestBuilder ForceMenzen(bool menzen) {
+            forceMenzen = menzen;
+            return this;
+        }
+
         public StdTestBuilder AddFree(string tiles) {
             var gameTiles = Create(tiles, -1);
             groups.Add(gameTiles);
@@ -68,7 +77,7 @@ namespace RabiRiichiTests.Pattern {
                 player = currentPlayer.Object,
                 freeTiles = freeTiles,
                 fuuro = fuuro,
-                menzen = fuuro.Count == 0,
+                menzen = forceMenzen ?? fuuro.Count == 0,
             }, incoming, scorings);
             if (shouldResolve) {
                 Assert.IsTrue(ret, "Expect resolve but failed");
