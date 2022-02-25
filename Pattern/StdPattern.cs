@@ -49,10 +49,4 @@ namespace RabiRiichi.Pattern {
         public virtual Type[] afterPatterns => NoPattern;
         public abstract bool Resolve(List<MenOrJantou> groups, Hand hand, GameTile incoming, Scorings scorings);
     }
-
-    /// <summary>
-    /// 奖励役种，仅包含算番不算役的，例如宝牌
-    /// 是StdPattern的子类
-    /// </summary>
-    public abstract class BonusPattern : StdPattern { }
 }

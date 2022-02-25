@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace RabiRiichi.Pattern {
-    public class 里宝牌 : BonusPattern {
+    public class 里宝牌 : StdPattern {
         public override Type[] basePatterns => AllBasePatterns;
 
         public override bool Resolve(List<MenOrJantou> groups, Hand hand, GameTile incoming, Scorings scorings) {

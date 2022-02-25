@@ -7,7 +7,7 @@ namespace RabiRiichi.Pattern {
     public class PatternResolver {
         public readonly List<BasePattern> basePatterns = new();
         public readonly List<StdPattern> stdPatterns = new();
-        public readonly List<BonusPattern> bonusPatterns = new();
+        public readonly List<StdPattern> bonusPatterns = new();
 
         public void RegisterBasePattern(BasePattern pattern) {
             basePatterns.Add(pattern);
@@ -17,7 +17,7 @@ namespace RabiRiichi.Pattern {
             stdPatterns.Add(pattern);
         }
 
-        public void RegisterBonusPattern(BonusPattern pattern) {
+        public void RegisterBonusPattern(StdPattern pattern) {
             bonusPatterns.Add(pattern);
         }
 
