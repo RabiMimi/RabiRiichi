@@ -16,11 +16,8 @@ namespace RabiRiichi.Pattern {
             foreach (var tile in tiles) {
                 han += hand.game.wall.CountUradora(tile);
             }
-            if (han > 0) {
-                scorings.Add(new Scoring(ScoringType.Han, han, this));
-                return true;
-            }
-            return false;
+            scorings.Add(new Scoring(ScoringType.Han, han, this));
+            return true;
         }
     }
 }
