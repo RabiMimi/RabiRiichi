@@ -13,7 +13,7 @@ namespace RabiRiichi.Pattern {
             for (int i = 0; i < grs.Count; i++) {
                 var checkList = grs.Where((gr, index) => index != i);
                 // 清一色
-                if (!checkList.All(gr => gr.Suit == checkList.First().Suit))
+                if (!checkList.All(gr => gr is Shun && gr.Suit == checkList.First().Suit))
                     return false;
                 // 一气通贯
                 if (checkList.All((gr, index) => gr[0].tile.Num == index * 3 + 1)) {
