@@ -13,6 +13,9 @@ namespace RabiRiichi.Riichi {
         /// <summary> 明暗 </summary>
         public bool IsClose { get; protected set; }
 
+        /// <summary> 花色 </summary>
+        public TileSuit Suit => this[0].tile.Suit;
+
         private void Init() {
             Sort();
             Value = 0;

@@ -90,9 +90,9 @@ namespace RabiRiichi.Pattern {
             }
 
             // 计算下一张牌
-            Tile nextTile = new Tile(curTile.Gr, curTile.Num + 1);
+            Tile nextTile = new Tile(curTile.Suit, curTile.Num + 1);
             if (!nextTile.IsValid) {
-                nextTile = new Tile(curTile.Gr + 1, 1);
+                nextTile = new Tile(curTile.Suit + 1, 1);
             }
 
             // 获取当前牌桶
@@ -113,8 +113,8 @@ namespace RabiRiichi.Pattern {
             GameTiles bucket1 = null;
             GameTiles bucket2 = null;
             if (nxt2.IsValid) {
-                bucket1 = tileBucket.GetBucket(nxt1.Gr, nxt1.Num);
-                bucket2 = tileBucket.GetBucket(nxt2.Gr, nxt2.Num);
+                bucket1 = tileBucket.GetBucket(nxt1.Suit, nxt1.Num);
+                bucket2 = tileBucket.GetBucket(nxt2.Suit, nxt2.Num);
             }
             // 枚举刻子数量
             var helpers = new Stack<DFSHelper>();
@@ -167,7 +167,7 @@ namespace RabiRiichi.Pattern {
             tileBucket = GetTileGroups(hand, incoming, false);
             current = hand.fuuro;
             this.output = output;
-            DFSPattern(new Tile(Group.M, 1), janCnt);
+            DFSPattern(new Tile(TileSuit.M, 1), janCnt);
             foreach (var gr in output) {
                 GenerateOtherPatterns(gr, incoming, extraOutput);
             }
@@ -210,10 +210,10 @@ namespace RabiRiichi.Pattern {
             if (!tile.IsValid) {
                 return 0;
             }
-            int gr = (int)tile.Gr, num = tile.Num;
-            Tile prev = new Tile(tile.Gr, num - 1);
+            int gr = (int)tile.Suit, num = tile.Num;
+            Tile prev = new Tile(tile.Suit, num - 1);
             if (!prev.IsValid) {
-                prev = new Tile(tile.Gr - 1, 9);
+                prev = new Tile(tile.Suit - 1, 9);
             }
             if (visitedDp[gr, num].TryGetValue(loc, out int dist)) {
                 return dist;
@@ -272,8 +272,8 @@ namespace RabiRiichi.Pattern {
             int Ll = dpPre.GetLength(3);
 
             // 计算dp
-            for (Group i1 = Group.M; i1 <= Group.Z; i1++) {
-                for (int i2 = 1; i2 <= (i1 == Group.Z ? 7 : 9); i2++) {
+            for (TileSuit i1 = TileSuit.M; i1 <= TileSuit.Z; i1++) {
+                for (int i2 = 1; i2 <= (i1 == TileSuit.Z ? 7 : 9); i2++) {
                     var tile = new Tile(i1, i2);
                     var dpCur = CreateDpSubArray();
                     dp[(int)i1, i2] = dpCur;

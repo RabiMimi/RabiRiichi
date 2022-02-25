@@ -8,7 +8,7 @@ namespace RabiRiichiTests.Riichi {
         public void TestTile() {
             var tile = new Tile("3s");
             Assert.AreEqual(3, tile.Num);
-            Assert.AreEqual(Group.S, tile.Gr);
+            Assert.AreEqual(TileSuit.S, tile.Suit);
             Assert.AreEqual(false, tile.Akadora);
             Assert.AreEqual(new Tile("3s"), tile);
             Assert.AreNotEqual(new Tile("r3s"), tile);

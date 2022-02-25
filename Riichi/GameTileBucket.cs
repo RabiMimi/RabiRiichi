@@ -17,27 +17,27 @@ namespace RabiRiichi.Riichi {
         }
 
         public GameTileBucket Add(GameTile tile) {
-            buckets[(int)tile.tile.Gr, tile.tile.Num].Add(tile);
+            buckets[(int)tile.tile.Suit, tile.tile.Num].Add(tile);
             return this;
         }
 
-        public GameTiles GetBucket(Group group, int num) {
+        public GameTiles GetBucket(TileSuit group, int num) {
             return buckets[(int)group, num];
         }
 
         public GameTiles GetBucket(Tile tile) {
-            return GetBucket(tile.Gr, tile.Num);
+            return GetBucket(tile.Suit, tile.Num);
         }
 
-        public IEnumerable<(GameTiles, int)> GetGroup(Group group) {
+        public IEnumerable<(GameTiles, int)> GetGroup(TileSuit group) {
             for (int i = 1; i < 10; i++) {
                 yield return (GetBucket(group, i), i);
             }
         }
 
-        public IEnumerable<(IEnumerable<(GameTiles, int)>, Group)> GetAll() {
+        public IEnumerable<(IEnumerable<(GameTiles, int)>, TileSuit)> GetAll() {
             for (int i = 1; i <= 4; i++) {
-                Group gr = (Group)i;
+                TileSuit gr = (TileSuit)i;
                 yield return (GetGroup(gr), gr);
             }
         }

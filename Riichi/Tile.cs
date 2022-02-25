@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 
 namespace RabiRiichi.Riichi {
-    public enum Group : byte {
+    public enum TileSuit : byte {
         Invalid, M, P, S, Z
     }
 
@@ -30,8 +30,8 @@ namespace RabiRiichi.Riichi {
         }
 
         /// <summary> 种类 </summary>
-        public Group Gr {
-            get => (Group)((Val >> 4) & 0x07);
+        public TileSuit Suit {
+            get => (TileSuit)((Val >> 4) & 0x07);
             set => Val = (byte)((Val & ~0x70) | ((byte)value << 4));
         }
 
@@ -49,7 +49,7 @@ namespace RabiRiichi.Riichi {
         /// <summary> 是否是合法牌 </summary>
         public bool IsValid {
             get {
-                if (Gr == Group.Invalid || Gr > Group.Z)
+                if (Suit == TileSuit.Invalid || Suit > TileSuit.Z)
                     return false;
                 if (Num < 1 || Num > 9)
                     return false;
@@ -66,22 +66,22 @@ namespace RabiRiichi.Riichi {
         public bool Is19Z => (IsMPS && (Num == 1 || Num == 9)) || IsZ;
 
         /// <summary> 是否是字牌 </summary>
-        public bool IsZ => Gr == Group.Z;
+        public bool IsZ => Suit == TileSuit.Z;
 
         /// <summary> 是否是万筒索 </summary>
-        public bool IsMPS => Gr == Group.M || Gr == Group.P || Gr == Group.S;
+        public bool IsMPS => Suit == TileSuit.M || Suit == TileSuit.P || Suit == TileSuit.S;
 
         /// <summary> 是否是三元牌 </summary>
         public bool IsSangen => IsZ && Num >= 5 && Num <= 7;
 
         public Tile(byte val = 0) { Val = val; }
-        public Tile(Group gr, int num, bool isAkadora = false) {
+        public Tile(TileSuit gr, int num, bool isAkadora = false) {
             Val = 0;
-            Gr = gr;
+            Suit = gr;
             Num = (byte)num;
             Akadora = isAkadora;
         }
-        public static Tile From(Wind wind) => new Tile(Group.Z, (int)wind + 1);
+        public static Tile From(Wind wind) => new Tile(TileSuit.Z, (int)wind + 1);
 
         public Tile(string str) {
             Val = 0;
@@ -98,7 +98,7 @@ namespace RabiRiichi.Riichi {
                 ThrowInvalidArgument(original);
             }
             Num = (byte)(num - '0');
-            Gr = str[1].ToGroup();
+            Suit = str[1].ToGroup();
             if (!IsValid) {
                 ThrowInvalidArgument(original);
             }
@@ -109,7 +109,7 @@ namespace RabiRiichi.Riichi {
             if (Akadora)
                 builder.Append('r');
             builder.Append(Num);
-            builder.Append(Gr.ToChar());
+            builder.Append(Suit.ToChar());
             return builder.ToString();
         }
 
@@ -125,7 +125,7 @@ namespace RabiRiichi.Riichi {
         }
 
         public int CompareTo(Tile other) {
-            int grcmp = Gr.CompareTo(other.Gr);
+            int grcmp = Suit.CompareTo(other.Suit);
             if (grcmp != 0)
                 return grcmp;
             int numcmp = Num.CompareTo(other.Num);
@@ -135,21 +135,21 @@ namespace RabiRiichi.Riichi {
         }
 
         /// <summary> 是否是相同的牌，赤dora视为相同 </summary>
-        public bool IsSame(Tile other) => Gr == other.Gr && Num == other.Num;
+        public bool IsSame(Tile other) => Suit == other.Suit && Num == other.Num;
         /// <summary> 是否是下一张牌，用于顺子计算 </summary>
-        public bool IsNext(Tile other) => IsMPS && Gr == other.Gr && other.Num == Num + 1;
+        public bool IsNext(Tile other) => IsMPS && Suit == other.Suit && other.Num == Num + 1;
         /// <summary> 是否是上一张牌，用于顺子计算 </summary>
-        public bool IsPrev(Tile other) => IsMPS && Gr == other.Gr && other.Num == Num - 1;
+        public bool IsPrev(Tile other) => IsMPS && Suit == other.Suit && other.Num == Num - 1;
         /// <summary> 上一张牌，用于顺子计算 </summary>
         public Tile Prev => IsMPS ? new Tile {
             Num = (byte)(Num - 1),
-            Gr = Gr,
+            Suit = Suit,
             Akadora = false
         } : Empty;
         /// <summary> 下一张牌，用于顺子计算 </summary>
         public Tile Next => IsMPS ? new Tile {
             Num = (byte)(Num + 1),
-            Gr = Gr,
+            Suit = Suit,
             Akadora = false
         } : Empty;
 
@@ -157,12 +157,12 @@ namespace RabiRiichi.Riichi {
         public Tile NextDora {
             get {
                 if (IsMPS)
-                    return new Tile { Num = (byte)(Num % 9 + 1), Gr = Gr };
+                    return new Tile { Num = (byte)(Num % 9 + 1), Suit = Suit };
                 if (IsZ) {
                     if (Num <= 4)
-                        return new Tile { Num = (byte)(Num % 4 + 1), Gr = Gr };
+                        return new Tile { Num = (byte)(Num % 4 + 1), Suit = Suit };
                     byte newNum = (byte)(Num == 7 ? 5 : Num + 1);
-                    return new Tile { Num = newNum, Gr = Gr };
+                    return new Tile { Num = newNum, Suit = Suit };
                 }
                 return Empty;
             }
@@ -206,15 +206,15 @@ namespace RabiRiichi.Riichi {
                     continue;
                 }
                 var g = c.ToGroup();
-                if (g == Group.Invalid) {
+                if (g == TileSuit.Invalid) {
                     ThrowInvalidArgument(tiles);
                 }
                 for (int i = Count - 1; i >= 0; i--) {
                     var tile = this[i];
-                    if (tile.Gr != Group.Invalid) {
+                    if (tile.Suit != TileSuit.Invalid) {
                         break;
                     }
-                    tile.Gr = g;
+                    tile.Suit = g;
                     this[i] = tile;
                 }
             }
@@ -288,12 +288,12 @@ namespace RabiRiichi.Riichi {
         public static Tiles All {
             get {
                 var ret = new Tiles();
-                for (var g = Group.M; g <= Group.Z; g++) {
-                    int maxTile = g == Group.Z ? 7 : 9;
+                for (var g = TileSuit.M; g <= TileSuit.Z; g++) {
+                    int maxTile = g == TileSuit.Z ? 7 : 9;
                     for (int i = 1; i <= maxTile; i++) {
                         for (int j = 0; j < 4; j++) {
                             ret.Add(new Tile {
-                                Gr = g,
+                                Suit = g,
                                 Num = (byte)i,
                                 Akadora = maxTile == 9 && i == 5 && j == 0
                             });
