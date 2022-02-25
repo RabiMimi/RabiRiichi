@@ -51,6 +51,13 @@ namespace RabiRiichiTests.Pattern {
                 .AddFree("11m")
                 .AddAgari("12s", "3s")
                 .Resolve(false);
+            new StdTestBuilder(V)
+                .AddFree("123s")
+                .AddFree("456s")
+                .AddFree("777s")
+                .AddFree("11m")
+                .AddAgari("23s", "4s")
+                .Resolve(false);
         }
     }
 }
