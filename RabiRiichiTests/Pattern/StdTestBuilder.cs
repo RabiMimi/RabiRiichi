@@ -1,9 +1,9 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Collections.Generic;
-using System.Linq;
+using Moq;
 using RabiRiichi.Pattern;
 using RabiRiichi.Riichi;
-using Moq;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace RabiRiichiTests.Pattern {
     public class StdTestBuilder {
@@ -26,6 +26,10 @@ namespace RabiRiichiTests.Pattern {
             return MenOrJantou.From(t);
         }
 
+        /// <summary>
+        /// 创建一个用于测试标准役种的Builder
+        /// </summary>
+        /// <param name="pattern"></param>
         public StdTestBuilder(StdPattern pattern) {
             V = pattern;
             currentPlayer.Setup(p => p.IsYaku(It.IsAny<Tile>())).Returns(false);
@@ -34,9 +38,9 @@ namespace RabiRiichiTests.Pattern {
 
         /// <summary>
         /// 添加一组副露
+        /// </summary>
         /// <param name="tiles">副露的面子</param>
         /// <param name="fuuroIndex">其中哪张牌是副露的，最左是0</param>
-        /// </summary>
         public StdTestBuilder AddFuuro(string tiles, int fuuroIndex) {
             var gameTiles = Create(tiles, fuuroIndex);
             fuuro.Add(gameTiles);
@@ -45,13 +49,17 @@ namespace RabiRiichiTests.Pattern {
         }
 
         /// <summary>
-        /// 计算门清情况
+        /// 强制标注门清情况
         /// </summary>
         public StdTestBuilder ForceMenzen(bool menzen) {
             forceMenzen = menzen;
             return this;
         }
 
+        /// <summary>
+        /// 添加一组手牌
+        /// </summary>
+        /// <param name="tiles">手牌的面子</param>
         public StdTestBuilder AddFree(string tiles) {
             var gameTiles = Create(tiles, -1);
             groups.Add(gameTiles);
@@ -59,6 +67,11 @@ namespace RabiRiichiTests.Pattern {
             return this;
         }
 
+        /// <summary>
+        /// 添加和牌的组合
+        /// </summary>
+        /// <param name="tiles">和牌的面子/雀头</param>
+        /// <param name="incoming">和了牌</param>
         public StdTestBuilder AddAgari(string tiles, string incoming) {
             this.incoming = new GameTile(new Tile(incoming)) {
                 player = currentPlayer.Object,
@@ -72,6 +85,10 @@ namespace RabiRiichiTests.Pattern {
             return this;
         }
 
+        /// <summary>
+        /// 使用给定的StdPatternResolver进行解析
+        /// </summary>
+        /// <param name="shouldResolve">是否期望成功解析</param>
         public StdTestBuilder Resolve(bool shouldResolve) {
             bool ret = V.Resolve(groups, new Hand {
                 player = currentPlayer.Object,
@@ -87,6 +104,12 @@ namespace RabiRiichiTests.Pattern {
             return this;
         }
 
+        /// <summary>
+        /// 检查是否有给定的计分结果，并将其从scorings中移除
+        /// </summary>
+        /// <param name="type">期望的结果类型</param>
+        /// <param name="value">期望的值</param>
+        /// <param name="source">期望的来源，默认为传入的resolver</param>
         public StdTestBuilder ExpectScoring(ScoringType type, int value, StdPattern source = null) {
             if (source == null) {
                 source = V;

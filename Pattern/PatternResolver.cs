@@ -1,7 +1,7 @@
-using System;
-using System.Linq;
-using System.Collections.Generic;
 using RabiRiichi.Riichi;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace RabiRiichi.Pattern {
     public class PatternResolver {
@@ -124,10 +124,10 @@ namespace RabiRiichi.Pattern {
 
         /// <summary>
         /// 获取手牌的向听数，并返回听牌或切牌
+        /// </summary>
         /// <param name="hand">手牌</param>
         /// <param name="incoming">进张，若为null则计算听牌，否则计算切牌</param>
         /// <param name="maxShanten">不计算超过该向听数的结果以加速</param>
-        /// </summary>
         public int ResolveShanten(Hand hand, GameTile incoming, out Tiles tiles, int maxShanten = int.MaxValue) {
             int retShanten = int.MaxValue;
             tiles = new Tiles();
