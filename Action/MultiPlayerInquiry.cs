@@ -24,13 +24,13 @@ namespace RabiRiichi.Action {
 
         public Task WaitTillFinalized => taskCompletionSource.Task;
 
-        public MultiPlayerInquiry Add(IPlayerAction action) {
+        public MultiPlayerInquiry Add(IPlayerAction action, bool isDefault = false) {
             var list = playerInquiries.Find(x => x.player.SamePlayer(action.player));
             if (list == null) {
                 list = new SinglePlayerInquiry(action.player);
                 playerInquiries.Add(list);
             }
-            list.AddAction(action);
+            list.AddAction(action, isDefault);
             return this;
         }
 
