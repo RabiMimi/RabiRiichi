@@ -24,7 +24,8 @@ namespace RabiRiichi.Action {
         int playerId { get; }
         int priority { get; }
         string id { get; }
-        Task<bool> OnResponse(string response);
+        bool OnResponse(string response);
+        Task Trigger();
     }
 
     /// <summary> 等待玩家做出选择 </summary>
@@ -36,36 +37,41 @@ namespace RabiRiichi.Action {
         public int playerId { get; }
 
         [JsonIgnore]
-        public abstract int priority { get; }
+        public int priority { get; protected set; }
 
         [JsonInclude]
         public abstract string id { get; }
 
+        /// <summary>
+        /// 初始值必须是一个有效的回应，用于用户超时跳过的情况
+        /// </summary>
         [JsonIgnore]
-        public virtual T defaultResponse { get; protected set; } = default;
+        protected T response = default;
 
         [JsonIgnore]
-        public Func<T, Task<bool>> onResponse { get; set; }
+        public Func<T, Task> onResponse { get; set; }
 
         public PlayerAction(Player player) {
             this.player = player;
             playerId = player.id;
         }
 
-        public async Task<bool> OnResponse(string response) {
+        public bool OnResponse(string response) {
             T resp;
             try {
                 resp = JsonSerializer.Deserialize<T>(response);
-                resp = await ValidateResponse(resp);
+                if (ValidateResponse(resp)) {
+                    this.response = resp;
+                    return true;
+                }
             } catch (Exception e) {
                 Logger.Warn(e);
-                resp = defaultResponse;
             }
-            return await onResponse(resp);
+            return false;
         }
 
-        public virtual Task<T> ValidateResponse(T response) {
-            return Task.FromResult(response);
-        }
+        public virtual Task Trigger() => onResponse(response);
+
+        public virtual bool ValidateResponse(T response) => true;
     }
 }

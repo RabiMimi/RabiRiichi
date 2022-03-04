@@ -3,7 +3,8 @@ using RabiRiichi.Riichi;
 namespace RabiRiichi.Action {
     public class RonAction : ConfirmAction {
         public override string id => "ron";
-        public override int priority => ActionPriority.Ron;
-        public RonAction(Player player) : base(player) { }
+        public RonAction(Player player, int priorityDelta = 0) : base(player) {
+            priority = ActionPriority.Ron + priorityDelta;
+        }
     }
 }
