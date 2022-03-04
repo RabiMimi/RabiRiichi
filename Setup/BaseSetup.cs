@@ -8,26 +8,67 @@ using System;
 
 namespace RabiRiichi.Setup {
     public class BaseSetup {
-        /// <summary> 配置底和 </summary>
-        protected virtual void RegisterBasePatterns(PatternResolver resolver) {
-            // Add patterns here
+        /// <summary> 底和 </summary>
+        protected Type[] basePatterns { get; set; }
+
+        /// <summary> 役种 </summary>
+        protected Type[] stdPatterns { get; set; }
+
+        /// <summary> 无役型役种 </summary>
+        protected Type[] bonusPatterns { get; set; }
+
+        #region Inject
+
+        /// <summary>
+        /// 初始化<see cref="basePatterns"/>，<see cref="stdPatterns"/>，<see cref="bonusPatterns"/>
+        /// </summary>
+        protected virtual void InitPatterns() {
+            // Init patterns here
         }
 
-        /// <summary> 配置役种 </summary>
-        protected virtual void RegisterStdPatterns(PatternResolver resolver) {
-            // Add patterns here
+        private void InjectPatterns(IServiceCollection collection) {
+            foreach (var pattern in basePatterns) {
+                collection.AddSingleton(pattern);
+            }
+            foreach (var pattern in stdPatterns) {
+                collection.AddSingleton(pattern);
+            }
+            foreach (var pattern in bonusPatterns) {
+                collection.AddSingleton(pattern);
+            }
         }
 
-        /// <summary> 配置有番无役型役种 </summary>
-        protected virtual void RegisterBonusPatterns(PatternResolver resolver) {
-            // Add patterns here
+        /// <summary> 注入事件分析类 </summary>
+        protected virtual void InjectResolvers(IServiceCollection collection) {
+            // Inject resolvers here
         }
+
+        /// <summary> 依赖注入阶段配置服务 </summary>
+        public virtual void Inject(Game game, IServiceCollection collection) {
+            // 注入事件分析类
+            InjectResolvers(collection);
+
+            // 注入牌型
+            InitPatterns();
+            InjectPatterns(collection);
+        }
+
+        #endregion
+
+        #region Register
 
         /// <summary> 配置牌型解析 </summary>
-        protected virtual void RegisterPatterns(PatternResolver resolver) {
-            RegisterBasePatterns(resolver);
-            RegisterStdPatterns(resolver);
-            RegisterBonusPatterns(resolver);
+        private void RegisterPatterns(IServiceProvider services) {
+            var resolver = services.GetService<PatternResolver>();
+            foreach (var pattern in basePatterns) {
+                resolver.RegisterBasePattern(services.GetService(pattern) as BasePattern);
+            }
+            foreach (var pattern in stdPatterns) {
+                resolver.RegisterStdPattern(services.GetService(pattern) as StdPattern);
+            }
+            foreach (var pattern in bonusPatterns) {
+                resolver.RegisterBonusPattern(services.GetService(pattern) as StdPattern);
+            }
         }
 
         /// <summary> 配置事件监听 </summary>
@@ -38,21 +79,10 @@ namespace RabiRiichi.Setup {
             RevealDoraListener.Register(eventBus);
         }
 
-        /// <summary> 依赖注入阶段配置服务 </summary>
-        public virtual void Inject(Game game, IServiceCollection collection) {
-            // 注入事件分析类
-            collection.AddSingleton<ChiResolver>();
-            collection.AddSingleton<KanResolver>();
-            collection.AddSingleton<PonResolver>();
-            collection.AddSingleton<PlayTileResolver>();
-            collection.AddSingleton<RonResolver>();
-            collection.AddSingleton<RiichiResolver>();
-        }
-
         /// <summary> 初始化阶段 </summary>
-        public virtual void Setup(Game game, IServiceProvider collection) {
-            RegisterPatterns(game.patternResolver);
-            RegisterEvents(game.eventBus);
+        public virtual void Setup(IServiceProvider services) {
+            RegisterPatterns(services);
         }
+        #endregion
     }
 }

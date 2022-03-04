@@ -1,27 +1,32 @@
 using RabiRiichi.Pattern;
+using System;
+
 
 namespace RabiRiichi.Setup {
     public class RiichiSetup : BaseSetup {
-        protected override void RegisterBasePatterns(PatternResolver resolver) {
-            resolver.RegisterBasePattern(new Base33332());
-            resolver.RegisterBasePattern(new Base72());
-            resolver.RegisterBasePattern(new Base13_1());
-        }
 
-        protected override void RegisterStdPatterns(PatternResolver resolver) {
-            resolver.RegisterStdPattern(new 一杯口());
-            resolver.RegisterStdPattern(new 平和());
-            resolver.RegisterStdPattern(new 役牌中());
-            resolver.RegisterStdPattern(new 役牌发());
-            resolver.RegisterStdPattern(new 役牌白());
-            resolver.RegisterStdPattern(new 役牌自风());
-            resolver.RegisterStdPattern(new 役牌场风());
-            resolver.RegisterStdPattern(new 断幺九());
-            resolver.RegisterStdPattern(new 门清自摸和());
-        }
-
-        protected override void RegisterBonusPatterns(PatternResolver resolver) {
-            resolver.RegisterBonusPattern(new 赤宝牌());
+        protected override void InitPatterns() {
+            basePatterns = new Type[] {
+                typeof(Base33332),
+                typeof(Base72),
+                typeof(Base13_1)
+            };
+            stdPatterns = new Type[] {
+                typeof(一杯口),
+                typeof(平和),
+                typeof(役牌中),
+                typeof(役牌发),
+                typeof(役牌白),
+                typeof(役牌自风),
+                typeof(役牌场风),
+                typeof(断幺九),
+                typeof(门清自摸和)
+            };
+            bonusPatterns = new Type[] {
+                typeof(赤宝牌),
+                typeof(宝牌),
+                typeof(里宝牌)
+            };
         }
     }
 }

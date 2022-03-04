@@ -59,7 +59,7 @@ namespace RabiRiichi.Riichi {
             patternResolver = diContainer.GetService<PatternResolver>();
 
             // Custom setup
-            config.setup.Setup(this, diContainer);
+            config.setup.Setup(diContainer);
         }
 
         #region GameUtil
