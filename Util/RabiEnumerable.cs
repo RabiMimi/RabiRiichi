@@ -59,7 +59,7 @@ namespace System.Linq {
             if (list.Count > MAX_SUBSET_SIZE) {
                 throw new ArgumentException($"List size cannot be greater than {MAX_SUBSET_SIZE}");
             }
-            if (n > list.Count) {
+            if (n < 0 || n > list.Count) {
                 yield break;
             }
             foreach (var indices in subsetIndices[list.Count][n]) {
