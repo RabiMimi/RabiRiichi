@@ -50,7 +50,7 @@ namespace System.Linq {
         }
 
         /// <summary>
-        /// 生成所有list的大小为n的子集
+        /// 生成所有source的大小为n的子集
         /// </summary>
         public static IEnumerable<IEnumerable<TSource>> Subset<TSource>(this IEnumerable<TSource> source, int n) {
             if (source is not List<TSource> list) {

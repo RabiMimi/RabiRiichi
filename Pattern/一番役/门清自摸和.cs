@@ -1,9 +1,6 @@
 ﻿using RabiRiichi.Riichi;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RabiRiichi.Pattern {
     public class 门清自摸和 : StdPattern {
