@@ -1,7 +1,7 @@
 ﻿using RabiRiichi.Riichi;
 using System.Threading.Tasks;
 
-namespace RabiRiichi.Event.Listener {
+namespace RabiRiichi.Event.InGame.Listener {
     public static class DefaultDealHand {
         public static Task PrepareHand(DealHandEvent e) {
             var yama = e.game.wall;

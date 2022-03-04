@@ -1,7 +1,7 @@
 ﻿using RabiRiichi.Riichi;
 using System.Threading.Tasks;
 
-namespace RabiRiichi.Event.Listener {
+namespace RabiRiichi.Event.InGame.Listener {
     /// TODO: 写的啥东西 等会儿鲨了重写
     public static class DefaultDrawTile {
         public static Task PrepareTile(DrawTileEvent e) {

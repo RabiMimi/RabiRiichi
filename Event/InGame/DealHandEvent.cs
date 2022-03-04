@@ -1,6 +1,6 @@
 ﻿using RabiRiichi.Riichi;
 
-namespace RabiRiichi.Event {
+namespace RabiRiichi.Event.InGame {
     public class DealHandEvent : EventBase {
         #region Request
         public Player player;

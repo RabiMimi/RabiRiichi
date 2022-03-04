@@ -1,9 +1,9 @@
-using System;
-using RabiRiichi.Riichi;
-using RabiRiichi.Pattern;
-using RabiRiichi.Event;
-using RabiRiichi.Event.Listener;
 using Microsoft.Extensions.DependencyInjection;
+using RabiRiichi.Event;
+using RabiRiichi.Event.InGame.Listener;
+using RabiRiichi.Pattern;
+using RabiRiichi.Riichi;
+using System;
 
 namespace RabiRiichi.Setup {
     public class BaseSetup {

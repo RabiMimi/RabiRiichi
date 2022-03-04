@@ -1,4 +1,4 @@
-﻿using RabiRiichi.Event.Listener;
+﻿using RabiRiichi.Event.InGame;
 using RabiRiichi.Riichi;
 using System;
 using System.Collections.Concurrent;

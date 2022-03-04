@@ -1,4 +1,6 @@
-﻿using RabiRiichi.Event;
+﻿using Microsoft.Extensions.DependencyInjection;
+using RabiRiichi.Event;
+using RabiRiichi.Event.InGame;
 using RabiRiichi.Pattern;
 using RabiRiichi.Resolver;
 using RabiRiichi.Util;
@@ -6,7 +8,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace RabiRiichi.Riichi {
 

@@ -1,6 +1,6 @@
 ﻿using RabiRiichi.Riichi;
 
-namespace RabiRiichi.Event {
+namespace RabiRiichi.Event.InGame {
     public enum DrawTileType {
         /// <summary> 牌山 </summary>
         Wall,

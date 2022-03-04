@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 
 
-namespace RabiRiichi.Event.Listener {
+namespace RabiRiichi.Event {
     /// <summary>
     /// 自定义事件监听器，一般临时使用
     /// </summary>

@@ -1,7 +1,7 @@
 ﻿using RabiRiichi.Riichi;
 using System.Threading.Tasks;
 
-namespace RabiRiichi.Event.Listener {
+namespace RabiRiichi.Event.InGame.Listener {
     public class MessageSender {
         public uint CanListen(EventBase ev) => EventPriority.MessageSender;
 
