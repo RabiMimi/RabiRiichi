@@ -1,7 +1,5 @@
-﻿using System;
+﻿using RabiRiichi.Riichi;
 using System.Collections.Generic;
-using System.Text;
-using RabiRiichi.Riichi;
 
 namespace RabiRiichi.Pattern {
     public class 役牌自风 : 役牌 {

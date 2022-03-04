@@ -1,8 +1,7 @@
+using RabiRiichi.Riichi;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using RabiRiichi.Riichi;
 
 namespace RabiRiichi.Pattern {
     public class 混全带幺九 : StdPattern {
