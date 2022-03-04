@@ -24,7 +24,7 @@ namespace RabiRiichi.Event {
         public bool IsCancelled => phase == EventPriority.Cancelled;
 
         /// <summary> 事件处理过程中可能会用到的额外信息 </summary>
-        public Dictionary<string, object> extraData = new Dictionary<string, object>();
+        public Dictionary<string, object> extraData = new();
 
         public EventBase(Game game) {
             this.game = game;

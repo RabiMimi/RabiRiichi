@@ -6,15 +6,12 @@ namespace RabiRiichi.Event.InGame.Listener {
         public uint CanListen(EventBase ev) => EventPriority.Broadcast;
 
         public static string ToString(TileSource source) {
-            switch (source) {
-                case TileSource.Chi:
-                    return "吃";
-                case TileSource.Pon:
-                    return "碰";
+            return source switch {
+                TileSource.Chi => "吃",
+                TileSource.Pon => "碰",
                 // case TileSource.Kan: return "杠";
-                default:
-                    return "";
-            }
+                _ => "",
+            };
         }
 
         public Task<bool> Handle(EventBase ev) {

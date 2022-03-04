@@ -35,6 +35,10 @@ namespace RabiRiichi.Action {
     public class ChooseTilesAction : ChoiceAction<int> {
         public override string id => "choose_tiles";
         public override int priority => ActionPriority.ChooseTile;
-        public ChooseTilesAction(Player player, List<GameTiles> tiles) : base(player) { }
+        public ChooseTilesAction(Player player, List<GameTiles> tiles) : base(player) {
+            foreach (var gr in tiles) {
+                AddOption(new ChooseTilesActionOption(gr));
+            }
+        }
     }
 }

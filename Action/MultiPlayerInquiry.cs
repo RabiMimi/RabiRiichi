@@ -16,7 +16,7 @@ namespace RabiRiichi.Action {
     }
 
     public class MultiPlayerInquiry {
-        public List<SinglePlayerInquiry> playerInquiries = new List<SinglePlayerInquiry>();
+        public List<SinglePlayerInquiry> playerInquiries = new();
         /// <summary> 当前已回应的用户的最高优先级 </summary>
         private int maxPriority = int.MinValue;
         private bool hasExecuted = false;

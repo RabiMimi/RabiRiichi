@@ -17,7 +17,7 @@ namespace RabiRiichi.Pattern {
             }
             // Check hand & groups valid
             var buckets = GetTileGroups(hand, incoming, true).GetAllBuckets();
-            List<MenOrJantou> ret = new List<MenOrJantou>();
+            List<MenOrJantou> ret = new();
             bool has2 = false;
             foreach (var gr in buckets) {
                 if (gr.Count > 2 || !gr[0].tile.Is19Z) {

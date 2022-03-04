@@ -33,9 +33,9 @@ namespace RabiRiichi.Event {
         }
 
         private readonly Dictionary<Type, List<IEventTrigger>> listeners =
-            new Dictionary<Type, List<IEventTrigger>>();
+            new();
 
-        private readonly BlockingCollection<EventBase> queue = new BlockingCollection<EventBase>();
+        private readonly BlockingCollection<EventBase> queue = new();
         public int Count => queue.Count;
         public bool Empty => Count == 0;
 

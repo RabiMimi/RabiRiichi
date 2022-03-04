@@ -9,13 +9,11 @@ namespace RabiRiichi.Event {
     /// 自定义事件监听器，一般临时使用
     /// </summary>
     public class EventListener<T> where T : EventBase {
-        private readonly Game game;
         private readonly EventBus eventBus;
-        private readonly List<Func<T, Task>> listeners = new List<Func<T, Task>>();
+        private readonly List<Func<T, Task>> listeners = new();
         private const int PRIORITY_DELTA = 1000;
 
-        public EventListener(Game game, EventBus eventBus) {
-            this.game = game;
+        public EventListener(EventBus eventBus) {
             this.eventBus = eventBus;
         }
 
@@ -75,16 +73,14 @@ namespace RabiRiichi.Event {
     /// 用于创建临时使用的自定义事件监听器
     /// </summary>
     public class EventListenerFactory {
-        private readonly Game game;
         private readonly EventBus eventBus;
 
-        public EventListenerFactory(Game game, EventBus eventBus) {
-            this.game = game;
+        public EventListenerFactory(EventBus eventBus) {
             this.eventBus = eventBus;
         }
 
         public EventListener<T> Create<T>() where T : EventBase {
-            return new EventListener<T>(game, eventBus);
+            return new EventListener<T>(eventBus);
         }
     }
 }
