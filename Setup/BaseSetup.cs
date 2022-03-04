@@ -31,8 +31,10 @@ namespace RabiRiichi.Setup {
 
         /// <summary> 配置事件监听 </summary>
         protected virtual void RegisterEvents(EventBus eventBus) {
+            BeginGameListener.Register(eventBus);
             DealHandListener.Register(eventBus);
             DrawTileListener.Register(eventBus);
+            RevealDoraListener.Register(eventBus);
         }
 
         /// <summary> 依赖注入阶段配置服务 </summary>
