@@ -40,6 +40,14 @@ namespace RabiRiichiTests.Pattern {
                 .AddAgari("23s", "4s")
                 .Resolve(true)
                 .ExpectScoring(ScoringType.Han, 1);
+            new StdTestBuilder(V)
+                .AddFuuro("123s", 0)
+                .AddFree("456s")
+                .AddFree("789s")
+                .AddFree("22m")
+                .AddAgari("22s", "2s")
+                .Resolve(true)
+                .ExpectScoring(ScoringType.Han, 1);
         }
 
         [TestMethod]

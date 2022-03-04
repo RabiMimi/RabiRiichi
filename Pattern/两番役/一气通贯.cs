@@ -8,17 +8,18 @@ namespace RabiRiichi.Pattern {
         public override Type[] basePatterns => Only33332;
 
         public override bool Resolve(List<MenOrJantou> groups, Hand hand, GameTile incoming, Scorings scorings) {
-            var grs = groups.Where(gr => gr is not Jantou).OrderBy(gr => gr[0]).ToList();
-            for (int i = 0; i < grs.Count; i++) {
-                var checkList = grs.Where((gr, index) => index != i);
-                // 清一色
-                if (!checkList.All(gr => gr is Shun && gr.Suit == checkList.First().Suit))
-                    return false;
-                // 一气通贯
-                if (checkList.All((gr, index) => gr[0].tile.Num == index * 3 + 1)) {
-                    scorings.Add(new Scoring(ScoringType.Han, hand.menzen ? 2 : 1, this));
-                    return true;
-                }
+            var isIttsuu = groups
+                .Where(gr => gr is not Jantou)
+                .OrderBy(gr => gr[0])
+                .Subset(3)
+                .Any(grs => grs.All((gr, index)
+                    => gr is Shun
+                    && gr.Suit == grs.First().Suit
+                    && gr[0].tile.Num == index * 3 + 1));
+
+            if (isIttsuu) {
+                scorings.Add(new Scoring(ScoringType.Han, hand.menzen ? 2 : 1, this));
+                return true;
             }
             return false;
         }

@@ -9,10 +9,15 @@ namespace RabiRiichi.Pattern {
         public override Type[] basePatterns => Only33332;
 
         public override bool Resolve(List<MenOrJantou> groups, Hand hand, GameTile incoming, Scorings scorings) {
-            var grs = groups.Where(gr => gr is not Jantou).ToList();
-            for (int i = 0; i < grs.Count; i++) {
-                var checkList = grs.Where((gr, index) => index != i);
-            }
+            bool isSanshoku = groups
+                .Where(gr => gr is not Jantou)
+                .OrderBy(gr => gr[0])
+                .Subset(3)
+                .Any(grs => grs.All((gr, index)
+                    => gr is Kan or Kou
+                    && (int)gr.Suit == index + 1
+                    && gr[0].tile.Num == grs.First()[0].tile.Num));
+            // TODO: (Frenqy) Finish this
             return false;
         }
     }
