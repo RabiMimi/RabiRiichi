@@ -32,7 +32,7 @@ namespace RabiRiichi.Action {
         }
     }
 
-    public class ChooseTilesAction : ChoiceAction<int> {
+    public class ChooseTilesAction : SingleChoiceAction {
         public override string id => "choose_tiles";
         public ChooseTilesAction(Player player, List<GameTiles> tiles, int priorityDelta = 0) : base(player) {
             priority = ActionPriority.ChooseTile + priorityDelta;
