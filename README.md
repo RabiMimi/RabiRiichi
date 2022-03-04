@@ -1,4 +1,4 @@
-# RabiRiichi
+# RabiRiichi (拉比立直)
 
 [![build-test](https://github.com/KCFindstr/RabiRiichi/actions/workflows/build-test.yml/badge.svg)](https://github.com/KCFindstr/RabiRiichi/actions)
 

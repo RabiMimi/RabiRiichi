@@ -87,6 +87,20 @@ namespace RabiRiichi.Pattern {
             baseScore = GetBaseScore() + point;
         }
 
+        public void Remove<T>() where T : StdPattern {
+            Remove(typeof(T));
+        }
+
+        public void Remove(Type t) {
+            RemoveAll(s => s.Source.GetType() == t);
+        }
+
+        public void Remove(IEnumerable<Type> types) {
+            foreach (var t in types) {
+                Remove(t);
+            }
+        }
+
         public int CompareTo(Scorings other) {
             if (baseScore != other.baseScore) {
                 return baseScore.CompareTo(other.baseScore);

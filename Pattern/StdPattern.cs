@@ -38,6 +38,10 @@ namespace RabiRiichi.Pattern {
             typeof(Base13_1),
             typeof(Base72)
         };
+        protected static readonly Type[] AllExecpt13_1 = new Type[] {
+            typeof(Base33332),
+            typeof(Base72)
+        };
 
         /// <summary> 满足这些pattern后，才会计算该pattern </summary>
         public virtual Type[] dependOnPatterns => NoPattern;
