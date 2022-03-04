@@ -3,21 +3,19 @@ using System.Threading.Tasks;
 
 namespace RabiRiichi.Event.Listener {
     public static class DefaultDealHand {
-        public static Task PrepareHand(EventBase ev) {
-            var e = (DealHandEvent)ev;
-            var yama = ev.game.wall;
+        public static Task PrepareHand(DealHandEvent e) {
+            var yama = e.game.wall;
             if (yama.NumRemaining < Game.HandSize) {
-                ev.Cancel();
+                e.Cancel();
                 return Task.CompletedTask;
             }
-            e.tiles = new Tiles(ev.game.rand.Choice(yama.remaining, Game.HandSize));
+            e.tiles = new Tiles(e.game.rand.Choice(yama.remaining, Game.HandSize));
             e.tiles.Sort();
             return Task.CompletedTask;
         }
 
 
-        public static Task DealHand(EventBase ev) {
-            var e = (DealHandEvent)ev;
+        public static Task DealHand(DealHandEvent e) {
             var player = e.player;
             foreach (var tile in e.tiles) {
                 player.hand.Add(new GameTile(tile) {
@@ -28,7 +26,7 @@ namespace RabiRiichi.Event.Listener {
         }
 
         public static void Register(EventBus eventBus) {
-            eventBus.Register<DealHandEvent>(PrepareHand, Priority.Prepare);
+            eventBus.Register<DealHandEvent>(PrepareHand, EventPriority.Prepare);
         }
     }
 }

@@ -4,16 +4,15 @@ using System.Threading.Tasks;
 namespace RabiRiichi.Event.Listener {
     /// TODO: 写的啥东西 等会儿鲨了重写
     public static class DefaultDrawTile {
-        public static Task PrepareTile(EventBase ev) {
-            var e = (DrawTileEvent)ev;
+        public static Task PrepareTile(DrawTileEvent e) {
             // ??? 啥意思
             int drawCount = e.type == DrawTileType.Wall ? 1 : 2;
-            var yama = ev.game.wall;
+            var yama = e.game.wall;
             if (yama.NumRemaining < drawCount) {
-                ev.Cancel();
+                e.Cancel();
                 return Task.CompletedTask;
             }
-            var tiles = ev.game.rand.Choice(yama.remaining, drawCount);
+            var tiles = e.game.rand.Choice(yama.remaining, drawCount);
             e.tile = tiles[0];
             if (drawCount > 1) {
                 e.doraIndicator = tiles[1];
@@ -21,8 +20,7 @@ namespace RabiRiichi.Event.Listener {
             return Task.CompletedTask;
         }
 
-        public static Task DrawTile(EventBase ev) {
-            var e = (DrawTileEvent)ev;
+        public static Task DrawTile(DrawTileEvent e) {
             e.game.wall.Draw(e.tile);
             var player = e.player;
             var incoming = new GameTile(e.tile) {
@@ -42,7 +40,7 @@ namespace RabiRiichi.Event.Listener {
         }
 
         public static void Register(EventBus eventBus) {
-            eventBus.Register<DrawTileEvent>(PrepareTile, Priority.Prepare);
+            eventBus.Register<DrawTileEvent>(PrepareTile, EventPriority.Prepare);
         }
     }
 }

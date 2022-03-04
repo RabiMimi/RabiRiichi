@@ -1,19 +1,28 @@
 ﻿using RabiRiichi.Event.Listener;
 using RabiRiichi.Riichi;
 using System;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Event {
 
     public class EventBus {
-        private class EventListener {
-            public int priority;
-            public Func<EventBase, Task> listener;
-            public EventListener(Func<EventBase, Task> listener, int priority) {
-                this.priority = priority;
-                this.listener = listener;
+        private interface IEventTrigger {
+            int Priority { get; }
+            Task Trigger(EventBase ev);
+        }
+
+        private class EventTrigger<T> : IEventTrigger where T : EventBase {
+            public int Priority { get; private set; }
+            public Func<T, Task> trigger;
+            public EventTrigger(Func<T, Task> handler, int priority) {
+                this.Priority = priority;
+                this.trigger = handler;
+            }
+
+            public Task Trigger(EventBase ev) {
+                return trigger((T)ev);
             }
         }
 
@@ -23,30 +32,30 @@ namespace RabiRiichi.Event {
             this.game = game;
         }
 
-        private readonly Dictionary<Type, List<EventListener>> listeners =
-            new Dictionary<Type, List<EventListener>>();
+        private readonly Dictionary<Type, List<IEventTrigger>> listeners =
+            new Dictionary<Type, List<IEventTrigger>>();
 
         private readonly BlockingCollection<EventBase> queue = new BlockingCollection<EventBase>();
         public int Count => queue.Count;
         public bool Empty => Count == 0;
 
-        public void Register<T>(Func<EventBase, Task> listener, int priority)
+        public void Register<T>(Func<T, Task> listener, int priority)
             where T : EventBase {
             var type = typeof(T);
             if (!listeners.TryGetValue(type, out var list)) {
-                list = new List<EventListener>();
+                list = new List<IEventTrigger>();
                 listeners.Add(type, list);
             }
-            list.Add(new EventListener(listener, priority));
+            list.Add(new EventTrigger<T>(listener, priority));
         }
 
-        public void Unregister<T>(Func<EventBase, Task> listener)
+        public void Unregister<T>(Func<T, Task> listener)
             where T : EventBase {
             var type = typeof(T);
             if (!listeners.TryGetValue(type, out var list)) {
                 return;
             }
-            list.RemoveAll(l => l.listener == listener);
+            list.RemoveAll(l => (l is EventTrigger<T> et) && et.trigger == listener);
         }
 
         public void Queue(EventBase ev) {
@@ -75,7 +84,7 @@ namespace RabiRiichi.Event {
             }
 
             // 监听该事件及所有子类
-            var list = new List<EventListener>();
+            var list = new List<IEventTrigger>();
             foreach (var (key, value) in listeners) {
                 if (key.IsAssignableFrom(ev.GetType())) {
                     list.AddRange(value);
@@ -83,17 +92,17 @@ namespace RabiRiichi.Event {
             }
 
             // 按priority从大到小排序
-            list.Sort((a, b) => b.priority.CompareTo(a.priority));
+            list.Sort((a, b) => b.Priority.CompareTo(a.Priority));
 
             foreach (var listener in list) {
-                await listener.listener(ev);
+                await listener.Trigger(ev);
                 if (ev.IsCancelled) {
                     return false;
                 }
-                ev.phase = listener.priority;
+                ev.phase = listener.Priority;
             }
 
-            ev.phase = Priority.Finished;
+            ev.phase = EventPriority.Finished;
 
             return true;
         }

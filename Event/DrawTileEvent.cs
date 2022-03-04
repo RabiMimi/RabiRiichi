@@ -1,12 +1,15 @@
 ﻿using RabiRiichi.Riichi;
 
 namespace RabiRiichi.Event {
-    enum DrawTileType {
+    public enum DrawTileType {
+        /// <summary> 牌山 </summary>
         Wall,
+        /// <summary> 明杠 </summary> 
         OpenRinshan,
+        /// <summary> 暗杠 </summary>
         CloseRinshan
     }
-    class DrawTileEvent : EventBase {
+    public class DrawTileEvent : EventBase {
         #region Request
         /// <summary>
         /// 是否摸岭上牌
@@ -20,7 +23,7 @@ namespace RabiRiichi.Event {
         public Tile doraIndicator = Tile.Empty;
         #endregion
 
-        public DrawTileEvent(Game game, Player player, DrawTileType type): base(game) {
+        public DrawTileEvent(Game game, Player player, DrawTileType type) : base(game) {
             this.player = player;
             this.type = type;
         }

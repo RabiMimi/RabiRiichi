@@ -1,7 +1,7 @@
 ﻿using RabiRiichi.Riichi;
 
 namespace RabiRiichi.Event {
-    class DealHandEvent : EventBase {
+    public class DealHandEvent : EventBase {
         #region Request
         public Player player;
         #endregion
@@ -10,7 +10,7 @@ namespace RabiRiichi.Event {
         public Tiles tiles;
         #endregion
 
-        public DealHandEvent(Game game, Player player): base(game) {
+        public DealHandEvent(Game game, Player player) : base(game) {
             this.player = player;
         }
     }
