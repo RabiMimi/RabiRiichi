@@ -30,6 +30,11 @@ namespace RabiRiichi.Riichi {
             remaining.Remove(this.uradoras);
         }
 
+        /// <summary> 检查牌山是否还有给定的牌数 </summary>
+        public bool Has(int amount) {
+            return NumRemaining >= amount;
+        }
+
         public bool Draw(Tile tile) {
             if (!remaining.Contains(tile)) {
                 return false;

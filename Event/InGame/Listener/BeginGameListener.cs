@@ -6,7 +6,7 @@ namespace RabiRiichi.Event.InGame.Listener {
             e.game.gameInfo.wind = e.wind;
             e.game.gameInfo.round = e.round;
             e.game.gameInfo.honba = e.honba;
-            e.game.gameInfo.Clear();
+            e.game.gameInfo.Reset();
             return Task.CompletedTask;
         }
 
@@ -15,6 +15,7 @@ namespace RabiRiichi.Event.InGame.Listener {
             foreach (var player in e.game.players) {
                 bus.Queue(new DealHandEvent(e.game, player));
             }
+            bus.Queue(new RevealDoraEvent(e.game));
             return Task.CompletedTask;
         }
 
