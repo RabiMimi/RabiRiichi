@@ -8,7 +8,7 @@ namespace RabiRiichi.Resolver {
     /// 判定是否可以立直
     /// </summary>
     public class RiichiResolver : ResolverBase {
-        public override bool ResolveAction(Hand hand, GameTile incoming, MultiPlayerAction output) {
+        public override bool ResolveAction(Hand hand, GameTile incoming, MultiPlayerInquiry output) {
             if (hand.game.wall.NumRemaining < hand.game.gameInfo.config.playerCount) {
                 return false;
             }

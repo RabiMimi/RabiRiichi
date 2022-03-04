@@ -1,5 +1,5 @@
-﻿using RabiRiichi.Pattern;
-using RabiRiichi.Action;
+﻿using RabiRiichi.Action;
+using RabiRiichi.Pattern;
 using RabiRiichi.Riichi;
 using System;
 using System.Collections.Generic;
@@ -18,7 +18,7 @@ namespace RabiRiichi.Resolver {
             this.patternResolver = patternResolver;
         }
 
-        public override bool ResolveAction(Hand hand, GameTile incoming, MultiPlayerAction output) {
+        public override bool ResolveAction(Hand hand, GameTile incoming, MultiPlayerInquiry output) {
             if (hand.IsFuriten && !incoming.IsTsumo) {
                 return false;
             }

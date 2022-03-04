@@ -1,5 +1,5 @@
-﻿using RabiRiichi.Riichi;
-using RabiRiichi.Action;
+﻿using RabiRiichi.Action;
+using RabiRiichi.Riichi;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -7,7 +7,7 @@ namespace RabiRiichi.Resolver {
 
     public abstract class ResolverBase {
 
-        public abstract bool ResolveAction(Hand hand, GameTile incoming, MultiPlayerAction output);
+        public abstract bool ResolveAction(Hand hand, GameTile incoming, MultiPlayerInquiry output);
 
         private static bool CheckComboDfs(
             List<GameTile> current,
@@ -32,7 +32,7 @@ namespace RabiRiichi.Resolver {
             for (int i = handIndex; i < hand.Count; i++) {
                 var cur = hand[i];
                 if (!cur.tile.IsSame(tile) ||
-                    (i > handIndex && cur.tile == hand[i-1].tile)) {
+                    (i > handIndex && cur.tile == hand[i - 1].tile)) {
                     continue;
                 }
                 current.Add(cur);

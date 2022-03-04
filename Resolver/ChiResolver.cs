@@ -1,14 +1,13 @@
 ﻿using RabiRiichi.Action;
 using RabiRiichi.Riichi;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace RabiRiichi.Resolver {
     /// <summary>
     /// 判定是否能吃
     /// </summary>
     public class ChiResolver : ResolverBase {
-        public override bool ResolveAction(Hand hand, GameTile incoming, MultiPlayerAction output) {
+        public override bool ResolveAction(Hand hand, GameTile incoming, MultiPlayerInquiry output) {
             if (hand.game.wall.IsHaitei) {
                 return false;
             }

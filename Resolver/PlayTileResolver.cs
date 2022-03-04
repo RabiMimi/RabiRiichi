@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
-using RabiRiichi.Action;
+﻿using RabiRiichi.Action;
 using RabiRiichi.Riichi;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace RabiRiichi.Resolver {
@@ -8,7 +8,7 @@ namespace RabiRiichi.Resolver {
     /// 生成切牌表
     /// </summary>
     public class PlayTileResolver : ResolverBase {
-        public override bool ResolveAction(Hand hand, GameTile incoming, MultiPlayerAction output) {
+        public override bool ResolveAction(Hand hand, GameTile incoming, MultiPlayerInquiry output) {
             var tiles = new List<GameTile>();
             if (incoming != null) {
                 tiles.Add(incoming);

@@ -8,7 +8,7 @@ namespace RabiRiichi.Resolver {
     /// 判定是否能碰
     /// </summary>
     public class PonResolver : ResolverBase {
-        public override bool ResolveAction(Hand hand, GameTile incoming, MultiPlayerAction output) {
+        public override bool ResolveAction(Hand hand, GameTile incoming, MultiPlayerInquiry output) {
             if (hand.game.wall.IsHaitei) {
                 return false;
             }

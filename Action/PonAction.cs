@@ -1,9 +1,10 @@
-using System.Collections.Generic;
 using RabiRiichi.Riichi;
+using System.Collections.Generic;
 
 namespace RabiRiichi.Action {
     public class PonAction : ChooseTilesAction {
-        public override int Priority => 4000;
-        public PonAction(Player player, List<GameTiles> tiles) : base(player, tiles) {}
+        public override string id => "pon";
+        public override int priority => ActionPriority.Pon;
+        public PonAction(Player player, List<GameTiles> tiles) : base(player, tiles) { }
     }
 }

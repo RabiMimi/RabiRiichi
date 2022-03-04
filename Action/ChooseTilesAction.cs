@@ -1,7 +1,7 @@
-using System.Text.Json.Serialization;
+using RabiRiichi.Riichi;
 using System.Collections.Generic;
 using System.Linq;
-using RabiRiichi.Riichi;
+using System.Text.Json.Serialization;
 
 namespace RabiRiichi.Action {
     public class ActionTileInfo {
@@ -23,7 +23,6 @@ namespace RabiRiichi.Action {
     }
 
     public class ChooseTilesActionOption : ActionOption {
-        public override string id => "choose_tiles";
 
         [JsonInclude]
         public readonly List<ActionTileInfo> tiles;
@@ -33,7 +32,9 @@ namespace RabiRiichi.Action {
         }
     }
 
-    public abstract class ChooseTilesAction : ChoiceAction {
+    public class ChooseTilesAction : ChoiceAction<int> {
+        public override string id => "choose_tiles";
+        public override int priority => ActionPriority.ChooseTile;
         public ChooseTilesAction(Player player, List<GameTiles> tiles) : base(player) { }
     }
 }
