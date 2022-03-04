@@ -2,7 +2,6 @@ using RabiRiichi.Riichi;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace RabiRiichi.Pattern {
     public class 对对和 : StdPattern {
