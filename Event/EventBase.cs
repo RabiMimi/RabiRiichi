@@ -6,10 +6,10 @@ namespace RabiRiichi.Event {
         public const int Cancelled = -1;
         public const int Finished = 0;
         public const int Minimum = 1;
-        public const int MessageSender = (int)1e3;
         public const int After = (int)1e6;
-        public const int Execute = (int)2e6;
-        public const int Prepare = (int)3e6;
+        public const int Broadcast = (int)2e6;
+        public const int Execute = (int)3e6;
+        public const int Prepare = (int)4e6;
         public const int Maximum = (int)1e7;
     }
 

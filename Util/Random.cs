@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace RabiRiichi.Util {
     public class Rand : Random {
-        public Rand(int seed): base(seed) { }
+        public Rand(int seed) : base(seed) { }
 
         public void Shuffle<T>(IList<T> list) {
             for (int i = 1; i < list.Count; i++) {
@@ -20,6 +20,7 @@ namespace RabiRiichi.Util {
         }
 
         public List<T> Choice<T>(IList<T> list, int count) {
+            count = Math.Min(count, list.Count);
             List<int> helper = Enumerable.Range(0, list.Count).ToList();
             Shuffle(helper);
             helper.RemoveRange(count, helper.Count - count);

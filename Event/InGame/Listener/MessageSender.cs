@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace RabiRiichi.Event.InGame.Listener {
     public class MessageSender {
-        public uint CanListen(EventBase ev) => EventPriority.MessageSender;
+        public uint CanListen(EventBase ev) => EventPriority.Broadcast;
 
         public static string ToString(TileSource source) {
             switch (source) {

@@ -13,19 +13,21 @@ namespace RabiRiichi.Riichi {
 
     public class Game {
         public const int HandSize = 13;
-        public ServiceProvider diContainer;
+        public readonly ServiceProvider diContainer;
 
-        public GameInfo gameInfo;
-        public Player[] players;
+        public readonly GameInfo gameInfo;
+        public readonly Player[] players;
 
-        public EventBus eventBus;
-        public Wall wall;
-        public ActionManager actionManager;
-        public PatternResolver patternResolver;
-        public Rand rand;
+        public readonly EventBus eventBus;
+        public readonly EventListenerFactory eventListenerFactory;
+        public readonly Wall wall;
+        public readonly ActionManager actionManager;
+        public readonly PatternResolver patternResolver;
+        public readonly Rand rand;
 
         public Game(GameConfig config) {
             rand = new Rand((int)(DateTimeOffset.Now.ToUnixTimeSeconds() & 0xffffffff));
+            players = new Player[config.playerCount];
             var serviceCollection = new ServiceCollection();
 
             // Existing instances
@@ -35,6 +37,7 @@ namespace RabiRiichi.Riichi {
 
             // Core utils
             serviceCollection.AddSingleton<EventBus>();
+            serviceCollection.AddSingleton<EventListenerFactory>();
 
             // Game related
             serviceCollection.AddSingleton<Wall>();
@@ -70,25 +73,21 @@ namespace RabiRiichi.Riichi {
         #region Start
 
         public async Task Start() {
-            // Init players
-            players = new Player[gameInfo.config.playerCount];
+            // 开始游戏
+            gameInfo.phase = GamePhase.Running;
+
+            // 初始化玩家
             for (int i = 0; i < players.Length; i++) {
                 players[i] = new Player(i, this) {
                     wind = (Wind)i,
                 };
             }
 
-            // Deal cards
-            foreach (var player in players) {
-                var ev = new DealHandEvent(this, player);
-                eventBus.Queue(ev);
-            }
-            eventBus.Queue(new DrawTileEvent(this, GetPlayer(this.gameInfo.Banker), DrawTileType.Wall));
-
             // 游戏逻辑
+            eventBus.Queue(new BeginGameEvent(this, Wind.E, 0, 0));
             await eventBus.ProcessQueue();
 
-            // End game
+            // 结束游戏
             gameInfo.phase = GamePhase.Finished;
         }
         #endregion

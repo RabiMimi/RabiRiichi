@@ -2,18 +2,17 @@
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Event.InGame.Listener {
-    public static class DefaultDealHand {
+    public static class DealHandListener {
         public static Task PrepareHand(DealHandEvent e) {
             var yama = e.game.wall;
             if (yama.NumRemaining < Game.HandSize) {
                 e.Cancel();
                 return Task.CompletedTask;
             }
-            e.tiles = new Tiles(e.game.rand.Choice(yama.remaining, Game.HandSize));
+            e.tiles = yama.Select(Game.HandSize);
             e.tiles.Sort();
             return Task.CompletedTask;
         }
-
 
         public static Task DealHand(DealHandEvent e) {
             var player = e.player;
@@ -27,6 +26,7 @@ namespace RabiRiichi.Event.InGame.Listener {
 
         public static void Register(EventBus eventBus) {
             eventBus.Register<DealHandEvent>(PrepareHand, EventPriority.Prepare);
+            eventBus.Register<DealHandEvent>(DealHand, EventPriority.Execute);
         }
     }
 }

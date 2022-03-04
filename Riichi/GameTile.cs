@@ -36,7 +36,7 @@ namespace RabiRiichi.Riichi {
         /// <summary> 弃牌的时间戳 </summary>
         public int discardTime = -1;
         /// <summary> 是否是公开牌 </summary>
-        public bool visible = false;
+        // public bool visible = false;
         /// <summary> 是否是立直宣告牌 </summary>
         public bool riichi = false;
         /// <summary> 是否是自摸 </summary>

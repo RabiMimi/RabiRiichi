@@ -16,7 +16,7 @@ namespace RabiRiichi.Riichi {
         public GamePhase phase = GamePhase.Pending;
         /// <summary> 场风 </summary>
         public Wind wind = Wind.E;
-        /// <summary> 局数 </summary>
+        /// <summary> 局数，从0开始 </summary>
         public int round = 0;
         /// <summary> 本场 </summary>
         public int honba = 0;
@@ -33,6 +33,12 @@ namespace RabiRiichi.Riichi {
 
         public GameInfo(GameConfig config) {
             this.config = config;
+        }
+
+        /// <summary> 清空本局数据以开始下一局 </summary>
+        public void Clear() {
+            firstJun = true;
+            timeStamp = 0;
         }
     }
 }

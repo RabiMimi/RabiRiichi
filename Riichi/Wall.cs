@@ -3,6 +3,8 @@ using System.Linq;
 
 namespace RabiRiichi.Riichi {
     public class Wall {
+        public Game game;
+
         /// <summary>
         /// 王牌数量
         /// </summary>
@@ -17,7 +19,8 @@ namespace RabiRiichi.Riichi {
         /// <summary> 是否到了海底 </summary>
         public bool IsHaitei => NumRemaining <= 0;
 
-        public Wall(string tiles = "", string doras = "", string uradoras = "") {
+        public Wall(Game game, string tiles = "", string doras = "", string uradoras = "") {
+            this.game = game;
             drawn = new Tiles(tiles);
             this.doras = new Tiles(doras);
             this.uradoras = new Tiles(uradoras);
@@ -59,6 +62,17 @@ namespace RabiRiichi.Riichi {
         /// <summary> 计算tile中几番里宝牌。非里宝牌返回0 </summary>
         public int CountUradora(Tile tile) {
             return uradoras.Count(uradora => uradora.NextDora.IsSame(tile));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public Tile SelectOne() {
+            return game.rand.Choice(remaining);
+        }
+
+        public Tiles Select(int count) {
+            return new Tiles(game.rand.Choice(remaining, count));
         }
     }
 }
