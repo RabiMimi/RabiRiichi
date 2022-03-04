@@ -36,7 +36,7 @@ namespace RabiRiichi.Riichi {
         }
 
         /// <summary> 清空本局数据以开始下一局 </summary>
-        public void Clear() {
+        public void Reset() {
             firstJun = true;
             timeStamp = 0;
         }

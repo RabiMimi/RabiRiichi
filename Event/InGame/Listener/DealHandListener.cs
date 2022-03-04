@@ -5,7 +5,7 @@ namespace RabiRiichi.Event.InGame.Listener {
     public static class DealHandListener {
         public static Task PrepareHand(DealHandEvent e) {
             var yama = e.game.wall;
-            if (yama.NumRemaining < Game.HandSize) {
+            if (!yama.Has(Game.HandSize)) {
                 e.Cancel();
                 return Task.CompletedTask;
             }

@@ -11,7 +11,7 @@ namespace RabiRiichi.Event.InGame.Listener {
             }
             // 从牌山随机选取一张牌
             var yama = e.game.wall;
-            if (yama.IsHaitei) {
+            if (!yama.Has(1)) {
                 e.Cancel();
                 return Task.CompletedTask;
             }
