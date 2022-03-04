@@ -9,9 +9,7 @@ namespace RabiRiichi.Util {
         public void Shuffle<T>(IList<T> list) {
             for (int i = 1; i < list.Count; i++) {
                 int index = Next(i + 1);
-                T tmp = list[i];
-                list[i] = list[index];
-                list[index] = tmp;
+                (list[index], list[i]) = (list[i], list[index]);
             }
         }
 

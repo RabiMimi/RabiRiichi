@@ -15,8 +15,8 @@ namespace RabiRiichi.Pattern {
 
         #region Resolve
         private class DFSHelper : IDisposable {
-            private Base33332 instance;
-            private Stack<GameTile> removed = new();
+            private readonly Base33332 instance;
+            private readonly Stack<GameTile> removed = new();
             private int groupNum = 0;
 
             public DFSHelper(Base33332 instance) {
@@ -90,7 +90,7 @@ namespace RabiRiichi.Pattern {
             }
 
             // 计算下一张牌
-            Tile nextTile = new Tile(curTile.Suit, curTile.Num + 1);
+            Tile nextTile = new(curTile.Suit, curTile.Num + 1);
             if (!nextTile.IsValid) {
                 nextTile = new Tile(curTile.Suit + 1, 1);
             }
@@ -211,7 +211,7 @@ namespace RabiRiichi.Pattern {
                 return 0;
             }
             int gr = (int)tile.Suit, num = tile.Num;
-            Tile prev = new Tile(tile.Suit, num - 1);
+            Tile prev = new(tile.Suit, num - 1);
             if (!prev.IsValid) {
                 prev = new Tile(tile.Suit - 1, 9);
             }

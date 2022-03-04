@@ -14,8 +14,8 @@ namespace RabiRiichiTests.Pattern {
         protected GameTile incoming;
         protected Scorings scorings = new();
         protected bool? forceMenzen = null;
-        public Mock<Player> currentPlayer = new Mock<Player>(MockBehavior.Default, 0, null);
-        public Mock<Player> anotherPlayer = new Mock<Player>(MockBehavior.Default, 1, null);
+        public Mock<Player> currentPlayer = new(MockBehavior.Default, 0, null);
+        public Mock<Player> anotherPlayer = new(MockBehavior.Default, 1, null);
 
         protected MenOrJantou Create(string tiles, int fuuroIndex) {
             var t = new GameTiles(new Tiles(tiles));

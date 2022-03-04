@@ -1,7 +1,7 @@
-using System;
-using System.Linq;
-using System.Collections.Generic;
 using RabiRiichi.Util;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace RabiRiichi.Riichi {
 
@@ -102,7 +102,7 @@ namespace RabiRiichi.Riichi {
         }
 
         public override bool IsSame(GameTiles other) {
-            if (!(other is Shun))
+            if (other is not Shun)
                 return false;
             return this[0].IsSame(other[0]);
         }
@@ -119,7 +119,7 @@ namespace RabiRiichi.Riichi {
 
         /// <summary> 判定是否相同，赤宝牌视为相同牌，杠和刻视为相同 </summary>
         public override bool IsSame(GameTiles other) {
-            if (!(other is Kou) && !(other is Kan))
+            if (other is not Kou && other is not Kan)
                 return false;
             return this[0].IsSame(other[0]);
         }
@@ -140,7 +140,7 @@ namespace RabiRiichi.Riichi {
 
         /// <summary> 判定是否相同，赤宝牌视为相同牌，杠和刻视为相同 </summary>
         public override bool IsSame(GameTiles other) {
-            if (!(other is Kan) && !(other is Kou))
+            if (other is not Kan and not Kou)
                 return false;
             return this[0].IsSame(other[0]);
         }
@@ -156,7 +156,7 @@ namespace RabiRiichi.Riichi {
         }
 
         public override bool IsSame(GameTiles other) {
-            if (!(other is Jantou))
+            if (other is not Jantou)
                 return false;
             return this[0].IsSame(other[0]);
         }
@@ -172,7 +172,7 @@ namespace RabiRiichi.Riichi {
         }
 
         public override bool IsSame(GameTiles other) {
-            if (!(other is Musou))
+            if (other is not Musou)
                 return false;
             return this[0].IsSame(other[0]);
         }

@@ -12,7 +12,7 @@ namespace RabiRiichi.Resolver {
         /// <summary> 番缚 </summary>
         public int MinHan { get; set; } = 1;
 
-        private PatternResolver patternResolver;
+        private readonly PatternResolver patternResolver;
 
         public RonResolver(PatternResolver patternResolver) {
             this.patternResolver = patternResolver;

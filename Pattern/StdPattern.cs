@@ -29,11 +29,11 @@ namespace RabiRiichi.Pattern {
 
     /// <summary> 标准役种 </summary>
     public abstract class StdPattern {
-        protected static Type[] NoPattern = new Type[0];
-        protected static Type[] Only33332 = new Type[] { typeof(Base33332) };
-        protected static Type[] Only72 = new Type[] { typeof(Base72) };
-        protected static Type[] Only13_1 = new Type[] { typeof(Base13_1) };
-        protected static Type[] AllBasePatterns = new Type[] {
+        protected static readonly Type[] NoPattern = Array.Empty<Type>();
+        protected static readonly Type[] Only33332 = new Type[] { typeof(Base33332) };
+        protected static readonly Type[] Only72 = new Type[] { typeof(Base72) };
+        protected static readonly Type[] Only13_1 = new Type[] { typeof(Base13_1) };
+        protected static readonly Type[] AllBasePatterns = new Type[] {
             typeof(Base33332),
             typeof(Base13_1),
             typeof(Base72)

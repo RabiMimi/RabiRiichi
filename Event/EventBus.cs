@@ -17,19 +17,13 @@ namespace RabiRiichi.Event {
             public int Priority { get; private set; }
             public Func<T, Task> trigger;
             public EventTrigger(Func<T, Task> handler, int priority) {
-                this.Priority = priority;
-                this.trigger = handler;
+                Priority = priority;
+                trigger = handler;
             }
 
             public Task Trigger(EventBase ev) {
                 return trigger((T)ev);
             }
-        }
-
-        private readonly Game game;
-
-        public EventBus(Game game) {
-            this.game = game;
         }
 
         private readonly Dictionary<Type, List<IEventTrigger>> listeners =

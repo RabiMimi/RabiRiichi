@@ -5,14 +5,14 @@ namespace RabiRiichi.Resolver {
     public class ActionManager {
         public static ResolverBase[] resolvers = new ResolverBase[] {
             // new RonResolver(),
-            new RiichiResolver(),
+            // new RiichiResolver(),
             new ChiResolver(),
             new KanResolver(),
             new PonResolver(),
             new PlayTileResolver(),
         };
 
-        public readonly List<ResolverBase> Resolvers = new List<ResolverBase>();
+        public readonly List<ResolverBase> Resolvers = new();
 
         public void RegisterResolver(ResolverBase resolver) {
             Resolvers.Add(resolver);

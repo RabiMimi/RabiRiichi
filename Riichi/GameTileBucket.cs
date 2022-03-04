@@ -2,7 +2,7 @@
 namespace RabiRiichi.Riichi {
     /// <summary> 将相同的牌放入同一个bucket </summary>
     public class GameTileBucket {
-        private GameTiles[,] buckets = new GameTiles[5, 10];
+        private readonly GameTiles[,] buckets = new GameTiles[5, 10];
         public GameTileBucket() {
             for (int i = 1; i < 5; i++) {
                 for (int j = 1; j < 10; j++) {

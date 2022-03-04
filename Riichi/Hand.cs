@@ -1,22 +1,22 @@
-﻿using System;
+﻿using RabiRiichi.Pattern;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using RabiRiichi.Pattern;
 
 namespace RabiRiichi.Riichi {
     public class Hand {
         /// <summary> 手牌（不包含副露） </summary>
-        public GameTiles freeTiles = new GameTiles();
+        public GameTiles freeTiles = new();
 
         /// <summary> 巡目 </summary>
         public int jun = 0;
 
         /// <summary> 副露的面子 </summary>
-        public List<MenOrJantou> fuuro = new List<MenOrJantou>();
+        public List<MenOrJantou> fuuro = new();
 
         /// <summary> 牌河 </summary>
-        public GameTiles discarded = new GameTiles();
+        public GameTiles discarded = new();
 
         /// <summary> 当前玩家 </summary>
         public Player player;

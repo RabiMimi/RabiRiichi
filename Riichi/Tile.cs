@@ -9,7 +9,7 @@ namespace RabiRiichi.Riichi {
     }
 
     public struct Tile : IComparable<Tile> {
-        public static Tile Empty = new Tile(0);
+        public static readonly Tile Empty = new(0);
         /// <summary>
         /// LSB to MSB:
         /// 4 bit digit
@@ -21,7 +21,7 @@ namespace RabiRiichi.Riichi {
         /// <summary> 不考虑赤宝的值。值一样说明是相同牌 </summary>
         public byte NoDoraVal => (byte)(Val & 0x7f);
         /// <summary> 去掉赤宝标记后的牌 </summary>
-        public Tile WithoutDora => new Tile(NoDoraVal);
+        public Tile WithoutDora => new(NoDoraVal);
 
         /// <summary> 点数 </summary>
         public byte Num {
@@ -81,7 +81,7 @@ namespace RabiRiichi.Riichi {
             Num = (byte)num;
             Akadora = isAkadora;
         }
-        public static Tile From(Wind wind) => new Tile(TileSuit.Z, (int)wind + 1);
+        public static Tile From(Wind wind) => new(TileSuit.Z, (int)wind + 1);
 
         public Tile(string str) {
             Val = 0;
@@ -305,12 +305,12 @@ namespace RabiRiichi.Riichi {
         }
 
         /// <summary> 所有牌（不重复，无赤宝） </summary>
-        public static Tiles AllDistinct => new Tiles("123456789m123456789p123456789s1234567z");
+        public static Tiles AllDistinct => new("123456789m123456789p123456789s1234567z");
 
         /// <summary> 所有19牌和字牌 </summary>
-        public static Tiles T19Z => new Tiles("19m19p19s1234567z");
+        public static Tiles T19Z => new("19m19p19s1234567z");
 
         /// <summary> 所有19牌 </summary>
-        public static Tiles T19 => new Tiles("19m19p19s");
+        public static Tiles T19 => new("19m19p19s");
     }
 }

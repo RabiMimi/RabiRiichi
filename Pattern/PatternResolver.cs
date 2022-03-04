@@ -31,7 +31,7 @@ namespace RabiRiichi.Pattern {
             public readonly HashSet<Type> stdFailure = new();
         }
 
-        private bool ResolveStdPattern(ResolutionContext context, StdPattern pattern, Scorings scorings) {
+        private static bool ResolveStdPattern(ResolutionContext context, StdPattern pattern, Scorings scorings) {
             var pType = pattern.GetType();
             if (pattern.Resolve(context.group, context.hand, context.incoming, scorings)) {
                 context.stdSuccess.Add(pType);
@@ -123,7 +123,8 @@ namespace RabiRiichi.Pattern {
         }
 
         /// <summary>
-        /// 获取手牌的向听数，并返回听牌或切牌
+        /// 获取手牌的向听数，并返回听牌或切牌。
+        /// 若向听数超过设定的限制，返回<see cref="int.MaxValue"/>。
         /// </summary>
         /// <param name="hand">手牌</param>
         /// <param name="incoming">进张，若为null则计算听牌，否则计算切牌</param>
@@ -131,7 +132,7 @@ namespace RabiRiichi.Pattern {
         public int ResolveShanten(Hand hand, GameTile incoming, out Tiles tiles, int maxShanten = int.MaxValue) {
             int retShanten = int.MaxValue;
             tiles = new Tiles();
-            foreach (var pattern in Patterns.BasePatterns) {
+            foreach (var pattern in basePatterns) {
                 int shanten = pattern.Shanten(hand, incoming, out var curTiles, maxShanten);
                 if (shanten > retShanten || shanten == int.MaxValue) {
                     continue;

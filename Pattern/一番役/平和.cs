@@ -8,10 +8,10 @@ namespace RabiRiichi.Pattern {
         public override Type[] basePatterns => Only33332;
 
         public override bool Resolve(List<MenOrJantou> groups, Hand hand, GameTile incoming, Scorings scorings) {
-            if (!hand.menzen || groups.Any(gr => !(gr is Jantou) && !(gr is Shun)))
+            if (!hand.menzen || groups.Any(gr => gr is not Jantou && gr is not Shun))
                 return false;
             var gr = groups.Find(gr => gr.Contains(incoming));
-            if (!(gr is Shun))
+            if (gr is not Shun)
                 return false;
             // 确认两面听
             if (gr.Any(tile => tile.tile.Is19Z && tile != incoming))

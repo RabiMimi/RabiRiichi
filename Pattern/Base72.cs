@@ -14,7 +14,7 @@ namespace RabiRiichi.Pattern {
                 return false;
             }
             // Check groups
-            if (hand.fuuro.Any(gr => !(gr is Jantou))) {
+            if (hand.fuuro.Any(gr => gr is not Jantou)) {
                 return false;
             }
             // Check hand & groups valid
@@ -31,7 +31,7 @@ namespace RabiRiichi.Pattern {
         }
 
         public override int Shanten(Hand hand, GameTile incoming, out Tiles output, int maxShanten = 13) {
-            if (hand.fuuro.Any(gr => !(gr is Jantou))) {
+            if (hand.fuuro.Any(gr => gr is not Jantou)) {
                 return Reject(out output);
             }
 

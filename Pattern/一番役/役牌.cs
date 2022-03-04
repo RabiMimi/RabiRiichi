@@ -1,8 +1,8 @@
-﻿using System;
+﻿using RabiRiichi.Riichi;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using RabiRiichi.Riichi;
 
 namespace RabiRiichi.Pattern {
     public abstract class 役牌 : StdPattern {
@@ -11,8 +11,8 @@ namespace RabiRiichi.Pattern {
         protected abstract Tile YakuTile { get; }
 
         public override bool Resolve(List<MenOrJantou> groups, Hand hand, GameTile incoming, Scorings scorings) {
-            var gr = groups.Where(tiles => (tiles is Kou || tiles is Kan) && tiles.HasTile(YakuTile));
-            if (gr.Count() > 0) {
+            bool hasYaku = groups.Any(tiles => (tiles is Kou || tiles is Kan) && tiles.HasTile(YakuTile));
+            if (hasYaku) {
                 scorings.Add(new Scoring(ScoringType.Han, 1, this));
                 return true;
             }
