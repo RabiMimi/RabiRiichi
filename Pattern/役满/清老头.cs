@@ -12,6 +12,7 @@ namespace RabiRiichi.Pattern {
 
         public override bool Resolve(List<MenOrJantou> groups, Hand hand, GameTile incoming, Scorings scorings) {
             if (groups.All(gr => gr[0].tile.IsMPS)) {
+                scorings.RemoveAll(s => s.Source is 混老头);
                 scorings.Add(new Scoring(ScoringType.Yakuman, 1, this));
                 return true;
             }
