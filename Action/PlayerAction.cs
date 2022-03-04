@@ -70,7 +70,7 @@ namespace RabiRiichi.Action {
             return false;
         }
 
-        public virtual Task Trigger() => onResponse(response);
+        public virtual Task Trigger() => onResponse == null ? Task.CompletedTask : onResponse(response);
 
         public virtual bool ValidateResponse(T response) => true;
     }
