@@ -12,10 +12,6 @@ namespace RabiRiichi.Event.InGame.Listener {
             }
             // 从牌山随机选取牌
             var yama = e.game.wall;
-            if (!yama.Has(drawCount)) {
-                e.Cancel();
-                return Task.CompletedTask;
-            }
             var tiles = yama.Select(drawCount);
             // 分配抽到的牌为宝牌或里宝
             if (e.dora.IsEmpty) {
