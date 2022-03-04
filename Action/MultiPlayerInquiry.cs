@@ -16,10 +16,13 @@ namespace RabiRiichi.Action {
     }
 
     public class MultiPlayerInquiry {
-        public List<SinglePlayerInquiry> playerInquiries = new();
+        public readonly List<SinglePlayerInquiry> playerInquiries = new();
+        public readonly TaskCompletionSource taskCompletionSource = new();
         /// <summary> 当前已回应的用户的最高优先级 </summary>
         private int curMaxPriority = int.MinValue;
         public bool hasExecuted { get; private set; } = false;
+
+        public Task WaitTillFinalized => taskCompletionSource.Task;
 
         public MultiPlayerInquiry Add(IPlayerAction action) {
             var list = playerInquiries.Find(x => x.player.SamePlayer(action.player));
@@ -71,6 +74,7 @@ namespace RabiRiichi.Action {
             foreach (var action in playerInquiries.Where(x => x.curPriority == curMaxPriority)) {
                 await action.Trigger();
             }
+            taskCompletionSource.SetResult();
             return true;
         }
     }
