@@ -9,6 +9,7 @@ namespace RabiRiichi.Action {
     /// <summary> 优先级较高的Action触发后，停止等待其他Action的触发 </summary>
     public static class ActionPriority {
         public const int ChooseTile = 10000;
+        public const int Skip = 1000;
         public const int Chi = 2000;
         public const int Pon = 3000;
         public const int Kan = 4000;
@@ -16,7 +17,6 @@ namespace RabiRiichi.Action {
         public const int Ron = 5000;
         public const int Riichi = 10000;
         public const int Discard = 10000;
-        public const int Confirm = 10000;
     }
 
     public interface IPlayerAction {

@@ -3,5 +3,6 @@
     "editor.formatOnSave": true,
     "omnisharp.enableImportCompletion": true,
     "omnisharp.organizeImportsOnFormat": true,
-    "editor.formatOnType": true
+    "editor.formatOnType": true,
+    "omnisharp.enableRoslynAnalyzers": true
 }
