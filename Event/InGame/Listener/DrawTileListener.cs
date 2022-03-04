@@ -31,6 +31,7 @@ namespace RabiRiichi.Event.InGame.Listener {
 
         public static void Register(EventBus eventBus) {
             eventBus.Register<DrawTileEvent>(PrepareTile, EventPriority.Prepare);
+            eventBus.Register<DrawTileEvent>(DrawTile, EventPriority.Execute);
         }
     }
 }
