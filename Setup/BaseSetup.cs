@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using RabiRiichi.Event;
 using RabiRiichi.Event.InGame.Listener;
 using RabiRiichi.Pattern;
+using RabiRiichi.Resolver;
 using RabiRiichi.Riichi;
 using System;
 
@@ -39,7 +40,13 @@ namespace RabiRiichi.Setup {
 
         /// <summary> 依赖注入阶段配置服务 </summary>
         public virtual void Inject(Game game, IServiceCollection collection) {
-            // Add services here
+            // 注入事件分析类
+            collection.AddSingleton<ChiResolver>();
+            collection.AddSingleton<KanResolver>();
+            collection.AddSingleton<PonResolver>();
+            collection.AddSingleton<PlayTileResolver>();
+            collection.AddSingleton<RonResolver>();
+            collection.AddSingleton<RiichiResolver>();
         }
 
         /// <summary> 初始化阶段 </summary>
