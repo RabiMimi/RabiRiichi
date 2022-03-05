@@ -119,7 +119,7 @@ namespace RabiRiichi.Riichi {
 
         /// <summary> 判定是否相同，赤宝牌视为相同牌，杠和刻视为相同 </summary>
         public override bool IsSame(GameTiles other) {
-            if (other is not Kou or Kan)
+            if (other is not (Kou or Kan))
                 return false;
             return this[0].IsSame(other[0]);
         }
