@@ -11,7 +11,7 @@ namespace RabiRiichi.Resolver {
             if (hand.game.wall.IsHaitei) {
                 return false;
             }
-            if (hand.riichi || incoming.IsTsumo || incoming.tile.IsZ || incoming.fromPlayer != hand.player.PrevPlayer) {
+            if (hand.riichi || incoming.IsTsumo || incoming.tile.IsZ || !incoming.fromPlayer.SamePlayer(hand.player.PrevPlayer)) {
                 return false;
             }
             var current = new List<GameTile> { incoming };
