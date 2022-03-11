@@ -1,11 +1,12 @@
 ﻿using RabiRiichi.Riichi;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace RabiRiichi.Pattern {
     public class 平和 : StdPattern {
-        public override Type[] basePatterns => Only33332;
+        public 平和() {
+            basePatterns = Only33332;
+        }
 
         public override bool Resolve(List<MenOrJantou> groups, Hand hand, GameTile incoming, Scorings scorings) {
             if (!hand.menzen || groups.Any(gr => gr is not (Jantou or Shun)))

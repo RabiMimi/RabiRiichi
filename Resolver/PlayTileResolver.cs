@@ -1,7 +1,6 @@
 ﻿using RabiRiichi.Action;
 using RabiRiichi.Riichi;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace RabiRiichi.Resolver {
     /// <summary>

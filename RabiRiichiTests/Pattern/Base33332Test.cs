@@ -1,6 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Pattern;
-using RabiRiichi.Riichi;
 
 namespace RabiRiichiTests.Pattern {
     [TestClass]
@@ -110,7 +109,7 @@ namespace RabiRiichiTests.Pattern {
             Assert.IsNull(tiles);
 
             Assert.AreEqual(-1, Shanten("1s", "1s", 8,
-                "222s", "345s", "111p", "111z")); 
+                "222s", "345s", "111p", "111z"));
             tiles.AssertEq("");
 
             Assert.AreEqual(0, Shanten("1s", "2s", 8,

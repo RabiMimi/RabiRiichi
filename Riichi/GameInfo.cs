@@ -1,4 +1,3 @@
-using RabiRiichi.Action;
 using RabiRiichi.Setup;
 
 namespace RabiRiichi.Riichi {

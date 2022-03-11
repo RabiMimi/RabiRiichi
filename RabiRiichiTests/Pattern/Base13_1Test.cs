@@ -1,11 +1,9 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Pattern;
-using RabiRiichi.Riichi;
-using System.Collections.Generic;
 
 namespace RabiRiichiTests.Pattern {
     [TestClass]
-    public class Base13_1Test: BaseTest {
+    public class Base13_1Test : BaseTest {
         protected override BasePattern V { get; set; } = new Base13_1();
 
         [TestMethod]

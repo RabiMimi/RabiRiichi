@@ -1,8 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Riichi;
-using System;
-using System.Linq;
-using System.Text;
 
 namespace RabiRiichiTests.Riichi {
     [TestClass]

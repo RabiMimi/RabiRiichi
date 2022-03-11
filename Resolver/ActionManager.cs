@@ -1,5 +1,4 @@
-﻿using RabiRiichi.Riichi;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace RabiRiichi.Resolver {
     public class ActionManager {
