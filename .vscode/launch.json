@@ -10,7 +10,7 @@
       "request": "launch",
       "preLaunchTask": "build",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/RabiRiichiTests/bin/Debug/netcoreapp3.1/RabiRiichiTests.dll",
+      "program": "${workspaceFolder}/RabiRiichiTests/bin/Debug/net5.0/RabiRiichiTests.dll",
       "args": [],
       "cwd": "${workspaceFolder}/RabiRiichiTests",
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console

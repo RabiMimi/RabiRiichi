@@ -4,7 +4,7 @@ using RabiRiichi.Riichi;
 namespace RabiRiichiTests.Riichi {
     [TestClass]
     public class PatternTest {
-        private MenOrJantou Create(string tiles) => MenOrJantou.From(new Tiles(tiles));
+        private static MenOrJantou Create(string tiles) => MenOrJantou.From(new Tiles(tiles));
 
         [TestMethod]
         public void TestFrom() {
