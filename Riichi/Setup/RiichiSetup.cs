@@ -2,7 +2,7 @@ using RabiRiichi.Pattern;
 using System;
 
 
-namespace RabiRiichi.Setup {
+namespace RabiRiichi.Riichi.Setup {
     public class RiichiSetup : BaseSetup {
 
         protected override void InitPatterns() {

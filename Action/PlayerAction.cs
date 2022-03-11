@@ -1,3 +1,4 @@
+using RabiRiichi.Event;
 using RabiRiichi.Riichi;
 using RabiRiichi.Util;
 using System;
@@ -19,8 +20,7 @@ namespace RabiRiichi.Action {
         public const int Discard = 10000;
     }
 
-    public interface IPlayerAction {
-        Player player { get; }
+    public interface IPlayerAction : IWithPlayer {
         int playerId { get; }
         int priority { get; }
         string id { get; }

@@ -1,4 +1,4 @@
-using RabiRiichi.Setup;
+using RabiRiichi.Riichi.Setup;
 
 namespace RabiRiichi.Riichi {
     public class GameConfig {
