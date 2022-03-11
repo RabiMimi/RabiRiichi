@@ -1,4 +1,4 @@
-using RabiRiichi.Event;
+using RabiRiichi.Interact;
 using RabiRiichi.Riichi;
 using RabiRiichi.Util;
 using System;

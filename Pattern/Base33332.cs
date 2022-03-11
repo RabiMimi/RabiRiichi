@@ -3,10 +3,9 @@ using RabiRiichi.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using DpLoc = System.ValueTuple<byte, byte, byte, byte>;
 
 namespace RabiRiichi.Pattern {
-    using DpLoc = ValueTuple<byte, byte, byte, byte>;
-
     public class Base33332 : BasePattern {
         private int M;
         private List<MenOrJantou> current;

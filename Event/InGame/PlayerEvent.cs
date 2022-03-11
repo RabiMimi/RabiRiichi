@@ -1,3 +1,4 @@
+using RabiRiichi.Interact;
 using RabiRiichi.Riichi;
 
 namespace RabiRiichi.Event.InGame {

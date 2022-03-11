@@ -1,6 +1,6 @@
 using RabiRiichi.Riichi;
 
-namespace RabiRiichi.Event {
+namespace RabiRiichi.Interact {
     public interface IWithPlayer {
         Player player { get; }
     }
