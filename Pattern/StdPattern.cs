@@ -1,6 +1,8 @@
 ﻿using RabiRiichi.Riichi;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+
 
 namespace RabiRiichi.Pattern {
     public enum ScoringType {
@@ -15,6 +17,7 @@ namespace RabiRiichi.Pattern {
         /// <summary> 流局 </summary>
         Ryuukyoku
     }
+
     public class Scoring {
         public ScoringType Type;
         public int Val;
@@ -29,28 +32,36 @@ namespace RabiRiichi.Pattern {
 
     /// <summary> 标准役种 </summary>
     public abstract class StdPattern {
-        protected static readonly Type[] NoPattern = Array.Empty<Type>();
-        protected static readonly Type[] Only33332 = new Type[] { typeof(Base33332) };
-        protected static readonly Type[] Only72 = new Type[] { typeof(Base72) };
-        protected static readonly Type[] Only13_1 = new Type[] { typeof(Base13_1) };
-        protected static readonly Type[] AllBasePatterns = new Type[] {
-            typeof(Base33332),
-            typeof(Base13_1),
-            typeof(Base72)
-        };
-        protected static readonly Type[] AllExecpt13_1 = new Type[] {
-            typeof(Base33332),
-            typeof(Base72)
-        };
-
-        /// <summary> 满足这些pattern后，才会计算该pattern </summary>
-        public Type[] dependOnPatterns { get; protected set; } = NoPattern;
 
         /// <summary> 可以触发该役种的底和 </summary>
-        public Type[] basePatterns { get; protected set; } = AllBasePatterns;
+        public BasePattern[] basePatterns { get; protected set; } = Array.Empty<BasePattern>();
+
+        /// <summary> 满足这些pattern后，才会计算该pattern </summary>
+        public StdPattern[] dependOnPatterns { get; protected set; } = Array.Empty<StdPattern>();
 
         /// <summary> 计算这些pattern后，才会计算该pattern。不保证这些pattern一定被满足 </summary>
-        public Type[] afterPatterns { get; protected set; } = NoPattern;
+        public StdPattern[] afterPatterns { get; protected set; } = Array.Empty<StdPattern>();
+
+        protected StdPattern BaseOn(IEnumerable<BasePattern> basePatterns) {
+            if (basePatterns != null) {
+                this.basePatterns = basePatterns.ToArray();
+            }
+            return this;
+        }
+        protected StdPattern BaseOn(params BasePattern[] basePatterns) {
+            this.basePatterns = basePatterns;
+            return this;
+        }
+
+        protected StdPattern DependOn(params StdPattern[] dependOnPatterns) {
+            this.dependOnPatterns = dependOnPatterns;
+            return this;
+        }
+
+        protected StdPattern After(params StdPattern[] afterPatterns) {
+            this.afterPatterns = afterPatterns;
+            return this;
+        }
 
         public abstract bool Resolve(List<MenOrJantou> groups, Hand hand, GameTile incoming, Scorings scorings);
     }

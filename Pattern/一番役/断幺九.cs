@@ -4,6 +4,9 @@ using System.Linq;
 
 namespace RabiRiichi.Pattern {
     public class 断幺九 : StdPattern {
+        public 断幺九(AllBasePatterns allBasePatterns) {
+            BaseOn(allBasePatterns);
+        }
         public override bool Resolve(List<MenOrJantou> groups, Hand hand, GameTile incoming, Scorings scorings) {
             // TODO: 食断
             if (groups.SelectMany(gr => gr).Any(tile => tile.tile.Is19Z))

@@ -4,8 +4,8 @@ using System.Linq;
 
 namespace RabiRiichi.Pattern {
     public abstract class 役牌 : StdPattern {
-        public 役牌() {
-            basePatterns = Only33332;
+        public 役牌(Base33332 base33332) {
+            BaseOn(base33332);
         }
 
         protected abstract Tile YakuTile { get; }

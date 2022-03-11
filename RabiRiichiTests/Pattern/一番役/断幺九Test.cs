@@ -4,7 +4,7 @@ using RabiRiichi.Pattern;
 namespace RabiRiichiTests.Pattern {
     [TestClass]
     public class 断幺九Test {
-        protected StdPattern V { get; set; } = new 断幺九();
+        protected StdPattern V { get; set; } = new 断幺九(null);
 
         [TestMethod]
         public void TestResolved() {

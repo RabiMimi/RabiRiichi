@@ -4,7 +4,7 @@ using RabiRiichi.Pattern;
 namespace RabiRiichiTests.Pattern {
     [TestClass]
     public class 一气通贯Test {
-        protected StdPattern V { get; set; } = new 一气通贯();
+        protected StdPattern V { get; set; } = new 一气通贯(null);
 
         [TestMethod]
         public void TestResolved() {

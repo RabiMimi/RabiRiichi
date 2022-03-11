@@ -4,7 +4,7 @@ using RabiRiichi.Pattern;
 namespace RabiRiichiTests.Pattern {
     [TestClass]
     public class 平和Test {
-        protected StdPattern V { get; set; } = new 平和();
+        protected StdPattern V { get; set; } = new 平和(null);
 
         [TestMethod]
         public void TestResolved() {

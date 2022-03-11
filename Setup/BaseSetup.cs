@@ -1,9 +1,12 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using RabiRiichi.Event;
 using RabiRiichi.Event.InGame.Listener;
 using RabiRiichi.Pattern;
 using RabiRiichi.Riichi;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace RabiRiichi.Setup {
     public class BaseSetup {
@@ -25,15 +28,29 @@ namespace RabiRiichi.Setup {
             // Init patterns here
         }
 
+        private void InjectPatternsHelper(
+            IServiceCollection collection,
+            Type pattern,
+            HashSet<Type> injectedPatterns) {
+            if (injectedPatterns.Contains(pattern))
+                return;
+            collection.TryAddSingleton(pattern);
+            injectedPatterns.Add(pattern);
+            // Try add dependencies
+            var ctors = pattern.GetConstructors();
+            if (ctors.Length > 0) {
+                var ctor = ctors[0];
+                var ctorParams = ctor.GetParameters();
+                foreach (var param in ctorParams) {
+                    InjectPatternsHelper(collection, param.ParameterType, injectedPatterns);
+                }
+            }
+        }
+
         private void InjectPatterns(IServiceCollection collection) {
-            foreach (var pattern in basePatterns) {
-                collection.AddSingleton(pattern);
-            }
-            foreach (var pattern in stdPatterns) {
-                collection.AddSingleton(pattern);
-            }
-            foreach (var pattern in bonusPatterns) {
-                collection.AddSingleton(pattern);
+            var injectedPatterns = new HashSet<Type>();
+            foreach (var pattern in basePatterns.Concat(stdPatterns).Concat(bonusPatterns)) {
+                InjectPatternsHelper(collection, pattern, injectedPatterns);
             }
         }
 
@@ -59,15 +76,9 @@ namespace RabiRiichi.Setup {
         /// <summary> 配置牌型解析 </summary>
         private void RegisterPatterns(IServiceProvider services) {
             var resolver = services.GetService<PatternResolver>();
-            foreach (var pattern in basePatterns) {
-                resolver.RegisterBasePattern(services.GetService(pattern) as BasePattern);
-            }
-            foreach (var pattern in stdPatterns) {
-                resolver.RegisterStdPattern(services.GetService(pattern) as StdPattern);
-            }
-            foreach (var pattern in bonusPatterns) {
-                resolver.RegisterBonusPattern(services.GetService(pattern) as StdPattern);
-            }
+            resolver.RegisterBasePatterns(basePatterns.Select(t => (BasePattern)services.GetService(t)).ToArray());
+            resolver.RegisterStdPatterns(stdPatterns.Select(t => (StdPattern)services.GetService(t)).ToArray());
+            resolver.RegisterBonusPatterns(bonusPatterns.Select(t => (StdPattern)services.GetService(t)).ToArray());
         }
 
         /// <summary> 配置事件监听 </summary>

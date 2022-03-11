@@ -4,8 +4,8 @@ using System.Linq;
 
 namespace RabiRiichi.Pattern {
     public class 三暗刻 : StdPattern {
-        public 三暗刻() {
-            basePatterns = Only33332;
+        public 三暗刻(Base33332 base33332) {
+            BaseOn(base33332);
         }
 
         public override bool Resolve(List<MenOrJantou> groups, Hand hand, GameTile incoming, Scorings scorings) {

@@ -1,16 +1,13 @@
 using RabiRiichi.Riichi;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace RabiRiichi.Pattern {
     public class 混老头 : StdPattern {
-        public 混老头() {
-            basePatterns = AllBasePatterns;
+        public 混老头(AllBasePatterns allBasePatterns, 混全带幺九 混全带幺九) {
+            BaseOn(allBasePatterns);
             /// 混全不判定七对子，因此混老头不依赖于混全带幺九
-            afterPatterns = new Type[] {
-                typeof(混全带幺九)
-            };
+            After(混全带幺九);
         }
 
         public override bool Resolve(List<MenOrJantou> groups, Hand hand, GameTile incoming, Scorings scorings) {

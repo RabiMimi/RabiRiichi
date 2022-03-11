@@ -4,8 +4,8 @@ using System.Linq;
 
 namespace RabiRiichi.Pattern {
     public class 混全带幺九 : StdPattern {
-        public 混全带幺九() {
-            basePatterns = Only33332;
+        public 混全带幺九(Base33332 base33332) {
+            BaseOn(base33332);
         }
 
         public override bool Resolve(List<MenOrJantou> groups, Hand hand, GameTile incoming, Scorings scorings) {

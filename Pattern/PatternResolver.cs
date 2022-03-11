@@ -1,24 +1,29 @@
 using RabiRiichi.Riichi;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace RabiRiichi.Pattern {
     public class PatternResolver {
-        public readonly List<BasePattern> basePatterns = new();
-        public readonly List<StdPattern> stdPatterns = new();
-        public readonly List<StdPattern> bonusPatterns = new();
+        public readonly HashSet<BasePattern> basePatterns = new();
+        public readonly HashSet<StdPattern> stdPatterns = new();
+        public readonly HashSet<StdPattern> bonusPatterns = new();
 
-        public void RegisterBasePattern(BasePattern pattern) {
-            basePatterns.Add(pattern);
+        public void RegisterBasePatterns(params BasePattern[] patterns) {
+            foreach (var pattern in patterns) {
+                basePatterns.Add(pattern);
+            }
         }
 
-        public void RegisterStdPattern(StdPattern pattern) {
-            stdPatterns.Add(pattern);
+        public void RegisterStdPatterns(params StdPattern[] patterns) {
+            foreach (var pattern in patterns) {
+                stdPatterns.Add(pattern);
+            }
         }
 
-        public void RegisterBonusPattern(StdPattern pattern) {
-            bonusPatterns.Add(pattern);
+        public void RegisterBonusPatterns(params StdPattern[] patterns) {
+            foreach (var pattern in patterns) {
+                bonusPatterns.Add(pattern);
+            }
         }
 
         private class ResolutionContext {
@@ -26,61 +31,49 @@ namespace RabiRiichi.Pattern {
             public Hand hand;
             public GameTile incoming;
             public Scorings scorings;
-            public readonly HashSet<Type> baseSuccess = new();
-            public readonly HashSet<Type> stdSuccess = new();
-            public readonly HashSet<Type> stdFailure = new();
+            public readonly HashSet<BasePattern> baseSuccess = new();
+            public readonly HashSet<StdPattern> stdSuccess = new();
+            public readonly HashSet<StdPattern> stdFailure = new();
         }
 
         private static bool ResolveStdPattern(ResolutionContext context, StdPattern pattern, Scorings scorings) {
-            var pType = pattern.GetType();
-            if (pattern.Resolve(context.group, context.hand, context.incoming, scorings)) {
-                context.stdSuccess.Add(pType);
+            // 检查是否已经计算过
+            if (context.stdSuccess.Contains(pattern)) {
                 return true;
-            } else {
-                context.stdFailure.Add(pType);
+            }
+            if (context.stdFailure.Contains(pattern)) {
                 return false;
             }
-        }
 
-        private bool ResolveStdPatternRecursive(ResolutionContext context, StdPattern pattern, Scorings scorings) {
-            var pType = pattern.GetType();
-            if (context.stdSuccess.Contains(pType))
-                return true;
-            if (context.stdFailure.Contains(pType))
-                return false;
             // 检查底和
             if (!pattern.basePatterns.Any((basePattern) => context.baseSuccess.Contains(basePattern))) {
-                // 不满足依赖
-                context.stdFailure.Add(pType);
+                // 不满足底和
+                context.stdFailure.Add(pattern);
                 return false;
             }
+
             // 检查依赖
             foreach (var dependency in pattern.dependOnPatterns) {
-                var stdPattern = stdPatterns.Find(ptn => ptn.GetType().Equals(dependency));
-                if (stdPattern != null) {
-                    // 检查役种
-                    if (!ResolveStdPatternRecursive(context, stdPattern, scorings)) {
-                        // 不满足依赖
-                        context.stdFailure.Add(pType);
-                        return false;
-                    }
+                if (!ResolveStdPattern(context, dependency, scorings)) {
+                    // 依赖失败
+                    context.stdFailure.Add(pattern);
+                    return false;
                 }
-                // 没有找到依赖的pattern
-                context.stdFailure.Add(pType);
-                return false;
             }
+
             // 计算非必须的依赖
             foreach (var ancestor in pattern.afterPatterns) {
-                var stdPattern = stdPatterns.Find(ptn => ptn.GetType().Equals(ancestor));
-                if (stdPattern == null) {
-                    // 没有找到依赖的pattern
-                    // TODO: Log
-                    // HUtil.Warn("未知的役种：" + ancestor.Name);
-                    continue;
-                }
-                ResolveStdPatternRecursive(context, stdPattern, scorings);
+                ResolveStdPattern(context, ancestor, scorings);
             }
-            return ResolveStdPattern(context, pattern, scorings);
+
+            // 计算当前役种
+            if (pattern.Resolve(context.group, context.hand, context.incoming, scorings)) {
+                context.stdSuccess.Add(pattern);
+                return true;
+            } else {
+                context.stdFailure.Add(pattern);
+                return false;
+            }
         }
 
         /// <summary>
@@ -96,7 +89,7 @@ namespace RabiRiichi.Pattern {
 
             foreach (var pattern in basePatterns) {
                 if (pattern.Resolve(hand, incoming, out var groups)) {
-                    context.baseSuccess.Add(pattern.GetType());
+                    context.baseSuccess.Add(pattern);
                     groupList.AddRange(groups);
                 }
             }
@@ -108,11 +101,11 @@ namespace RabiRiichi.Pattern {
                 context.group = group;
                 var scorings = new Scorings();
                 foreach (var pattern in stdPatterns) {
-                    ResolveStdPatternRecursive(context, pattern, scorings);
+                    ResolveStdPattern(context, pattern, scorings);
                 }
                 if (applyBonus) {
                     foreach (var pattern in bonusPatterns) {
-                        ResolveStdPatternRecursive(context, pattern, scorings);
+                        ResolveStdPattern(context, pattern, scorings);
                     }
                 }
                 if (maxScore == null || maxScore < scorings) {

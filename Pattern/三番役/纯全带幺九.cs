@@ -1,13 +1,12 @@
 using RabiRiichi.Riichi;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace RabiRiichi.Pattern {
     public class 纯全带幺九 : StdPattern {
-        public 纯全带幺九() {
-            basePatterns = Only33332;
-            dependOnPatterns = new Type[] { typeof(混全带幺九) };
+        public 纯全带幺九(Base33332 base33332, 混全带幺九 混全带幺九) {
+            BaseOn(base33332);
+            DependOn(混全带幺九);
         }
 
         public override bool Resolve(List<MenOrJantou> groups, Hand hand, GameTile incoming, Scorings scorings) {

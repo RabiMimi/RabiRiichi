@@ -4,8 +4,8 @@ using System.Linq;
 
 namespace RabiRiichi.Pattern {
     public class 一气通贯 : StdPattern {
-        public 一气通贯() {
-            basePatterns = Only33332;
+        public 一气通贯(Base33332 base33332) {
+            BaseOn(base33332);
         }
 
         public override bool Resolve(List<MenOrJantou> groups, Hand hand, GameTile incoming, Scorings scorings) {
