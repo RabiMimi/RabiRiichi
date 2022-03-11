@@ -15,7 +15,8 @@ namespace RabiRiichiTests.Pattern {
                 .AddFree("22m")
                 .AddAgari("23s", "4s")
                 .Resolve(true)
-                .ExpectScoring(ScoringType.Han, 1);
+                .ExpectScoring(ScoringType.Han, 1)
+                .NoMore();
             new StdTestBuilder(V)
                 .AddFree("22s")
                 .AddFree("33p")
@@ -25,7 +26,8 @@ namespace RabiRiichiTests.Pattern {
                 .AddFree("44p")
                 .AddAgari("8s", "8s")
                 .Resolve(true)
-                .ExpectScoring(ScoringType.Han, 1);
+                .ExpectScoring(ScoringType.Han, 1)
+                .NoMore();
         }
 
         [TestMethod]

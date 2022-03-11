@@ -15,7 +15,8 @@ namespace RabiRiichiTests.Pattern {
                 .AddFree("22m")
                 .AddAgari("23s", "4s")
                 .Resolve(true)
-                .ExpectScoring(ScoringType.Han, 2);
+                .ExpectScoring(ScoringType.Han, 2)
+                .NoMore();
             new StdTestBuilder(V)
                 .AddFree("123s")
                 .AddFree("456s")
@@ -23,7 +24,8 @@ namespace RabiRiichiTests.Pattern {
                 .AddFree("22m")
                 .AddAgari("23s", "1s")
                 .Resolve(true)
-                .ExpectScoring(ScoringType.Han, 2);
+                .ExpectScoring(ScoringType.Han, 2)
+                .NoMore();
             new StdTestBuilder(V)
                 .AddFree("123p")
                 .AddFree("456s")
@@ -31,7 +33,8 @@ namespace RabiRiichiTests.Pattern {
                 .AddFree("22m")
                 .AddAgari("12s", "3s")
                 .Resolve(true)
-                .ExpectScoring(ScoringType.Han, 2);
+                .ExpectScoring(ScoringType.Han, 2)
+                .NoMore();
             new StdTestBuilder(V)
                 .AddFuuro("123s", 0)
                 .AddFree("456s")
@@ -39,7 +42,8 @@ namespace RabiRiichiTests.Pattern {
                 .AddFree("22m")
                 .AddAgari("23s", "4s")
                 .Resolve(true)
-                .ExpectScoring(ScoringType.Han, 1);
+                .ExpectScoring(ScoringType.Han, 1)
+                .NoMore();
             new StdTestBuilder(V)
                 .AddFuuro("123s", 0)
                 .AddFree("456s")
@@ -47,7 +51,8 @@ namespace RabiRiichiTests.Pattern {
                 .AddFree("22m")
                 .AddAgari("22s", "2s")
                 .Resolve(true)
-                .ExpectScoring(ScoringType.Han, 1);
+                .ExpectScoring(ScoringType.Han, 1)
+                .NoMore();
         }
 
         [TestMethod]

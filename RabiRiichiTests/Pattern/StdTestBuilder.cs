@@ -119,5 +119,10 @@ namespace RabiRiichiTests.Pattern {
             scorings.Remove(s);
             return this;
         }
+
+        public StdTestBuilder NoMore() {
+            Assert.IsTrue(scorings.Count == 0, "Expect no more scorings but found");
+            return this;
+        }
     }
 }
