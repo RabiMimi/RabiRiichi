@@ -7,7 +7,6 @@ namespace RabiRiichi.Action {
     public abstract class ActionOption { }
 
     public abstract class ChoiceAction<T> : PlayerAction<T> {
-        [JsonInclude]
         public List<ActionOption> choices = new();
 
         public ChoiceAction(Player player) : base(player) { }

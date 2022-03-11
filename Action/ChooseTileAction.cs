@@ -4,7 +4,6 @@ using System.Text.Json.Serialization;
 
 namespace RabiRiichi.Action {
     public class ChooseTileActionOption : ActionOption {
-        [JsonInclude]
         public readonly ActionTileInfo tile;
 
         public ChooseTileActionOption(GameTile tile) {

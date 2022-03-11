@@ -33,13 +33,11 @@ namespace RabiRiichi.Action {
         [JsonIgnore]
         public Player player { get; }
 
-        [JsonInclude]
         public int playerId { get; }
 
         [JsonIgnore]
         public int priority { get; protected set; }
 
-        [JsonInclude]
         public abstract string id { get; }
 
         /// <summary>

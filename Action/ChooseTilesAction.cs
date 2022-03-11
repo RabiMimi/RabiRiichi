@@ -5,13 +5,9 @@ using System.Text.Json.Serialization;
 
 namespace RabiRiichi.Action {
     public class ActionTileInfo {
-        [JsonInclude]
         public readonly string tile;
-        [JsonInclude]
         public readonly int from;
-        [JsonInclude]
         public readonly int player;
-        [JsonInclude]
         public readonly string source;
 
         public ActionTileInfo(GameTile tile) {
@@ -24,7 +20,6 @@ namespace RabiRiichi.Action {
 
     public class ChooseTilesActionOption : ActionOption {
 
-        [JsonInclude]
         public readonly List<ActionTileInfo> tiles;
 
         public ChooseTilesActionOption(GameTiles tiles) {
