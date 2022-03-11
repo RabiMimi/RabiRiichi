@@ -7,7 +7,7 @@ namespace RabiRiichi.Riichi {
         /// <summary> 番缚 </summary>
         public int minHan = 1;
         public BaseSetup setup = new RiichiSetup();
-        public System.Action<MultiPlayerInquiry> inquiryCallback = null;
+        public IActionCenter actionCenter = null;
     }
 
     public enum GamePhase {
