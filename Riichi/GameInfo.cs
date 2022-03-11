@@ -4,6 +4,8 @@ using RabiRiichi.Setup;
 namespace RabiRiichi.Riichi {
     public class GameConfig {
         public int playerCount = 2;
+        /// <summary> 番缚 </summary>
+        public int minHan = 1;
         public BaseSetup setup = new RiichiSetup();
         public System.Action<MultiPlayerInquiry> inquiryCallback = null;
     }

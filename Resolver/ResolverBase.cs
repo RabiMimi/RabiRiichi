@@ -7,7 +7,19 @@ namespace RabiRiichi.Resolver {
 
     public abstract class ResolverBase {
 
-        public abstract bool ResolveAction(Hand hand, GameTile incoming, MultiPlayerInquiry output);
+        /// <summary>
+        /// 计算玩家可以执行的动作
+        /// </summary>
+        /// <param name="player">当前计算的玩家</param>
+        /// <param name="incoming">摸到或打出的牌</param>
+        protected abstract bool ResolveAction(Player player, GameTile incoming, MultiPlayerInquiry output);
+
+        /// <summary>
+        /// 计算哪些玩家可以执行该动作
+        /// </summary>
+        /// <param name="player">与该操作有关的玩家，例如打出该牌或摸到该牌</param>
+        /// <param name="incoming">摸到或打出的牌</param>
+        protected abstract IEnumerable<Player> ResolvePlayers(Player player, GameTile incoming);
 
         private static bool CheckComboDfs(
             List<GameTile> current,
@@ -52,6 +64,15 @@ namespace RabiRiichi.Resolver {
             tileList.Sort();
             hand.Sort();
             return CheckComboDfs(current, output, hand, 0, tileList, 0);
+        }
+
+        public bool Resolve(Player current, GameTile incoming, MultiPlayerInquiry output) {
+            var players = ResolvePlayers(current, incoming);
+            bool success = false;
+            foreach (var player in players) {
+                success |= ResolveAction(player, incoming, output);
+            }
+            return success;
         }
     }
 }

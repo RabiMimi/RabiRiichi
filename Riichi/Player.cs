@@ -27,5 +27,14 @@
 
         /// <summary> 是否是役牌 </summary>
         public virtual bool IsYaku(Tile tile) => game.IsYaku(tile) || tile.IsSame(Tile.From(wind));
+
+        /// <summary> 计算rhs是该玩家后的第几个 </summary>
+        public int Dist(Player rhs) {
+            int dist = rhs.id - id;
+            if (dist < 0) {
+                dist += game.players.Length;
+            }
+            return dist;
+        }
     }
 }

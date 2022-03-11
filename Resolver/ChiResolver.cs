@@ -7,11 +7,16 @@ namespace RabiRiichi.Resolver {
     /// 判定是否能吃
     /// </summary>
     public class ChiResolver : ResolverBase {
-        public override bool ResolveAction(Hand hand, GameTile incoming, MultiPlayerInquiry output) {
-            if (hand.game.wall.IsHaitei) {
+        protected override IEnumerable<Player> ResolvePlayers(Player player, GameTile incoming) {
+            yield return player.PrevPlayer;
+        }
+
+        protected override bool ResolveAction(Player player, GameTile incoming, MultiPlayerInquiry output) {
+            var hand = player.hand;
+            if (player.game.wall.IsHaitei) {
                 return false;
             }
-            if (hand.riichi || incoming.IsTsumo || incoming.tile.IsZ || !incoming.fromPlayer.SamePlayer(hand.player.PrevPlayer)) {
+            if (hand.riichi || incoming.IsTsumo || incoming.tile.IsZ) {
                 return false;
             }
             var current = new List<GameTile> { incoming };
@@ -22,7 +27,7 @@ namespace RabiRiichi.Resolver {
             if (result.Count == 0) {
                 return false;
             }
-            output.Add(new ChiAction(hand.player, result));
+            output.Add(new ChiAction(player, result, -incoming.fromPlayer.Dist(player)));
             return true;
         }
     }

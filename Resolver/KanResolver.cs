@@ -8,13 +8,13 @@ namespace RabiRiichi.Resolver {
     /// 判定是否能杠
     /// </summary>
     public class KanResolver : ResolverBase {
+        protected override IEnumerable<Player> ResolvePlayers(Player player, GameTile _) {
+            return player.game.players.Where(p => !p.SamePlayer(player));
+        }
 
-        public override bool ResolveAction(Hand hand, GameTile incoming, MultiPlayerInquiry output) {
-            if (hand.game.wall.IsHaitei) {
-                return false;
-            }
-            if (hand.player == incoming.fromPlayer) {
-                // 自己打出来的
+        protected override bool ResolveAction(Player player, GameTile incoming, MultiPlayerInquiry output) {
+            var hand = player.hand;
+            if (player.game.wall.IsHaitei) {
                 return false;
             }
             var tile = incoming.tile.WithoutDora;
@@ -24,7 +24,7 @@ namespace RabiRiichi.Resolver {
             if (result.Count == 0) {
                 return false;
             }
-            output.Add(new KanAction(hand.player, result));
+            output.Add(new KanAction(player, result, -incoming.fromPlayer.Dist(player)));
             return true;
         }
     }

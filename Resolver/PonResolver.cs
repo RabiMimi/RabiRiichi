@@ -8,11 +8,16 @@ namespace RabiRiichi.Resolver {
     /// 判定是否能碰
     /// </summary>
     public class PonResolver : ResolverBase {
-        public override bool ResolveAction(Hand hand, GameTile incoming, MultiPlayerInquiry output) {
+        protected override IEnumerable<Player> ResolvePlayers(Player player, GameTile _) {
+            return player.game.players.Where(p => !p.SamePlayer(player));
+        }
+
+        protected override bool ResolveAction(Player player, GameTile incoming, MultiPlayerInquiry output) {
+            var hand = player.hand;
             if (hand.game.wall.IsHaitei) {
                 return false;
             }
-            if (hand.riichi || incoming.IsTsumo || hand.player == incoming.fromPlayer) {
+            if (hand.riichi || incoming.IsTsumo) {
                 return false;
             }
             var tile = incoming.tile.WithoutDora;
@@ -22,7 +27,7 @@ namespace RabiRiichi.Resolver {
             if (result.Count == 0) {
                 return false;
             }
-            output.Add(new PonAction(hand.player, result));
+            output.Add(new PonAction(player, result, -incoming.fromPlayer.Dist(player)));
             return true;
         }
     }

@@ -8,8 +8,13 @@ namespace RabiRiichi.Resolver {
     /// 生成切牌表
     /// </summary>
     public class PlayTileResolver : ResolverBase {
-        public override bool ResolveAction(Hand hand, GameTile incoming, MultiPlayerInquiry output) {
+        protected override IEnumerable<Player> ResolvePlayers(Player player, GameTile incoming) {
+            yield return player;
+        }
+
+        protected override bool ResolveAction(Player player, GameTile incoming, MultiPlayerInquiry output) {
             var tiles = new List<GameTile>();
+            var hand = player.hand;
             if (incoming != null) {
                 tiles.Add(incoming);
             }
@@ -20,7 +25,7 @@ namespace RabiRiichi.Resolver {
                 return false;
             }
             tiles.Sort();
-            output.Add(new ChooseTileAction(hand.player, tiles));
+            output.Add(new ChooseTileAction(player, tiles));
             return true;
         }
     }

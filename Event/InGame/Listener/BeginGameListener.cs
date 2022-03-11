@@ -3,10 +3,10 @@ using System.Threading.Tasks;
 namespace RabiRiichi.Event.InGame.Listener {
     public static class BeginGameListener {
         public static Task UpdateGameInfo(BeginGameEvent e) {
-            e.game.gameInfo.wind = e.wind;
-            e.game.gameInfo.round = e.round;
-            e.game.gameInfo.honba = e.honba;
-            e.game.gameInfo.Reset();
+            e.game.info.wind = e.wind;
+            e.game.info.round = e.round;
+            e.game.info.honba = e.honba;
+            e.game.info.Reset();
             return Task.CompletedTask;
         }
 

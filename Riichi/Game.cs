@@ -15,7 +15,8 @@ namespace RabiRiichi.Riichi {
         public const int HandSize = 13;
         public readonly ServiceProvider diContainer;
 
-        public readonly GameInfo gameInfo;
+        public readonly GameInfo info;
+        public GameConfig config => info.config;
         public readonly Player[] players;
 
         public readonly EventBus eventBus;
@@ -53,7 +54,7 @@ namespace RabiRiichi.Riichi {
 
             // Get instances
             eventBus = diContainer.GetService<EventBus>();
-            gameInfo = diContainer.GetService<GameInfo>();
+            info = diContainer.GetService<GameInfo>();
             actionManager = diContainer.GetService<ActionManager>();
             wall = diContainer.GetService<Wall>();
             patternResolver = diContainer.GetService<PatternResolver>();
@@ -64,17 +65,17 @@ namespace RabiRiichi.Riichi {
 
         #region GameUtil
         public bool IsYaku(Tile tile) {
-            return tile.IsSangen || tile.IsSame(Tile.From(gameInfo.wind));
+            return tile.IsSangen || tile.IsSame(Tile.From(info.wind));
         }
         public Player GetPlayer(int index) => players[index];
-        public int Time => gameInfo.timeStamp;
+        public int Time => info.timeStamp;
         #endregion
 
         #region Start
 
         public async Task Start() {
             // 开始游戏
-            gameInfo.phase = GamePhase.Running;
+            info.phase = GamePhase.Running;
 
             // 初始化玩家
             for (int i = 0; i < players.Length; i++) {
@@ -88,7 +89,7 @@ namespace RabiRiichi.Riichi {
             await eventBus.ProcessQueue();
 
             // 结束游戏
-            gameInfo.phase = GamePhase.Finished;
+            info.phase = GamePhase.Finished;
         }
         #endregion
 
