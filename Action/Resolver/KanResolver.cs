@@ -3,7 +3,7 @@ using RabiRiichi.Riichi;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace RabiRiichi.Resolver {
+namespace RabiRiichi.Action.Resolver {
     /// <summary>
     /// 判定是否能杠
     /// </summary>

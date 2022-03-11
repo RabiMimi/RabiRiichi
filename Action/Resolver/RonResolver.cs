@@ -2,21 +2,21 @@
 using RabiRiichi.Pattern;
 using RabiRiichi.Riichi;
 using System.Collections.Generic;
+using System.Linq;
 
-namespace RabiRiichi.Resolver {
+namespace RabiRiichi.Action.Resolver {
     /// <summary>
-    /// 判定是否可以自摸
+    /// 判定是否可以和牌
     /// </summary>
-    public class TsumoResolver : ResolverBase {
-
+    public class RonResolver : ResolverBase {
         private readonly PatternResolver patternResolver;
 
-        public TsumoResolver(PatternResolver patternResolver) {
+        public RonResolver(PatternResolver patternResolver) {
             this.patternResolver = patternResolver;
         }
 
         protected override IEnumerable<Player> ResolvePlayers(Player player, GameTile incoming) {
-            yield return player;
+            return player.game.players.Where(p => !p.SamePlayer(player));
         }
 
         protected override bool ResolveAction(Player player, GameTile incoming, MultiPlayerInquiry output) {
@@ -26,7 +26,7 @@ namespace RabiRiichi.Resolver {
             }
             var maxScore = patternResolver.ResolveMaxScore(hand, incoming, false);
             if (maxScore != null && maxScore.IsValid(player.game.config.minHan)) {
-                output.Add(new TsumoAction(hand.player));
+                output.Add(new RonAction(hand.player));
                 return true;
             }
             return false;

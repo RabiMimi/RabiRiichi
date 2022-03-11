@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace RabiRiichi.Resolver {
+namespace RabiRiichi.Action.Resolver {
     public class ActionManager {
         public static ResolverBase[] resolvers = new ResolverBase[] {
             // new RonResolver(),

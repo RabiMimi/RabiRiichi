@@ -2,7 +2,7 @@
 using RabiRiichi.Riichi;
 using System.Collections.Generic;
 
-namespace RabiRiichi.Resolver {
+namespace RabiRiichi.Action.Resolver {
     /// <summary>
     /// 生成切牌表
     /// </summary>

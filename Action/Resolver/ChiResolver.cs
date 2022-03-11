@@ -2,7 +2,7 @@
 using RabiRiichi.Riichi;
 using System.Collections.Generic;
 
-namespace RabiRiichi.Resolver {
+namespace RabiRiichi.Action.Resolver {
     /// <summary>
     /// 判定是否能吃
     /// </summary>
