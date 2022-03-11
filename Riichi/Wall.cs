@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using RabiRiichi.Util;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace RabiRiichi.Riichi {
@@ -19,8 +20,10 @@ namespace RabiRiichi.Riichi {
         /// <summary> 是否到了海底 </summary>
         public bool IsHaitei => NumRemaining <= 0;
 
-        public Wall(Game game, string tiles = "", string doras = "", string uradoras = "") {
-            this.game = game;
+        private readonly Rand rand;
+
+        public Wall(Rand rand, string tiles = "", string doras = "", string uradoras = "") {
+            this.rand = rand;
             drawn = new Tiles(tiles);
             this.doras = new Tiles(doras);
             this.uradoras = new Tiles(uradoras);
@@ -73,11 +76,11 @@ namespace RabiRiichi.Riichi {
         /// 
         /// </summary>
         public Tile SelectOne() {
-            return game.rand.Choice(remaining);
+            return rand.Choice(remaining);
         }
 
         public Tiles Select(int count) {
-            return new Tiles(game.rand.Choice(remaining, count));
+            return new Tiles(rand.Choice(remaining, count));
         }
     }
 }

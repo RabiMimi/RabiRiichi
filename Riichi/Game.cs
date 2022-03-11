@@ -17,17 +17,13 @@ namespace RabiRiichi.Riichi {
 
         public readonly GameInfo info;
         public GameConfig config => info.config;
+        public readonly Wall wall;
+        public readonly EventBus eventBus;
         public readonly Player[] players;
 
-        public readonly EventBus eventBus;
-        public readonly EventListenerFactory eventListenerFactory;
-        public readonly Wall wall;
-        public readonly ActionManager actionManager;
-        public readonly PatternResolver patternResolver;
-        public readonly Rand rand;
 
         public Game(GameConfig config) {
-            rand = new Rand((int)(DateTimeOffset.Now.ToUnixTimeSeconds() & 0xffffffff));
+            var rand = new Rand((int)(DateTimeOffset.Now.ToUnixTimeSeconds() & 0xffffffff));
             players = new Player[config.playerCount];
             var serviceCollection = new ServiceCollection();
 
@@ -55,13 +51,15 @@ namespace RabiRiichi.Riichi {
             // Get instances
             eventBus = diContainer.GetService<EventBus>();
             info = diContainer.GetService<GameInfo>();
-            actionManager = diContainer.GetService<ActionManager>();
             wall = diContainer.GetService<Wall>();
-            patternResolver = diContainer.GetService<PatternResolver>();
 
             // Custom setup
             config.setup.Setup(diContainer);
         }
+
+        #region Internal
+        public T Get<T>() => diContainer.GetService<T>();
+        #endregion
 
         #region GameUtil
         public bool IsYaku(Tile tile) {
