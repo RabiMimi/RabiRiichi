@@ -48,7 +48,7 @@ namespace RabiRiichi.Event {
             if (!listeners.TryGetValue(type, out var list)) {
                 return;
             }
-            list.RemoveAll(l => (l is EventTrigger<T> et) && et.trigger == listener);
+            list.RemoveAll(l => l is EventTrigger<T> et && et.trigger == listener);
         }
 
         public void Queue(EventBase ev) {

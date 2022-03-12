@@ -13,7 +13,8 @@ namespace RabiRiichi.Interact {
                 options[i] = new JsonSerializerOptions {
                     Converters = {
                         new MessageJsonConverter(i)
-                    }
+                    },
+                    IncludeFields = true,
                 };
             }
         }

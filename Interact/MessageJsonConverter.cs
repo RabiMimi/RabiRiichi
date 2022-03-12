@@ -30,9 +30,9 @@ namespace RabiRiichi.Interact {
             #region static
             private static readonly MemberInfo[] AllMembers;
             private static readonly MemberInfo[] BroadCastMembers;
+            private static readonly Type type = typeof(T);
 
             static RabiMessageConverter() {
-                var type = typeof(T);
                 if (type.GetCustomAttribute<RabiMessageAttribute>() == null) {
                     throw new ArgumentException($"{type} is not a RabiMessage");
                 }
@@ -45,10 +45,7 @@ namespace RabiRiichi.Interact {
                         || f.GetCustomAttribute<RabiBroadcastAttribute>() != null);
 
                 if (AllProperties.Any(p => p.GetCustomAttribute<JsonIncludeAttribute>() == null && p.GetSetMethod() == null)) {
-                    throw new ArgumentException($"{type} has properties with private setter. Consider using [JsonInclude].");
-                }
-                if (AllFields.Any(f => f.GetCustomAttribute<JsonIncludeAttribute>() == null)) {
-                    throw new ArgumentException($"{type} has fields with private setter. Consider using [JsonInclude].");
+                    throw new JsonException($"{type} has properties with private setter. Consider using [JsonInclude].");
                 }
 
                 var BroadCastProperties = AllProperties.Where(p => p.GetCustomAttribute<RabiBroadcastAttribute>() != null);
@@ -58,7 +55,7 @@ namespace RabiRiichi.Interact {
 
                 if (!type.IsAssignableTo(typeof(IWithPlayer))) {
                     if (AllMembers.Length != BroadCastMembers.Length) {
-                        throw new ArgumentException($"{type} is not IWithPlayer but has properties or fields that are not broadcastable.");
+                        throw new JsonException($"{type} is not IWithPlayer but has properties or fields that are not broadcastable.");
                     }
                 }
             }
@@ -67,7 +64,7 @@ namespace RabiRiichi.Interact {
                 return info.MemberType switch {
                     MemberTypes.Property => ((PropertyInfo)info).GetValue(obj),
                     MemberTypes.Field => ((FieldInfo)info).GetValue(obj),
-                    _ => throw new ArgumentException($"{info} is not a property or field."),
+                    _ => throw new JsonException($"{info} is not a property or field."),
                 };
             }
             #endregion
@@ -79,12 +76,12 @@ namespace RabiRiichi.Interact {
             }
 
             public override T Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
-                options.IncludeFields = true;
-                return (T)JsonSerializer.Deserialize(ref reader, typeToConvert, options);
+                var newOptions = new JsonSerializerOptions(options);
+                newOptions.Converters.Clear();
+                return JsonSerializer.Deserialize<T>(ref reader, newOptions);
             }
 
             public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options) {
-                options.IncludeFields = true;
                 // Check which fields and properties to include
                 var members = (value is IWithPlayer iwp && iwp.player.id != playerId) ? BroadCastMembers : AllMembers;
 
