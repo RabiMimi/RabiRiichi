@@ -1,4 +1,5 @@
-﻿using RabiRiichi.Riichi;
+﻿using RabiRiichi.Interact;
+using RabiRiichi.Riichi;
 using System.Collections.Generic;
 
 namespace RabiRiichi.Event {
@@ -13,7 +14,10 @@ namespace RabiRiichi.Event {
         public const int Maximum = (int)1e7;
     }
 
+    [RabiMessage]
     public abstract class EventBase {
+        [RabiBroadcast]
+        public abstract string name { get; }
         public Game game;
         public int phase = EventPriority.Maximum;
 

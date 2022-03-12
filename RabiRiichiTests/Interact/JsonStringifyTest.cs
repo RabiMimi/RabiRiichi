@@ -17,6 +17,8 @@ namespace RabiRiichiTests.Interact {
             [RabiPrivate]
             public string privateMessage = "nest private";
 
+            public int notIncluded = 233;
+
             public RabiTestNestedMessage(Player player) {
                 this.player = player;
             }
@@ -58,12 +60,6 @@ namespace RabiRiichiTests.Interact {
         }
 
         [RabiMessage]
-        private class InvalidMessagePrivateSet {
-            [RabiBroadcast]
-            public string message { get; private set; } = "invalid message with private set";
-        }
-
-        [RabiMessage]
         private class ValidMessagePrivateSet {
             [RabiBroadcast]
             [JsonInclude]
@@ -87,6 +83,7 @@ namespace RabiRiichiTests.Interact {
             Assert.AreEqual(message.privateMessage, parsed.GetProperty("privateMessage").GetString());
             Assert.AreEqual(message.broadcastNested.broadcastMessage, parsed.GetProperty("broadcastNested").GetProperty("broadcastMessage").GetString());
             Assert.AreEqual(message.privateNested.privateMessage, parsed.GetProperty("privateNested").GetProperty("privateMessage").GetString());
+            Assert.IsFalse(parsed.TryGetProperty("notIncluded", out _));
 
             // Parse by the other player
             var partialJson = jsonStringify.Stringify(message, 1);
@@ -130,16 +127,6 @@ namespace RabiRiichiTests.Interact {
             var json = jsonStringify.Stringify(message, 0);
             var parsed = jsonStringify.Parse<JsonElement>(json, 0);
             Assert.AreEqual(message.message, parsed.GetProperty("message").GetString());
-        }
-
-        [TestMethod]
-        public void TestInvalidMessagePrivateSet() {
-            var message = new InvalidMessagePrivateSet();
-            var except = Assert.ThrowsException<TypeInitializationException>(
-                () => jsonStringify.Stringify(message, 0)
-            );
-            Assert.IsInstanceOfType(except.InnerException, typeof(JsonException));
-            StringAssert.Contains(except.InnerException.Message, "has properties with private setter");
         }
     }
 }

@@ -15,6 +15,7 @@ namespace RabiRiichi.Action {
         }
     }
 
+    // TODO: Make it thread safe
     public class MultiPlayerInquiry {
         public readonly List<SinglePlayerInquiry> playerInquiries = new();
         public readonly TaskCompletionSource taskCompletionSource = new();
@@ -38,7 +39,7 @@ namespace RabiRiichi.Action {
         /// 处理用户的回应，但是不会触发操作
         /// </summary>
         /// <returns>是否可以终止等待（已无用户可以做出优先级更高或相同的回应）</returns>
-        public bool OnResponseWithoutTrigger(InquiryResponse resp) {
+        private bool OnResponseWithoutTrigger(InquiryResponse resp) {
             var list = playerInquiries.Find(x => x.player.id == resp.playerId);
             if (list == null || !list.OnResponse(resp.index, resp.response)) {
                 return false;

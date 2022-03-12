@@ -1,12 +1,15 @@
-﻿using RabiRiichi.Riichi;
+﻿using RabiRiichi.Interact;
+using RabiRiichi.Riichi;
 
 namespace RabiRiichi.Event.InGame {
-    public class DrawTileEvent : PlayerEvent {
+    public class DrawTileEvent : PrivatePlayerEvent {
         #region Request
+        [RabiPrivate]
         public TileSource source;
         #endregion
 
         #region Response
+        [RabiPrivate]
         public Tile tile;
         #endregion
 

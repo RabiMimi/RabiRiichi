@@ -1,14 +1,17 @@
+using RabiRiichi.Interact;
 using RabiRiichi.Riichi;
 
 namespace RabiRiichi.Event.InGame {
     public class BeginGameEvent : EventBase {
+        public override string name => "begin_game";
+
         #region Request
         /// <summary> 场风 </summary>
-        public Wind wind;
+        [RabiBroadcast] public Wind wind;
         /// <summary> 局数 </summary>
-        public int round;
+        [RabiBroadcast] public int round;
         /// <summary> 本场 </summary>
-        public int honba;
+        [RabiBroadcast] public int honba;
         #endregion
 
         #region Response

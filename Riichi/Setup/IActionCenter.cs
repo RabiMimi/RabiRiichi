@@ -3,6 +3,6 @@ using System.Threading.Tasks;
 
 namespace RabiRiichi.Riichi.Setup {
     public interface IActionCenter {
-        Task OnInquiry(MultiPlayerInquiry inquiry);
+        void OnInquiry(MultiPlayerInquiry inquiry);
     }
 }

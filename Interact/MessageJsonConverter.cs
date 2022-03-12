@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace RabiRiichi.Interact {
+    // TODO: Support RabiPrivate classes
     public class MessageJsonConverter : JsonConverterFactory {
         public readonly int playerId;
 
@@ -43,10 +44,6 @@ namespace RabiRiichi.Interact {
                 var AllFields = type.GetFields(bindingFlags)
                     .Where(f => f.GetCustomAttribute<RabiPrivateAttribute>() != null
                         || f.GetCustomAttribute<RabiBroadcastAttribute>() != null);
-
-                if (AllProperties.Any(p => p.GetCustomAttribute<JsonIncludeAttribute>() == null && p.GetSetMethod() == null)) {
-                    throw new JsonException($"{type} has properties with private setter. Consider using [JsonInclude].");
-                }
 
                 var BroadCastProperties = AllProperties.Where(p => p.GetCustomAttribute<RabiBroadcastAttribute>() != null);
                 var BroadCastFields = AllFields.Where(f => f.GetCustomAttribute<RabiBroadcastAttribute>() != null);
