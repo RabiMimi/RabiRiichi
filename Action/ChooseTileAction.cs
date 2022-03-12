@@ -13,7 +13,7 @@ namespace RabiRiichi.Action {
 
     public class ChooseTileAction : SingleChoiceAction {
         public override string name => "choose_tile";
-        public ChooseTileAction(Player player, List<GameTile> tiles, int priorityDelta = 0) : base(player) {
+        public ChooseTileAction(int playerId, List<GameTile> tiles, int priorityDelta = 0) : base(playerId) {
             priority = ActionPriority.ChooseTile + priorityDelta;
             foreach (var tile in tiles) {
                 AddOption(new ChooseTileActionOption(tile));

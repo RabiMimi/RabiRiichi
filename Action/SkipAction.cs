@@ -4,7 +4,7 @@ namespace RabiRiichi.Action {
     public class SkipAction : ConfirmAction {
         public override string name => "skip";
 
-        public SkipAction(Player player, int priorityDelta = 0) : base(player) {
+        public SkipAction(int playerId, int priorityDelta = 0) : base(playerId) {
             priority = ActionPriority.Skip + priorityDelta;
         }
     }

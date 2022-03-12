@@ -6,6 +6,6 @@ namespace RabiRiichi.Action {
     /// 用户跳过会使用<see cref="SkipAction"/>处理。
     /// </summary>
     public abstract class ConfirmAction : PlayerAction<bool> {
-        public ConfirmAction(Player player) : base(player) { }
+        public ConfirmAction(int playerId) : base(playerId) { }
     }
 }

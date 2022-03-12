@@ -3,7 +3,7 @@ using RabiRiichi.Riichi;
 namespace RabiRiichi.Action {
     public class TsumoAction : ConfirmAction {
         public override string name => "tsumo";
-        public TsumoAction(Player player, int priorityDelta = 0) : base(player) {
+        public TsumoAction(int playerId, int priorityDelta = 0) : base(playerId) {
             priority = ActionPriority.Ron + priorityDelta;
         }
     }

@@ -5,7 +5,7 @@ namespace RabiRiichi.Action {
 
     public class RiichiAction : ChooseTileAction {
         public override string name => "riichi";
-        public RiichiAction(Player player, List<GameTile> tiles, int priorityDelta = 0) : base(player, tiles) {
+        public RiichiAction(int playerId, List<GameTile> tiles, int priorityDelta = 0) : base(playerId, tiles) {
             priority = ActionPriority.Riichi + priorityDelta;
         }
     }

@@ -32,9 +32,7 @@ namespace RabiRiichi.Action {
         [RabiPrivate] public abstract string name { get; }
         [RabiPrivate] public RabiMessageType msgType => RabiMessageType.Action;
 
-        public Player player { get; }
-
-        [RabiPrivate] public int playerId => player.id;
+        [RabiPrivate] public int playerId { get; init; }
 
         public int priority { get; protected set; }
 
@@ -46,8 +44,8 @@ namespace RabiRiichi.Action {
 
         public Func<T, Task> onResponse { get; set; }
 
-        public PlayerAction(Player player) {
-            this.player = player;
+        public PlayerAction(int playerId) {
+            this.playerId = playerId;
         }
 
         public bool OnResponse(string response) {

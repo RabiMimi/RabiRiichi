@@ -24,7 +24,7 @@ namespace RabiRiichi.Action.Resolver {
             if (result.Count == 0) {
                 return false;
             }
-            output.Add(new KanAction(player, result, -incoming.fromPlayer.Dist(player)));
+            output.Add(new KanAction(player.id, result, -incoming.fromPlayer.Dist(player)));
             return true;
         }
     }

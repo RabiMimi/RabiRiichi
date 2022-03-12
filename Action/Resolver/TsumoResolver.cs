@@ -26,7 +26,7 @@ namespace RabiRiichi.Action.Resolver {
             }
             var maxScore = patternResolver.ResolveMaxScore(hand, incoming, false);
             if (maxScore != null && maxScore.IsValid(player.game.config.minHan)) {
-                output.Add(new TsumoAction(hand.player));
+                output.Add(new TsumoAction(hand.player.id));
                 return true;
             }
             return false;

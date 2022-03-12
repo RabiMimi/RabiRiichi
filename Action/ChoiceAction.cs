@@ -11,7 +11,7 @@ namespace RabiRiichi.Action {
     public abstract class ChoiceAction<T> : PlayerAction<T> {
         [RabiBroadcast] public List<ActionOption> choices = new();
 
-        public ChoiceAction(Player player) : base(player) { }
+        public ChoiceAction(int playerId) : base(playerId) { }
 
         public void AddOption(ActionOption option) {
             choices.Add(option);
@@ -19,7 +19,7 @@ namespace RabiRiichi.Action {
     }
 
     public abstract class MultiChoiceAction : ChoiceAction<List<int>> {
-        public MultiChoiceAction(Player player) : base(player) {
+        public MultiChoiceAction(int playerId) : base(playerId) {
             response = new List<int>();
         }
 
@@ -37,7 +37,7 @@ namespace RabiRiichi.Action {
     }
 
     public abstract class SingleChoiceAction : ChoiceAction<int> {
-        public SingleChoiceAction(Player player) : base(player) {
+        public SingleChoiceAction(int playerId) : base(playerId) {
             response = 0;
         }
 

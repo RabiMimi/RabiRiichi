@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace RabiRiichi.Action {
     public class PonAction : ChooseTilesAction {
         public override string name => "pon";
-        public PonAction(Player player, List<GameTiles> tiles, int priorityDelta = 0) : base(player, tiles) {
+        public PonAction(int playerId, List<GameTiles> tiles, int priorityDelta = 0) : base(playerId, tiles) {
             priority = ActionPriority.Pon + priorityDelta;
         }
     }

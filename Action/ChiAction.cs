@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace RabiRiichi.Action {
     public class ChiAction : ChooseTilesAction {
         public override string name => "chi";
-        public ChiAction(Player player, List<GameTiles> tiles, int priorityDelta = 0) : base(player, tiles) {
+        public ChiAction(int playerId, List<GameTiles> tiles, int priorityDelta = 0) : base(playerId, tiles) {
             priority = ActionPriority.Chi + priorityDelta;
         }
     }
