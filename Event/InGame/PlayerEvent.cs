@@ -2,7 +2,7 @@ using RabiRiichi.Interact;
 using RabiRiichi.Riichi;
 
 namespace RabiRiichi.Event.InGame {
-    public abstract class PlayerEvent : EventBase, IWithPlayer {
+    public abstract class PlayerEvent : EventBase, IRabiPlayerMessage {
         public Player player { get; protected set; }
         [RabiBroadcast] public int playerId => player.id;
 

@@ -10,36 +10,32 @@ namespace RabiRiichiTests.Interact {
     public class JsonStringifyTest {
         #region Test Classes
         [RabiMessage]
-        private class RabiTestNestedMessage : IWithPlayer {
-            public Player player { get; init; }
-            [RabiBroadcast]
-            public string broadcastMessage = "nested broadcast";
-            [RabiPrivate]
-            public string privateMessage = "nest private";
+        private class RabiTestNestedMessage : IRabiPlayerMessage {
+            public int playerId { get; init; }
+            public string msgType => "test";
+            [RabiBroadcast] public string broadcastMessage = "nested broadcast";
+            [RabiPrivate] public string privateMessage = "nest private";
 
             public int notIncluded = 233;
 
-            public RabiTestNestedMessage(Player player) {
-                this.player = player;
+            public RabiTestNestedMessage(int playerId) {
+                this.playerId = playerId;
             }
         }
 
         [RabiMessage]
-        private class RabiTestMessage : IWithPlayer {
-            public Player player { get; init; }
-            [RabiBroadcast]
-            public string broadcastMessage { get; set; } = "broadcast";
-            [RabiPrivate]
-            public readonly string privateMessage = "private";
-            [RabiBroadcast]
-            public RabiTestNestedMessage broadcastNested;
-            [RabiPrivate]
-            public RabiTestNestedMessage privateNested;
+        private class RabiTestMessage : IRabiPlayerMessage {
+            public int playerId { get; init; }
+            public string msgType => "test";
+            [RabiBroadcast] public string broadcastMessage { get; set; } = "broadcast";
+            [RabiPrivate] public readonly string privateMessage = "private";
+            [RabiBroadcast] public RabiTestNestedMessage broadcastNested;
+            [RabiPrivate] public RabiTestNestedMessage privateNested;
 
-            public RabiTestMessage(Player player) {
-                this.player = player;
-                broadcastNested = new RabiTestNestedMessage(player);
-                privateNested = new RabiTestNestedMessage(player);
+            public RabiTestMessage(int playerId) {
+                this.playerId = playerId;
+                broadcastNested = new RabiTestNestedMessage(playerId);
+                privateNested = new RabiTestNestedMessage(playerId);
             }
         }
 
@@ -75,13 +71,14 @@ namespace RabiRiichiTests.Interact {
 
         [RabiMessage]
         [RabiPrivate]
-        private class RabiPrivateWithPlayer : IWithPlayer {
-            public Player player { get; init; }
+        private class RabiPrivateWithPlayer : IRabiPlayerMessage {
+            public int playerId { get; init; }
+            public string msgType => "test";
             [RabiBroadcast]
             public string message { get; set; } = "rabi private message with player";
 
-            public RabiPrivateWithPlayer(Player player) {
-                this.player = player;
+            public RabiPrivateWithPlayer(int playerId) {
+                this.playerId = playerId;
             }
         }
 
@@ -90,15 +87,13 @@ namespace RabiRiichiTests.Interact {
         }
         #endregion
 
-        private readonly Player player0 = new(0, null);
-        private readonly Player player1 = new(1, null);
         private readonly JsonStringify jsonStringify = new(new GameConfig {
             playerCount = 2,
         });
 
         [TestMethod]
         public void TestSucceedNested() {
-            var message = new RabiTestMessage(player0);
+            var message = new RabiTestMessage(0);
             var json = jsonStringify.Stringify(message, 0);
             // Parse by current player
             var parsed = jsonStringify.Parse<JsonElement>(json, 0);
@@ -160,7 +155,7 @@ namespace RabiRiichiTests.Interact {
 
         [TestMethod]
         public void TestSuccessRabiPrivateWithPlayer() {
-            var message = new RabiPrivateWithPlayer(player0);
+            var message = new RabiPrivateWithPlayer(0);
             var json = jsonStringify.Stringify(message, 0);
             var parsed = jsonStringify.Parse<JsonElement>(json, 0);
             Assert.AreEqual(message.message, parsed.GetProperty("message").GetString());
@@ -168,7 +163,7 @@ namespace RabiRiichiTests.Interact {
 
         [TestMethod]
         public void TestNullRabiPrivateWithPlayerOtherPlayer() {
-            var message = new RabiPrivateWithPlayer(player1);
+            var message = new RabiPrivateWithPlayer(1);
             var json = jsonStringify.Stringify(message, 0);
             var parsed = jsonStringify.Parse<JsonElement>(json, 0);
             Assert.AreEqual(parsed.ValueKind, JsonValueKind.Null);

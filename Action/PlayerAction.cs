@@ -20,10 +20,8 @@ namespace RabiRiichi.Action {
         public const int Discard = 10000;
     }
 
-    public interface IPlayerAction : IWithPlayer {
-        int playerId { get; }
+    public interface IPlayerAction : IRabiPlayerMessage {
         int priority { get; }
-        string name { get; }
         bool OnResponse(string response);
         Task Trigger();
     }
@@ -32,13 +30,15 @@ namespace RabiRiichi.Action {
     [RabiMessage]
     [RabiPrivate]
     public abstract class PlayerAction<T> : IPlayerAction {
+        [RabiPrivate] public abstract string name { get; }
+        [RabiPrivate] public string msgType => "action";
+
         public Player player { get; }
 
         [RabiPrivate] public int playerId => player.id;
 
         public int priority { get; protected set; }
 
-        [RabiPrivate] public abstract string name { get; }
 
         /// <summary>
         /// 初始值必须是一个有效的回应，用于用户超时跳过的情况

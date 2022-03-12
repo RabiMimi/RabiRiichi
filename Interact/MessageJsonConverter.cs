@@ -59,7 +59,7 @@ namespace RabiRiichi.Interact {
                 AllMembers = AllProperties.Cast<MemberInfo>().Concat(AllFields).ToArray();
                 BroadCastMembers = BroadCastProperties.Cast<MemberInfo>().Concat(BroadCastFields).ToArray();
 
-                if (!type.IsAssignableTo(typeof(IWithPlayer))) {
+                if (!type.IsAssignableTo(typeof(IRabiPlayerMessage))) {
                     if (AllMembers.Length != BroadCastMembers.Length) {
                         throw new JsonException($"{type} is not IWithPlayer but has properties or fields that are not broadcastable.");
                     }
@@ -95,15 +95,14 @@ namespace RabiRiichi.Interact {
                 var reflectionData = RabiMessageReflectionData.Of(value.GetType());
                 // Check if entire class is private
                 if (reflectionData.isPrivate) {
-                    var playerId = ((IWithPlayer)value).player.id;
-                    if (playerId != this.playerId) {
+                    if (((IRabiPlayerMessage)value).playerId != this.playerId) {
                         writer.WriteNullValue();
                         return;
                     }
                 }
 
                 // Check which fields and properties to include
-                var members = (value is IWithPlayer iwp && iwp.player.id != playerId) ? reflectionData.BroadCastMembers : reflectionData.AllMembers;
+                var members = (value is IRabiPlayerMessage iwp && iwp.playerId != playerId) ? reflectionData.BroadCastMembers : reflectionData.AllMembers;
 
                 // Write stringified json
                 writer.WriteStartObject();

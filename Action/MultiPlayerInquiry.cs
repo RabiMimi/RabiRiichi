@@ -26,9 +26,9 @@ namespace RabiRiichi.Action {
         public Task WaitTillFinalized => taskCompletionSource.Task;
 
         public MultiPlayerInquiry Add(IPlayerAction action, bool isDefault = false) {
-            var list = playerInquiries.Find(x => x.player.SamePlayer(action.player));
+            var list = playerInquiries.Find(x => x.playerId == action.playerId);
             if (list == null) {
-                list = new SinglePlayerInquiry(action.player);
+                list = new SinglePlayerInquiry(action.playerId);
                 playerInquiries.Add(list);
             }
             list.AddAction(action, isDefault);
@@ -40,7 +40,7 @@ namespace RabiRiichi.Action {
         /// </summary>
         /// <returns>是否可以终止等待（已无用户可以做出优先级更高或相同的回应）</returns>
         private bool OnResponseWithoutTrigger(InquiryResponse resp) {
-            var list = playerInquiries.Find(x => x.player.id == resp.playerId);
+            var list = playerInquiries.Find(x => x.playerId == resp.playerId);
             if (list == null || !list.OnResponse(resp.index, resp.response)) {
                 return false;
             }

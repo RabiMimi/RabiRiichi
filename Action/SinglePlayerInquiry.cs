@@ -6,9 +6,10 @@ using System.Threading.Tasks;
 
 namespace RabiRiichi.Action {
     [RabiMessage]
-    public class SinglePlayerInquiry : IWithPlayer {
+    public class SinglePlayerInquiry : IRabiPlayerMessage {
+        [RabiBroadcast] public string msgType { get; } = "inquiry";
         [RabiBroadcast] public readonly List<IPlayerAction> actions = new();
-        public Player player { get; init; }
+        public int playerId { get; init; }
         /// <summary>
         /// 所有操作的最高优先级
         /// </summary>
@@ -21,16 +22,16 @@ namespace RabiRiichi.Action {
         public int responseIndex = 0;
         public bool hasResponded = false;
 
-        public SinglePlayerInquiry(Player player) {
-            this.player = player;
+        public SinglePlayerInquiry(int playerId) {
+            this.playerId = playerId;
         }
 
         public SinglePlayerInquiry AddAction(IPlayerAction action, bool isDefault = false) {
             if (action.priority > maxPriority) {
                 maxPriority = action.priority;
             }
-            if (!player.SamePlayer(action.player)) {
-                throw new InvalidDataException($"Cannot add action for {action.player.id} to {player.id}");
+            if (playerId != action.playerId) {
+                throw new InvalidDataException($"Cannot add action for {action.playerId} to {playerId}");
             }
             actions.Add(action);
             if (isDefault) {
