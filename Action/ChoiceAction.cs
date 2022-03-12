@@ -4,8 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace RabiRiichi.Action {
-    [RabiMessage]
-    public abstract class ActionOption { }
+    public abstract class ActionOption : IRabiMessage {
+        public RabiMessageType msgType => RabiMessageType.Unnecessary;
+    }
 
     public abstract class ChoiceAction<T> : PlayerAction<T> {
         [RabiBroadcast] public List<ActionOption> choices = new();

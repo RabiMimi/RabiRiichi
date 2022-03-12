@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace RabiRiichi.Action {
-    [RabiMessage]
-    public class ActionTileInfo {
+    public class ActionTileInfo : IRabiMessage {
+        public RabiMessageType msgType => RabiMessageType.Unnecessary;
         [RabiBroadcast] public readonly string tile;
         [RabiBroadcast] public readonly int from;
         [RabiBroadcast] public readonly int player;

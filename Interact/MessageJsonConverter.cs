@@ -14,7 +14,7 @@ namespace RabiRiichi.Interact {
         }
 
         public override bool CanConvert(Type typeToConvert) {
-            return typeToConvert.GetCustomAttribute<RabiMessageAttribute>() != null;
+            return typeToConvert.IsAssignableTo(typeof(IRabiMessage));
         }
 
         public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options) {
@@ -42,8 +42,8 @@ namespace RabiRiichi.Interact {
             public readonly bool isPrivate;
 
             public RabiMessageReflectionData(Type type) {
-                if (type.GetCustomAttribute<RabiMessageAttribute>() == null) {
-                    throw new ArgumentException($"{type} is not a RabiMessage");
+                if (!type.IsAssignableTo(typeof(IRabiMessage))) {
+                    throw new ArgumentException($"{type} is not IRabiMessage");
                 }
                 isPrivate = type.GetCustomAttribute<RabiPrivateAttribute>() != null;
                 var bindingFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
@@ -95,7 +95,7 @@ namespace RabiRiichi.Interact {
                 var reflectionData = RabiMessageReflectionData.Of(value.GetType());
                 // Check if entire class is private
                 if (reflectionData.isPrivate) {
-                    if (((IRabiPlayerMessage)value).playerId != this.playerId) {
+                    if (((IRabiPlayerMessage)value).playerId != playerId) {
                         writer.WriteNullValue();
                         return;
                     }

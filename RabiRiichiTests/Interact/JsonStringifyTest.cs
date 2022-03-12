@@ -9,10 +9,12 @@ namespace RabiRiichiTests.Interact {
     [TestClass]
     public class JsonStringifyTest {
         #region Test Classes
-        [RabiMessage]
-        private class RabiTestNestedMessage : IRabiPlayerMessage {
+        private abstract class BaseRabiMessage : IRabiMessage {
+            public RabiMessageType msgType => RabiMessageType.Unnecessary;
+        }
+
+        private class RabiTestNestedMessage : BaseRabiMessage, IRabiPlayerMessage {
             public int playerId { get; init; }
-            public string msgType => "test";
             [RabiBroadcast] public string broadcastMessage = "nested broadcast";
             [RabiPrivate] public string privateMessage = "nest private";
 
@@ -23,10 +25,8 @@ namespace RabiRiichiTests.Interact {
             }
         }
 
-        [RabiMessage]
-        private class RabiTestMessage : IRabiPlayerMessage {
+        private class RabiTestMessage : BaseRabiMessage, IRabiPlayerMessage {
             public int playerId { get; init; }
-            public string msgType => "test";
             [RabiBroadcast] public string broadcastMessage { get; set; } = "broadcast";
             [RabiPrivate] public readonly string privateMessage = "private";
             [RabiBroadcast] public RabiTestNestedMessage broadcastNested;
@@ -43,37 +43,31 @@ namespace RabiRiichiTests.Interact {
             public string message { get; set; } = "not rabi message";
         }
 
-        [RabiMessage]
-        private class NotIWithPlayer {
+        private class NotIWithPlayer : BaseRabiMessage {
             [RabiBroadcast]
             public string message { get; set; } = "not IWithPlayer";
         }
 
-        [RabiMessage]
-        private class InvalidNotIWithPlayer {
+        private class InvalidNotIWithPlayer : BaseRabiMessage {
             [RabiPrivate]
             public string privateMessage { get; set; } = "invalid private message without player";
         }
 
-        [RabiMessage]
-        private class ValidMessagePrivateSet {
+        private class ValidMessagePrivateSet : BaseRabiMessage {
             [RabiBroadcast]
             [JsonInclude]
             public string message { get; private set; } = "valid message with private set";
         }
 
-        [RabiMessage]
         [RabiPrivate]
-        private class InvalidRabiPrivateNotIWithPlayer {
+        private class InvalidRabiPrivateNotIWithPlayer : BaseRabiMessage {
             [RabiBroadcast]
             public string message { get; set; } = "invalid rabi private message without player";
         }
 
-        [RabiMessage]
         [RabiPrivate]
-        private class RabiPrivateWithPlayer : IRabiPlayerMessage {
+        private class RabiPrivateWithPlayer : BaseRabiMessage, IRabiPlayerMessage {
             public int playerId { get; init; }
-            public string msgType => "test";
             [RabiBroadcast]
             public string message { get; set; } = "rabi private message with player";
 

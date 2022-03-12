@@ -1,13 +1,11 @@
 using RabiRiichi.Interact;
-using RabiRiichi.Riichi;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Action {
-    [RabiMessage]
     public class SinglePlayerInquiry : IRabiPlayerMessage {
-        [RabiBroadcast] public string msgType { get; } = "inquiry";
+        [RabiBroadcast] public RabiMessageType msgType => RabiMessageType.Inquiry;
         [RabiBroadcast] public readonly List<IPlayerAction> actions = new();
         public int playerId { get; init; }
         /// <summary>

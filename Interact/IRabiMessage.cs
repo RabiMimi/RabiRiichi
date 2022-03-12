@@ -1,6 +1,13 @@
 namespace RabiRiichi.Interact {
+    public enum RabiMessageType {
+        Unnecessary,
+        Action,
+        Inquiry,
+        Event,
+    }
+
     public interface IRabiMessage {
-        string msgType { get; }
+        RabiMessageType msgType { get; }
     }
 
     public interface IRabiPlayerMessage : IRabiMessage {
