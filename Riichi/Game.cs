@@ -2,6 +2,7 @@
 using RabiRiichi.Action.Resolver;
 using RabiRiichi.Event;
 using RabiRiichi.Event.InGame;
+using RabiRiichi.Interact;
 using RabiRiichi.Pattern;
 using RabiRiichi.Util;
 using System;
@@ -35,6 +36,7 @@ namespace RabiRiichi.Riichi {
             // Core utils
             serviceCollection.AddSingleton<EventBus>();
             serviceCollection.AddSingleton<EventListenerFactory>();
+            serviceCollection.AddSingleton<JsonStringify>();
 
             // Game related
             serviceCollection.AddSingleton<Wall>();

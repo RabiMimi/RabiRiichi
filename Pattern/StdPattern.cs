@@ -34,13 +34,13 @@ namespace RabiRiichi.Pattern {
     public abstract class StdPattern {
 
         /// <summary> 可以触发该役种的底和 </summary>
-        public BasePattern[] basePatterns { get; protected set; } = Array.Empty<BasePattern>();
+        public BasePattern[] basePatterns { get; private set; } = Array.Empty<BasePattern>();
 
         /// <summary> 满足这些pattern后，才会计算该pattern </summary>
-        public StdPattern[] dependOnPatterns { get; protected set; } = Array.Empty<StdPattern>();
+        public StdPattern[] dependOnPatterns { get; private set; } = Array.Empty<StdPattern>();
 
         /// <summary> 计算这些pattern后，才会计算该pattern。不保证这些pattern一定被满足 </summary>
-        public StdPattern[] afterPatterns { get; protected set; } = Array.Empty<StdPattern>();
+        public StdPattern[] afterPatterns { get; private set; } = Array.Empty<StdPattern>();
 
         protected StdPattern BaseOn(IEnumerable<BasePattern> basePatterns) {
             if (basePatterns != null) {
