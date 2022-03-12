@@ -23,35 +23,32 @@ namespace RabiRiichi.Action {
     public interface IPlayerAction : IWithPlayer {
         int playerId { get; }
         int priority { get; }
-        string id { get; }
+        string name { get; }
         bool OnResponse(string response);
         Task Trigger();
     }
 
     /// <summary> 等待玩家做出选择 </summary>
+    [RabiMessage]
+    [RabiPrivate]
     public abstract class PlayerAction<T> : IPlayerAction {
-        [JsonIgnore]
         public Player player { get; }
 
-        public int playerId { get; }
+        [RabiPrivate] public int playerId => player.id;
 
-        [JsonIgnore]
         public int priority { get; protected set; }
 
-        public abstract string id { get; }
+        [RabiPrivate] public abstract string name { get; }
 
         /// <summary>
         /// 初始值必须是一个有效的回应，用于用户超时跳过的情况
         /// </summary>
-        [JsonIgnore]
         protected T response = default;
 
-        [JsonIgnore]
         public Func<T, Task> onResponse { get; set; }
 
         public PlayerAction(Player player) {
             this.player = player;
-            playerId = player.id;
         }
 
         public bool OnResponse(string response) {

@@ -1,7 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Interact;
 using RabiRiichi.Riichi;
-using System;
+using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -84,6 +84,10 @@ namespace RabiRiichiTests.Interact {
                 this.player = player;
             }
         }
+
+        private class InheritedMessage : ValidMessagePrivateSet {
+            [RabiBroadcast] public string newMessage = "inherited message";
+        }
         #endregion
 
         private readonly Player player0 = new(0, null);
@@ -133,11 +137,9 @@ namespace RabiRiichiTests.Interact {
         [TestMethod]
         public void TestInvalidNotIWithPlayer() {
             var message = new InvalidNotIWithPlayer();
-            var except = Assert.ThrowsException<TypeInitializationException>(
-                () => jsonStringify.Stringify(message, 0)
-            );
-            Assert.IsInstanceOfType(except.InnerException, typeof(JsonException));
-            StringAssert.Contains(except.InnerException.Message, "is not IWithPlayer but has properties or fields that are not broadcastable");
+            var except = Assert.ThrowsException<JsonException>(
+                () => jsonStringify.Stringify(message, 0),
+                "is not IWithPlayer but has properties or fields that are not broadcastable");
         }
 
         [TestMethod]
@@ -151,11 +153,9 @@ namespace RabiRiichiTests.Interact {
         [TestMethod]
         public void TestInvalidRabiPrivateNotIWithPlayer() {
             var message = new InvalidRabiPrivateNotIWithPlayer();
-            var except = Assert.ThrowsException<TypeInitializationException>(
-                () => jsonStringify.Stringify(message, 0)
-            );
-            Assert.IsInstanceOfType(except.InnerException, typeof(JsonException));
-            StringAssert.Contains(except.InnerException.Message, "is not IWithPlayer but marked as RabiPrivate");
+            var except = Assert.ThrowsException<JsonException>(
+                () => jsonStringify.Stringify(message, 0),
+                "is not IWithPlayer but marked as RabiPrivate");
         }
 
         [TestMethod]
@@ -172,6 +172,15 @@ namespace RabiRiichiTests.Interact {
             var json = jsonStringify.Stringify(message, 0);
             var parsed = jsonStringify.Parse<JsonElement>(json, 0);
             Assert.AreEqual(parsed.ValueKind, JsonValueKind.Null);
+        }
+
+        [TestMethod]
+        public void TestInheritedMessage() {
+            var messages = new List<ValidMessagePrivateSet> { new InheritedMessage() };
+            var json = jsonStringify.Stringify(messages, 0);
+            var parsed = jsonStringify.Parse<JsonElement>(json, 0)[0];
+            Assert.AreEqual(messages[0].message, parsed.GetProperty("message").GetString());
+            Assert.AreEqual((messages[0] as InheritedMessage).newMessage, parsed.GetProperty("newMessage").GetString());
         }
     }
 }

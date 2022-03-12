@@ -1,12 +1,14 @@
+using RabiRiichi.Interact;
 using RabiRiichi.Riichi;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace RabiRiichi.Action {
+    [RabiMessage]
     public abstract class ActionOption { }
 
     public abstract class ChoiceAction<T> : PlayerAction<T> {
-        public List<ActionOption> choices = new();
+        [RabiBroadcast] public List<ActionOption> choices = new();
 
         public ChoiceAction(Player player) : base(player) { }
 

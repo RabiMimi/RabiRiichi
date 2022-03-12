@@ -4,8 +4,7 @@ using RabiRiichi.Riichi;
 namespace RabiRiichi.Event.InGame {
     public abstract class PlayerEvent : EventBase, IWithPlayer {
         public Player player { get; protected set; }
-        [RabiBroadcast]
-        public int playerId => player.id;
+        [RabiBroadcast] public int playerId => player.id;
 
         public PlayerEvent(Game game, Player player) : base(game) {
             this.player = player;

@@ -1,13 +1,15 @@
+using RabiRiichi.Interact;
 using RabiRiichi.Riichi;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace RabiRiichi.Action {
+    [RabiMessage]
     public class ActionTileInfo {
-        public readonly string tile;
-        public readonly int from;
-        public readonly int player;
-        public readonly string source;
+        [RabiBroadcast] public readonly string tile;
+        [RabiBroadcast] public readonly int from;
+        [RabiBroadcast] public readonly int player;
+        [RabiBroadcast] public readonly string source;
 
         public ActionTileInfo(GameTile tile) {
             this.tile = tile.ToString();
@@ -19,7 +21,7 @@ namespace RabiRiichi.Action {
 
     public class ChooseTilesActionOption : ActionOption {
 
-        public readonly List<ActionTileInfo> tiles;
+        [RabiBroadcast] public readonly List<ActionTileInfo> tiles;
 
         public ChooseTilesActionOption(GameTiles tiles) {
             this.tiles = tiles.Select(tile => new ActionTileInfo(tile)).ToList();
@@ -27,7 +29,7 @@ namespace RabiRiichi.Action {
     }
 
     public class ChooseTilesAction : SingleChoiceAction {
-        public override string id => "choose_tiles";
+        public override string name => "choose_tiles";
         public ChooseTilesAction(Player player, List<GameTiles> tiles, int priorityDelta = 0) : base(player) {
             priority = ActionPriority.ChooseTile + priorityDelta;
             foreach (var gr in tiles) {

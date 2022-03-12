@@ -1,12 +1,14 @@
+using RabiRiichi.Interact;
 using RabiRiichi.Riichi;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Action {
-    public class SinglePlayerInquiry {
-        public readonly List<IPlayerAction> actions = new();
-        public readonly Player player;
+    [RabiMessage]
+    public class SinglePlayerInquiry : IWithPlayer {
+        [RabiBroadcast] public readonly List<IPlayerAction> actions = new();
+        public Player player { get; init; }
         /// <summary>
         /// 所有操作的最高优先级
         /// </summary>

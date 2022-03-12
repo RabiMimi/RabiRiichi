@@ -1,9 +1,10 @@
+using RabiRiichi.Interact;
 using RabiRiichi.Riichi;
 using System.Collections.Generic;
 
 namespace RabiRiichi.Action {
     public class ChooseTileActionOption : ActionOption {
-        public readonly ActionTileInfo tile;
+        [RabiBroadcast] public readonly ActionTileInfo tile;
 
         public ChooseTileActionOption(GameTile tile) {
             this.tile = new ActionTileInfo(tile);
@@ -11,7 +12,7 @@ namespace RabiRiichi.Action {
     }
 
     public class ChooseTileAction : SingleChoiceAction {
-        public override string id => "choose_tile";
+        public override string name => "choose_tile";
         public ChooseTileAction(Player player, List<GameTile> tiles, int priorityDelta = 0) : base(player) {
             priority = ActionPriority.ChooseTile + priorityDelta;
             foreach (var tile in tiles) {

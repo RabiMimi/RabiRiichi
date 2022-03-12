@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
@@ -26,14 +27,21 @@ namespace RabiRiichi.Interact {
             );
         }
 
-        private class RabiMessageConverter<T> : JsonConverter<T> {
-            #region static
-            private static readonly MemberInfo[] AllMembers;
-            private static readonly MemberInfo[] BroadCastMembers;
-            private static readonly Type type = typeof(T);
-            private static readonly bool isPrivate;
+        private class RabiMessageReflectionData {
+            private static readonly Dictionary<Type, RabiMessageReflectionData> reflectionDataDict = new();
+            public static RabiMessageReflectionData Of(Type type) {
+                if (!reflectionDataDict.TryGetValue(type, out var reflectionData)) {
+                    reflectionData = new RabiMessageReflectionData(type);
+                    reflectionDataDict.Add(type, reflectionData);
+                }
+                return reflectionData;
+            }
 
-            static RabiMessageConverter() {
+            public readonly MemberInfo[] AllMembers;
+            public readonly MemberInfo[] BroadCastMembers;
+            public readonly bool isPrivate;
+
+            public RabiMessageReflectionData(Type type) {
                 if (type.GetCustomAttribute<RabiMessageAttribute>() == null) {
                     throw new ArgumentException($"{type} is not a RabiMessage");
                 }
@@ -60,7 +68,9 @@ namespace RabiRiichi.Interact {
                     }
                 }
             }
+        }
 
+        private class RabiMessageConverter<T> : JsonConverter<T> {
             private static object GetValue(MemberInfo info, object obj) {
                 return info.MemberType switch {
                     MemberTypes.Property => ((PropertyInfo)info).GetValue(obj),
@@ -68,7 +78,6 @@ namespace RabiRiichi.Interact {
                     _ => throw new JsonException($"{info} is not a property or field."),
                 };
             }
-            #endregion
 
             private readonly int playerId;
 
@@ -83,8 +92,9 @@ namespace RabiRiichi.Interact {
             }
 
             public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options) {
+                var reflectionData = RabiMessageReflectionData.Of(value.GetType());
                 // Check if entire class is private
-                if (isPrivate) {
+                if (reflectionData.isPrivate) {
                     var playerId = ((IWithPlayer)value).player.id;
                     if (playerId != this.playerId) {
                         writer.WriteNullValue();
@@ -93,7 +103,7 @@ namespace RabiRiichi.Interact {
                 }
 
                 // Check which fields and properties to include
-                var members = (value is IWithPlayer iwp && iwp.player.id != playerId) ? BroadCastMembers : AllMembers;
+                var members = (value is IWithPlayer iwp && iwp.player.id != playerId) ? reflectionData.BroadCastMembers : reflectionData.AllMembers;
 
                 // Write stringified json
                 writer.WriteStartObject();
