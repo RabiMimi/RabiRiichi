@@ -53,10 +53,10 @@ namespace RabiRiichiTests.Interact {
             public string privateMessage { get; set; } = "invalid private message without player";
         }
 
-        private class ValidMessagePrivateSet : BaseRabiMessage {
+        private class ValidMessageNonPublicSet : BaseRabiMessage {
             [RabiBroadcast]
             [JsonInclude]
-            public string message { get; private set; } = "valid message with private set";
+            public virtual string message { get; protected set; } = "valid message with private set";
         }
 
         [RabiPrivate]
@@ -76,8 +76,9 @@ namespace RabiRiichiTests.Interact {
             }
         }
 
-        private class InheritedMessage : ValidMessagePrivateSet {
-            [RabiBroadcast] public string newMessage = "inherited message";
+        private class InheritedMessage : ValidMessageNonPublicSet {
+            public override string message { get; protected set; } = "inherited message";
+            [RabiBroadcast] public string newMessage = "new inherited message";
         }
         #endregion
 
@@ -132,8 +133,8 @@ namespace RabiRiichiTests.Interact {
         }
 
         [TestMethod]
-        public void TestSuccessPrivateSet() {
-            var message = new ValidMessagePrivateSet();
+        public void TestSuccessNonPublicSet() {
+            var message = new ValidMessageNonPublicSet();
             var json = jsonStringify.Stringify(message, 0);
             var parsed = jsonStringify.Parse<JsonElement>(json, 0);
             Assert.AreEqual(message.message, parsed.GetProperty("message").GetString());
@@ -165,7 +166,7 @@ namespace RabiRiichiTests.Interact {
 
         [TestMethod]
         public void TestInheritedMessage() {
-            var messages = new List<ValidMessagePrivateSet> { new InheritedMessage() };
+            var messages = new List<ValidMessageNonPublicSet> { new InheritedMessage() };
             var json = jsonStringify.Stringify(messages, 0);
             var parsed = jsonStringify.Parse<JsonElement>(json, 0)[0];
             Assert.AreEqual(messages[0].message, parsed.GetProperty("message").GetString());
