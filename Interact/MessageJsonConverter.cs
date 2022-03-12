@@ -5,7 +5,6 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace RabiRiichi.Interact {
-    // TODO: Support RabiPrivate classes
     public class MessageJsonConverter : JsonConverterFactory {
         public readonly int playerId;
 
@@ -32,11 +31,13 @@ namespace RabiRiichi.Interact {
             private static readonly MemberInfo[] AllMembers;
             private static readonly MemberInfo[] BroadCastMembers;
             private static readonly Type type = typeof(T);
+            private static readonly bool isPrivate;
 
             static RabiMessageConverter() {
                 if (type.GetCustomAttribute<RabiMessageAttribute>() == null) {
                     throw new ArgumentException($"{type} is not a RabiMessage");
                 }
+                isPrivate = type.GetCustomAttribute<RabiPrivateAttribute>() != null;
                 var bindingFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
                 var AllProperties = type.GetProperties(bindingFlags)
                     .Where(p => p.GetCustomAttribute<RabiPrivateAttribute>() != null
@@ -53,6 +54,9 @@ namespace RabiRiichi.Interact {
                 if (!type.IsAssignableTo(typeof(IWithPlayer))) {
                     if (AllMembers.Length != BroadCastMembers.Length) {
                         throw new JsonException($"{type} is not IWithPlayer but has properties or fields that are not broadcastable.");
+                    }
+                    if (isPrivate) {
+                        throw new JsonException($"{type} is not IWithPlayer but marked as RabiPrivate.");
                     }
                 }
             }
@@ -79,6 +83,15 @@ namespace RabiRiichi.Interact {
             }
 
             public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options) {
+                // Check if entire class is private
+                if (isPrivate) {
+                    var playerId = ((IWithPlayer)value).player.id;
+                    if (playerId != this.playerId) {
+                        writer.WriteNullValue();
+                        return;
+                    }
+                }
+
                 // Check which fields and properties to include
                 var members = (value is IWithPlayer iwp && iwp.player.id != playerId) ? BroadCastMembers : AllMembers;
 

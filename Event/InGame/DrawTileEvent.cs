@@ -3,6 +3,8 @@ using RabiRiichi.Riichi;
 
 namespace RabiRiichi.Event.InGame {
     public class DrawTileEvent : PrivatePlayerEvent {
+        public override string name => "draw_tile";
+
         #region Request
         [RabiPrivate]
         public TileSource source;

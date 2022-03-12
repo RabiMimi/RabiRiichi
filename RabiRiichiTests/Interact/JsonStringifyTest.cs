@@ -65,6 +65,25 @@ namespace RabiRiichiTests.Interact {
             [JsonInclude]
             public string message { get; private set; } = "valid message with private set";
         }
+
+        [RabiMessage]
+        [RabiPrivate]
+        private class InvalidRabiPrivateNotIWithPlayer {
+            [RabiBroadcast]
+            public string message { get; set; } = "invalid rabi private message without player";
+        }
+
+        [RabiMessage]
+        [RabiPrivate]
+        private class RabiPrivateWithPlayer : IWithPlayer {
+            public Player player { get; init; }
+            [RabiBroadcast]
+            public string message { get; set; } = "rabi private message with player";
+
+            public RabiPrivateWithPlayer(Player player) {
+                this.player = player;
+            }
+        }
         #endregion
 
         private readonly Player player0 = new(0, null);
@@ -127,6 +146,32 @@ namespace RabiRiichiTests.Interact {
             var json = jsonStringify.Stringify(message, 0);
             var parsed = jsonStringify.Parse<JsonElement>(json, 0);
             Assert.AreEqual(message.message, parsed.GetProperty("message").GetString());
+        }
+
+        [TestMethod]
+        public void TestInvalidRabiPrivateNotIWithPlayer() {
+            var message = new InvalidRabiPrivateNotIWithPlayer();
+            var except = Assert.ThrowsException<TypeInitializationException>(
+                () => jsonStringify.Stringify(message, 0)
+            );
+            Assert.IsInstanceOfType(except.InnerException, typeof(JsonException));
+            StringAssert.Contains(except.InnerException.Message, "is not IWithPlayer but marked as RabiPrivate");
+        }
+
+        [TestMethod]
+        public void TestSuccessRabiPrivateWithPlayer() {
+            var message = new RabiPrivateWithPlayer(player0);
+            var json = jsonStringify.Stringify(message, 0);
+            var parsed = jsonStringify.Parse<JsonElement>(json, 0);
+            Assert.AreEqual(message.message, parsed.GetProperty("message").GetString());
+        }
+
+        [TestMethod]
+        public void TestNullRabiPrivateWithPlayerOtherPlayer() {
+            var message = new RabiPrivateWithPlayer(player1);
+            var json = jsonStringify.Stringify(message, 0);
+            var parsed = jsonStringify.Parse<JsonElement>(json, 0);
+            Assert.AreEqual(parsed.ValueKind, JsonValueKind.Null);
         }
     }
 }

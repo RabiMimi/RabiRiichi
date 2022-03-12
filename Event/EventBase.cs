@@ -16,8 +16,9 @@ namespace RabiRiichi.Event {
 
     [RabiMessage]
     public abstract class EventBase {
-        [RabiBroadcast]
-        public abstract string name { get; }
+        [RabiBroadcast] public abstract string name { get; }
+        [RabiBroadcast] public readonly string type = "event";
+
         public Game game;
         public int phase = EventPriority.Maximum;
 
