@@ -8,8 +8,5 @@ namespace RabiRiichi.Action {
         public SkipAction(int playerId, int priorityDelta = 0) : base(playerId) {
             priority = ActionPriority.Skip + priorityDelta;
         }
-        public override Task OnResponse(bool response) {
-            throw new System.NotImplementedException();
-        }
     }
 }

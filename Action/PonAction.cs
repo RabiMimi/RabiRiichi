@@ -9,9 +9,5 @@ namespace RabiRiichi.Action {
         public PonAction(int playerId, List<GameTiles> tiles, int priorityDelta = 0) : base(playerId, tiles) {
             priority = ActionPriority.Pon + priorityDelta;
         }
-
-        public override Task OnResponse(int response) {
-            throw new System.NotImplementedException();
-        }
     }
 }

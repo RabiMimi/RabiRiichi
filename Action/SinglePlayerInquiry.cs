@@ -21,7 +21,12 @@ namespace RabiRiichi.Action {
         /// </summary>
         public int curPriority { get; private set; } = int.MinValue;
 
+        /// <summary>
+        /// 用户做出的回应，默认是0（第一个选项）
+        /// </summary>
         public int responseIndex = 0;
+
+        public IPlayerAction Selected => actions[responseIndex];
         public bool hasResponded = false;
 
         public SinglePlayerInquiry(int playerId, int eventId) {
@@ -57,7 +62,5 @@ namespace RabiRiichi.Action {
             curPriority = action.priority;
             return true;
         }
-
-        public Task Trigger() => actions[responseIndex].Trigger();
     }
 }

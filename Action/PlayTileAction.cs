@@ -8,9 +8,5 @@ namespace RabiRiichi.Action {
         public override string name => "play_tile";
 
         public PlayTileAction(int playerId, List<GameTile> tiles, int priorityDelta = 0) : base(playerId, tiles, priorityDelta) { }
-
-        public override Task OnResponse(int response) {
-            throw new System.NotImplementedException();
-        }
     }
 }

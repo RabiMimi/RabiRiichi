@@ -4,7 +4,7 @@ namespace RabiRiichi.Event.InGame.Listener {
     public static class WaitPlayerActionListener {
         public static Task Execute(WaitPlayerActionEvent e) {
             e.game.config.actionCenter.OnInquiry(e.inquiry);
-            return e.inquiry.WaitTillFinalized;
+            return e.inquiry.WaitForResponse;
         }
 
         public static void Register(EventBus eventBus) {

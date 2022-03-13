@@ -11,9 +11,5 @@ namespace RabiRiichi.Action {
         public KanAction(int playerId, List<GameTiles> tiles, int priorityDelta = 0) : base(playerId, tiles) {
             priority = ActionPriority.Kan + priorityDelta;
         }
-
-        public override Task OnResponse(int response) {
-            throw new System.NotImplementedException();
-        }
     }
 }

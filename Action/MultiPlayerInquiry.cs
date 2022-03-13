@@ -21,10 +21,11 @@ namespace RabiRiichi.Action {
         public readonly int id;
         public readonly List<SinglePlayerInquiry> playerInquiries = new();
         public readonly TaskCompletionSource taskCompletionSource = new();
+        public readonly List<IPlayerAction> responses = new();
         /// <summary> 当前已回应的用户的最高优先级 </summary>
         private int curMaxPriority = int.MinValue;
         public AtomicBool hasExecuted { get; private set; } = new();
-        public Task WaitTillFinalized => taskCompletionSource.Task;
+        public Task WaitForResponse => taskCompletionSource.Task;
 
         public MultiPlayerInquiry(GameInfo info) {
             id = info.eventId.Next;
@@ -54,35 +55,34 @@ namespace RabiRiichi.Action {
             }
         }
 
-        /// <summary> 处理用户的回应 </summary>
+        /// <summary> 处理用户的回应，线程安全 </summary>
         /// <returns>
         /// 是否成功处理本次询问。
         /// 若返回true，应该终止等待，并无视关于此inquiry的后续回应
         /// </returns>
-        public Task<bool> OnResponse(InquiryResponse resp) {
+        public bool OnResponse(InquiryResponse resp) {
             if (hasExecuted) {
-                return Task.FromResult(false);
+                return true;
             }
             if (OnResponseWithoutTrigger(resp)) {
-                return Finalize();
+                if (hasExecuted.Exchange(true)) {
+                    return true;
+                }
+                if (curMaxPriority == int.MinValue) {
+                    // 没有用户做出有效回应
+                    curMaxPriority = playerInquiries.Max(x => x.curPriority);
+                }
+                // 仅触发优先级最高的操作（可能有多个用户）
+                if (responses.Count > 0) {
+                    throw new InvalidOperationException("MultiPlayerInquiry.OnResponse: responses already populated (multithread error?)");
+                }
+                responses.AddRange(playerInquiries
+                    .Where(x => x.curPriority == curMaxPriority)
+                    .Select(x => x.Selected));
+                taskCompletionSource.SetResult();
+                return true;
             }
-            return Task.FromResult(false);
-        }
-
-        public async Task<bool> Finalize() {
-            if (hasExecuted.Exchange(true)) {
-                return false;
-            }
-            if (curMaxPriority == int.MinValue) {
-                // 没有用户做出有效回应
-                curMaxPriority = playerInquiries.Max(x => x.curPriority);
-            }
-            // 仅触发优先级最高的操作（可能有多个用户）
-            foreach (var action in playerInquiries.Where(x => x.curPriority == curMaxPriority)) {
-                await action.Trigger();
-            }
-            taskCompletionSource.SetResult();
-            return true;
+            return false;
         }
     }
 }

@@ -1,9 +1,7 @@
 using RabiRiichi.Interact;
-using RabiRiichi.Riichi;
 using RabiRiichi.Util;
 using System;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Action {
@@ -23,7 +21,6 @@ namespace RabiRiichi.Action {
     public interface IPlayerAction : IRabiPlayerMessage {
         int priority { get; }
         bool OnResponse(string response);
-        Task Trigger();
     }
 
     /// <summary> 等待玩家做出选择 </summary>
@@ -40,14 +37,11 @@ namespace RabiRiichi.Action {
         /// <summary>
         /// 初始值必须是一个有效的回应，用于用户超时跳过的情况
         /// </summary>
-        protected T response = default;
+        protected T response;
 
         public PlayerAction(int playerId) {
             this.playerId = playerId;
         }
-
-        /// <summary> 处理回复 </summary>
-        public abstract Task OnResponse(T response);
 
         public bool OnResponse(string response) {
             T resp;
@@ -63,8 +57,8 @@ namespace RabiRiichi.Action {
             return false;
         }
 
-        public virtual Task Trigger() => OnResponse(response);
-
-        public virtual bool ValidateResponse(T response) => true;
+        public virtual bool ValidateResponse(T response) {
+            return true;
+        }
     }
 }
