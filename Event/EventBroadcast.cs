@@ -3,8 +3,8 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace RabiRiichi.Event.InGame.Listener {
-    public static class MessageSender {
+namespace RabiRiichi.Event {
+    public static class EventBroadcast {
         public static Task Send(EventBase ev) {
             var players = ev.game.players.AsEnumerable();
             if (ev is IRabiPlayerMessage msg

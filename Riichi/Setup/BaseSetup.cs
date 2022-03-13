@@ -3,7 +3,6 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using RabiRiichi.Event;
 using RabiRiichi.Event.InGame.Listener;
 using RabiRiichi.Pattern;
-using RabiRiichi.Riichi;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -87,9 +86,10 @@ namespace RabiRiichi.Riichi.Setup {
             DealHandListener.Register(eventBus);
             DrawTileListener.Register(eventBus);
             IncreaseJunListener.Register(eventBus);
-            MessageSender.Register(eventBus);
             RevealDoraListener.Register(eventBus);
             WaitPlayerActionListener.Register(eventBus);
+
+            EventBroadcast.Register(eventBus);
         }
 
         /// <summary> 初始化阶段 </summary>
