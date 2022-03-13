@@ -49,6 +49,18 @@ namespace System.Linq {
             }
         }
 
+        private static IEnumerable<IEnumerable<TSource>> SubsetHelper<TSource>(List<TSource> list, int n) {
+            if (n > list.Count) {
+                yield break;
+            }
+            foreach (var result in list.Skip(1).Subset(n - 1)) {
+                yield return result.Prepend(list[0]);
+            }
+            foreach (var result in list.Skip(1).Subset(n)) {
+                yield return result;
+            }
+        }
+
         /// <summary>
         /// 生成所有source的大小为n的子集
         /// </summary>
@@ -56,14 +68,17 @@ namespace System.Linq {
             if (source is not List<TSource> list) {
                 list = source.ToList();
             }
-            if (list.Count > MAX_SUBSET_SIZE) {
-                throw new ArgumentException($"List size cannot be greater than {MAX_SUBSET_SIZE}");
-            }
             if (n < 0 || n > list.Count) {
                 yield break;
             }
-            foreach (var indices in subsetIndices[list.Count][n]) {
-                yield return indices.Select(i => list[i]);
+            if (list.Count > MAX_SUBSET_SIZE) {
+                foreach (var result in SubsetHelper(list, n)) {
+                    yield return result;
+                }
+            } else {
+                foreach (var indices in subsetIndices[list.Count][n]) {
+                    yield return indices.Select(index => list[index]);
+                }
             }
         }
         #endregion
