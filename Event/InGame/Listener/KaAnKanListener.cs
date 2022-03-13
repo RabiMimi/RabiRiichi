@@ -1,3 +1,5 @@
+using RabiRiichi.Action;
+using RabiRiichi.Action.Resolver;
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Event.InGame.Listener {
@@ -8,8 +10,20 @@ namespace RabiRiichi.Event.InGame.Listener {
             } else {
                 ev.player.hand.KaKan(ev.kan);
             }
-            // TODO: Use RonResolver to resolve possible ChanKan and schedule next event
+            var inquiry = new MultiPlayerInquiry(ev.game.info);
+            ev.game.Get<ChanKanResolver>().Resolve(ev.player, ev.incoming, inquiry);
+            ev.game.eventBus.Queue(new WaitPlayerActionEvent(ev.game, inquiry));
+            AfterInquiry(inquiry).ConfigureAwait(false);
             return Task.CompletedTask;
+        }
+
+        private static async Task AfterInquiry(MultiPlayerInquiry inquiry) {
+            await inquiry.WaitForResponse;
+            foreach (var action in inquiry.responses) {
+                if (action is RonAction) {
+                    // TODO: 和了
+                }
+            }
         }
 
         public static void Register(EventBus eventBus) {

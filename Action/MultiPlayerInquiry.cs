@@ -25,7 +25,8 @@ namespace RabiRiichi.Action {
         /// <summary> 当前已回应的用户的最高优先级 </summary>
         private int curMaxPriority = int.MinValue;
         public AtomicBool hasExecuted { get; private set; } = new();
-        public Task WaitForResponse => taskCompletionSource.Task;
+        public Task WaitForResponse => IsEmpty ? Task.CompletedTask : taskCompletionSource.Task;
+        public bool IsEmpty => playerInquiries.Count == 0;
 
         public MultiPlayerInquiry(GameInfo info) {
             id = info.eventId.Next;

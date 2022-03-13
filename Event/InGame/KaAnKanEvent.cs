@@ -9,10 +9,12 @@ namespace RabiRiichi.Event.InGame {
         public override string name => "kakan_or_ankan";
         #region Request
         [RabiBroadcast] public readonly Kan kan;
+        public readonly GameTile incoming;
         public bool isAnKan => kan.IsClose;
         #endregion
-        public KaAnKanEvent(Game game, int playerId, Kan kan) : base(game, playerId) {
+        public KaAnKanEvent(Game game, int playerId, Kan kan, GameTile incoming) : base(game, playerId) {
             this.kan = kan;
+            this.incoming = incoming;
         }
     }
 }
