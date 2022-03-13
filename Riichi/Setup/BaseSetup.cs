@@ -103,6 +103,7 @@ namespace RabiRiichi.Riichi.Setup {
             IncreaseJunListener.Register(eventBus);
             RevealDoraListener.Register(eventBus);
             WaitPlayerActionListener.Register(eventBus);
+            KaAnKanListener.Register(eventBus);
 
             EventBroadcast.Register(eventBus);
         }
