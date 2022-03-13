@@ -3,21 +3,26 @@ using RabiRiichi.Riichi;
 
 namespace RabiRiichi.Event.InGame {
     public abstract class PlayerEvent : EventBase, IRabiPlayerMessage {
-        public Player player { get; protected set; }
-        [RabiBroadcast] public int playerId => player.id;
+        public Player player => game.GetPlayer(playerId);
+        [RabiBroadcast] public int playerId { get; init; }
 
-        public PlayerEvent(Game game, Player player) : base(game) {
-            this.player = player;
+        public PlayerEvent(Game game, int playerId) : base(game) {
+            this.playerId = playerId;
         }
     }
 
     [RabiPrivate]
     public abstract class PrivatePlayerEvent : PlayerEvent {
-        public PrivatePlayerEvent(Game game, Player player) : base(game, player) { }
+        public PrivatePlayerEvent(Game game, int playerId) : base(game, playerId) { }
     }
 
     [RabiBroadcast]
     public abstract class BroadcastPlayerEvent : PlayerEvent {
-        public BroadcastPlayerEvent(Game game, Player player) : base(game, player) { }
+        public BroadcastPlayerEvent(Game game, int playerId) : base(game, playerId) { }
+    }
+
+    [RabiPrivate]
+    public abstract class IgnoredEvent : PlayerEvent {
+        public IgnoredEvent(Game game) : base(game, -1) { }
     }
 }

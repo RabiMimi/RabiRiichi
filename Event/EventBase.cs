@@ -15,6 +15,7 @@ namespace RabiRiichi.Event {
     }
 
     public abstract class EventBase : IRabiMessage {
+        [RabiBroadcast] public int id;
         [RabiBroadcast] public abstract string name { get; }
         [RabiBroadcast] public RabiMessageType msgType => RabiMessageType.Event;
 
@@ -32,6 +33,7 @@ namespace RabiRiichi.Event {
 
         public EventBase(Game game) {
             this.game = game;
+            id = game.info.eventId.Next;
         }
 
         /// <summary> 强制取消该事件 </summary>

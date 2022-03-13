@@ -11,6 +11,6 @@ namespace RabiRiichi.Event.InGame {
         public Tiles tiles;
         #endregion
 
-        public DealHandEvent(Game game, Player player) : base(game, player) { }
+        public DealHandEvent(Game game, int playerId) : base(game, playerId) { }
     }
 }

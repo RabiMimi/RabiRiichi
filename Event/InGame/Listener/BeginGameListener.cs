@@ -13,7 +13,7 @@ namespace RabiRiichi.Event.InGame.Listener {
         public static Task AfterUpdateInfo(BeginGameEvent e) {
             var bus = e.game.eventBus;
             foreach (var player in e.game.players) {
-                bus.Queue(new DealHandEvent(e.game, player));
+                bus.Queue(new DealHandEvent(e.game, player.id));
             }
             bus.Queue(new RevealDoraEvent(e.game));
             return Task.CompletedTask;

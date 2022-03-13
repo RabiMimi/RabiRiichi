@@ -1,4 +1,6 @@
 using RabiRiichi.Riichi.Setup;
+using RabiRiichi.Util;
+
 
 namespace RabiRiichi.Riichi {
     public class GameConfig {
@@ -26,8 +28,10 @@ namespace RabiRiichi.Riichi {
         public int honba = 0;
 
         /// <summary> 游戏内用时间戳 </summary>
-        public int timeStamp = 0;
-        public int Time(bool advance = true) => timeStamp += advance ? 1 : 0;
+        public AutoIncrementInt timeStamp;
+
+        /// <summary> 事件ID </summary>
+        public AutoIncrementInt eventId;
 
         /// <summary> 庄家 </summary>
         public int Banker => ((int)wind + round) % config.playerCount;
@@ -42,7 +46,7 @@ namespace RabiRiichi.Riichi {
         /// <summary> 清空本局数据以开始下一局 </summary>
         public void Reset() {
             firstJun = true;
-            timeStamp = 0;
+            timeStamp.Reset();
         }
     }
 }

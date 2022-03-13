@@ -68,7 +68,7 @@ namespace RabiRiichi.Riichi {
             return tile.IsSangen || tile.IsSame(Tile.From(info.wind));
         }
         public Player GetPlayer(int index) => players[index];
-        public int Time => info.timeStamp;
+        public int Time => info.timeStamp.Value;
         #endregion
 
         #region Start
