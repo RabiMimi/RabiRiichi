@@ -32,7 +32,7 @@ namespace RabiRiichi.Event.InGame.Listener {
         public static Task DrawTile(DrawTileEvent e) {
             e.game.wall.Draw(e.tile);
             var resolvers = GetDrawTileResolvers(e.game);
-            var inquiry = new MultiPlayerInquiry();
+            var inquiry = new MultiPlayerInquiry(e.game.info);
             var incoming = new GameTile(e.tile) {
                 source = e.source,
             };

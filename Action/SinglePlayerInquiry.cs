@@ -7,6 +7,10 @@ namespace RabiRiichi.Action {
     public class SinglePlayerInquiry : IRabiPlayerMessage {
         [RabiBroadcast] public RabiMessageType msgType => RabiMessageType.Inquiry;
         [RabiBroadcast] public readonly List<IPlayerAction> actions = new();
+        /// <summary>
+        /// 对应的Event Id（和Event共享，同一次Inquiry的所有Player相同）
+        /// </summary>
+        [RabiBroadcast] public readonly int id;
         public int playerId { get; init; }
         /// <summary>
         /// 所有操作的最高优先级
@@ -20,8 +24,9 @@ namespace RabiRiichi.Action {
         public int responseIndex = 0;
         public bool hasResponded = false;
 
-        public SinglePlayerInquiry(int playerId) {
+        public SinglePlayerInquiry(int playerId, int eventId) {
             this.playerId = playerId;
+            id = eventId;
         }
 
         public SinglePlayerInquiry AddAction(IPlayerAction action, bool isDefault = false) {

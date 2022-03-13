@@ -1,3 +1,4 @@
+using RabiRiichi.Riichi;
 using RabiRiichi.Util;
 using System;
 using System.Collections.Generic;
@@ -17,6 +18,7 @@ namespace RabiRiichi.Action {
     }
 
     public class MultiPlayerInquiry {
+        public readonly int id;
         public readonly List<SinglePlayerInquiry> playerInquiries = new();
         public readonly TaskCompletionSource taskCompletionSource = new();
         /// <summary> 当前已回应的用户的最高优先级 </summary>
@@ -24,11 +26,15 @@ namespace RabiRiichi.Action {
         public AtomicBool hasExecuted { get; private set; } = new();
         public Task WaitTillFinalized => taskCompletionSource.Task;
 
+        public MultiPlayerInquiry(GameInfo info) {
+            id = info.eventId.Next;
+        }
+
         /// <summary> 添加一个PlayerAction，仅在构建inquiry被调用，非线程安全 </summary>
         internal MultiPlayerInquiry Add(IPlayerAction action, bool isDefault = false) {
             var list = playerInquiries.Find(x => x.playerId == action.playerId);
             if (list == null) {
-                list = new SinglePlayerInquiry(action.playerId);
+                list = new SinglePlayerInquiry(action.playerId, id);
                 playerInquiries.Add(list);
             }
             list.AddAction(action, isDefault);

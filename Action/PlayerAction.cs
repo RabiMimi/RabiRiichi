@@ -42,11 +42,12 @@ namespace RabiRiichi.Action {
         /// </summary>
         protected T response = default;
 
-        public Func<T, Task> onResponse { get; set; }
-
         public PlayerAction(int playerId) {
             this.playerId = playerId;
         }
+
+        /// <summary> 处理回复 </summary>
+        public abstract Task OnResponse(T response);
 
         public bool OnResponse(string response) {
             T resp;
@@ -62,7 +63,7 @@ namespace RabiRiichi.Action {
             return false;
         }
 
-        public virtual Task Trigger() => onResponse == null ? Task.CompletedTask : onResponse(response);
+        public virtual Task Trigger() => OnResponse(response);
 
         public virtual bool ValidateResponse(T response) => true;
     }

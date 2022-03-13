@@ -1,4 +1,5 @@
-using RabiRiichi.Riichi;
+using System.Threading.Tasks;
+
 
 namespace RabiRiichi.Action {
     public class SkipAction : ConfirmAction {
@@ -6,6 +7,9 @@ namespace RabiRiichi.Action {
 
         public SkipAction(int playerId, int priorityDelta = 0) : base(playerId) {
             priority = ActionPriority.Skip + priorityDelta;
+        }
+        public override Task OnResponse(bool response) {
+            throw new System.NotImplementedException();
         }
     }
 }

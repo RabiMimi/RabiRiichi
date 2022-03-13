@@ -24,7 +24,7 @@ namespace RabiRiichi.Action.Resolver {
                 return false;
             }
             tiles.Sort();
-            output.Add(new ChooseTileAction(player.id, tiles));
+            output.Add(new PlayTileAction(player.id, tiles));
             return true;
         }
     }
