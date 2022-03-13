@@ -1,3 +1,4 @@
+using RabiRiichi.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,17 +16,16 @@ namespace RabiRiichi.Action {
         }
     }
 
-    // TODO: Make it thread safe
     public class MultiPlayerInquiry {
         public readonly List<SinglePlayerInquiry> playerInquiries = new();
         public readonly TaskCompletionSource taskCompletionSource = new();
         /// <summary> 当前已回应的用户的最高优先级 </summary>
         private int curMaxPriority = int.MinValue;
-        public bool hasExecuted { get; private set; } = false;
-
+        public AtomicBool hasExecuted { get; private set; } = new();
         public Task WaitTillFinalized => taskCompletionSource.Task;
 
-        public MultiPlayerInquiry Add(IPlayerAction action, bool isDefault = false) {
+        /// <summary> 添加一个PlayerAction，仅在构建inquiry被调用，非线程安全 </summary>
+        internal MultiPlayerInquiry Add(IPlayerAction action, bool isDefault = false) {
             var list = playerInquiries.Find(x => x.playerId == action.playerId);
             if (list == null) {
                 list = new SinglePlayerInquiry(action.playerId);
@@ -35,23 +35,24 @@ namespace RabiRiichi.Action {
             return this;
         }
 
-        /// <summary>
-        /// 处理用户的回应，但是不会触发操作
-        /// </summary>
-        /// <returns>是否可以终止等待（已无用户可以做出优先级更高或相同的回应）</returns>
+        /// <summary> 处理用户的回应，但是不会触发操作 </summary>
+        /// <returns> 是否可以终止等待（已无用户可以做出优先级更高或相同的回应） </returns>
         private bool OnResponseWithoutTrigger(InquiryResponse resp) {
-            var list = playerInquiries.Find(x => x.playerId == resp.playerId);
-            if (list == null || !list.OnResponse(resp.index, resp.response)) {
-                return false;
+            lock (playerInquiries) {
+                var list = playerInquiries.Find(x => x.playerId == resp.playerId);
+                if (list == null || !list.OnResponse(resp.index, resp.response)) {
+                    return false;
+                }
+                curMaxPriority = Math.Max(curMaxPriority, list.curPriority);
+                return playerInquiries.All(x => x.hasResponded || x.maxPriority < curMaxPriority);
             }
-            curMaxPriority = Math.Max(curMaxPriority, list.curPriority);
-            return playerInquiries.All(x => x.hasResponded || x.maxPriority < curMaxPriority);
         }
 
-        /// <summary>
-        /// 处理用户的回应
-        /// </summary>
-        /// <returns>是否成功处理本次询问。若返回true，应该终止等待，并无视关于此inquiry的后续回应</returns>
+        /// <summary> 处理用户的回应 </summary>
+        /// <returns>
+        /// 是否成功处理本次询问。
+        /// 若返回true，应该终止等待，并无视关于此inquiry的后续回应
+        /// </returns>
         public Task<bool> OnResponse(InquiryResponse resp) {
             if (hasExecuted) {
                 return Task.FromResult(false);
@@ -63,10 +64,9 @@ namespace RabiRiichi.Action {
         }
 
         public async Task<bool> Finalize() {
-            if (hasExecuted) {
+            if (hasExecuted.Exchange(true)) {
                 return false;
             }
-            hasExecuted = true;
             if (curMaxPriority == int.MinValue) {
                 // 没有用户做出有效回应
                 curMaxPriority = playerInquiries.Max(x => x.curPriority);
