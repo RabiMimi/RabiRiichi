@@ -14,7 +14,10 @@ namespace RabiRiichi.Riichi {
         public bool IsClose { get; protected set; }
 
         /// <summary> 花色 </summary>
-        public TileSuit Suit => this[0].tile.Suit;
+        public TileSuit Suit => First.tile.Suit;
+
+        /// <summary> 第一张牌 </summary>
+        public GameTile First => this[0];
 
         private void Init() {
             Sort();
@@ -102,9 +105,9 @@ namespace RabiRiichi.Riichi {
         }
 
         public override bool IsSame(GameTiles other) {
-            if (other is not Shun)
+            if (other is not Shun shun)
                 return false;
-            return this[0].IsSame(other[0]);
+            return First.IsSame(shun.First);
         }
     }
 
@@ -121,7 +124,7 @@ namespace RabiRiichi.Riichi {
         public override bool IsSame(GameTiles other) {
             if (other is not (Kou or Kan))
                 return false;
-            return this[0].IsSame(other[0]);
+            return First.IsSame((other as MenLike).First);
         }
     }
 
@@ -153,7 +156,7 @@ namespace RabiRiichi.Riichi {
         public override bool IsSame(GameTiles other) {
             if (other is not (Kou or Kan))
                 return false;
-            return this[0].IsSame(other[0]);
+            return First.IsSame((other as MenLike).First);
         }
     }
 
@@ -167,9 +170,9 @@ namespace RabiRiichi.Riichi {
         }
 
         public override bool IsSame(GameTiles other) {
-            if (other is not Jantou)
+            if (other is not Jantou jantou)
                 return false;
-            return this[0].IsSame(other[0]);
+            return First.IsSame(jantou.First);
         }
     }
 
@@ -183,9 +186,9 @@ namespace RabiRiichi.Riichi {
         }
 
         public override bool IsSame(GameTiles other) {
-            if (other is not Musou)
+            if (other is not Musou musou)
                 return false;
-            return this[0].IsSame(other[0]);
+            return First.IsSame(musou.First);
         }
     }
 }

@@ -11,7 +11,7 @@ namespace RabiRiichi.Pattern {
         }
 
         public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, Scorings scorings) {
-            if (groups.All(gr => gr is not Shun && gr[0].tile.Is19Z)) {
+            if (groups.All(gr => gr is not Shun && gr.First.tile.Is19Z)) {
                 scorings.Remove(afterPatterns);
                 scorings.Add(new Scoring(ScoringType.Han, 2, this));
                 return true;

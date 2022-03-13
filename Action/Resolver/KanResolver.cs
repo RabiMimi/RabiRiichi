@@ -9,26 +9,35 @@ namespace RabiRiichi.Action.Resolver {
     /// </summary>
     public class KanResolver : ResolverBase {
         protected override IEnumerable<Player> ResolvePlayers(Player player, GameTile tile) {
-            if (tile.fromPlayer != null) {
-                // 来自玩家的牌，明杠
+            if (tile.IsTsumo) {
+                // 暗杠或加杠
+                yield return player;
+            } else {
+                // 来自别的玩家的牌，大明杠
                 foreach (var p in player.game.players.Where(p => !p.SamePlayer(player)))
                     yield return p;
-            } else {
-                // 暗杠
-                yield return player;
             }
         }
 
         protected override bool ResolveAction(Player player, GameTile incoming, MultiPlayerInquiry output) {
-            // TODO: 加杠
-            var hand = player.hand;
             if (player.game.wall.IsHaitei) {
                 return false;
             }
+            var hand = player.hand;
             var tile = incoming.tile.WithoutDora;
             var current = new List<GameTile> { incoming };
             var result = new List<GameTiles>();
+
+            // 大明杠或暗杠
             CheckCombo(hand.freeTiles, result, current, tile, tile, tile);
+            // 加杠
+            if (incoming.IsTsumo) {
+                var groups = hand.fuuro.Where(g => g is Kou && g.First.tile.IsSame(incoming.tile));
+                foreach (var group in groups) {
+                    current.AddRange(new GameTiles(group.Append(incoming)));
+                }
+            }
+
             if (result.Count == 0) {
                 return false;
             }

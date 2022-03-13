@@ -11,12 +11,12 @@ namespace RabiRiichi.Pattern {
         public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, Scorings scorings) {
             bool isSanshoku = groups
                 .Where(gr => gr is not Jantou)
-                .OrderBy(gr => gr[0])
+                .OrderBy(gr => gr.First)
                 .Subset(3)
                 .Any(grs => grs.All((gr, index)
                     => gr is Kan or Kou
                     && (int)gr.Suit == index + 1
-                    && gr[0].tile.Num == grs.First()[0].tile.Num));
+                    && gr.First.tile.Num == grs.First().First.tile.Num));
             // TODO: (Frenqy) Finish this
             return false;
         }
