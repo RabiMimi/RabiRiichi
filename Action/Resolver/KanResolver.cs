@@ -8,11 +8,19 @@ namespace RabiRiichi.Action.Resolver {
     /// 判定是否能杠
     /// </summary>
     public class KanResolver : ResolverBase {
-        protected override IEnumerable<Player> ResolvePlayers(Player player, GameTile _) {
-            return player.game.players.Where(p => !p.SamePlayer(player));
+        protected override IEnumerable<Player> ResolvePlayers(Player player, GameTile tile) {
+            if (tile.fromPlayer != null) {
+                // 来自玩家的牌，明杠
+                foreach (var p in player.game.players.Where(p => !p.SamePlayer(player)))
+                    yield return p;
+            } else {
+                // 暗杠
+                yield return player;
+            }
         }
 
         protected override bool ResolveAction(Player player, GameTile incoming, MultiPlayerInquiry output) {
+            // TODO: 加杠
             var hand = player.hand;
             if (player.game.wall.IsHaitei) {
                 return false;

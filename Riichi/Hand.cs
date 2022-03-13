@@ -127,7 +127,6 @@ namespace RabiRiichi.Riichi {
             tiles.ForEach(tile => {
                 tile.player = player;
                 tile.source = source;
-                tile.riichi = false;
                 Remove(tile);
             });
         }

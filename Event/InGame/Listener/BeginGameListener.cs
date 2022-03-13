@@ -19,6 +19,7 @@ namespace RabiRiichi.Event.InGame.Listener {
             }
             bus.Queue(new RevealDoraEvent(e.game));
             bus.Queue(new IncreaseJunEvent(e.game, banker));
+            bus.Queue(new DrawTileEvent(e.game, banker));
             return Task.CompletedTask;
         }
 
