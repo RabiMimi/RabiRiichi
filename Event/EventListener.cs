@@ -4,6 +4,11 @@ using System.Threading.Tasks;
 
 
 namespace RabiRiichi.Event {
+    public enum EventScope {
+        /// <summary> 本局 </summary>
+        Round
+    }
+
     /// <summary>
     /// 自定义事件监听器，一般临时使用
     /// </summary>
@@ -53,18 +58,35 @@ namespace RabiRiichi.Event {
         /// <summary>
         /// 取消所有监听
         /// </summary>
-        public void CancelAll() {
+        public void Cancel() {
             foreach (var listener in listeners) {
                 eventBus.Unregister(listener);
             }
+            listeners.Clear();
+        }
+
+        private Task CancelHelper<U>(U _) where U : EventBase {
+            Cancel();
+            return Task.CompletedTask;
         }
 
         /// <summary>
-        /// 取消一个监听
+        /// 在某个事件成功触发后，取消所有监听
         /// </summary>
-        public void Cancel(Func<T, Task> handler) {
-            eventBus.Unregister(handler);
-            listeners.Remove(handler);
+        public EventListener<T> CancelOn<U>() where U : EventBase {
+            eventBus.Register<U>(CancelHelper, EventPriority.After + PRIORITY_DELTA, 1);
+            return this;
+        }
+
+        public EventListener<T> ScopeTo(EventScope scope) {
+            switch (scope) {
+                case EventScope.Round:
+                    // TODO: Cancel on round end event
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(scope), scope, "Unknown event scope");
+            }
+            return this;
         }
     }
 

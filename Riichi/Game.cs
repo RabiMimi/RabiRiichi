@@ -24,7 +24,7 @@ namespace RabiRiichi.Riichi {
 
 
         public Game(GameConfig config) {
-            var rand = new Rand((int)(DateTimeOffset.Now.ToUnixTimeMilliseconds() & 0xffffffff));
+            var rand = new Rand((int)(config.seed ?? (DateTimeOffset.Now.ToUnixTimeMilliseconds() & 0xffffffff)));
             players = new Player[config.playerCount];
             var serviceCollection = new ServiceCollection();
 

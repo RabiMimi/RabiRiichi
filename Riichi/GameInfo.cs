@@ -7,6 +7,7 @@ namespace RabiRiichi.Riichi {
         public int minHan = 1;
         public BaseSetup setup = new RiichiSetup();
         public IActionCenter actionCenter = null;
+        public int? seed;
     }
 
     public enum GamePhase {
