@@ -14,12 +14,13 @@ namespace RabiRiichi.Riichi {
 
     public class Game {
         public const int HandSize = 13;
-        public readonly ServiceProvider diContainer;
+        private readonly ServiceProvider diContainer;
 
         public readonly GameInfo info;
         public GameConfig config => info.config;
         public readonly Wall wall;
         public readonly EventBus eventBus;
+        public readonly JsonStringify json;
         public readonly Player[] players;
 
 
@@ -51,9 +52,10 @@ namespace RabiRiichi.Riichi {
             diContainer = serviceCollection.BuildServiceProvider();
 
             // Get instances
-            eventBus = diContainer.GetService<EventBus>();
-            info = diContainer.GetService<GameInfo>();
-            wall = diContainer.GetService<Wall>();
+            eventBus = Get<EventBus>();
+            info = Get<GameInfo>();
+            wall = Get<Wall>();
+            json = Get<JsonStringify>();
 
             // Custom setup
             config.setup.Setup(diContainer);
@@ -68,7 +70,7 @@ namespace RabiRiichi.Riichi {
             return tile.IsSangen || tile.IsSame(Tile.From(info.wind));
         }
         public Player GetPlayer(int index) => players[index];
-        public int Time => info.timeStamp.Value;
+        public int Time => info.timeStamp;
         #endregion
 
         #region Start

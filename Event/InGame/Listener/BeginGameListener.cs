@@ -12,10 +12,13 @@ namespace RabiRiichi.Event.InGame.Listener {
 
         public static Task AfterUpdateInfo(BeginGameEvent e) {
             var bus = e.game.eventBus;
-            foreach (var player in e.game.players) {
-                bus.Queue(new DealHandEvent(e.game, player.id));
+            int banker = e.game.info.Banker;
+            for (int i = 0; i < e.game.config.playerCount; i++) {
+                int playerId = (i + banker) % e.game.config.playerCount;
+                bus.Queue(new DealHandEvent(e.game, playerId));
             }
             bus.Queue(new RevealDoraEvent(e.game));
+            bus.Queue(new IncreaseJunEvent(e.game, banker));
             return Task.CompletedTask;
         }
 

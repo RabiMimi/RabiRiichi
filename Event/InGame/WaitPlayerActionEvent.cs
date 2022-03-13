@@ -2,7 +2,7 @@ using RabiRiichi.Action;
 using RabiRiichi.Riichi;
 
 namespace RabiRiichi.Event.InGame {
-    public class WaitPlayerActionEvent : EventBase {
+    public class WaitPlayerActionEvent : IgnoredEvent {
         public override string name => "wait_player_action";
 
         #region Request
