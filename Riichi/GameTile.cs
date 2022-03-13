@@ -35,6 +35,8 @@ namespace RabiRiichi.Riichi {
         public Player player;
         /// <summary> 弃牌的时间戳 </summary>
         public int discardTime = -1;
+        /// <summary> 该牌成为副露或暗杠的时间戳 </summary>
+        public int formTime = -1;
         /// <summary> 是否是公开牌 </summary>
         // public bool visible = false;
         /// <summary> 是否是立直宣告牌 </summary>

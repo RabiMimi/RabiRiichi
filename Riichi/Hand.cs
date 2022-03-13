@@ -127,6 +127,9 @@ namespace RabiRiichi.Riichi {
             tiles.ForEach(tile => {
                 tile.player = player;
                 tile.source = source;
+                if (tile.formTime == -1) {
+                    tile.formTime = game.info.timeStamp.Next;
+                }
                 Remove(tile);
             });
         }
@@ -144,7 +147,6 @@ namespace RabiRiichi.Riichi {
         }
 
         public void KaKan(Kan tiles) {
-            tiles.IsKakan = true;
             var original = fuuro.Find(gr => gr is Kou && (gr.Contains(tiles[0]) || gr.Contains(tiles[1]))) as Kou;
             Debug.Assert(original != null, "加杠了个空气");
             fuuro.Remove(original);
