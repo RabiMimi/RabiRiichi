@@ -6,27 +6,44 @@ namespace RabiRiichi.Riichi.Setup {
     public class RiichiSetup : BaseSetup {
 
         protected override void InitPatterns() {
-            basePatterns = new Type[] {
-                typeof(Base33332),
-                typeof(Base72),
-                typeof(Base13_1)
-            };
-            stdPatterns = new Type[] {
-                typeof(一杯口),
-                typeof(平和),
-                typeof(役牌中),
-                typeof(役牌发),
-                typeof(役牌白),
-                typeof(役牌自风),
-                typeof(役牌场风),
-                typeof(断幺九),
-                typeof(门清自摸和)
-            };
-            bonusPatterns = new Type[] {
-                typeof(赤宝牌),
-                typeof(宝牌),
-                typeof(里宝牌)
-            };
+            // Base patterns
+            AddBasePattern<Base33332>();
+            AddBasePattern<Base72>();
+            AddBasePattern<Base13_1>();
+
+            // Std patterns
+            AddStdPattern<一发>();
+            AddStdPattern<一杯口>();
+            AddStdPattern<岭上开花>();
+            AddStdPattern<平和>();
+            AddStdPattern<役牌中>();
+            AddStdPattern<役牌发>();
+            AddStdPattern<役牌场风>();
+            AddStdPattern<役牌白>();
+            AddStdPattern<役牌自风>();
+            AddStdPattern<断幺九>();
+            AddStdPattern<枪杠>();
+            AddStdPattern<河底捞鱼>();
+            AddStdPattern<海底摸月>();
+            AddStdPattern<立直>();
+            AddStdPattern<门清自摸和>();
+            AddStdPattern<纯全带幺九>();
+            AddStdPattern<一气通贯>();
+            AddStdPattern<三暗刻>();
+            AddStdPattern<三杠子>();
+            AddStdPattern<三色同刻>();
+            AddStdPattern<双立直>();
+            AddStdPattern<对对和>();
+            AddStdPattern<混全带幺九>();
+            AddStdPattern<混老头>();
+            AddStdPattern<四暗刻>();
+            AddStdPattern<四杠子>();
+            AddStdPattern<清老头>();
+
+            // Bonus pattern
+            AddBonusPattern<赤宝牌>();
+            AddBonusPattern<宝牌>();
+            AddBonusPattern<里宝牌>();
         }
     }
 }

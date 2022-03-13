@@ -10,15 +10,30 @@ using System.Linq;
 namespace RabiRiichi.Riichi.Setup {
     public class BaseSetup {
         /// <summary> 底和 </summary>
-        protected Type[] basePatterns { get; set; }
+        private readonly List<Type> basePatterns = new();
 
         /// <summary> 役种 </summary>
-        protected Type[] stdPatterns { get; set; }
+        private readonly List<Type> stdPatterns = new();
 
         /// <summary> 无役型役种 </summary>
-        protected Type[] bonusPatterns { get; set; }
+        private readonly List<Type> bonusPatterns = new();
 
         #region Inject
+
+        /// <summary> 注册Base Pattern </summary>
+        protected void AddBasePattern<T>() where T : BasePattern {
+            basePatterns.Add(typeof(T));
+        }
+
+        /// <summary> 注册Std Pattern </summary>
+        protected void AddStdPattern<T>() where T : StdPattern {
+            stdPatterns.Add(typeof(T));
+        }
+
+        /// <summary> 注册Bonus Pattern </summary>
+        protected void AddBonusPattern<T>() where T : StdPattern {
+            bonusPatterns.Add(typeof(T));
+        }
 
         /// <summary>
         /// 初始化<see cref="basePatterns"/>，<see cref="stdPatterns"/>，<see cref="bonusPatterns"/>
