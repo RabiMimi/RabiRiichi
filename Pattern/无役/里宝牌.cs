@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace RabiRiichi.Pattern {
     public class 里宝牌 : StdPattern {
-        public override bool Resolve(List<MenOrJantou> groups, Hand hand, GameTile incoming, Scorings scorings) {
+        public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, Scorings scorings) {
             if (!hand.riichi)
                 return false;
 

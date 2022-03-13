@@ -5,8 +5,8 @@ using System.Linq;
 
 namespace RabiRiichi.Riichi {
 
-    /// <summary> 面子或雀头 </summary>
-    public abstract class MenOrJantou : GameTiles {
+    /// <summary> 面子或雀头或单张 </summary>
+    public abstract class MenLike : GameTiles {
         /// <summary> 唯一确定该面子的值（忽略赤宝） </summary>
         public ulong Value { get; protected set; }
 
@@ -25,11 +25,11 @@ namespace RabiRiichi.Riichi {
             IsClose = this.All(t => t.IsTsumo);
         }
 
-        public MenOrJantou() { }
-        public MenOrJantou(IEnumerable<GameTile> tiles) : base(tiles) {
+        public MenLike() { }
+        public MenLike(IEnumerable<GameTile> tiles) : base(tiles) {
             Init();
         }
-        public MenOrJantou(IEnumerable<Tile> tiles) : base(tiles) {
+        public MenLike(IEnumerable<Tile> tiles) : base(tiles) {
             Init();
         }
 
@@ -70,7 +70,7 @@ namespace RabiRiichi.Riichi {
         }
 
         /// <summary> 根据牌返回最适合的类 </summary>
-        public static MenOrJantou From(List<GameTile> tiles) {
+        public static MenLike From(List<GameTile> tiles) {
             if (IsJan(tiles)) {
                 return new Jantou(tiles);
             } else if (IsKan(tiles)) {
@@ -87,13 +87,13 @@ namespace RabiRiichi.Riichi {
         }
 
         /// <summary> 根据牌返回最适合的类 </summary>
-        public static MenOrJantou From(List<Tile> tiles) {
+        public static MenLike From(List<Tile> tiles) {
             return From(new GameTiles(tiles));
         }
     }
 
     /// <summary> 顺子 </summary>
-    public class Shun : MenOrJantou {
+    public class Shun : MenLike {
         public Shun(IEnumerable<Tile> tiles) : base(tiles) {
             Logger.Assert(IsShun(this), "顺子必须是顺子");
         }
@@ -109,7 +109,7 @@ namespace RabiRiichi.Riichi {
     }
 
     /// <summary> 刻子 </summary>
-    public class Kou : MenOrJantou {
+    public class Kou : MenLike {
         public Kou(IEnumerable<Tile> tiles) : base(tiles) {
             Logger.Assert(IsKou(this), "刻子必须是刻子");
         }
@@ -126,7 +126,7 @@ namespace RabiRiichi.Riichi {
     }
 
     /// <summary> 杠子 </summary>
-    public class Kan : MenOrJantou {
+    public class Kan : MenLike {
         /// <summary> 是否是加杠 </summary>
         public bool IsKakan { get; set; }
         public Kan(IEnumerable<Tile> tiles, bool isKakan) : base(tiles) {
@@ -147,7 +147,7 @@ namespace RabiRiichi.Riichi {
     }
 
     /// <summary> 雀头 </summary>
-    public class Jantou : MenOrJantou {
+    public class Jantou : MenLike {
         public Jantou(IEnumerable<Tile> tiles) : base(tiles) {
             Logger.Assert(IsJan(this), "雀头必须是雀头");
         }
@@ -163,7 +163,7 @@ namespace RabiRiichi.Riichi {
     }
 
     /// <summary> 单牌，仅用于国士无双 </summary>
-    public class Musou : MenOrJantou {
+    public class Musou : MenLike {
         public Musou(IEnumerable<Tile> tiles) : base(tiles) {
             Logger.Assert(IsMusou(this), "单牌必须是单牌");
         }

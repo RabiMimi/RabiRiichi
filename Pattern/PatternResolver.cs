@@ -27,7 +27,7 @@ namespace RabiRiichi.Pattern {
         }
 
         private class ResolutionContext {
-            public List<MenOrJantou> group;
+            public List<MenLike> group;
             public Hand hand;
             public GameTile incoming;
             public Scorings scorings;
@@ -80,7 +80,7 @@ namespace RabiRiichi.Pattern {
         /// 检查是否和牌并计算得分最高的牌型
         /// </summary>
         public Scorings ResolveMaxScore(Hand hand, GameTile incoming, bool applyBonus) {
-            var groupList = new List<List<MenOrJantou>>();
+            var groupList = new List<List<MenLike>>();
             var context = new ResolutionContext {
                 hand = hand,
                 incoming = incoming,

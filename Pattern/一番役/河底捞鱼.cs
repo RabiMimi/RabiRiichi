@@ -6,7 +6,7 @@ namespace RabiRiichi.Pattern {
         public 河底捞鱼(AllBasePatterns allBasePatterns) {
             BaseOn(allBasePatterns);
         }
-        public override bool Resolve(List<MenOrJantou> groups, Hand hand, GameTile incoming, Scorings scorings) {
+        public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, Scorings scorings) {
             // TODO: 排除花天月底
             if (!incoming.IsTsumo && hand.game.wall.IsHaitei) {
                 scorings.Add(new Scoring(ScoringType.Han, 1, this));

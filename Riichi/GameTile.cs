@@ -21,8 +21,8 @@ namespace RabiRiichi.Riichi {
         KaKan,
         /// <summary> 暗杠 </summary>
         AnKan,
-        /// <summary> 明杠 </summary>
-        MinKan,
+        /// <summary> 大明杠 </summary>
+        DaiMinKan,
         /// <summary> 和 </summary>
         Ron,
     }

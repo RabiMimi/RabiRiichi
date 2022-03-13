@@ -9,7 +9,7 @@ namespace RabiRiichi.Pattern {
     public class Base13_1 : BasePattern {
         private static readonly Tiles T19Z = Tiles.T19Z;
 
-        public override bool Resolve(Hand hand, GameTile incoming, out List<List<MenOrJantou>> output) {
+        public override bool Resolve(Hand hand, GameTile incoming, out List<List<MenLike>> output) {
             output = null;
             // Check tile count
             if (hand.Count != (incoming == null ? Game.HandSize + 1 : Game.HandSize)) {
@@ -17,7 +17,7 @@ namespace RabiRiichi.Pattern {
             }
             // Check hand & groups valid
             var buckets = GetTileGroups(hand, incoming, true).GetAllBuckets();
-            List<MenOrJantou> ret = new();
+            List<MenLike> ret = new();
             bool has2 = false;
             foreach (var gr in buckets) {
                 if (gr.Count > 2 || !gr[0].tile.Is19Z) {
@@ -29,9 +29,9 @@ namespace RabiRiichi.Pattern {
                     }
                     has2 = true;
                 }
-                ret.Add(MenOrJantou.From(gr));
+                ret.Add(MenLike.From(gr));
             }
-            output = new List<List<MenOrJantou>>() { ret };
+            output = new List<List<MenLike>>() { ret };
             return true;
         }
 

@@ -10,7 +10,7 @@ namespace RabiRiichi.Pattern {
             After(混全带幺九);
         }
 
-        public override bool Resolve(List<MenOrJantou> groups, Hand hand, GameTile incoming, Scorings scorings) {
+        public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, Scorings scorings) {
             if (groups.All(gr => gr is not Shun && gr[0].tile.Is19Z)) {
                 scorings.Remove(afterPatterns);
                 scorings.Add(new Scoring(ScoringType.Han, 2, this));

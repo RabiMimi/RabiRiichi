@@ -7,7 +7,7 @@ namespace RabiRiichi.Pattern {
         public 断幺九(AllBasePatterns allBasePatterns) {
             BaseOn(allBasePatterns);
         }
-        public override bool Resolve(List<MenOrJantou> groups, Hand hand, GameTile incoming, Scorings scorings) {
+        public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, Scorings scorings) {
             // TODO: 食断
             if (groups.SelectMany(gr => gr).Any(tile => tile.tile.Is19Z))
                 return false;

@@ -8,7 +8,7 @@ namespace RabiRiichi.Pattern {
             BaseOn(base33332);
         }
 
-        public override bool Resolve(List<MenOrJantou> groups, Hand hand, GameTile incoming, Scorings scorings) {
+        public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, Scorings scorings) {
             bool isSanshoku = groups
                 .Where(gr => gr is not Jantou)
                 .OrderBy(gr => gr[0])

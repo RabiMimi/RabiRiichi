@@ -6,7 +6,7 @@ namespace RabiRiichi.Pattern {
         public 海底摸月(AllBasePatterns allBasePatterns) {
             BaseOn(allBasePatterns);
         }
-        public override bool Resolve(List<MenOrJantou> groups, Hand hand, GameTile incoming, Scorings scorings) {
+        public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, Scorings scorings) {
             if (incoming.IsTsumo && hand.game.wall.IsHaitei) {
                 scorings.Add(new Scoring(ScoringType.Han, 1, this));
                 return true;

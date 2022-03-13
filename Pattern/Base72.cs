@@ -6,7 +6,7 @@ using System.Linq;
 namespace RabiRiichi.Pattern {
 
     public class Base72 : BasePattern {
-        public override bool Resolve(Hand hand, GameTile incoming, out List<List<MenOrJantou>> output) {
+        public override bool Resolve(Hand hand, GameTile incoming, out List<List<MenLike>> output) {
             output = null;
             // Check tile count
             if (hand.Count != (incoming == null ? Game.HandSize + 1 : Game.HandSize)) {
@@ -18,14 +18,14 @@ namespace RabiRiichi.Pattern {
             }
             // Check hand & groups valid
             var tileGroups = GetTileGroups(hand, incoming, true);
-            var ret = new List<MenOrJantou>();
+            var ret = new List<MenLike>();
             foreach (var gr in tileGroups.GetAllBuckets()) {
                 if (gr.Count != 2) {
                     return false;
                 }
-                ret.Add(MenOrJantou.From(gr));
+                ret.Add(MenLike.From(gr));
             }
-            output = new List<List<MenOrJantou>> { ret };
+            output = new List<List<MenLike>> { ret };
             return true;
         }
 

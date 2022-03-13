@@ -8,8 +8,8 @@ using System.Linq;
 namespace RabiRiichiTests.Pattern {
     public class StdTestBuilder {
         protected virtual StdPattern V { get; set; }
-        protected List<MenOrJantou> groups = new();
-        protected List<MenOrJantou> fuuro = new();
+        protected List<MenLike> groups = new();
+        protected List<MenLike> fuuro = new();
         protected GameTiles freeTiles = new();
         protected GameTile incoming;
         protected Scorings scorings = new();
@@ -17,13 +17,13 @@ namespace RabiRiichiTests.Pattern {
         public Mock<Player> currentPlayer = new(MockBehavior.Default, 0, null);
         public Mock<Player> anotherPlayer = new(MockBehavior.Default, 1, null);
 
-        protected MenOrJantou Create(string tiles, int fuuroIndex) {
+        protected MenLike Create(string tiles, int fuuroIndex) {
             var t = new GameTiles(new Tiles(tiles));
             for (int i = 0; i < t.Count; i++) {
                 t[i].player = currentPlayer.Object;
                 t[i].fromPlayer = fuuroIndex == i ? anotherPlayer.Object : null;
             }
-            return MenOrJantou.From(t);
+            return MenLike.From(t);
         }
 
         /// <summary>
@@ -81,7 +81,7 @@ namespace RabiRiichiTests.Pattern {
             group.ForEach(g => g.player = currentPlayer.Object);
             freeTiles.AddRange(group.ToList());
             group.Add(this.incoming);
-            groups.Add(MenOrJantou.From(group));
+            groups.Add(MenLike.From(group));
             return this;
         }
 

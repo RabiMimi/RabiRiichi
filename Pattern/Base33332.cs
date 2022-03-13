@@ -8,8 +8,8 @@ using DpLoc = System.ValueTuple<byte, byte, byte, byte>;
 namespace RabiRiichi.Pattern {
     public class Base33332 : BasePattern {
         private int M;
-        private List<MenOrJantou> current;
-        private List<List<MenOrJantou>> output;
+        private List<MenLike> current;
+        private List<List<MenLike>> output;
         private GameTileBucket tileBucket;
 
         #region Resolve
@@ -31,8 +31,8 @@ namespace RabiRiichi.Pattern {
                 return ret;
             }
 
-            public MenOrJantou Remove(params Tile[] indexes) {
-                var gr = MenOrJantou.From(indexes.Select(index => Remove(index)).ToList());
+            public MenLike Remove(params Tile[] indexes) {
+                var gr = MenLike.From(indexes.Select(index => Remove(index)).ToList());
                 instance.current.Add(gr);
                 groupNum++;
                 return gr;
@@ -50,7 +50,7 @@ namespace RabiRiichi.Pattern {
         }
 
         /// <summary> 和了牌算进哪一组会影响符数计算，因此需要生成不同组合 </summary>
-        private static void GenerateOtherPatterns(List<MenOrJantou> group, GameTile incoming, List<List<MenOrJantou>> output) {
+        private static void GenerateOtherPatterns(List<MenLike> group, GameTile incoming, List<List<MenLike>> output) {
             // TODO:(Frenqy) 写test
             var existingMentsu = new List<ulong>();
             var incomingGroup = group.Find(gr => gr.Contains(incoming));
@@ -66,7 +66,7 @@ namespace RabiRiichi.Pattern {
                 }
                 existingMentsu.Add(gr.Value);
                 var newGroup = group.Select(
-                    g => MenOrJantou.From(g.Select(t => {
+                    g => MenLike.From(g.Select(t => {
                         if (t == toExchange) {
                             return incoming;
                         }
@@ -143,7 +143,7 @@ namespace RabiRiichi.Pattern {
             }
         }
 
-        public override bool Resolve(Hand hand, GameTile incoming, out List<List<MenOrJantou>> output) {
+        public override bool Resolve(Hand hand, GameTile incoming, out List<List<MenLike>> output) {
             output = null;
             // Check tile count
             if (hand.Count != (incoming == null ? Game.HandSize + 1 : Game.HandSize)) {
@@ -161,8 +161,8 @@ namespace RabiRiichi.Pattern {
                 }
             }
             // DFS output
-            output = new List<List<MenOrJantou>>();
-            var extraOutput = new List<List<MenOrJantou>>();
+            output = new List<List<MenLike>>();
+            var extraOutput = new List<List<MenLike>>();
             tileBucket = GetTileGroups(hand, incoming, false);
             current = hand.fuuro;
             this.output = output;

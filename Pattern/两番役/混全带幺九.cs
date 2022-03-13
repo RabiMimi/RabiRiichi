@@ -8,7 +8,7 @@ namespace RabiRiichi.Pattern {
             BaseOn(base33332);
         }
 
-        public override bool Resolve(List<MenOrJantou> groups, Hand hand, GameTile incoming, Scorings scorings) {
+        public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, Scorings scorings) {
             if (groups.All(gr => gr.Any(tile => tile.tile.Is19Z))) {
                 scorings.Add(new Scoring(ScoringType.Han, hand.menzen ? 2 : 1, this));
                 return true;

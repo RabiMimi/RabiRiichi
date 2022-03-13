@@ -13,7 +13,7 @@ namespace RabiRiichi.Riichi {
         public int jun = 0;
 
         /// <summary> 副露的面子 </summary>
-        public List<MenOrJantou> fuuro = new();
+        public List<MenLike> fuuro = new();
 
         /// <summary> 牌河 </summary>
         public GameTiles discarded = new();
@@ -122,7 +122,7 @@ namespace RabiRiichi.Riichi {
             }
         }
 
-        public void AddGroup(MenOrJantou tiles, TileSource source) {
+        public void AddGroup(MenLike tiles, TileSource source) {
             fuuro.Add(tiles);
             tiles.ForEach(tile => {
                 tile.player = player;
@@ -140,7 +140,7 @@ namespace RabiRiichi.Riichi {
         }
 
         public void AddKan(Kan tiles) {
-            AddGroup(tiles, tiles.IsClose ? TileSource.AnKan : TileSource.MinKan);
+            AddGroup(tiles, tiles.IsClose ? TileSource.AnKan : TileSource.DaiMinKan);
         }
 
         public void KaKan(Kan tiles) {

@@ -63,6 +63,6 @@ namespace RabiRiichi.Pattern {
             return this;
         }
 
-        public abstract bool Resolve(List<MenOrJantou> groups, Hand hand, GameTile incoming, Scorings scorings);
+        public abstract bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, Scorings scorings);
     }
 }
