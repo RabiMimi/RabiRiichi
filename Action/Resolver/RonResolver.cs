@@ -9,7 +9,7 @@ namespace RabiRiichi.Action.Resolver {
     /// 判定是否可以和牌
     /// </summary>
     public class RonResolver : ResolverBase {
-        private readonly PatternResolver patternResolver;
+        protected readonly PatternResolver patternResolver;
 
         public RonResolver(PatternResolver patternResolver) {
             this.patternResolver = patternResolver;
@@ -21,7 +21,7 @@ namespace RabiRiichi.Action.Resolver {
 
         protected override bool ResolveAction(Player player, GameTile incoming, MultiPlayerInquiry output) {
             var hand = player.hand;
-            if (hand.IsFuriten && !incoming.IsTsumo) {
+            if (hand.IsFuriten) {
                 return false;
             }
             var maxScore = patternResolver.ResolveMaxScore(hand, incoming, false);

@@ -1,6 +1,3 @@
-using System.Threading.Tasks;
-
-
 namespace RabiRiichi.Action {
     public class RonAction : ConfirmAction {
         public override string name => "ron";
