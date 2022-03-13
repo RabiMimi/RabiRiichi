@@ -66,24 +66,34 @@ namespace RabiRiichi.Action {
                 return true;
             }
             if (OnResponseWithoutTrigger(resp)) {
-                if (hasExecuted.Exchange(true)) {
-                    return true;
-                }
-                if (curMaxPriority == int.MinValue) {
-                    // 没有用户做出有效回应
-                    curMaxPriority = playerInquiries.Max(x => x.curPriority);
-                }
-                // 仅触发优先级最高的操作（可能有多个用户）
-                if (responses.Count > 0) {
-                    throw new InvalidOperationException("MultiPlayerInquiry.OnResponse: responses already populated (multithread error?)");
-                }
-                responses.AddRange(playerInquiries
-                    .Where(x => x.curPriority == curMaxPriority)
-                    .Select(x => x.Selected));
-                taskCompletionSource.SetResult();
+                Finish();
                 return true;
             }
             return false;
+        }
+
+        /// <summary>
+        /// 强制终止询问，未作出选择的用户将选择默认选项，线程安全。
+        /// 用户的选择将被放入<see cref="responses"/>，然后完成<see cref="WaitForResponse"/>。
+        /// 若询问已被终止过，该方法不会产生任何效果
+        /// </summary>
+        /// <exception cref="InvalidOperationException"></exception>
+        public void Finish() {
+            if (hasExecuted.Exchange(true)) {
+                return;
+            }
+            if (curMaxPriority == int.MinValue) {
+                // 没有用户做出有效回应
+                curMaxPriority = playerInquiries.Max(x => x.curPriority);
+            }
+            // 仅触发优先级最高的操作（可能有多个用户）
+            if (responses.Count > 0) {
+                throw new InvalidOperationException("MultiPlayerInquiry.OnResponse: responses already populated (multithread error?)");
+            }
+            responses.AddRange(playerInquiries
+                .Where(x => x.curPriority == curMaxPriority)
+                .Select(x => x.Selected));
+            taskCompletionSource.SetResult();
         }
     }
 }
