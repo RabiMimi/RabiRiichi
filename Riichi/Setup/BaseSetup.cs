@@ -86,8 +86,10 @@ namespace RabiRiichi.Riichi.Setup {
             BeginGameListener.Register(eventBus);
             DealHandListener.Register(eventBus);
             DrawTileListener.Register(eventBus);
-            RevealDoraListener.Register(eventBus);
             IncreaseJunListener.Register(eventBus);
+            MessageSender.Register(eventBus);
+            RevealDoraListener.Register(eventBus);
+            WaitPlayerActionListener.Register(eventBus);
         }
 
         /// <summary> 初始化阶段 </summary>

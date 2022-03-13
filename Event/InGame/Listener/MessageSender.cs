@@ -1,44 +1,24 @@
-﻿using RabiRiichi.Riichi;
+﻿using RabiRiichi.Interact;
+using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Event.InGame.Listener {
-    public class MessageSender {
-        public uint CanListen(EventBase ev) => EventPriority.Broadcast;
-
-        public static string ToString(TileSource source) {
-            return source switch {
-                TileSource.Chi => "吃",
-                TileSource.Pon => "碰",
-                // case TileSource.Kan: return "杠";
-                _ => "",
-            };
+    public static class MessageSender {
+        public static Task Send(EventBase ev) {
+            var players = ev.game.players.AsEnumerable();
+            if (ev is IRabiPlayerMessage msg
+                && ev.GetType().GetCustomAttribute<RabiPrivateAttribute>() != null) {
+                players = players.Where(p => p.id == msg.playerId);
+            }
+            foreach (var player in players) {
+                ev.game.config.actionCenter.OnEvent(player.id, ev);
+            }
+            return Task.CompletedTask;
         }
 
-        public Task<bool> Handle(EventBase ev) {
-            /*
-            var game = ev.game;
-            if (ev is DealHandEvent dhe) {
-                using var image = TilesImage.V.Generate(dhe.tiles);
-                MessageSegmentImage hand = new MessageSegmentImage(image);
-                await game.SendPrivate(dhe.player, HMessage.From(hand));
-            } else if (ev is PlayTileEvent pte) {
-                var player = game.GetPlayer(pte.player);
-                var str = $"{player.nickname}打出了{pte.tile}";
-                if (pte.riichi) {
-                    str += "并立直";
-                }
-                await game.SendPublic(str);
-            } else if (ev is GetTileEvent gte) {
-                var player = game.GetPlayer(gte.player);
-                var fromPlayer = game.GetPlayer(gte.incoming.fromPlayer);
-                var str = $"{player.nickname}{ToString(gte.source)}了";
-                if (player != fromPlayer) {
-                    str += $"{fromPlayer.nickname}的{gte.incoming}：";
-                }
-                str += gte.group.ToString();
-                await game.SendPublic(str);
-            }*/
-            return Task.FromResult(true);
+        public static void Register(EventBus eventBus) {
+            eventBus.Register<EventBase>(Send, EventPriority.Broadcast);
         }
     }
 }
