@@ -17,8 +17,10 @@ namespace RabiRiichi.Pattern {
                     => gr is Kan or Kou
                     && (int)gr.Suit == index + 1
                     && gr.First.tile.Num == grs.First().First.tile.Num));
-            // TODO: (Frenqy) Finish this
-            return false;
+            if (isSanshoku) {
+                scorings.Add(new Scoring(ScoringType.Han, 2, this));
+            }
+            return isSanshoku;
         }
     }
 }
