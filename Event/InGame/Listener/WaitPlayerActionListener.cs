@@ -7,7 +7,7 @@ namespace RabiRiichi.Event.InGame.Listener {
                 return Task.CompletedTask;
             }
             e.game.config.actionCenter.OnInquiry(e.inquiry);
-            return e.inquiry.WaitForResponse;
+            return e.inquiry.WaitForFinish;
         }
 
         public static void Register(EventBus eventBus) {

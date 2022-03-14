@@ -83,7 +83,7 @@ namespace RabiRiichi.Event {
         /// <returns>是否处理成功</returns>
         /// </summary>
         public async Task<bool> Process(EventBase ev) {
-            if (ev == null || ev.IsFinished) {
+            if (ev == null || ev.IsFinishedOrCancelled) {
                 return false;
             }
 
@@ -109,7 +109,7 @@ namespace RabiRiichi.Event {
                 ev.phase = listener.Priority;
             }
 
-            ev.phase = EventPriority.Finished;
+            ev.Finish();
 
             return true;
         }

@@ -1,6 +1,9 @@
 ﻿using RabiRiichi.Interact;
 using RabiRiichi.Riichi;
+using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+
 
 namespace RabiRiichi.Event {
     public static class EventPriority {
@@ -23,10 +26,17 @@ namespace RabiRiichi.Event {
         public int phase = EventPriority.Maximum;
 
         /// <summary> 是否已经处理完毕或被取消 </summary>
-        public bool IsFinished => phase <= EventPriority.Finished;
+        public bool IsFinishedOrCancelled => phase <= EventPriority.Finished;
+
+        /// <summary> 是否已经处理完毕 </summary>
+        public bool IsFinished => phase == EventPriority.Finished;
 
         /// <summary> 是否被取消 </summary>
         public bool IsCancelled => phase == EventPriority.Cancelled;
+
+        /// <summary> 等待事件被成功处理 </summary>
+        private readonly Lazy<TaskCompletionSource> finishTcs = new();
+        public Task WaitForFinish => IsFinished ? Task.CompletedTask : finishTcs.Value.Task;
 
         /// <summary> 事件处理过程中可能会用到的额外信息 </summary>
         public Dictionary<string, object> extraData = new();
@@ -39,6 +49,13 @@ namespace RabiRiichi.Event {
         /// <summary> 强制取消该事件 </summary>
         public void Cancel() {
             phase = EventPriority.Cancelled;
+        }
+
+        public void Finish() {
+            phase = EventPriority.Finished;
+            if (finishTcs.IsValueCreated) {
+                finishTcs.Value.SetResult();
+            }
         }
 
         public override string ToString() {

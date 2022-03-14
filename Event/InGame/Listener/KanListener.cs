@@ -29,7 +29,7 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         private static async Task AfterInquiry(MultiPlayerInquiry inquiry) {
-            await inquiry.WaitForResponse;
+            await inquiry.WaitForFinish;
             foreach (var action in inquiry.responses) {
                 if (action is RonAction) {
                     // TODO: 和了

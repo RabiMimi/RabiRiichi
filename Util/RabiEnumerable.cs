@@ -69,13 +69,13 @@ namespace System.Linq {
         }
 
         /// <summary>
-        /// 生成所有source的大小为n的子集
+        /// 生成所有source的大小为size的子集
         /// </summary>
-        public static IEnumerable<IEnumerable<TSource>> Subset<TSource>(this IEnumerable<TSource> source, int n) {
+        public static IEnumerable<IEnumerable<TSource>> Subset<TSource>(this IEnumerable<TSource> source, int size) {
             if (source is not List<TSource> list) {
                 list = source.ToList();
             }
-            return SubsetHelper(list, 0, n);
+            return SubsetHelper(list, 0, size);
         }
         #endregion
     }

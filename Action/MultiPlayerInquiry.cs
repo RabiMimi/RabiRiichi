@@ -20,12 +20,12 @@ namespace RabiRiichi.Action {
     public class MultiPlayerInquiry {
         public readonly int id;
         public readonly List<SinglePlayerInquiry> playerInquiries = new();
-        public readonly TaskCompletionSource taskCompletionSource = new();
+        public readonly TaskCompletionSource finishTcs = new();
         public readonly List<IPlayerAction> responses = new();
         /// <summary> 当前已回应的用户的最高优先级 </summary>
         private int curMaxPriority = int.MinValue;
         public AtomicBool hasExecuted { get; private set; } = new();
-        public Task WaitForResponse => IsEmpty ? Task.CompletedTask : taskCompletionSource.Task;
+        public Task WaitForFinish => IsEmpty ? Task.CompletedTask : finishTcs.Task;
         public bool IsEmpty => playerInquiries.Count == 0;
 
         public MultiPlayerInquiry(GameInfo info) {
@@ -74,7 +74,7 @@ namespace RabiRiichi.Action {
 
         /// <summary>
         /// 强制终止询问，未作出选择的用户将选择默认选项，线程安全。
-        /// 用户的选择将被放入<see cref="responses"/>，然后完成<see cref="WaitForResponse"/>。
+        /// 用户的选择将被放入<see cref="responses"/>，然后完成<see cref="WaitForFinish"/>。
         /// 若询问已被终止过，该方法不会产生任何效果
         /// </summary>
         /// <exception cref="InvalidOperationException"></exception>
@@ -93,7 +93,7 @@ namespace RabiRiichi.Action {
             responses.AddRange(playerInquiries
                 .Where(x => x.curPriority == curMaxPriority)
                 .Select(x => x.Selected));
-            taskCompletionSource.SetResult();
+            finishTcs.SetResult();
         }
     }
 }
