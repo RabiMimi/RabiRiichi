@@ -10,7 +10,7 @@ namespace RabiRiichi.Event.InGame {
         #region Request
         [RabiBroadcast] public readonly Kan kan;
         public readonly GameTile incoming;
-        public bool isAnKan => kan.IsClose;
+        [RabiBroadcast] public bool isAnKan => kan.IsClose;
         #endregion
         public KaAnKanEvent(Game game, int playerId, Kan kan, GameTile incoming) : base(game, playerId) {
             this.kan = kan;
