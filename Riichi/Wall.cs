@@ -7,8 +7,8 @@ namespace RabiRiichi.Riichi {
     public class Wall {
         public Game game;
 
-        /// <summary> 王牌数量 </summary>
-        public const int NUM_WANPAI = 14;
+        /// <summary> 宝牌数量 </summary>
+        public const int NUM_DORA = 5;
         /// <summary> 岭上牌数量 </summary>
         public const int NUM_RINSHAN = 4;
 
@@ -18,7 +18,9 @@ namespace RabiRiichi.Riichi {
         public readonly Tiles doras = new();
         public readonly Tiles uradoras = new();
 
-        public int NumRemaining => remaining.Count + rinshan.Count + doras.Count + uradoras.Count - NUM_WANPAI;
+        public int NumRemaining => remaining.Count
+            + doras.Count + uradoras.Count - NUM_DORA * 2
+            - (NUM_RINSHAN - rinshan.Count);
         /// <summary> 是否到了海底 </summary>
         public bool IsHaitei => NumRemaining <= 0;
 
