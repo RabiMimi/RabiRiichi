@@ -175,7 +175,7 @@ namespace RabiRiichiTests.Interact {
         }
 
         [TestMethod]
-        public void TestInheritedMessage() {
+        public void TestSuccessInheritedMessage() {
             var messages = new List<ValidMessageNonPublicSet> { new InheritedMessage() };
             var json = jsonStringify.Stringify(messages, 0);
             var parsed = jsonStringify.Parse<JsonElement>(json, 0)[0];
@@ -184,7 +184,7 @@ namespace RabiRiichiTests.Interact {
         }
 
         [TestMethod]
-        public void TestGameTileMessage() {
+        public void TestSuccessGameTileMessage() {
             var tiles = new Tiles("123s123m123p");
             var message = new GameTileMessage(new GameTile(new Tile("r5s")) {
                 source = TileSource.Wall,
