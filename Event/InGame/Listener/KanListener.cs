@@ -20,17 +20,19 @@ namespace RabiRiichi.Event.InGame.Listener {
                 if (ev.game.TryGet<ChanKanResolver>(out var resolver)) {
                     var inquiry = new MultiPlayerInquiry(ev.game.info);
                     resolver.Resolve(ev.player, ev.incoming, inquiry);
-                    ev.game.eventBus.Queue(new WaitPlayerActionEvent(ev.game, inquiry));
-                    AfterInquiry(inquiry).ConfigureAwait(false);
+                    var waitEv = new WaitPlayerActionEvent(ev.game, inquiry);
+                    ev.game.eventBus.Queue(waitEv);
+                    AfterInquiry(waitEv).ConfigureAwait(false);
                     return Task.CompletedTask;
                 }
             }
             return Task.CompletedTask;
         }
 
-        private static async Task AfterInquiry(MultiPlayerInquiry inquiry) {
-            await inquiry.WaitForFinish;
-            foreach (var action in inquiry.responses) {
+        private static async Task AfterInquiry(WaitPlayerActionEvent waitEv) {
+            await waitEv.WaitForFinish;
+            var resp = waitEv.inquiry.responses;
+            foreach (var action in resp) {
                 if (action is RonAction) {
                     // TODO: 和了
                 }
