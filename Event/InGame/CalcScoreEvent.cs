@@ -21,19 +21,23 @@ namespace RabiRiichi.Event.InGame {
                 - this.Where(x => x.from == playerId).Sum(x => x.points);
     }
 
-    public class CalcScoreEvent : BroadcastPlayerEvent {
+    public class CalcScoreEvent : EventBase {
         public override string name => "calc_score";
 
         #region Request
-        [RabiBroadcast] public readonly List<AgariInfo> agariInfos;
+        [RabiBroadcast] public readonly AgariInfoList agariInfos;
+        [RabiBroadcast] public readonly bool isAgari;
         #endregion
 
         #region Response
         [RabiBroadcast] public readonly ScoreTransferList scoreChange = new();
         #endregion
 
-        public CalcScoreEvent(Game game, int playerId, List<AgariInfo> agariInfos) : base(game, playerId) {
+        public CalcScoreEvent(Game game, AgariInfoList agariInfos) : base(game) {
             this.agariInfos = agariInfos;
+            this.isAgari = true;
         }
+
+        // TODO: Another constructor for Ryuukyoku
     }
 }
