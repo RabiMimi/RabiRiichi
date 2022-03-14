@@ -32,9 +32,12 @@ namespace RabiRiichi.Action {
             id = info.eventId.Next;
         }
 
+        public SinglePlayerInquiry GetByPlayerId(int playerId)
+            => playerInquiries.Find(inquiry => inquiry.playerId == playerId);
+
         /// <summary> 添加一个PlayerAction，仅在构建inquiry被调用，非线程安全 </summary>
         internal MultiPlayerInquiry Add(IPlayerAction action, bool isDefault = false) {
-            var list = playerInquiries.Find(x => x.playerId == action.playerId);
+            var list = GetByPlayerId(action.playerId);
             if (list == null) {
                 list = new SinglePlayerInquiry(action.playerId, id);
                 playerInquiries.Add(list);
@@ -47,7 +50,7 @@ namespace RabiRiichi.Action {
         /// <returns> 是否可以终止等待（已无用户可以做出优先级更高或相同的回应） </returns>
         private bool OnResponseWithoutTrigger(InquiryResponse resp) {
             lock (playerInquiries) {
-                var list = playerInquiries.Find(x => x.playerId == resp.playerId);
+                var list = GetByPlayerId(resp.playerId);
                 if (list == null || !list.OnResponse(resp.index, resp.response)) {
                     return false;
                 }

@@ -53,6 +53,7 @@ namespace RabiRiichi.Event.InGame.Listener {
             foreach (var resolver in resolvers) {
                 resolver.Resolve(e.player, e.tile, inquiry);
             }
+            inquiry.GetByPlayerId(e.playerId).DisableSkip();
             e.game.eventBus.Queue(new WaitPlayerActionEvent(e.game, inquiry));
             return Task.CompletedTask;
         }

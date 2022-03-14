@@ -31,7 +31,13 @@ namespace RabiRiichi.Action {
 
         public SinglePlayerInquiry(int playerId, int eventId) {
             this.playerId = playerId;
+            AddAction(new SkipAction(playerId), true);
             id = eventId;
+        }
+
+        public SinglePlayerInquiry DisableSkip() {
+            actions.RemoveAll(action => action is SkipAction);
+            return this;
         }
 
         public SinglePlayerInquiry AddAction(IPlayerAction action, bool isDefault = false) {
