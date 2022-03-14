@@ -33,11 +33,17 @@ namespace RabiRiichi.Riichi {
         /// <summary> W立直 </summary>
         public bool wRiichi = false;
 
+        /// <summary> 场上立直棒数量，不可用于判定是否立直 </summary>
+        public int riichiStick = 0;
+
         /// <summary> 一发 </summary>
         public bool ippatsu = false;
 
         /// <summary> 门清 </summary>
         public bool menzen = true;
+
+        /// <summary> 是否已经和了 </summary>
+        public bool agari = false;
 
         /// <summary> 听牌列表，无赤宝牌。不听牌时返回null </summary>
         public Tiles Tenpai {

@@ -6,8 +6,6 @@
         public int id;
         public Game game;
         public Wind wind;
-        /// <summary> 场上立直棒数量，不可用于判定是否立直 </summary>
-        public int riichiStick = 0;
         /// <summary> 手牌 </summary>
         public Hand hand = new();
 
@@ -35,6 +33,11 @@
                 dist += game.players.Length;
             }
             return dist;
+        }
+
+        /// <summary> 开局时重置玩家手牌状态 </summary>
+        public void Reset() {
+            hand = new Hand();
         }
     }
 }
