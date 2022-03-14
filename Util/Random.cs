@@ -17,12 +17,12 @@ namespace RabiRiichi.Util {
             return list[Next(list.Count)];
         }
 
-        public List<T> Choice<T>(IList<T> list, int count) {
+        public IEnumerable<T> Choice<T>(IList<T> list, int count) {
             count = Math.Min(count, list.Count);
             List<int> helper = Enumerable.Range(0, list.Count).ToList();
             Shuffle(helper);
             helper.RemoveRange(count, helper.Count - count);
-            return helper.Select(index => list[index]).ToList();
+            return helper.Select(index => list[index]);
         }
     }
 }
