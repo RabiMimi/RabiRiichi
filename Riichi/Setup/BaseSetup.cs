@@ -104,7 +104,7 @@ namespace RabiRiichi.Riichi.Setup {
             RevealDoraListener.Register(eventBus);
             WaitPlayerActionListener.Register(eventBus);
             KanListener.Register(eventBus);
-            RonListener.Register(eventBus);
+            AgariListener.Register(eventBus);
             SetMenzenListener.Register(eventBus);
 
             EventBroadcast.Register(eventBus);
