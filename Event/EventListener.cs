@@ -1,3 +1,4 @@
+using RabiRiichi.Event.InGame;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -86,7 +87,7 @@ namespace RabiRiichi.Event {
                     CancelOn<EventBase>();
                     break;
                 case EventScope.Round:
-                    // TODO: Cancel on round end event
+                    CancelOn<EndGameEvent>();
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(scope), scope, "Unknown event scope");
