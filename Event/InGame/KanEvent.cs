@@ -3,18 +3,19 @@ using RabiRiichi.Riichi;
 
 namespace RabiRiichi.Event.InGame {
     /// <summary>
-    /// 加杠或暗杠
+    /// 加杠/暗杠/大明杠
     /// </summary>
-    public class KaAnKanEvent : PlayerEvent {
-        public override string name => "kakan_or_ankan";
+    public class KanEvent : PlayerEvent {
+        public override string name => "kan";
         #region Request
         [RabiBroadcast] public readonly Kan kan;
+        [RabiBroadcast] public readonly TileSource kanSource;
         public readonly GameTile incoming;
-        [RabiBroadcast] public bool isAnKan => kan.IsClose;
         #endregion
-        public KaAnKanEvent(Game game, int playerId, Kan kan, GameTile incoming) : base(game, playerId) {
+        public KanEvent(Game game, int playerId, Kan kan, GameTile incoming) : base(game, playerId) {
             this.kan = kan;
             this.incoming = incoming;
+            this.kanSource = kan.KanSource;
         }
     }
 }
