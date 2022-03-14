@@ -10,10 +10,14 @@ namespace RabiRiichi.Event.InGame.Listener {
             } else {
                 ev.player.hand.KaKan(ev.kan);
             }
-            var inquiry = new MultiPlayerInquiry(ev.game.info);
-            ev.game.Get<ChanKanResolver>().Resolve(ev.player, ev.incoming, inquiry);
-            ev.game.eventBus.Queue(new WaitPlayerActionEvent(ev.game, inquiry));
-            AfterInquiry(inquiry).ConfigureAwait(false);
+            if (ev.game.TryGet<ChanKanResolver>(out var resolver)) {
+                var inquiry = new MultiPlayerInquiry(ev.game.info);
+                resolver.Resolve(ev.player, ev.incoming, inquiry);
+                ev.game.eventBus.Queue(new WaitPlayerActionEvent(ev.game, inquiry));
+                AfterInquiry(inquiry).ConfigureAwait(false);
+            } else {
+                // TODO: Next event
+            }
             return Task.CompletedTask;
         }
 

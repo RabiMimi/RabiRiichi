@@ -63,6 +63,7 @@ namespace RabiRiichi.Riichi {
 
         #region Internal
         public T Get<T>() => diContainer.GetService<T>();
+        public bool TryGet<T>(out T service) => (service = Get<T>()) != null;
         #endregion
 
         #region GameUtil

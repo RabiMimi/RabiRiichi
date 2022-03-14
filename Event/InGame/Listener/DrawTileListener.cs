@@ -23,10 +23,18 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         private static IEnumerable<ResolverBase> GetDrawTileResolvers(Game game) {
-            yield return game.Get<PlayTileResolver>();
-            yield return game.Get<RiichiResolver>();
-            yield return game.Get<KanResolver>();
-            yield return game.Get<TsumoResolver>();
+            if (game.TryGet<PlayTileResolver>(out var resolver1)) {
+                yield return resolver1;
+            }
+            if (game.TryGet<RiichiResolver>(out var resolver2)) {
+                yield return resolver2;
+            }
+            if (game.TryGet<KanResolver>(out var resolver3)) {
+                yield return resolver3;
+            }
+            if (game.TryGet<TsumoResolver>(out var resolver4)) {
+                yield return resolver4;
+            }
         }
 
         public static Task DrawTile(DrawTileEvent e) {
