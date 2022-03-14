@@ -5,7 +5,9 @@ using System.Threading.Tasks;
 
 namespace RabiRiichi.Event {
     public enum EventScope {
-        /// <summary> 本局 </summary>
+        /// <summary> 成功处理下一个事件后移除监听，无论该事件能否触发监听器 </summary>
+        Event,
+        /// <summary> 本局结束后移除监听 </summary>
         Round
     }
 
@@ -74,12 +76,15 @@ namespace RabiRiichi.Event {
         /// 在某个事件成功触发后，取消所有监听
         /// </summary>
         public EventListener<T> CancelOn<U>() where U : EventBase {
-            eventBus.Register<U>(CancelHelper, EventPriority.After + PRIORITY_DELTA, 1);
+            eventBus.Register<U>(CancelHelper, EventPriority.Minimum + PRIORITY_DELTA, 1);
             return this;
         }
 
         public EventListener<T> ScopeTo(EventScope scope) {
             switch (scope) {
+                case EventScope.Event:
+                    CancelOn<EventBase>();
+                    break;
                 case EventScope.Round:
                     // TODO: Cancel on round end event
                     break;
