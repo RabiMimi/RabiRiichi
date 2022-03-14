@@ -87,7 +87,11 @@ namespace RabiRiichi.Interact {
 
             public override T Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
                 var newOptions = new JsonSerializerOptions(options);
-                newOptions.Converters.Clear();
+                for (int i = options.Converters.Count - 1; i >= 0; i--) {
+                    if (options.Converters[i] is MessageJsonConverter) {
+                        newOptions.Converters.RemoveAt(i);
+                    }
+                }
                 return JsonSerializer.Deserialize<T>(ref reader, newOptions);
             }
 

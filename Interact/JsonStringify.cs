@@ -8,11 +8,15 @@ namespace RabiRiichi.Interact {
         private readonly JsonSerializerOptions[] options;
 
         public JsonStringify(GameConfig config) {
+            var tileConverter = new TileJsonConverter();
+            var tilesConverter = new TilesJsonConverter();
             options = new JsonSerializerOptions[config.playerCount];
             for (int i = 0; i < config.playerCount; i++) {
                 options[i] = new JsonSerializerOptions {
                     Converters = {
-                        new MessageJsonConverter(i)
+                        new MessageJsonConverter(i),
+                        tileConverter,
+                        tilesConverter
                     },
                     IncludeFields = true,
                 };

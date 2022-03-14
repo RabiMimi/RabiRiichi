@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RabiRiichi.Interact;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -27,12 +28,15 @@ namespace RabiRiichi.Riichi {
         Ron,
     }
 
-    public class GameTile : IComparable<GameTile> {
-        public Tile tile = Tile.Empty;
+    public class GameTile : IComparable<GameTile>, IRabiMessage {
+        public RabiMessageType msgType => RabiMessageType.Unnecessary;
+        [RabiBroadcast] public Tile tile = Tile.Empty;
         /// <summary> 来自哪个玩家（吃碰杠等）对于刚摸的牌为null </summary>
         public Player fromPlayer;
+        [RabiBroadcast] public int? fromPlayerId => fromPlayer?.id;
         /// <summary> 当前归属于哪个玩家，摸切或副露时会被设置 </summary>
         public Player player;
+        [RabiBroadcast] public int? playerId => player?.id;
         /// <summary> 弃牌的时间戳 </summary>
         public int discardTime = -1;
         /// <summary> 该牌成为副露或暗杠的时间戳 </summary>
@@ -40,10 +44,10 @@ namespace RabiRiichi.Riichi {
         /// <summary> 是否是公开牌 </summary>
         // public bool visible = false;
         /// <summary> 是否是立直宣告牌 </summary>
-        public bool riichi = false;
+        [RabiBroadcast] public bool riichi = false;
         /// <summary> 是否是自摸 </summary>
         public bool IsTsumo => fromPlayer == null;
-        public TileSource source = TileSource.Hand;
+        [RabiBroadcast] public TileSource source = TileSource.Hand;
 
         /// <summary> 是否是万筒索 </summary>
         public bool IsMPS => tile.IsMPS;

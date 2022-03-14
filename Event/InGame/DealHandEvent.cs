@@ -6,9 +6,7 @@ namespace RabiRiichi.Event.InGame {
         public override string name => "deal_hand";
 
         #region Response
-        // TODO: Custom JsonConverter for Tile, Tiles
-        [RabiPrivate]
-        public Tiles tiles;
+        [RabiPrivate] public Tiles tiles;
         #endregion
 
         public DealHandEvent(Game game, int playerId) : base(game, playerId) { }

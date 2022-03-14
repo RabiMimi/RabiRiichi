@@ -80,6 +80,16 @@ namespace RabiRiichiTests.Interact {
             public override string message { get; protected set; } = "inherited message";
             [RabiBroadcast] public string newMessage = "new inherited message";
         }
+
+        private class GameTileMessage : BaseRabiMessage {
+            [RabiBroadcast] public readonly GameTile tile;
+            [RabiBroadcast] public readonly Tiles tiles;
+
+            public GameTileMessage(GameTile tile, Tiles tiles) {
+                this.tile = tile;
+                this.tiles = tiles;
+            }
+        }
         #endregion
 
         private readonly JsonStringify jsonStringify = new(new GameConfig {
@@ -87,7 +97,7 @@ namespace RabiRiichiTests.Interact {
         });
 
         [TestMethod]
-        public void TestSucceedNested() {
+        public void TestSuccessNested() {
             var message = new RabiTestMessage(0);
             var json = jsonStringify.Stringify(message, 0);
             // Parse by current player
@@ -109,7 +119,7 @@ namespace RabiRiichiTests.Interact {
         }
 
         [TestMethod]
-        public void TestSucceedNotRabiMessage() {
+        public void TestSuccessNotRabiMessage() {
             var message = new NotRabiMessage();
             var json = jsonStringify.Stringify(message, 0);
             var parsed = jsonStringify.Parse<JsonElement>(json, 0);
@@ -117,7 +127,7 @@ namespace RabiRiichiTests.Interact {
         }
 
         [TestMethod]
-        public void TestSucceedNotIWithPlayer() {
+        public void TestSuccessNotIWithPlayer() {
             var message = new NotIWithPlayer();
             var json = jsonStringify.Stringify(message, 0);
             var parsed = jsonStringify.Parse<JsonElement>(json, 0);
@@ -171,6 +181,24 @@ namespace RabiRiichiTests.Interact {
             var parsed = jsonStringify.Parse<JsonElement>(json, 0)[0];
             Assert.AreEqual(messages[0].message, parsed.GetProperty("message").GetString());
             Assert.AreEqual((messages[0] as InheritedMessage).newMessage, parsed.GetProperty("newMessage").GetString());
+        }
+
+        [TestMethod]
+        public void TestGameTileMessage() {
+            var tiles = new Tiles("123s123m123p");
+            var message = new GameTileMessage(new GameTile(new Tile("r5s")) {
+                source = TileSource.Wall,
+                fromPlayer = new Player(1, null),
+            }, tiles);
+            var json = jsonStringify.Stringify(message, 0);
+            var parsed = jsonStringify.Parse<JsonElement>(json, 0);
+            Assert.AreEqual("r5s", parsed.GetProperty("tile").GetProperty("tile").GetString());
+            Assert.AreEqual((int)TileSource.Wall, parsed.GetProperty("tile").GetProperty("source").GetInt32());
+            Assert.AreEqual(1, parsed.GetProperty("tile").GetProperty("fromPlayerId").GetInt32());
+            Assert.AreEqual("123s123m123p", parsed.GetProperty("tiles").GetString());
+            var parsedMsg = jsonStringify.Parse<GameTileMessage>(json, 0);
+            Assert.AreEqual(message.tile.tile, parsedMsg.tile.tile);
+            CollectionAssert.AreEqual(message.tiles, parsedMsg.tiles);
         }
     }
 }
