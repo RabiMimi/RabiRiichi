@@ -30,7 +30,6 @@ namespace RabiRiichi.Pattern {
             public List<MenLike> group;
             public Hand hand;
             public GameTile incoming;
-            public Scorings scorings;
             public readonly HashSet<BasePattern> baseSuccess = new();
             public readonly HashSet<StdPattern> stdSuccess = new();
             public readonly HashSet<StdPattern> stdFailure = new();
@@ -83,8 +82,7 @@ namespace RabiRiichi.Pattern {
             var groupList = new List<List<MenLike>>();
             var context = new ResolutionContext {
                 hand = hand,
-                incoming = incoming,
-                scorings = new Scorings()
+                incoming = incoming
             };
 
             foreach (var pattern in basePatterns) {
@@ -94,8 +92,7 @@ namespace RabiRiichi.Pattern {
                 }
             }
 
-            Scorings maxScore = null;
-            foreach (var group in groupList) {
+            var maxScore = groupList.Max(group => {
                 context.stdSuccess.Clear();
                 context.stdFailure.Clear();
                 context.group = group;
@@ -108,10 +105,9 @@ namespace RabiRiichi.Pattern {
                         ResolveStdPattern(context, pattern, scorings);
                     }
                 }
-                if (maxScore == null || maxScore < scorings) {
-                    maxScore = scorings;
-                }
-            }
+                scorings.Calc();
+                return scorings;
+            });
             return maxScore;
         }
 
