@@ -1,7 +1,7 @@
 using RabiRiichi.Interact;
 using RabiRiichi.Riichi;
 
-namespace RabiRiichi.Event.InGame {
+namespace RabiRiichi.Event {
     public abstract class PlayerEvent : EventBase, IRabiPlayerMessage {
         public Player player => game.GetPlayer(playerId);
         [RabiBroadcast] public int playerId { get; init; }
