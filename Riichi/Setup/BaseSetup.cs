@@ -105,6 +105,7 @@ namespace RabiRiichi.Riichi.Setup {
             WaitPlayerActionListener.Register(eventBus);
             KanListener.Register(eventBus);
             RonListener.Register(eventBus);
+            SetMenzenListener.Register(eventBus);
 
             EventBroadcast.Register(eventBus);
         }
