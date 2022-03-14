@@ -1,6 +1,7 @@
 ﻿using RabiRiichi.Action;
 using RabiRiichi.Action.Resolver;
 using RabiRiichi.Riichi;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -8,17 +9,25 @@ namespace RabiRiichi.Event.InGame.Listener {
     public static class DrawTileListener {
 
         public static Task PrepareTile(DrawTileEvent e) {
-            if (!e.tile.IsEmpty) {
+            if (e.tile != null) {
                 // 已经有牌了，不需要再摸牌
                 return Task.CompletedTask;
             }
-            // 从牌山随机选取一张牌
-            var yama = e.game.wall;
-            if (!yama.Has(1)) {
-                e.Cancel();
-                return Task.CompletedTask;
+            switch (e.source) {
+                case TileSource.Wall:
+                case TileSource.Wanpai:
+                    // 从牌山随机选取一张牌
+                    if (!e.game.wall.Has(1)) {
+                        e.Cancel();
+                        return Task.CompletedTask;
+                    }
+                    e.tile = new GameTile(e.game.wall.SelectOne()) {
+                        source = e.source
+                    };
+                    break;
+                default:
+                    throw new ArgumentException($"Drawing from unsupported tile source: {e.source}");
             }
-            e.tile = yama.SelectOne();
             return Task.CompletedTask;
         }
 
@@ -38,14 +47,11 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         public static Task DrawTile(DrawTileEvent e) {
-            e.game.wall.Draw(e.tile);
+            e.game.wall.Draw(e.tile.tile);
             var resolvers = GetDrawTileResolvers(e.game);
             var inquiry = new MultiPlayerInquiry(e.game.info);
-            var incoming = new GameTile(e.tile) {
-                source = e.source,
-            };
             foreach (var resolver in resolvers) {
-                resolver.Resolve(e.player, incoming, inquiry);
+                resolver.Resolve(e.player, e.tile, inquiry);
             }
             e.game.eventBus.Queue(new WaitPlayerActionEvent(e.game, inquiry));
             return Task.CompletedTask;

@@ -6,16 +6,14 @@ namespace RabiRiichi.Event.InGame {
         public override string name => "draw_tile";
 
         #region Request
-        [RabiBroadcast]
-        public TileSource source;
+        [RabiBroadcast] public TileSource source;
         #endregion
 
         #region Response
-        [RabiPrivate]
-        public Tile tile;
+        [RabiPrivate] public GameTile tile;
         #endregion
 
-        public DrawTileEvent(Game game, int playerId, TileSource source = TileSource.Wall, Tile tile = default) : base(game, playerId) {
+        public DrawTileEvent(Game game, int playerId, TileSource source, GameTile tile = null) : base(game, playerId) {
             this.source = source;
             this.tile = tile;
         }
