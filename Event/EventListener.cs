@@ -31,11 +31,11 @@ namespace RabiRiichi.Event {
         }
 
         /// <summary> 事件开始前，事件信息可能未准备好 </summary>
-        public EventListener<T> OnStart(Func<T, Task> handler, int times = -1)
+        public EventListener<T> EarlyPrepare(Func<T, Task> handler, int times = -1)
             => ListenTo(handler, EventPriority.Prepare + PRIORITY_DELTA, times);
 
         /// <summary> 事件开始时，事件信息已处理完毕 </summary>
-        public EventListener<T> Before(Func<T, Task> handler, int times = -1)
+        public EventListener<T> LatePrepare(Func<T, Task> handler, int times = -1)
             => ListenTo(handler, EventPriority.Prepare - PRIORITY_DELTA, times);
 
         /// <summary> 处理事件前，可以修改事件信息 </summary>
@@ -47,7 +47,7 @@ namespace RabiRiichi.Event {
             => ListenTo(handler, EventPriority.Execute - PRIORITY_DELTA, times);
 
         /// <summary> 广播消息后 </summary>
-        public EventListener<T> AfterMsg(Func<T, Task> handler, int times = -1)
+        public EventListener<T> AfterBroadcast(Func<T, Task> handler, int times = -1)
             => ListenTo(handler, EventPriority.Broadcast - PRIORITY_DELTA, times);
 
         /// <summary> 事件结束时 </summary>
