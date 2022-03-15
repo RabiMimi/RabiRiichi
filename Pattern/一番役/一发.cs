@@ -7,9 +7,9 @@ namespace RabiRiichi.Pattern {
             BaseOn(allBasePatterns);
         }
 
-        public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, Scorings scorings) {
+        public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
             if (hand.ippatsu) {
-                scorings.Add(new Scoring(ScoringType.Han, 1, this));
+                scores.Add(new Scoring(ScoringType.Han, 1, this));
                 return true;
             }
             return false;

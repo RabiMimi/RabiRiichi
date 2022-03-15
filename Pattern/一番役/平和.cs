@@ -8,7 +8,7 @@ namespace RabiRiichi.Pattern {
             BaseOn(base33332);
         }
 
-        public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, Scorings scorings) {
+        public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
             if (!hand.menzen || groups.Any(gr => gr is not (Jantou or Shun)))
                 return false;
             var gr = groups.Find(gr => gr.Contains(incoming));
@@ -23,7 +23,7 @@ namespace RabiRiichi.Pattern {
             var jantou = groups.Find(gr => gr is Jantou);
             if (jantou == null || hand.player.IsYaku(jantou.First.tile))
                 return false;
-            scorings.Add(new Scoring(ScoringType.Han, 1, this));
+            scores.Add(new Scoring(ScoringType.Han, 1, this));
             return true;
         }
     }

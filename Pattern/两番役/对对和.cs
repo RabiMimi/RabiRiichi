@@ -8,9 +8,9 @@ namespace RabiRiichi.Pattern {
             BaseOn(base33332);
         }
 
-        public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, Scorings scorings) {
+        public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
             if (!groups.Any(gr => gr is Shun)) {
-                scorings.Add(new Scoring(ScoringType.Han, 2, this));
+                scores.Add(new Scoring(ScoringType.Han, 2, this));
                 return true;
             }
             return false;

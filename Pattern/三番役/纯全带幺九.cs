@@ -9,10 +9,10 @@ namespace RabiRiichi.Pattern {
             DependOn(混全带幺九);
         }
 
-        public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, Scorings scorings) {
+        public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
             if (!groups.SelectMany(gr => gr).Any(tile => tile.tile.IsZ)) {
-                scorings.Remove(dependOnPatterns);
-                scorings.Add(new Scoring(ScoringType.Han, hand.menzen ? 3 : 2, this));
+                scores.Remove(dependOnPatterns);
+                scores.Add(new Scoring(ScoringType.Han, hand.menzen ? 3 : 2, this));
                 return true;
             }
             return false;

@@ -125,12 +125,12 @@ namespace RabiRiichi.Riichi {
         }
 
         public int CompareTo(Tile other) {
-            int grcmp = Suit.CompareTo(other.Suit);
-            if (grcmp != 0)
-                return grcmp;
-            int numcmp = Num.CompareTo(other.Num);
-            if (numcmp != 0)
-                return numcmp;
+            int result = Suit.CompareTo(other.Suit);
+            if (result != 0)
+                return result;
+            result = Num.CompareTo(other.Num);
+            if (result != 0)
+                return result;
             return Akadora.CompareTo(other.Akadora);
         }
 

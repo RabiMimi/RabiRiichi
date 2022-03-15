@@ -8,11 +8,11 @@ namespace RabiRiichi.Event.InGame {
     public class AgariInfo : IRabiPlayerMessage {
         public RabiMessageType msgType => RabiMessageType.Unnecessary;
         [RabiBroadcast] public int playerId { get; init; }
-        public readonly Scorings scorings;
+        public readonly ScoreStorage scores;
 
-        public AgariInfo(int playerId, Scorings scorings) {
+        public AgariInfo(int playerId, ScoreStorage scores) {
             this.playerId = playerId;
-            this.scorings = scorings;
+            this.scores = scores;
         }
     }
 
@@ -37,8 +37,8 @@ namespace RabiRiichi.Event.InGame {
             this.agariInfos = new AgariInfoList(incoming.fromPlayerId ?? -1);
         }
 
-        public AgariEvent AddAgari(int playerId, Scorings scorings) {
-            agariInfos.Add(new AgariInfo(playerId, scorings));
+        public AgariEvent AddAgari(int playerId, ScoreStorage scores) {
+            agariInfos.Add(new AgariInfo(playerId, scores));
             return this;
         }
     }

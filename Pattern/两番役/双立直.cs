@@ -7,7 +7,7 @@ namespace RabiRiichi.Pattern {
             BaseOn(allBasePatterns);
         }
 
-        public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, Scorings scorings) {
+        public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
             // TODO: 双立直
             return false;
         }

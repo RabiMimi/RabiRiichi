@@ -8,7 +8,7 @@ namespace RabiRiichi.Pattern {
             BaseOn(base33332);
         }
 
-        public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, Scorings scorings) {
+        public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
             bool is三色同顺 = groups
                 .Where(gr => gr is not Jantou)
                 .OrderBy(gr => gr.First)
@@ -18,7 +18,7 @@ namespace RabiRiichi.Pattern {
                     && (int)gr.Suit == index + 1
                     && gr.First.tile.Num == grs.First().First.tile.Num));
             if (is三色同顺) {
-                scorings.Add(new Scoring(ScoringType.Han, hand.menzen ? 2 : 1, this));
+                scores.Add(new Scoring(ScoringType.Han, hand.menzen ? 2 : 1, this));
             }
             return is三色同顺;
         }

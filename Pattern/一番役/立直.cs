@@ -6,9 +6,9 @@ namespace RabiRiichi.Pattern {
         public 立直(AllBasePatterns allBasePatterns) {
             BaseOn(allBasePatterns);
         }
-        public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, Scorings scorings) {
+        public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
             if (hand.riichi) {
-                scorings.Add(new Scoring(ScoringType.Han, 1, this));
+                scores.Add(new Scoring(ScoringType.Han, 1, this));
                 return true;
             }
             return false;

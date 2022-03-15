@@ -35,7 +35,7 @@ namespace RabiRiichi.Pattern {
             public readonly HashSet<StdPattern> stdFailure = new();
         }
 
-        private bool ResolveStdPattern(ResolutionContext context, StdPattern pattern, Scorings scorings) {
+        private bool ResolveStdPattern(ResolutionContext context, StdPattern pattern, ScoreStorage scores) {
             // 检查是否已经计算过
             if (context.stdSuccess.Contains(pattern)) {
                 return true;
@@ -53,7 +53,7 @@ namespace RabiRiichi.Pattern {
 
             // 检查依赖
             foreach (var dependency in pattern.dependOnPatterns) {
-                if (!ResolveStdPattern(context, dependency, scorings)) {
+                if (!ResolveStdPattern(context, dependency, scores)) {
                     // 依赖失败
                     context.stdFailure.Add(pattern);
                     return false;
@@ -62,12 +62,12 @@ namespace RabiRiichi.Pattern {
 
             // 计算非必须的依赖
             foreach (var ancestor in pattern.afterPatterns) {
-                ResolveStdPattern(context, ancestor, scorings);
+                ResolveStdPattern(context, ancestor, scores);
             }
 
             // 计算当前役种
-            using var fridge = scorings.Freeze(!stdPatterns.Contains(pattern) && !bonusPatterns.Contains(pattern));
-            if (pattern.Resolve(context.group, context.hand, context.incoming, scorings)) {
+            using var fridge = scores.Freeze(!stdPatterns.Contains(pattern) && !bonusPatterns.Contains(pattern));
+            if (pattern.Resolve(context.group, context.hand, context.incoming, scores)) {
                 context.stdSuccess.Add(pattern);
                 return true;
             } else {
@@ -79,7 +79,7 @@ namespace RabiRiichi.Pattern {
         /// <summary>
         /// 检查是否和牌并计算得分最高的牌型
         /// </summary>
-        public Scorings ResolveMaxScore(Hand hand, GameTile incoming, bool applyBonus) {
+        public ScoreStorage ResolveMaxScore(Hand hand, GameTile incoming, bool applyBonus) {
             var groupList = new List<List<MenLike>>();
             var context = new ResolutionContext {
                 hand = hand,
@@ -97,17 +97,17 @@ namespace RabiRiichi.Pattern {
                 context.stdSuccess.Clear();
                 context.stdFailure.Clear();
                 context.group = group;
-                var scorings = new Scorings();
+                var scores = new ScoreStorage();
                 foreach (var pattern in stdPatterns) {
-                    ResolveStdPattern(context, pattern, scorings);
+                    ResolveStdPattern(context, pattern, scores);
                 }
                 if (applyBonus) {
                     foreach (var pattern in bonusPatterns) {
-                        ResolveStdPattern(context, pattern, scorings);
+                        ResolveStdPattern(context, pattern, scores);
                     }
                 }
-                scorings.Calc();
-                return scorings;
+                scores.Calc();
+                return scores;
             });
             return maxScore;
         }

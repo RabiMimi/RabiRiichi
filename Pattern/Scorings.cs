@@ -2,18 +2,18 @@
 using System.Collections.Generic;
 
 namespace RabiRiichi.Pattern {
-    public class Scorings : IComparable<Scorings> {
+    public class ScoreStorage : IComparable<ScoreStorage> {
         internal class Refrigerator : IDisposable {
-            private readonly Scorings scorings;
+            private readonly ScoreStorage scores;
             private readonly bool oldValue;
-            public Refrigerator(Scorings scorings, bool newValue) {
-                this.scorings = scorings;
-                oldValue = scorings.isFrozen;
-                scorings.isFrozen = newValue;
+            public Refrigerator(ScoreStorage scores, bool newValue) {
+                this.scores = scores;
+                oldValue = scores.isFrozen;
+                scores.isFrozen = newValue;
             }
 
             public void Dispose() {
-                scorings.isFrozen = oldValue;
+                scores.isFrozen = oldValue;
             }
         }
 
@@ -71,8 +71,8 @@ namespace RabiRiichi.Pattern {
             return Math.Min(2000, score);
         }
 
-        public Scorings() { }
-        public Scorings(IEnumerable<Scoring> scores) {
+        public ScoreStorage() { }
+        public ScoreStorage(IEnumerable<Scoring> scores) {
             items.AddRange(scores);
         }
         public void Calc() {
@@ -151,7 +151,7 @@ namespace RabiRiichi.Pattern {
             }
         }
 
-        public int CompareTo(Scorings other) {
+        public int CompareTo(ScoreStorage other) {
             if (baseScore != other.baseScore) {
                 return baseScore.CompareTo(other.baseScore);
             }
@@ -161,11 +161,11 @@ namespace RabiRiichi.Pattern {
             return fu.CompareTo(other.fu);
         }
 
-        public static bool operator <(Scorings lhs, Scorings rhs) {
+        public static bool operator <(ScoreStorage lhs, ScoreStorage rhs) {
             return lhs.CompareTo(rhs) < 0;
         }
 
-        public static bool operator >(Scorings lhs, Scorings rhs) {
+        public static bool operator >(ScoreStorage lhs, ScoreStorage rhs) {
             return lhs.CompareTo(rhs) > 0;
         }
     }

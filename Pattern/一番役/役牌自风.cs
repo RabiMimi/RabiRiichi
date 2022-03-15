@@ -7,9 +7,9 @@ namespace RabiRiichi.Pattern {
         private Tile yakuTile;
         public 役牌自风(Base33332 base33332) : base(base33332) { }
 
-        public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, Scorings scorings) {
+        public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
             yakuTile = Tile.From(hand.player.wind);
-            return base.Resolve(groups, hand, incoming, scorings);
+            return base.Resolve(groups, hand, incoming, scores);
         }
     }
 }

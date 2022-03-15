@@ -8,7 +8,7 @@ namespace RabiRiichi.Pattern {
             BaseOn(base33332);
         }
 
-        public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, Scorings scorings) {
+        public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
             if (!hand.menzen)
                 return false;
 
@@ -18,7 +18,7 @@ namespace RabiRiichi.Pattern {
                 .Any(grs => grs.First().IsSame(grs.Last()));
 
             if (isValid) {
-                scorings.Add(new Scoring(ScoringType.Han, 1, this));
+                scores.Add(new Scoring(ScoringType.Han, 1, this));
                 return true;
             }
             return false;

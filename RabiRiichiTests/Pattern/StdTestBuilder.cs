@@ -12,7 +12,7 @@ namespace RabiRiichiTests.Pattern {
         protected List<MenLike> fuuro = new();
         protected GameTiles freeTiles = new();
         protected GameTile incoming;
-        protected Scorings scorings = new();
+        protected ScoreStorage scores = new();
         protected bool? forceMenzen = null;
         public Mock<Player> currentPlayer = new(MockBehavior.Default, 0, null);
         public Mock<Player> anotherPlayer = new(MockBehavior.Default, 1, null);
@@ -95,7 +95,7 @@ namespace RabiRiichiTests.Pattern {
                 freeTiles = freeTiles,
                 fuuro = fuuro,
                 menzen = forceMenzen ?? fuuro.Count == 0,
-            }, incoming, scorings);
+            }, incoming, scores);
             if (shouldResolve) {
                 Assert.IsTrue(ret, "Expect resolve but failed");
             } else {
@@ -114,14 +114,14 @@ namespace RabiRiichiTests.Pattern {
             if (source == null) {
                 source = V;
             }
-            var s = scorings.Find(s => s.Type == type && s.Val == value && s.Source == source);
+            var s = scores.Find(s => s.Type == type && s.Val == value && s.Source == source);
             Assert.IsNotNull(s, $"Expect scoring {type} {value} but not found");
-            scorings.Remove(s);
+            scores.Remove(s);
             return this;
         }
 
         public StdTestBuilder NoMore() {
-            Assert.IsTrue(scorings.Count == 0, "Expect no more scorings but found");
+            Assert.IsTrue(scores.Count == 0, "Expect no more scores but found");
             return this;
         }
     }

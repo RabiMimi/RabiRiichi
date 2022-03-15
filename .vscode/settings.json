@@ -4,5 +4,30 @@
     "omnisharp.enableImportCompletion": true,
     "omnisharp.organizeImportsOnFormat": true,
     "editor.formatOnType": true,
-    "omnisharp.enableRoslynAnalyzers": true
+    "omnisharp.enableRoslynAnalyzers": true,
+    "cSpell.words": [
+        "cref",
+        "Dora",
+        "Doras",
+        "Frenqy",
+        "Furiten",
+        "Fuuro",
+        "Haitei",
+        "Honba",
+        "Ippatsu",
+        "Jantou",
+        "Kazoe",
+        "Lian",
+        "Musou",
+        "Riichi",
+        "Rinshan",
+        "Ryuukyoku",
+        "Tenpai",
+        "Tsumo",
+        "Uradora",
+        "Uradoras",
+        "Yaku",
+        "Yakuman"
+    ],
+    "cSpell.enabled": true
 }

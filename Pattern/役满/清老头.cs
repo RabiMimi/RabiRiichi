@@ -8,9 +8,9 @@ namespace RabiRiichi.Pattern {
             DependOn(混老头, 纯全带幺九);
         }
 
-        public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, Scorings scorings) {
-            scorings.Remove(dependOnPatterns);
-            scorings.Add(new Scoring(ScoringType.Yakuman, 1, this));
+        public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
+            scores.Remove(dependOnPatterns);
+            scores.Add(new Scoring(ScoringType.Yakuman, 1, this));
             return true;
         }
     }

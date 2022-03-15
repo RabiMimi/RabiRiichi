@@ -115,7 +115,7 @@ namespace RabiRiichiTests.Interact {
             Assert.IsFalse(partialParsed.TryGetProperty("privateMessage", out _));
             Assert.AreEqual(message.broadcastNested.broadcastMessage, partialParsed.GetProperty("broadcastNested").GetProperty("broadcastMessage").GetString());
             Assert.IsFalse(partialParsed.GetProperty("broadcastNested").TryGetProperty("privateMessage", out _));
-            Assert.IsFalse(partialParsed.TryGetProperty("priavteNested", out _));
+            Assert.IsFalse(partialParsed.TryGetProperty("privateNested", out _));
         }
 
         [TestMethod]

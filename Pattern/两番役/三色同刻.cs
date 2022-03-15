@@ -8,7 +8,7 @@ namespace RabiRiichi.Pattern {
             BaseOn(base33332);
         }
 
-        public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, Scorings scorings) {
+        public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
             bool isSanshoku = groups
                 .Where(gr => gr is not Jantou)
                 .OrderBy(gr => gr.First)
@@ -18,7 +18,7 @@ namespace RabiRiichi.Pattern {
                     && (int)gr.Suit == index + 1
                     && gr.First.tile.Num == grs.First().First.tile.Num));
             if (isSanshoku) {
-                scorings.Add(new Scoring(ScoringType.Han, 2, this));
+                scores.Add(new Scoring(ScoringType.Han, 2, this));
             }
             return isSanshoku;
         }

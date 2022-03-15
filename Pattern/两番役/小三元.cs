@@ -8,14 +8,14 @@ namespace RabiRiichi.Pattern {
             BaseOn(base33332);
         }
 
-        public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, Scorings scorings) {
+        public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
             bool jantouFlag = groups.Any(gr => gr is Jantou && gr.First.tile.IsSangen);
             bool kouFlag = groups
                 .Where(gr => gr is not Jantou)
                 .Subset(2)
                 .Any(grs => grs.All(gr => gr.First.tile.IsSangen));
             if (jantouFlag && kouFlag) {
-                scorings.Add(new Scoring(ScoringType.Han, 2, this));
+                scores.Add(new Scoring(ScoringType.Han, 2, this));
                 return true;
             }
             return false;

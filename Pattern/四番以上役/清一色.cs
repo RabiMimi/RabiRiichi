@@ -9,11 +9,11 @@ namespace RabiRiichi.Pattern {
             DependOn(混一色);
         }
 
-        public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, Scorings scorings) {
+        public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
             bool 清一色 = !groups.SelectMany(gr => gr).Any(tile => tile.tile.IsZ);
             if (清一色) {
-                scorings.Remove(dependOnPatterns);
-                scorings.Add(new Scoring(ScoringType.Han, hand.menzen ? 6 : 5, this));
+                scores.Remove(dependOnPatterns);
+                scores.Add(new Scoring(ScoringType.Han, hand.menzen ? 6 : 5, this));
                 return true;
             }
             return false;
