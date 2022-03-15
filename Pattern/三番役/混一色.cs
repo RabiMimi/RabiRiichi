@@ -4,8 +4,8 @@ using System.Linq;
 
 namespace RabiRiichi.Pattern {
     public class 混一色 : StdPattern {
-        public 混一色(AllExecpt13_1 allExecpt13_1) {
-            BaseOn(allExecpt13_1);
+        public 混一色(AllExcept13_1 allExcept13_1) {
+            BaseOn(allExcept13_1);
         }
 
         public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, Scorings scorings) {

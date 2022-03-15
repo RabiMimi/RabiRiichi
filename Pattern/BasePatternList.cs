@@ -16,8 +16,8 @@ namespace RabiRiichi.Pattern {
             : base(base33332, base13_1, base72) { }
     }
 
-    public class AllExecpt13_1 : BasePatternList {
-        public AllExecpt13_1(Base33332 base33332, Base72 base72)
+    public class AllExcept13_1 : BasePatternList {
+        public AllExcept13_1(Base33332 base33332, Base72 base72)
             : base(base33332, base72) { }
     }
 }

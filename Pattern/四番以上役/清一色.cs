@@ -4,8 +4,8 @@ using System.Linq;
 
 namespace RabiRiichi.Pattern {
     public class 清一色 : StdPattern {
-        public 清一色(AllExecpt13_1 allExecpt13_1, 混一色 混一色) {
-            BaseOn(allExecpt13_1);
+        public 清一色(AllExcept13_1 allExcept13_1, 混一色 混一色) {
+            BaseOn(allExcept13_1);
             DependOn(混一色);
         }
 
