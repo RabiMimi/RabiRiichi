@@ -35,7 +35,7 @@ namespace RabiRiichi.Pattern {
             public readonly HashSet<StdPattern> stdFailure = new();
         }
 
-        private static bool ResolveStdPattern(ResolutionContext context, StdPattern pattern, Scorings scorings) {
+        private bool ResolveStdPattern(ResolutionContext context, StdPattern pattern, Scorings scorings) {
             // 检查是否已经计算过
             if (context.stdSuccess.Contains(pattern)) {
                 return true;
@@ -66,7 +66,13 @@ namespace RabiRiichi.Pattern {
             }
 
             // 计算当前役种
-            if (pattern.Resolve(context.group, context.hand, context.incoming, scorings)) {
+            Scorings.Refrigerator fridge = null;
+            if (!stdPatterns.Contains(pattern) && !bonusPatterns.Contains(pattern)) {
+                fridge = scorings.Freeze();
+            }
+            bool isResolved = pattern.Resolve(context.group, context.hand, context.incoming, scorings);
+            fridge?.Dispose();
+            if (isResolved) {
                 context.stdSuccess.Add(pattern);
                 return true;
             } else {
