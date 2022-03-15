@@ -66,13 +66,8 @@ namespace RabiRiichi.Pattern {
             }
 
             // 计算当前役种
-            Scorings.Refrigerator fridge = null;
-            if (!stdPatterns.Contains(pattern) && !bonusPatterns.Contains(pattern)) {
-                fridge = scorings.Freeze();
-            }
-            bool isResolved = pattern.Resolve(context.group, context.hand, context.incoming, scorings);
-            fridge?.Dispose();
-            if (isResolved) {
+            using var fridge = scorings.Freeze(!stdPatterns.Contains(pattern) && !bonusPatterns.Contains(pattern));
+            if (pattern.Resolve(context.group, context.hand, context.incoming, scorings)) {
                 context.stdSuccess.Add(pattern);
                 return true;
             } else {

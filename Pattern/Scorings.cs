@@ -4,14 +4,16 @@ using System.Collections.Generic;
 namespace RabiRiichi.Pattern {
     public class Scorings : IComparable<Scorings> {
         internal class Refrigerator : IDisposable {
-            public readonly Scorings scorings;
-            public Refrigerator(Scorings scorings) {
+            private readonly Scorings scorings;
+            private readonly bool oldValue;
+            public Refrigerator(Scorings scorings, bool newValue) {
                 this.scorings = scorings;
-                scorings.isFrozen = true;
+                oldValue = scorings.isFrozen;
+                scorings.isFrozen = newValue;
             }
 
             public void Dispose() {
-                scorings.isFrozen = false;
+                scorings.isFrozen = oldValue;
             }
         }
 
@@ -111,8 +113,11 @@ namespace RabiRiichi.Pattern {
         }
 
         /// <summary> 冻结当前的Scoring（临时变为只读） </summary>
-        internal Refrigerator Freeze() {
-            return new Refrigerator(this);
+        internal Refrigerator Freeze(bool shouldFreeze = true) {
+            if (isFrozen == shouldFreeze) {
+                return null;
+            }
+            return new Refrigerator(this, shouldFreeze);
         }
 
         public void Add(Scoring scoring) {
