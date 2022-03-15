@@ -9,7 +9,7 @@ namespace RabiRiichi.Pattern {
             DependOn(一杯口);
         }
 
-        public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, Scorings scorings) {
+        public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
             if (!hand.menzen)
                 return false;
 
@@ -19,8 +19,8 @@ namespace RabiRiichi.Pattern {
             bool isValid = grs.Count() == 2 && grs.All(gr => gr.Count() == 2);
 
             if (isValid) {
-                scorings.Remove(dependOnPatterns);
-                scorings.Add(new Scoring(ScoringType.Han, 3, this));
+                scores.Remove(dependOnPatterns);
+                scores.Add(new Scoring(ScoringType.Han, 3, this));
                 return true;
             }
             return false;
