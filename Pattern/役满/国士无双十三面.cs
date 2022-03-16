@@ -10,7 +10,7 @@ namespace RabiRiichi.Pattern {
         }
 
         public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
-            bool flag = hand.freeTiles.Contains(incoming);
+            bool flag = hand.freeTiles.Select(tile => tile.tile.Val).Any(val => val == incoming.tile.Val);
             if (flag) {
                 scores.Remove(dependOnPatterns);
                 scores.Add(new Scoring(ScoringType.Yakuman, 2, this));
