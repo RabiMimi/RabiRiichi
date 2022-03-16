@@ -11,26 +11,32 @@ namespace RabiRiichi.Riichi {
         public const int NUM_DORA = 5;
         /// <summary> 岭上牌数量 </summary>
         public const int NUM_RINSHAN = 4;
-
-        public readonly Tiles drawn = new();
-        public readonly Tiles remaining = Tiles.All;
-        public readonly Stack<Tile> rinshan = new();
-        public readonly Tiles doras = new();
-        public readonly Tiles uradoras = new();
-
-        public int NumRemaining => remaining.Count
-            + doras.Count + uradoras.Count - NUM_DORA * 2
-            - (NUM_RINSHAN - rinshan.Count);
+        /// <summary> 牌山剩下的牌 </summary>
+        public readonly ListStack<Tile> remaining = new(Tiles.All);
+        /// <summary> 岭上牌 </summary>
+        public readonly ListStack<Tile> rinshan = new();
+        /// <summary> 宝牌 </summary>
+        public readonly ListStack<Tile> doras = new();
+        /// <summary> 里宝牌 </summary>
+        public readonly ListStack<Tile> uradoras = new();
+        /// <summary> 已翻的Dora数量 </summary>
+        public int revealedDoraCount = 0;
+        /// <summary> 玩家还尚不知道的牌，用于搞事 </summary>
+        public IEnumerable<Tile> hiddenTiles =>
+            remaining
+            .Concat(rinshan)
+            .Concat(doras.Skip(revealedDoraCount))
+            .Concat(uradoras);
+        /// <summary> 牌山剩下的牌数 </summary>
+        public int NumRemaining => remaining.Count;
         /// <summary> 是否到了海底 </summary>
         public bool IsHaitei => NumRemaining <= 0;
 
-        private readonly Rand rand;
-
         public Wall(Rand rand) {
-            this.rand = rand;
-            var tiles = Select(NUM_RINSHAN);
-            tiles.ForEach(t => rinshan.Push(t));
-            remaining.Remove(rinshan);
+            rand.Shuffle(remaining);
+            rinshan.AddRange(remaining.PopMany(NUM_RINSHAN));
+            doras.AddRange(remaining.PopMany(NUM_DORA));
+            uradoras.AddRange(remaining.PopMany(NUM_DORA));
         }
 
         /// <summary> 检查牌山是否还有给定的牌数 </summary>
@@ -38,65 +44,120 @@ namespace RabiRiichi.Riichi {
             return NumRemaining >= amount;
         }
 
-        public bool Draw(Tile tile) {
-            if (!remaining.Contains(tile)) {
-                return false;
-            }
-            remaining.Remove(tile);
-            drawn.Add(tile);
-            return true;
-        }
 
-        public void RevealDora(Tile tile, Tile uraDora) {
-            doras.Add(tile);
-            uradoras.Add(uraDora);
-            remaining.Remove(tile);
-            remaining.Remove(uraDora);
-        }
+        /// <summary> 抽一张牌 </summary>
+        public Tile Draw() => remaining.Pop();
 
-        public bool Draw(IEnumerable<Tile> tiles) {
-            foreach (var tile in tiles) {
-                if (!Draw(tile))
-                    return false;
-            }
-            return true;
-        }
+        /// <summary> 抽若干张牌 </summary>
+        public IEnumerable<Tile> Draw(int count) => remaining.PopMany(count);
+
+        /// <summary> 翻一张宝牌 </summary>
+        public Tile RevealDora() => doras[revealedDoraCount++];
+
 
         /// <summary> 计算tile算几番宝牌（不考虑里宝牌/红宝牌）。非宝牌返回0 </summary>
-        public int CountDora(Tile tile) {
-            return doras.Count(dora => dora.NextDora.IsSame(tile));
-        }
+        public int CountDora(Tile tile)
+            => doras.Count(dora => dora.NextDora.IsSame(tile));
 
         /// <summary> 计算tile中几番里宝牌。非里宝牌返回0 </summary>
-        public int CountUradora(Tile tile) {
-            return uradoras.Count(uradora => uradora.NextDora.IsSame(tile));
+        public int CountUradora(Tile tile)
+            => uradoras.Count(uradora => uradora.NextDora.IsSame(tile));
+
+        /// <summary> 抽一张岭上牌 </summary>
+        public Tile DrawRinshan() => rinshan.Pop();
+
+        /// <summary>
+        /// 去掉一张玩家未知牌（需要在<see cref="hiddenTiles"/>中）
+        /// 若该牌在王牌里，则牌山最后一张牌会补充王牌
+        /// </summary>
+        public bool Remove(Tile tile) {
+            if (remaining.Remove(tile))
+                return true;
+            if (IsHaitei)
+                return false;
+            var newTile = remaining[0];
+            int index;
+            if ((index = rinshan.IndexOf(tile)) >= 0) {
+                remaining.RemoveAt(0);
+                rinshan[index] = newTile;
+                return true;
+            }
+            if ((index = uradoras.IndexOf(tile)) >= 0) {
+                remaining.RemoveAt(0);
+                uradoras[index] = newTile;
+                return true;
+            }
+            if ((index = doras.IndexOf(tile)) >= revealedDoraCount) {
+                remaining.RemoveAt(0);
+                doras[index] = newTile;
+                return true;
+            }
+            return false;
         }
 
-        /// <summary> 随机从牌山中选择一张牌 </summary>
-        public Tile SelectOne() {
-            return rand.Choice(remaining);
+        /// <summary>
+        /// 若tile在searchFrom中，将tile与target的targetIndex位置的tile进行交换
+        /// </summary>
+        private static bool Swap(ListStack<Tile> target, int targetIndex, ListStack<Tile> searchFrom, Tile tile) {
+            int index = searchFrom.IndexOf(tile);
+            if (index < -1)
+                return false;
+            (target[targetIndex], searchFrom[index]) = (searchFrom[index], target[targetIndex]);
+            return true;
         }
 
-        public Tiles Select(int count) {
-            return new Tiles(rand.Choice(remaining, count));
-        }
-
-        public Tile NextRinshan => rinshan.Peek();
-        /// <summary> 抽一张牌，然后去掉一张岭上牌 </summary>
-        public void DrawRinshan(Tile tile) {
-            int index = remaining.IndexOf(tile);
-            if (index < 0) {
-                // 不在牌山里，则必定抽岭上牌
-                if (tile != NextRinshan) {
-                    throw new ArgumentException($"{tile} is not in the wall or rinshan");
-                }
-                rinshan.Pop();
+        /// <summary>
+        /// 将tile与target的targetIndex位置的tile进行交换
+        /// </summary>
+        private void Swap(ListStack<Tile> target, int targetIndex, Tile tile) {
+            if (Swap(target, targetIndex, remaining, tile))
+                return;
+            if (Swap(target, targetIndex, rinshan, tile))
+                return;
+            if (Swap(target, targetIndex, uradoras, tile))
+                return;
+            int index = doras.IndexOf(tile);
+            if (index >= revealedDoraCount) {
+                (doras[index], target[targetIndex]) = (target[targetIndex], doras[index]);
                 return;
             }
-            // 在牌山里，有人搞事，假装这张是岭上牌
-            remaining.RemoveAt(index);
-            remaining.Add(NextRinshan);
-            rinshan.Pop();
+            throw new ArgumentException("tile is already drawn or revealed, cannot swap");
+        }
+
+        /// <summary> 将一张牌作为牌山第i前的牌（从0开始） </summary>
+        public void Insert(int i, Tile tile) {
+            Remove(tile);
+            remaining.Insert(remaining.Count - i, tile);
+        }
+
+        /// <summary> 将一张牌放到牌山最前 </summary>
+        public void InsertFirst(Tile tile) {
+            Insert(0, tile);
+        }
+
+        /// <summary> 将一张牌放到牌山最后 </summary>
+        public void InsertLast(Tile tile) {
+            Insert(remaining.Count - 1, tile);
+        }
+
+        /// <summary> 将一张牌作为第i张里宝牌 </summary>
+        public void PlaceUradora(int i, Tile tile) {
+            Swap(uradoras, i, tile);
+        }
+
+        /// <summary> 将一张牌作为第i张宝牌 </summary>
+        public void PlaceDora(int i, Tile tile) {
+            Swap(doras, i, tile);
+        }
+
+        /// <summary> 将一张牌放到岭上牌最前 </summary>
+        public void PlaceRinshanFirst(Tile tile) {
+            Swap(rinshan, rinshan.Count - 1, tile);
+        }
+
+        /// <summary> 将一张牌放到岭上牌最后 </summary>
+        public void PlaceRinshanLast(Tile tile) {
+            Swap(rinshan, 0, tile);
         }
     }
 }

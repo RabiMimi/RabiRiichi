@@ -8,27 +8,15 @@ using System.Threading.Tasks;
 namespace RabiRiichi.Event.InGame.Listener {
     public static class DrawTileListener {
 
-        public static Task PrepareTile(DrawTileEvent e) {
-            if (e.tile != null) {
-                // 已经有牌了，不需要再摸牌
-                return Task.CompletedTask;
-            }
-            switch (e.source) {
-                case TileSource.Wall:
-                case TileSource.Wanpai:
-                    // 从牌山随机选取一张牌
-                    if (!e.game.wall.Has(1)) {
-                        e.Cancel();
-                        return Task.CompletedTask;
-                    }
-                    e.tile = new GameTile(e.game.wall.SelectOne()) {
-                        source = e.source
-                    };
-                    break;
-                default:
-                    throw new ArgumentException($"Drawing from unsupported tile source: {e.source}");
-            }
-            return Task.CompletedTask;
+        private static GameTile DrawFrom(DrawTileEvent e) {
+            var tile = e.source switch {
+                TileSource.Wall => e.game.wall.DrawRinshan(),// 抽岭上牌
+                TileSource.Wanpai => e.game.wall.Draw(),// 从牌山随机选取一张牌
+                _ => throw new ArgumentException($"Drawing from unsupported tile source: {e.source}"),
+            };
+            return new GameTile(tile) {
+                source = e.source,
+            };
         }
 
         private static IEnumerable<ResolverBase> GetDrawTileResolvers(Game game) {
@@ -47,11 +35,11 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         public static Task DrawTile(DrawTileEvent e) {
-            e.game.wall.Draw(e.tile.tile);
+            var gameTile = DrawFrom(e);
             var resolvers = GetDrawTileResolvers(e.game);
             var inquiry = new MultiPlayerInquiry(e.game.info);
             foreach (var resolver in resolvers) {
-                resolver.Resolve(e.player, e.tile, inquiry);
+                resolver.Resolve(e.player, gameTile, inquiry);
             }
             inquiry.GetByPlayerId(e.playerId).DisableSkip();
             var waitEv = new WaitPlayerActionEvent(e.game, inquiry);
@@ -90,7 +78,6 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         public static void Register(EventBus eventBus) {
-            eventBus.Register<DrawTileEvent>(PrepareTile, EventPriority.Prepare);
             eventBus.Register<DrawTileEvent>(DrawTile, EventPriority.Execute);
         }
     }

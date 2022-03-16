@@ -11,6 +11,15 @@ namespace RabiRiichiTests {
             };
         }
 
+        private static Game cachedGame;
+
+        public static Game GetGame() {
+            if (cachedGame == null) {
+                cachedGame = new Game(new GameConfig());
+            }
+            return cachedGame;
+        }
+
         public static void AssertEq(this Tiles tiles, string str) {
             var newTiles = new Tiles(str);
             tiles.Sort();

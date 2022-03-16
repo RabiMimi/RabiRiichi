@@ -9,13 +9,8 @@ namespace RabiRiichi.Event.InGame {
         [RabiBroadcast] public TileSource source;
         #endregion
 
-        #region Response
-        [RabiPrivate] public GameTile tile;
-        #endregion
-
-        public DrawTileEvent(Game game, int playerId, TileSource source, GameTile tile = null) : base(game, playerId) {
+        public DrawTileEvent(Game game, int playerId, TileSource source) : base(game, playerId) {
             this.source = source;
-            this.tile = tile;
         }
     }
 }

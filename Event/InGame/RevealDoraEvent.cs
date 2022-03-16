@@ -9,9 +9,7 @@ namespace RabiRiichi.Event.InGame {
         public override string name => "reveal_dora";
 
         #region Response
-        [RabiBroadcast]
-        public Tile dora;
-        public Tile uraDora;
+        [RabiBroadcast] public Tile dora;
         #endregion
 
         public RevealDoraEvent(Game game, int playerId = -1) : base(game, playerId) { }

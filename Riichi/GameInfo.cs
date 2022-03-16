@@ -27,7 +27,7 @@ namespace RabiRiichi.Riichi {
     }
 
     public class GameInfo {
-        public GameConfig config;
+        public GameConfig config = new();
         /// <summary> 游戏状态 </summary>
         public GamePhase phase = GamePhase.Pending;
         /// <summary> 场风 </summary>
