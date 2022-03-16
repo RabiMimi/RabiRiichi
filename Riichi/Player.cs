@@ -7,12 +7,14 @@
         public Game game;
         public Wind wind;
         /// <summary> 手牌 </summary>
-        public Hand hand = new();
+        public Hand hand;
+        /// <summary> 点数 </summary>
+        public int points;
 
         public Player(int id, Game game) {
             this.id = id;
             this.game = game;
-            hand.player = this;
+            points = game.config.initialPoints;
         }
 
         public int NextPlayerId => game.NextPlayerId(id);
@@ -40,7 +42,9 @@
 
         /// <summary> 开局时重置玩家手牌状态 </summary>
         public void Reset() {
-            hand = new Hand();
+            hand = new Hand() {
+                player = this
+            };
         }
     }
 }

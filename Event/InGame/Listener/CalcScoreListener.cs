@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 namespace RabiRiichi.Event.InGame.Listener {
     public static class CalcScoreListener {
         public static Task CalcScore(CalcScoreEvent ev) {
+            // TODO: 立直棒 本场棒
             var fromPlayer = ev.game.GetPlayer(ev.agariInfos.fromPlayer);
             foreach (var info in ev.agariInfos) {
                 var toPlayer = ev.game.GetPlayer(info.playerId);

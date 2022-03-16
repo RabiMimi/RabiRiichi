@@ -106,6 +106,7 @@ namespace RabiRiichi.Riichi.Setup {
             KanListener.Register(eventBus);
             AgariListener.Register(eventBus);
             SetMenzenListener.Register(eventBus);
+            ApplyScoreListener.Register(eventBus);
 
             EventBroadcast.Register(eventBus);
         }

@@ -8,6 +8,9 @@ namespace RabiRiichi.Event.InGame.Listener {
             e.game.info.round = e.round;
             e.game.info.honba = e.honba;
             e.game.info.Reset();
+            foreach (var player in e.game.players) {
+                player.Reset();
+            }
             return Task.CompletedTask;
         }
 

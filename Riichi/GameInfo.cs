@@ -8,8 +8,17 @@ namespace RabiRiichi.Riichi {
         public int playerCount = 2;
         /// <summary> 番缚 </summary>
         public int minHan = 1;
+
+        /// <summary> 初始点数 </summary>
+        public int initialPoints = 25000;
+
+        /// <summary> 注册类 </summary>
         public BaseSetup setup = new RiichiSetup();
+
+        /// <summary> 交互类 </summary>
         public IActionCenter actionCenter = null;
+
+        /// <summary> 随机种子 </summary>
         public int? seed;
     }
 
