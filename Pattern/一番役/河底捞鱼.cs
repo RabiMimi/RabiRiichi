@@ -7,7 +7,7 @@ namespace RabiRiichi.Pattern {
             BaseOn(allBasePatterns);
         }
         public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
-            // TODO: 排除花天月底
+            // 应该不会错，不用排除花天月底
             if (!incoming.IsTsumo && hand.game.wall.IsHaitei) {
                 scores.Add(new Scoring(ScoringType.Han, 1, this));
                 return true;

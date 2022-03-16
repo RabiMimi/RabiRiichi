@@ -74,6 +74,9 @@ namespace RabiRiichi.Riichi {
         /// <summary> 是否是三元牌 </summary>
         public bool IsSangen => IsZ && Num >= 5 && Num <= 7;
 
+        /// <summary> 是否是风牌 </summary>
+        public bool IsWind => IsZ && Num >= 1 && Num <= 4;
+
         public Tile(byte val = 0) { Val = val; }
         public Tile(TileSuit gr, int num, bool isAkadora = false) {
             Val = 0;
