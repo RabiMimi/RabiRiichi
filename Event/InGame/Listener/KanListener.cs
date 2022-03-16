@@ -30,9 +30,13 @@ namespace RabiRiichi.Event.InGame.Listener {
             return Task.CompletedTask;
         }
 
-        private static async Task AfterInquiry(WaitPlayerActionEvent waitEv) {
-            await waitEv.WaitForFinish;
-            var resp = waitEv.inquiry.responses;
+        private static async Task AfterInquiry(WaitPlayerActionEvent ev) {
+            try {
+                await ev.WaitForFinish;
+            } catch (TaskCanceledException) {
+                return;
+            }
+            var resp = ev.inquiry.responses;
             foreach (var action in resp) {
                 if (action is RonAction) {
                     // TODO: 和了

@@ -36,8 +36,8 @@ namespace RabiRiichi.Event {
         public bool IsCancelled => phase == EventPriority.Cancelled;
 
         /// <summary> 等待事件被成功处理 </summary>
-        private readonly Lazy<TaskCompletionSource> finishTcs = new();
-        public Task WaitForFinish => IsFinished ? Task.CompletedTask : finishTcs.Value.Task;
+        private readonly TaskCompletionSource finishTcs = new();
+        public Task WaitForFinish => IsFinished ? Task.CompletedTask : finishTcs.Task;
 
         /// <summary> 事件处理过程中可能会用到的额外信息 </summary>
         public Dictionary<string, object> extraData = new();
@@ -50,13 +50,12 @@ namespace RabiRiichi.Event {
         /// <summary> 强制取消该事件 </summary>
         public void Cancel() {
             phase = EventPriority.Cancelled;
+            finishTcs.SetCanceled();
         }
 
         public void Finish() {
             phase = EventPriority.Finished;
-            if (finishTcs.IsValueCreated) {
-                finishTcs.Value.SetResult();
-            }
+            finishTcs.SetResult();
         }
 
         public override string ToString() {

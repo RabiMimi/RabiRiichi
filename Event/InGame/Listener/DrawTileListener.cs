@@ -61,7 +61,11 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         private static async Task AfterPlayerAction(WaitPlayerActionEvent ev) {
-            await ev.WaitForFinish;
+            try {
+                await ev.WaitForFinish;
+            } catch (TaskCanceledException) {
+                return;
+            }
             var resp = ev.inquiry.responses;
             var eventBuilder = new MultiEventBuilder();
             foreach (var action in resp) {
