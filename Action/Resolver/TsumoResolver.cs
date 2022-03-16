@@ -1,4 +1,5 @@
 ﻿using RabiRiichi.Action;
+using RabiRiichi.Event.InGame;
 using RabiRiichi.Pattern;
 using RabiRiichi.Riichi;
 using System.Collections.Generic;
@@ -22,9 +23,9 @@ namespace RabiRiichi.Action.Resolver {
         protected override bool ResolveAction(Player player, GameTile incoming, MultiPlayerInquiry output) {
             var hand = player.hand;
             // 不需要判定振听，因为这里已经保证是自摸了
-            var maxScore = patternResolver.ResolveMaxScore(hand, incoming, false).cachedResult;
-            if (maxScore != null && maxScore.IsValid(player.game.config.minHan)) {
-                output.Add(new TsumoAction(hand.player.id));
+            var maxScore = patternResolver.ResolveMaxScore(hand, incoming, false);
+            if (maxScore != null && maxScore.cachedResult.IsValid(player.game.config.minHan)) {
+                output.Add(new TsumoAction(hand.player.id, maxScore, incoming));
                 return true;
             }
             return false;

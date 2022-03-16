@@ -37,7 +37,7 @@ namespace RabiRiichi.Action {
         /// <summary>
         /// 初始值必须是一个有效的回应，用于用户超时跳过的情况
         /// </summary>
-        protected T response;
+        public T response;
 
         public PlayerAction(int playerId) {
             this.playerId = playerId;

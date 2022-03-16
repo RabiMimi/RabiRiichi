@@ -23,6 +23,7 @@ namespace RabiRiichi.Event {
         [RabiBroadcast] public RabiMessageType msgType => RabiMessageType.Event;
 
         public Game game;
+        public EventBus bus => game.eventBus;
         public int phase = EventPriority.Maximum;
 
         /// <summary> 是否已经处理完毕或被取消 </summary>

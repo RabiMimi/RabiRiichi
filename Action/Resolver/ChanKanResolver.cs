@@ -15,11 +15,9 @@ namespace RabiRiichi.Action.Resolver {
             }
             if (incoming.IsTsumo) {
                 // 暗杠，判定国士
-                if (base13_1.Resolve(player.hand, incoming, out _)) {
-                    output.Add(new RonAction(player.id));
-                    return true;
+                if (!base13_1.Resolve(player.hand, incoming, out _)) {
+                    return false;
                 }
-                return false;
             }
             return base.ResolveAction(player, incoming, output);
         }

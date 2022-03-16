@@ -1,17 +1,31 @@
+using RabiRiichi.Event.InGame;
+using RabiRiichi.Pattern;
+using RabiRiichi.Riichi;
+
 namespace RabiRiichi.Action {
     public abstract class AgariAction : ConfirmAction {
-        public AgariAction(int playerId, int priorityDelta = 0) : base(playerId) {
+        public readonly AgariInfo agariInfo;
+        public readonly GameTile incoming;
+        public AgariAction(int playerId, AgariInfo agariInfo, GameTile incoming, int priorityDelta = 0) : base(playerId) {
+            this.agariInfo = agariInfo;
+            this.incoming = incoming;
             priority = ActionPriority.Ron + priorityDelta;
         }
     }
 
     public class RonAction : AgariAction {
         public override string name => "ron";
-        public RonAction(int playerId, int priorityDelta = 0) : base(playerId, priorityDelta) { }
+        public RonAction(AgariInfo agariInfo, GameTile incoming, int priorityDelta = 0)
+            : base(agariInfo.playerId, agariInfo, incoming, priorityDelta) { }
+        public RonAction(int playerId, ScoreStorage scores, GameTile incoming, int priorityDelta = 0)
+            : base(playerId, new AgariInfo(playerId, scores), incoming, priorityDelta) { }
     }
 
     public class TsumoAction : AgariAction {
         public override string name => "tsumo";
-        public TsumoAction(int playerId, int priorityDelta = 0) : base(playerId, priorityDelta) { }
+        public TsumoAction(AgariInfo agariInfo, GameTile incoming, int priorityDelta = 0)
+            : base(agariInfo.playerId, agariInfo, incoming, priorityDelta) { }
+        public TsumoAction(int playerId, ScoreStorage scores, GameTile incoming, int priorityDelta = 0)
+            : this(new AgariInfo(playerId, scores), incoming, priorityDelta) { }
     }
 }

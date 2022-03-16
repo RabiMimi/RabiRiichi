@@ -6,12 +6,14 @@ using System.Linq;
 namespace RabiRiichi.Action {
     public class ActionTileInfo : IRabiMessage {
         public RabiMessageType msgType => RabiMessageType.Unnecessary;
+        public GameTile gameTile;
         [RabiBroadcast] public readonly string tile;
         [RabiBroadcast] public readonly int from;
         [RabiBroadcast] public readonly int player;
         [RabiBroadcast] public readonly string source;
 
         public ActionTileInfo(GameTile tile) {
+            gameTile = tile;
             this.tile = tile.ToString();
             from = tile.fromPlayer?.id ?? -1;
             player = tile.player?.id ?? -1;
@@ -22,8 +24,10 @@ namespace RabiRiichi.Action {
     public class ChooseTilesActionOption : ActionOption {
 
         [RabiBroadcast] public readonly List<ActionTileInfo> tiles;
+        public readonly GameTiles gameTiles;
 
         public ChooseTilesActionOption(GameTiles tiles) {
+            gameTiles = tiles;
             this.tiles = tiles.Select(tile => new ActionTileInfo(tile)).ToList();
         }
     }

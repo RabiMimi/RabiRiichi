@@ -18,8 +18,10 @@ namespace RabiRiichi.Event.InGame {
 
     public class AgariInfoList : List<AgariInfo> {
         public readonly int fromPlayer;
-        public AgariInfoList(int fromPlayer) {
+        public readonly GameTile incoming;
+        public AgariInfoList(int fromPlayer, GameTile incoming, params AgariInfo[] agariInfos) : base(agariInfos) {
             this.fromPlayer = fromPlayer;
+            this.incoming = incoming;
         }
     }
 
@@ -27,19 +29,12 @@ namespace RabiRiichi.Event.InGame {
     public class AgariEvent : EventBase {
         public override string name => "agari";
         #region Request
-        [RabiBroadcast] public bool isTsumo => incoming.IsTsumo;
-        [RabiBroadcast] public readonly GameTile incoming;
+        [RabiBroadcast] public bool isTsumo => agariInfos.incoming.IsTsumo;
         [RabiBroadcast] public readonly AgariInfoList agariInfos;
         #endregion
 
-        public AgariEvent(Game game, GameTile incoming) : base(game) {
-            this.incoming = incoming;
-            this.agariInfos = new AgariInfoList(incoming.fromPlayerId ?? -1);
-        }
-
-        public AgariEvent AddAgari(int playerId, ScoreStorage scores) {
-            agariInfos.Add(new AgariInfo(playerId, scores));
-            return this;
+        public AgariEvent(Game game, AgariInfoList info) : base(game) {
+            agariInfos = info;
         }
     }
 }

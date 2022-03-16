@@ -6,7 +6,7 @@ namespace RabiRiichi.Event.InGame.Listener {
             foreach (var info in ev.agariInfos) {
                 ev.game.GetPlayer(info.playerId).hand.agari = true;
             }
-            ev.game.eventBus.Queue(new CalcScoreEvent(ev.game, ev.agariInfos));
+            ev.bus.Queue(new CalcScoreEvent(ev.game, ev.agariInfos));
             return Task.CompletedTask;
         }
 

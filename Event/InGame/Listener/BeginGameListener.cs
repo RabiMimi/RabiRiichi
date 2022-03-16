@@ -12,7 +12,7 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         public static Task AfterUpdateInfo(BeginGameEvent e) {
-            var bus = e.game.eventBus;
+            var bus = e.bus;
             int banker = e.game.info.Banker;
             for (int i = 0; i < e.game.config.playerCount; i++) {
                 int playerId = (i + banker) % e.game.config.playerCount;

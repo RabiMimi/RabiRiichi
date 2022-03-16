@@ -19,6 +19,7 @@ namespace RabiRiichi.Action {
     }
 
     public abstract class MultiChoiceAction : ChoiceAction<List<int>> {
+        public IEnumerable<ActionOption> chosen => response.Select(r => choices[r]);
         public MultiChoiceAction(int playerId) : base(playerId) {
             response = new List<int>();
         }
@@ -27,7 +28,7 @@ namespace RabiRiichi.Action {
             if (resp == null) {
                 return false;
             }
-            response = response
+            response = resp
                 .Where(i => i >= 0 && i < choices.Count)
                 .OrderBy(i => i)
                 .Distinct()
@@ -37,6 +38,7 @@ namespace RabiRiichi.Action {
     }
 
     public abstract class SingleChoiceAction : ChoiceAction<int> {
+        public ActionOption chosen => choices[response];
         public SingleChoiceAction(int playerId) : base(playerId) {
             response = 0;
         }
