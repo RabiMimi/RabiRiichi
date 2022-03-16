@@ -1,6 +1,6 @@
 using System;
 
-namespace RabiRiichi.Interact {
+namespace RabiRiichi.Communication {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property | AttributeTargets.Field)]
     public class RabiPrivateAttribute : Attribute { }
 

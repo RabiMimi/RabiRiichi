@@ -1,4 +1,4 @@
-using RabiRiichi.Interact;
+using RabiRiichi.Communication;
 using RabiRiichi.Util;
 using System;
 using System.Text.Json;

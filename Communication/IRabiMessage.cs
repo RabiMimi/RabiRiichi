@@ -1,4 +1,4 @@
-namespace RabiRiichi.Interact {
+namespace RabiRiichi.Communication {
     public enum RabiMessageType {
         Unnecessary,
         Action,

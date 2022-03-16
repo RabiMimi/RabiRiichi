@@ -3,7 +3,7 @@ using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace RabiRiichi.Interact {
+namespace RabiRiichi.Communication {
     public abstract class ToStringJsonConverter<T> : JsonConverter<T> {
         public abstract T FromString(string str);
 

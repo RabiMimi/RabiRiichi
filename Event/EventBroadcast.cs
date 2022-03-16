@@ -1,4 +1,4 @@
-﻿using RabiRiichi.Interact;
+﻿using RabiRiichi.Communication;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;

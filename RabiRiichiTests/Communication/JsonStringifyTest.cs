@@ -1,11 +1,11 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using RabiRiichi.Interact;
+using RabiRiichi.Communication;
 using RabiRiichi.Riichi;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace RabiRiichiTests.Interact {
+namespace RabiRiichiTests.Communication {
     [TestClass]
     public class JsonStringifyTest {
         #region Test Classes

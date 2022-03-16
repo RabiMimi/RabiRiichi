@@ -1,4 +1,4 @@
-using RabiRiichi.Interact;
+using RabiRiichi.Communication;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
