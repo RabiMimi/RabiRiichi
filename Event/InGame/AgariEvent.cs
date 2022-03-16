@@ -27,6 +27,24 @@ namespace RabiRiichi.Event.InGame {
 
     [RabiBroadcast]
     public class AgariEvent : EventBase {
+        public class Builder : IEventBuilder {
+            public readonly Game game;
+            public readonly AgariInfoList agariInfos;
+            public Builder(Game game, int fromPlayer, GameTile incoming) {
+                this.game = game;
+                agariInfos = new AgariInfoList(fromPlayer, incoming);
+            }
+            public Builder Add(AgariInfo agariInfo) {
+                agariInfos.Add(agariInfo);
+                return this;
+            }
+            public EventBase Build() {
+                if (agariInfos.Count == 0) {
+                    return null;
+                }
+                return new AgariEvent(game, agariInfos);
+            }
+        }
         public override string name => "agari";
         #region Request
         [RabiBroadcast] public bool isTsumo => agariInfos.incoming.IsTsumo;

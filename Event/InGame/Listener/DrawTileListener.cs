@@ -63,25 +63,26 @@ namespace RabiRiichi.Event.InGame.Listener {
         private static async Task AfterPlayerAction(WaitPlayerActionEvent ev) {
             await ev.WaitForFinish;
             var resp = ev.inquiry.responses;
+            var eventBuilder = new MultiEventBuilder();
             foreach (var action in resp) {
                 if (action is TsumoAction tsumo) {
-                    ev.bus.Queue(new AgariEvent(ev.game,
-                        new AgariInfoList(tsumo.playerId, tsumo.incoming, tsumo.agariInfo)));
+                    eventBuilder.AddAgari(ev.game, tsumo.playerId, tsumo.incoming, tsumo.agariInfo);
                 } else if (action is PlayTileAction play) {
                     var option = play.chosen as ChooseTileActionOption;
                     if (action is RiichiAction) {
-                        ev.bus.Queue(
+                        eventBuilder.AddEvent(
                             new RiichiEvent(ev.game, play.playerId, option.tile.gameTile));
                     } else {
-                        ev.bus.Queue(
+                        eventBuilder.AddEvent(
                             new DiscardTileEvent(ev.game, play.playerId, option.tile.gameTile));
                     }
                 } else if (action is KanAction kanAction) {
                     var option = kanAction.chosen as ChooseTilesActionOption;
                     var kan = new Kan(option.gameTiles);
-                    ev.bus.Queue(new KanEvent(ev.game, kanAction.playerId, kan, kanAction.incoming));
+                    eventBuilder.AddEvent(new KanEvent(ev.game, kanAction.playerId, kan, kanAction.incoming));
                 }
             }
+            eventBuilder.BuildAndQueue(ev.bus);
         }
 
         public static void Register(EventBus eventBus) {
