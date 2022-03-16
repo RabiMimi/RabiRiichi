@@ -93,6 +93,10 @@ namespace RabiRiichi.Pattern {
                 }
             }
 
+            if (groupList.Count == 0) {
+                return null;
+            }
+
             var maxScore = groupList.Max(group => {
                 context.stdSuccess.Clear();
                 context.stdFailure.Clear();

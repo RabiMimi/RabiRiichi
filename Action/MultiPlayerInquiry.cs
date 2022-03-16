@@ -85,6 +85,9 @@ namespace RabiRiichi.Action {
             if (hasExecuted.Exchange(true)) {
                 return;
             }
+            if (IsEmpty) {
+                return;
+            }
             if (curMaxPriority == int.MinValue) {
                 // 没有用户做出有效回应
                 curMaxPriority = playerInquiries.Max(x => x.curPriority);

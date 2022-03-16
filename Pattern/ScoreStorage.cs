@@ -17,87 +17,100 @@ namespace RabiRiichi.Pattern {
             }
         }
 
+        public class ScoreCalcResult : IComparable<ScoreCalcResult> {
+            /// <summary> 基本点 </summary>
+            public int BaseScore {
+                get {
+                    if (IsYakuman) {
+                        return yakuman * 8000;
+                    }
+                    if (IsKazoeYakuman) {
+                        return 8000;
+                    }
+                    if (han >= 11) {
+                        return 6000;
+                    }
+                    if (han >= 8) {
+                        return 4000;
+                    }
+                    if (han >= 6) {
+                        return 3000;
+                    }
+                    if (han >= 5) {
+                        return 2000;
+                    }
+                    int score = fu * (1 << (han + 2));
+                    return Math.Min(2000, score);
+                }
+            }
+            /// <summary> 额外得分 </summary>
+            public int extraPoints;
+            /// <summary> 番 </summary>
+            public int han;
+            /// <summary> 符 </summary>
+            public int fu;
+            /// <summary> 役满数 </summary>
+            public int yakuman;
+            /// <summary> 流局 </summary>
+            public int ryuukyoku;
+
+            public bool IsKazoeYakuman => han >= KAZOE_YAKUMAN;
+            public bool IsYakuman => yakuman > 0 || IsKazoeYakuman;
+            public bool IsValid(int minHan) => han + yakuman * KAZOE_YAKUMAN >= minHan;
+
+            public int CompareTo(ScoreCalcResult other) {
+                if (BaseScore != other.BaseScore) {
+                    return BaseScore.CompareTo(other.BaseScore);
+                }
+                if (han != other.han) {
+                    return han.CompareTo(other.han);
+                }
+                return fu.CompareTo(other.fu);
+            }
+            public static bool operator <(ScoreCalcResult lhs, ScoreCalcResult rhs) {
+                return lhs.CompareTo(rhs) < 0;
+            }
+
+            public static bool operator >(ScoreCalcResult lhs, ScoreCalcResult rhs) {
+                return lhs.CompareTo(rhs) > 0;
+            }
+        }
+
         private readonly List<Scoring> items = new();
 
         /// <summary> 累计役满需要番数 </summary>
         public const int KAZOE_YAKUMAN = 13;
-
-        /// <summary> 番 </summary>
-        public int han;
-
-        /// <summary> 符 </summary>
-        public int fu;
-
-        /// <summary> 役满数 </summary>
-        public int yakuman;
-
         /// <summary> 是否已冻结。已冻结的Scoring将无视所有修改操作 </summary>
         public bool isFrozen { get; private set; }
-        public bool IsKazoeYakuman => han >= KAZOE_YAKUMAN;
-        public bool IsYakuman => yakuman > 0 || IsKazoeYakuman;
 
         /// <summary> Scoring数量 </summary>
         public int Count => items.Count;
 
-        /// <summary> 基本点变动 </summary>
-        /// TODO: 研究一下这是个啥玩意儿
-        public int point;
-
-        /// <summary> 基本点 </summary>
-        public int baseScore;
-
-        public bool IsValid(int minHan) => han + yakuman * KAZOE_YAKUMAN >= minHan;
-
-        private int GetBaseScore() {
-            if (IsYakuman) {
-                return yakuman * 8000;
-            }
-            if (IsKazoeYakuman) {
-                return 8000;
-            }
-            if (han >= 11) {
-                return 6000;
-            }
-            if (han >= 8) {
-                return 4000;
-            }
-            if (han >= 6) {
-                return 3000;
-            }
-            if (han >= 5) {
-                return 2000;
-            }
-            int score = fu * (1 << (han + 2));
-            return Math.Min(2000, score);
-        }
+        public ScoreCalcResult cachedResult = null;
 
         public ScoreStorage() { }
         public ScoreStorage(IEnumerable<Scoring> scores) {
             items.AddRange(scores);
         }
-        public void Calc() {
-            han = 0;
-            fu = 0;
-            yakuman = 0;
-            point = 0;
-            baseScore = 0;
+        public ScoreCalcResult Calc() {
+            cachedResult = new ScoreCalcResult();
             foreach (var score in items) {
                 switch (score.Type) {
                     case ScoringType.Point:
-                        point += score.Val;
+                        cachedResult.extraPoints += score.Val;
                         break;
                     case ScoringType.Fu:
-                        if (fu != 0) {
+                        if (cachedResult.fu != 0) {
                             // TODO: Log
                             // HUtil.Warn("检测到了多个符数计算结果，可能是一个bug");
                         }
-                        fu += score.Val;
+                        cachedResult.fu += score.Val;
                         break;
                     case ScoringType.Han:
-                        han += score.Val;
+                        cachedResult.han += score.Val;
                         break;
                     case ScoringType.Yakuman:
-                        yakuman += score.Val;
+                        cachedResult.yakuman += score.Val;
                         break;
                     case ScoringType.Ryuukyoku:
                         // TODO: Log
@@ -109,7 +122,7 @@ namespace RabiRiichi.Pattern {
                         break;
                 }
             }
-            baseScore = GetBaseScore() + point;
+            return cachedResult;
         }
 
         /// <summary> 冻结当前的Scoring（临时变为只读） </summary>
@@ -152,13 +165,7 @@ namespace RabiRiichi.Pattern {
         }
 
         public int CompareTo(ScoreStorage other) {
-            if (baseScore != other.baseScore) {
-                return baseScore.CompareTo(other.baseScore);
-            }
-            if (han != other.han) {
-                return han.CompareTo(other.han);
-            }
-            return fu.CompareTo(other.fu);
+            return cachedResult.CompareTo(other.cachedResult);
         }
 
         public static bool operator <(ScoreStorage lhs, ScoreStorage rhs) {

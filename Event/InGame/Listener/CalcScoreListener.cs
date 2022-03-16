@@ -14,7 +14,7 @@ namespace RabiRiichi.Event.InGame.Listener {
                     ev.scoreChange.AddRange(HandleTsumo(fromPlayer, ev.game, info));
                 } else {
                     // 荣和
-                    int scoreChange = info.scores.baseScore * (toPlayer.IsBanker ? 6 : 4);
+                    int scoreChange = info.scores.cachedResult.BaseScore * (toPlayer.IsBanker ? 6 : 4);
                     ev.scoreChange.Add(new ScoreTransfer(fromPlayer.id, toPlayer.id, scoreChange));
                 }
             }
@@ -22,7 +22,7 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         private static IEnumerable<ScoreTransfer> HandleTsumo(Player tsumoPlayer, Game game, AgariInfo info) {
-            int score = info.scores.baseScore;
+            int score = info.scores.cachedResult.BaseScore;
             if (tsumoPlayer.IsBanker) {
                 score *= 2;
             }

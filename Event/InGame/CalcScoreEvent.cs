@@ -27,6 +27,7 @@ namespace RabiRiichi.Event.InGame {
                 - this.Where(x => x.from == playerId).Sum(x => x.points);
 
         public int[,] ToMatrix() {
+            // TODO: Allow points from nowhere
             var matrix = new int[playerCount, playerCount];
             foreach (var x in this) {
                 matrix[x.from, x.to] += x.points;

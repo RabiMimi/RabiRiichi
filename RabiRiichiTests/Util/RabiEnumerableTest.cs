@@ -1,4 +1,5 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Linq;
 
 namespace RabiRiichiTests.Util {
@@ -41,6 +42,12 @@ namespace RabiRiichiTests.Util {
         public void TestInvalidSubset() {
             Assert.AreEqual(0, source.Subset(-1).Count());
             Assert.AreEqual(0, source.Subset(source.Length + 1).Count());
+        }
+
+        [TestMethod]
+        public void TestMaxBy() {
+            Assert.AreEqual(1, source.MaxBy(x => -x));
+            Assert.ThrowsException<InvalidOperationException>(() => Enumerable.Empty<int>().MaxBy(x => x));
         }
     }
 }
