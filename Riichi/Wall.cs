@@ -150,14 +150,19 @@ namespace RabiRiichi.Riichi {
             Swap(doras, i, tile);
         }
 
+        /// <summary> 将一张牌作为第i张岭上牌 </summary>
+        public void PlaceRinshan(int i, Tile tile) {
+            Swap(rinshan, i, tile);
+        }
+
         /// <summary> 将一张牌放到岭上牌最前 </summary>
         public void PlaceRinshanFirst(Tile tile) {
-            Swap(rinshan, rinshan.Count - 1, tile);
+            PlaceRinshan(rinshan.Count - 1, tile);
         }
 
         /// <summary> 将一张牌放到岭上牌最后 </summary>
         public void PlaceRinshanLast(Tile tile) {
-            Swap(rinshan, 0, tile);
+            PlaceRinshan(0, tile);
         }
     }
 }
