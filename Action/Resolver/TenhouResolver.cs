@@ -39,7 +39,7 @@ namespace RabiRiichi.Action.Resolver {
                     freeTiles.Add(incoming);
                     incoming = maxTile;
                 }
-                output.Add(new TsumoAction(player.id, maxScore, incoming));
+                output.Add(new TsumoAction(player.id, maxScore, incoming), true);
                 return true;
             }
             return false;

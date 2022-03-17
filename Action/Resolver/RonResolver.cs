@@ -26,7 +26,7 @@ namespace RabiRiichi.Action.Resolver {
             }
             var maxScore = patternResolver.ResolveMaxScore(hand, incoming, false);
             if (maxScore != null && maxScore.cachedResult.IsValid(player.game.config.minHan)) {
-                output.Add(new RonAction(hand.player.id, maxScore, incoming));
+                output.Add(new RonAction(hand.player.id, maxScore, incoming), true);
                 return true;
             }
             return false;
