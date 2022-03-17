@@ -10,8 +10,7 @@ namespace RabiRiichi.Event.InGame.Listener {
             var junEv = new IncreaseJunEvent(ev.game, ev.playerId);
             ev.bus.Queue(junEv);
             if (ev.group is Kan kan) {
-                ev.player.hand.AddKan(kan);
-                ev.bus.Queue(new DrawTileEvent(ev.game, ev.playerId, TileSource.Wanpai, DiscardReason.DrawRinshan));
+                ev.bus.Queue(new KanEvent(ev.game, ev.playerId, kan, ev.tile));
                 return Task.CompletedTask;
             }
             DiscardReason reason;

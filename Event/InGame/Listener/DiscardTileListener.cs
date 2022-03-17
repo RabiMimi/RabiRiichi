@@ -38,8 +38,7 @@ namespace RabiRiichi.Event.InGame.Listener {
                     var option = (ChooseTilesActionOption)kan.chosen;
                     eventBuilder.AddEvent(new ClaimTileEvent(ev.game, kan.playerId, new Kan(option.gameTiles), incoming));
                 } else if (action is RonAction ron) {
-                    eventBuilder.AddAgari(ev.game, incoming.player.id
-                    , incoming, ron.agariInfo);
+                    eventBuilder.AddAgari(ev.game, incoming.player.id, incoming, ron.agariInfo);
                 }
             }
             if (eventBuilder.BuildAndQueue(ev.bus).Count == 0) {

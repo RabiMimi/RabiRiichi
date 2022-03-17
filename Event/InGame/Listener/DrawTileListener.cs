@@ -16,7 +16,7 @@ namespace RabiRiichi.Event.InGame.Listener {
             };
         }
 
-        private static IEnumerable<ResolverBase> GetDrawTileResolvers(Game game) {
+        public static IEnumerable<ResolverBase> GetDrawTileResolvers(Game game) {
             if (game.TryGet<PlayTileResolver>(out var resolver1)) {
                 yield return resolver1;
             }

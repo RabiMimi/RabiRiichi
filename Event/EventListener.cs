@@ -9,7 +9,7 @@ namespace RabiRiichi.Event {
         /// <summary> 成功处理下一个事件后移除监听，无论该事件能否触发监听器 </summary>
         Event,
         /// <summary> 本局结束后移除监听 </summary>
-        Round
+        Game
     }
 
     /// <summary>
@@ -86,7 +86,7 @@ namespace RabiRiichi.Event {
                 case EventScope.Event:
                     CancelOn<EventBase>();
                     break;
-                case EventScope.Round:
+                case EventScope.Game:
                     CancelOn<EndGameEvent>();
                     break;
                 default:

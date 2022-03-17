@@ -39,7 +39,7 @@ namespace RabiRiichi.Riichi {
     }
 
     public class DiscardInfo {
-        /// <summary> 来自哪个玩家（吃碰杠等） </summary>
+        /// <summary> 哪个玩家的弃牌 </summary>
         public readonly Player fromPlayer;
         /// <summary> 弃牌原因 </summary>
         public readonly DiscardReason reason;

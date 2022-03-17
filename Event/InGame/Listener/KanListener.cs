@@ -1,47 +1,74 @@
 using RabiRiichi.Action;
 using RabiRiichi.Action.Resolver;
 using RabiRiichi.Riichi;
-using System;
-using System.IO;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Event.InGame.Listener {
     public static class KanListener {
         public static Task ExecuteKan(KanEvent ev) {
-            // TODO: Add kan after chankan resolved
+            var inquiry = new MultiPlayerInquiry(ev.game.info);
+            if (ev.kanSource != TileSource.DaiMinKan) {
+                // 抢杠
+                var resolvers = GetKanResolvers(ev.game);
+                foreach (var resolver in resolvers) {
+                    resolver.Resolve(ev.player, ev.incoming, inquiry);
+                }
+            }
+            var waitEv = new WaitPlayerActionEvent(ev.game, inquiry);
+            ev.bus.Queue(waitEv);
+            AfterChanKan(waitEv, ev).ConfigureAwait(false);
+            return Task.CompletedTask;
+        }
+
+        private static void FinishKan(KanEvent ev) {
             if (ev.kanSource == TileSource.AnKan || ev.kanSource == TileSource.DaiMinKan) {
                 ev.player.hand.AddKan(ev.kan);
             } else if (ev.kanSource == TileSource.KaKan) {
                 ev.player.hand.KaKan(ev.kan);
             } else {
-                throw new InvalidDataException($"Invalid kanSource: {ev.kanSource}");
+                return;
             }
-            if (ev.kanSource != TileSource.DaiMinKan) {
-                // 抢杠
-                if (ev.game.TryGet<ChanKanResolver>(out var resolver)) {
-                    var inquiry = new MultiPlayerInquiry(ev.game.info);
-                    resolver.Resolve(ev.player, ev.incoming, inquiry);
-                    var waitEv = new WaitPlayerActionEvent(ev.game, inquiry);
-                    ev.bus.Queue(waitEv);
-                    AfterInquiry(waitEv).ConfigureAwait(false);
-                    return Task.CompletedTask;
-                }
+
+            if (ev.kanSource == TileSource.AnKan) {
+                ev.bus.Queue(new RevealDoraEvent(ev.game, ev.playerId));
+            } else {
+                new EventListener<DiscardTileEvent>(ev.bus)
+                    .LatePrepare((_) => {
+                        ev.bus.Queue(new RevealDoraEvent(ev.game, ev.playerId));
+                        return Task.CompletedTask;
+                    }, 1)
+                    .ScopeTo(EventScope.Game);
             }
-            return Task.CompletedTask;
+
+            ev.bus.Queue(new DrawTileEvent(ev.game, ev.playerId, TileSource.Wanpai, DiscardReason.DrawRinshan));
         }
 
-        private static async Task AfterInquiry(WaitPlayerActionEvent ev) {
+        private static IEnumerable<ResolverBase> GetKanResolvers(Game game) {
+            if (game.TryGet<ChanKanResolver>(out var resolver)) {
+                yield return resolver;
+            }
+        }
+
+        private static async Task AfterChanKan(WaitPlayerActionEvent waitEv, KanEvent kanEv) {
             try {
-                await ev.WaitForFinish;
+                await waitEv.WaitForFinish;
             } catch (TaskCanceledException) {
                 return;
             }
-            var resp = ev.inquiry.responses;
+            var eventBuilder = new MultiEventBuilder();
+            var resp = waitEv.inquiry.responses;
             foreach (var action in resp) {
-                if (action is RonAction) {
-                    // TODO: 和了
+                if (action is RonAction ron) {
+                    eventBuilder.AddAgari(waitEv.game, kanEv.playerId, kanEv.incoming, ron.agariInfo);
                 }
             }
+            if (eventBuilder.BuildAndQueue(waitEv.bus).Count > 0) {
+                return;
+            }
+
+            // 没有人抢杠，继续处理开杠事件
+            FinishKan(kanEv);
         }
 
         public static void Register(EventBus eventBus) {
