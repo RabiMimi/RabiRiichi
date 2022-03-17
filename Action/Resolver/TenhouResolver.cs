@@ -18,20 +18,21 @@ namespace RabiRiichi.Action.Resolver {
         }
 
         protected override bool ResolveAction(Player player, GameTile incoming, MultiPlayerInquiry output) {
-            // 此时incoming一定为null
             var freeTiles = player.hand.freeTiles;
             ScoreStorage maxScore = null;
+            freeTiles.Add(incoming);
             for (int i = 0; i < freeTiles.Count; i++) {
-                incoming = freeTiles[i];
+                var tile = freeTiles[i];
                 freeTiles.RemoveAt(i);
-                var score = patternResolver.ResolveMaxScore(player.hand, incoming, false);
+                var score = patternResolver.ResolveMaxScore(player.hand, tile, false);
                 if (maxScore == null || score > maxScore) {
                     maxScore = score;
                 }
-                freeTiles.Insert(i, incoming);
+                freeTiles.Insert(i, tile);
             }
+            freeTiles.Remove(incoming);
             if (maxScore != null && maxScore.cachedResult.IsValid(player.game.config.minHan)) {
-                output.Add(new TsumoAction(player.id, maxScore, player.hand.freeTiles[^1]));
+                output.Add(new TsumoAction(player.id, maxScore, incoming));
                 return true;
             }
             return false;

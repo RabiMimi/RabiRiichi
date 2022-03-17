@@ -1,4 +1,7 @@
+using RabiRiichi.Action;
+using RabiRiichi.Action.Resolver;
 using RabiRiichi.Riichi;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Event.InGame.Listener {
@@ -22,9 +25,44 @@ namespace RabiRiichi.Event.InGame.Listener {
                 bus.Queue(new DealHandEvent(e.game, playerId));
             }
             bus.Queue(new RevealDoraEvent(e.game));
-            bus.Queue(new IncreaseJunEvent(e.game, banker));
-            bus.Queue(new DrawTileEvent(e.game, banker, TileSource.Wall));
+            var lastEvent = new IncreaseJunEvent(e.game, banker);
+            bus.Queue(lastEvent);
+            AfterBankerDealHand(lastEvent).ConfigureAwait(false);
             return Task.CompletedTask;
+        }
+
+        private static async Task AfterBankerDealHand(IncreaseJunEvent ev) {
+            try {
+                await ev.WaitForFinish;
+            } catch (TaskCanceledException) {
+                return;
+            }
+            var inquiry = new MultiPlayerInquiry(ev.game.info);
+            var freeTiles = ev.player.hand.freeTiles;
+            var lastTile = freeTiles[^1];
+            freeTiles.RemoveAt(freeTiles.Count - 1);
+            foreach (var resolver in GetBankerFirstJunResolvers(ev.game)) {
+                resolver.Resolve(ev.player, lastTile, inquiry);
+            }
+            inquiry.GetByPlayerId(ev.playerId).DisableSkip();
+            var waitEv = new WaitPlayerActionEvent(ev.game, inquiry);
+            ev.bus.Queue(waitEv);
+            await DrawTileListener.AfterPlayerAction(waitEv);
+        }
+
+        private static IEnumerable<ResolverBase> GetBankerFirstJunResolvers(Game game) {
+            if (game.TryGet<PlayTileResolver>(out var resolver1)) {
+                yield return resolver1;
+            }
+            if (game.TryGet<RiichiResolver>(out var resolver2)) {
+                yield return resolver2;
+            }
+            if (game.TryGet<KanResolver>(out var resolver3)) {
+                yield return resolver3;
+            }
+            if (game.TryGet<TenhouResolver>(out var resolver4)) {
+                yield return resolver4;
+            }
         }
 
         public static void Register(EventBus eventBus) {

@@ -45,7 +45,7 @@ namespace RabiRiichi.Event.InGame.Listener {
             return Task.CompletedTask;
         }
 
-        private static async Task AfterPlayerAction(WaitPlayerActionEvent ev) {
+        public static async Task AfterPlayerAction(WaitPlayerActionEvent ev) {
             try {
                 await ev.WaitForFinish;
             } catch (TaskCanceledException) {
