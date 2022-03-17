@@ -14,9 +14,6 @@ namespace RabiRiichi.Event.InGame {
         [RabiBroadcast] public int honba;
         #endregion
 
-        #region Response
-        #endregion
-
         public BeginGameEvent(Game game, Wind wind, int banker, int honba) : base(game) {
             this.wind = wind;
             this.banker = banker;

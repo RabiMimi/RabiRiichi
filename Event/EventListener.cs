@@ -87,7 +87,7 @@ namespace RabiRiichi.Event {
                     CancelOn<EventBase>();
                     break;
                 case EventScope.Game:
-                    CancelOn<EndGameEvent>();
+                    CancelOn<NextGameEvent>();
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(scope), scope, "Unknown event scope");
