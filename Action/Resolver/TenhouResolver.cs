@@ -25,7 +25,7 @@ namespace RabiRiichi.Action.Resolver {
                 var tile = freeTiles[i];
                 freeTiles.RemoveAt(i);
                 var score = patternResolver.ResolveMaxScore(player.hand, tile, false);
-                if (maxScore == null || score > maxScore) {
+                if (score != null && (maxScore == null || score > maxScore)) {
                     maxScore = score;
                 }
                 freeTiles.Insert(i, tile);
