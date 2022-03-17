@@ -15,8 +15,8 @@ namespace RabiRiichi.Action {
         public ActionTileInfo(GameTile tile) {
             gameTile = tile;
             this.tile = tile.ToString();
-            from = tile.fromPlayer?.id ?? -1;
-            player = tile.player?.id ?? -1;
+            from = tile.fromPlayerId ?? -1;
+            player = tile.playerId ?? -1;
             source = tile.source.ToString();
         }
     }

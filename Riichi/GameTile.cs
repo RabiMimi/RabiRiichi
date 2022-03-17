@@ -24,21 +24,44 @@ namespace RabiRiichi.Riichi {
         AnKan,
         /// <summary> 大明杠 </summary>
         DaiMinKan,
-        /// <summary> 和 </summary>
-        Ron,
+    }
+
+    public enum DiscardReason {
+        None,
+        /// <summary> 抽牌 </summary>
+        Draw,
+        /// <summary> 抽岭上 </summary>
+        DrawRinshan,
+        /// <summary> 吃 </summary>
+        Chi,
+        /// <summary> 碰 </summary>
+        Pon,
+    }
+
+    public class DiscardInfo {
+        /// <summary> 来自哪个玩家（吃碰杠等） </summary>
+        public readonly Player fromPlayer;
+        /// <summary> 弃牌原因 </summary>
+        public readonly DiscardReason reason;
+        /// <summary> 弃牌时间，与<see cref="GameInfo.timeStamp"/>同步 </summary>
+        public readonly int discardTime;
+
+        public DiscardInfo(Player fromPlayer, DiscardReason reason, int discardTime) {
+            this.fromPlayer = fromPlayer;
+            this.reason = reason;
+            this.discardTime = discardTime;
+        }
     }
 
     public class GameTile : IComparable<GameTile>, IRabiMessage {
         public RabiMessageType msgType => RabiMessageType.Unnecessary;
         [RabiBroadcast] public Tile tile = Tile.Empty;
-        /// <summary> 来自哪个玩家（吃碰杠等）对于刚摸的牌为null </summary>
-        public Player fromPlayer;
-        [RabiBroadcast] public int? fromPlayerId => fromPlayer?.id;
+        [RabiBroadcast] public int? fromPlayerId => discardInfo?.fromPlayer.id;
         /// <summary> 当前归属于哪个玩家，摸切或副露时会被设置 </summary>
         public Player player;
         [RabiBroadcast] public int? playerId => player?.id;
-        /// <summary> 弃牌的时间戳 </summary>
-        public int discardTime = -1;
+        /// <summary> 弃牌信息 </summary>
+        public DiscardInfo discardInfo;
         /// <summary> 该牌成为副露或暗杠的时间戳 </summary>
         public int formTime = -1;
         /// <summary> 是否是公开牌 </summary>
@@ -46,7 +69,7 @@ namespace RabiRiichi.Riichi {
         /// <summary> 是否是立直宣告牌 </summary>
         [RabiBroadcast] public bool riichi = false;
         /// <summary> 是否是自摸 </summary>
-        public bool IsTsumo => fromPlayer == null;
+        public bool IsTsumo => discardInfo == null;
         [RabiBroadcast] public TileSource source = TileSource.Hand;
 
         /// <summary> 是否是万筒索 </summary>

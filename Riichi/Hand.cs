@@ -69,12 +69,12 @@ namespace RabiRiichi.Riichi {
                 if (riichi) {
                     // 立直振听
                     return game.AllDiscardedTiles
-                        .Where(tile => tile.discardTime >= firstRiichiTile.discardTime)
+                        .Where(tile => tile.discardInfo.discardTime >= firstRiichiTile.discardInfo.discardTime)
                         .Any(tile => tenpai.Contains(tile.tile.WithoutDora));
                 } else {
                     // 同巡振听
                     var discarded = game.AllDiscardedTiles.ToList();
-                    int lastIndex = discarded.FindLastIndex(tile => tile.fromPlayer == player);
+                    int lastIndex = discarded.FindLastIndex(tile => tile.fromPlayerId == player.id);
                     return discarded.Skip(lastIndex + 1).Any(tile => tenpai.Contains(tile.tile.WithoutDora));
                 }
             }
@@ -106,13 +106,12 @@ namespace RabiRiichi.Riichi {
             freeTiles.Add(tile);
         }
 
-        public void Play(GameTile tile, bool riichi = false) {
+        public void Play(GameTile tile, DiscardReason reason, bool riichi = false) {
             ippatsu = false;
             tile.player = null;
-            tile.fromPlayer = player;
+            tile.discardInfo = new DiscardInfo(player, reason, game.info.timeStamp.Next);
             tile.source = TileSource.Discard;
             freeTiles.Remove(tile);
-            tile.discardTime = player.game.info.timeStamp.Next;
             discarded.Add(tile);
             if (riichi) {
                 Debug.Assert(menzen && !riichi);

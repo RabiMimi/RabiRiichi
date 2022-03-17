@@ -188,7 +188,8 @@ namespace RabiRiichiTests.Communication {
             var tiles = new Tiles("123s123m123p");
             var message = new GameTileMessage(new GameTile(new Tile("r5s")) {
                 source = TileSource.Wall,
-                fromPlayer = new Player(1, TestHelper.GetGame()),
+                discardInfo = new DiscardInfo(
+                    new Player(1, TestHelper.GetGame()), DiscardReason.Draw, 1),
             }, tiles);
             var json = jsonStringify.Stringify(message, 0);
             var parsed = jsonStringify.Parse<JsonElement>(json, 0);

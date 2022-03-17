@@ -27,7 +27,7 @@ namespace RabiRiichi.Action.Resolver {
             if (result.Count == 0) {
                 return false;
             }
-            output.Add(new ChiAction(player.id, result, -incoming.fromPlayer.Dist(player)));
+            output.Add(new ChiAction(player.id, result, -incoming.discardInfo!.fromPlayer.Dist(player)));
             return true;
         }
     }

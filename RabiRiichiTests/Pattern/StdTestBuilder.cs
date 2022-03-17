@@ -21,7 +21,7 @@ namespace RabiRiichiTests.Pattern {
             var t = new GameTiles(new Tiles(tiles));
             for (int i = 0; i < t.Count; i++) {
                 t[i].player = currentPlayer.Object;
-                t[i].fromPlayer = fuuroIndex == i ? anotherPlayer.Object : null;
+                t[i].discardInfo = fuuroIndex == i ? new DiscardInfo(anotherPlayer.Object, DiscardReason.Draw, 1) : null;
             }
             return MenLike.From(t);
         }
@@ -75,7 +75,7 @@ namespace RabiRiichiTests.Pattern {
         public StdTestBuilder AddAgari(string tiles, string incoming) {
             this.incoming = new GameTile(new Tile(incoming)) {
                 player = currentPlayer.Object,
-                fromPlayer = anotherPlayer.Object
+                discardInfo = new DiscardInfo(anotherPlayer.Object, DiscardReason.Draw, 1),
             };
             var group = new GameTiles(new Tiles(tiles));
             group.ForEach(g => g.player = currentPlayer.Object);
