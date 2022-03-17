@@ -41,6 +41,7 @@ namespace RabiRiichi.Event.InGame.Listener {
                     eventBuilder.AddAgari(ev.game, incoming.player.id, incoming, ron.agariInfo);
                 }
             }
+            // TODO: Riichi
             if (eventBuilder.BuildAndQueue(ev.bus).Count == 0) {
                 ev.bus.Queue(new NextPlayerEvent(ev.game, ev.playerId));
             }

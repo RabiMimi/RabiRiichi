@@ -106,6 +106,7 @@ namespace RabiRiichi.Riichi.Setup {
             DrawTileListener.Register(eventBus);
             IncreaseJunListener.Register(eventBus);
             KanListener.Register(eventBus);
+            NextPlayerListener.Register(eventBus);
             RevealDoraListener.Register(eventBus);
             SetMenzenListener.Register(eventBus);
             WaitPlayerActionListener.Register(eventBus);
