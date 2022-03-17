@@ -42,7 +42,6 @@ namespace RabiRiichi.Riichi {
             // Game related
             serviceCollection.AddSingleton<Wall>();
             serviceCollection.AddSingleton<GameInfo>();
-            serviceCollection.AddSingleton<ActionManager>();
             serviceCollection.AddSingleton<PatternResolver>();
 
             // Custom setup
