@@ -6,9 +6,7 @@ namespace RabiRiichi.Event.InGame.Listener {
         public static Task DealHand(DealHandEvent e) {
             var player = e.player;
             foreach (var tile in e.game.wall.Draw(Game.HandSize)) {
-                player.hand.Add(new GameTile(tile) {
-                    source = TileSource.Wall,
-                });
+                player.hand.Add(tile);
             }
             return Task.CompletedTask;
         }

@@ -105,7 +105,7 @@ namespace RabiRiichiTests.Pattern {
         }
 
         /// <summary>
-        /// 检查是否有给定的计分结果，并将其从scorings中移除
+        /// 检查是否有给定的计分结果，并将其从scores中移除
         /// </summary>
         /// <param name="type">期望的结果类型</param>
         /// <param name="value">期望的值</param>
