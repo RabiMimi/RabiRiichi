@@ -8,7 +8,7 @@ namespace RabiRiichi.Event.InGame.Listener {
     public static class BeginGameListener {
         public static Task UpdateGameInfo(BeginGameEvent e) {
             e.game.info.wind = e.wind;
-            e.game.info.round = e.round;
+            e.game.info.banker = e.banker;
             e.game.info.honba = e.honba;
             e.game.info.Reset();
             foreach (var player in e.game.players) {
@@ -19,7 +19,7 @@ namespace RabiRiichi.Event.InGame.Listener {
 
         public static Task AfterUpdateInfo(BeginGameEvent e) {
             var bus = e.bus;
-            int banker = e.game.info.Banker;
+            int banker = e.game.info.banker;
             for (int i = 0; i < e.game.config.playerCount; i++) {
                 int playerId = (i + banker) % e.game.config.playerCount;
                 bus.Queue(new DealHandEvent(e.game, playerId));

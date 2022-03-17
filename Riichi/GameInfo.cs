@@ -32,8 +32,8 @@ namespace RabiRiichi.Riichi {
         public GamePhase phase = GamePhase.Pending;
         /// <summary> 场风 </summary>
         public Wind wind = Wind.E;
-        /// <summary> 局数，从0开始 </summary>
-        public int round = 0;
+        /// <summary> 庄家ID </summary>
+        public int banker = 0;
         /// <summary> 本场 </summary>
         public int honba = 0;
 
@@ -42,9 +42,6 @@ namespace RabiRiichi.Riichi {
 
         /// <summary> 事件ID </summary>
         public AutoIncrementInt eventId;
-
-        /// <summary> 庄家 </summary>
-        public int Banker => ((int)wind + round) % config.playerCount;
 
         /// <summary> 是否是本局第一巡，用于判定天地和和W立 </summary>
         public bool firstJun = true;

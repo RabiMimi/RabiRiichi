@@ -9,7 +9,7 @@ namespace RabiRiichi.Event.InGame {
         /// <summary> 场风 </summary>
         [RabiBroadcast] public Wind wind;
         /// <summary> 局数 </summary>
-        [RabiBroadcast] public int round;
+        [RabiBroadcast] public int banker;
         /// <summary> 本场 </summary>
         [RabiBroadcast] public int honba;
         #endregion
@@ -17,9 +17,9 @@ namespace RabiRiichi.Event.InGame {
         #region Response
         #endregion
 
-        public BeginGameEvent(Game game, Wind wind, int round, int honba) : base(game) {
+        public BeginGameEvent(Game game, Wind wind, int banker, int honba) : base(game) {
             this.wind = wind;
-            this.round = round;
+            this.banker = banker;
             this.honba = honba;
         }
     }

@@ -26,7 +26,7 @@
         public bool SamePlayer(Player rhs) => rhs != null && id == rhs.id;
 
         /// <summary> 是否是庄家 </summary>
-        public bool IsBanker => id == game.info.Banker;
+        public bool IsBanker => id == game.info.banker;
 
         /// <summary> 是否是役牌 </summary>
         public virtual bool IsYaku(Tile tile) => game.IsYaku(tile) || tile.IsSame(Tile.From(wind));
