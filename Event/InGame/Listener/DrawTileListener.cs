@@ -41,11 +41,11 @@ namespace RabiRiichi.Event.InGame.Listener {
             inquiry.GetByPlayerId(e.playerId).DisableSkip();
             var waitEv = new WaitPlayerActionEvent(e.game, inquiry);
             e.bus.Queue(waitEv);
-            AfterPlayerAction(waitEv).ConfigureAwait(false);
+            AfterPlayerAction(waitEv, e.reason).ConfigureAwait(false);
             return Task.CompletedTask;
         }
 
-        public static async Task AfterPlayerAction(WaitPlayerActionEvent ev) {
+        public static async Task AfterPlayerAction(WaitPlayerActionEvent ev, DiscardReason reason) {
             try {
                 await ev.WaitForFinish;
             } catch (TaskCanceledException) {
@@ -60,10 +60,10 @@ namespace RabiRiichi.Event.InGame.Listener {
                     var option = play.chosen as ChooseTileActionOption;
                     if (action is RiichiAction) {
                         eventBuilder.AddEvent(
-                            new RiichiEvent(ev.game, play.playerId, option.tile.gameTile));
+                            new RiichiEvent(ev.game, play.playerId, option.tile.gameTile, reason));
                     } else {
                         eventBuilder.AddEvent(
-                            new DiscardTileEvent(ev.game, play.playerId, option.tile.gameTile));
+                            new DiscardTileEvent(ev.game, play.playerId, option.tile.gameTile, reason));
                     }
                 } else if (action is KanAction kanAction) {
                     var option = kanAction.chosen as ChooseTilesActionOption;

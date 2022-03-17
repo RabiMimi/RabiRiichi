@@ -108,7 +108,6 @@ namespace RabiRiichi.Riichi {
 
         public void Play(GameTile tile, DiscardReason reason, bool riichi = false) {
             ippatsu = false;
-            tile.player = null;
             tile.discardInfo = new DiscardInfo(player, reason, game.info.timeStamp.Next);
             tile.source = TileSource.Discard;
             freeTiles.Remove(tile);

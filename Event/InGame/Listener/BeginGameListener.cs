@@ -47,7 +47,7 @@ namespace RabiRiichi.Event.InGame.Listener {
             inquiry.GetByPlayerId(ev.playerId).DisableSkip();
             var waitEv = new WaitPlayerActionEvent(ev.game, inquiry);
             ev.bus.Queue(waitEv);
-            await DrawTileListener.AfterPlayerAction(waitEv);
+            await DrawTileListener.AfterPlayerAction(waitEv, DiscardReason.Draw);
         }
 
         private static IEnumerable<ResolverBase> GetBankerFirstJunResolvers(Game game) {

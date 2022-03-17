@@ -11,15 +11,20 @@ namespace RabiRiichi.Event.InGame.Listener {
             ev.bus.Queue(junEv);
             if (ev.group is Kan kan) {
                 ev.player.hand.AddKan(kan);
-                ev.bus.Queue(new DrawTileEvent(ev.game, ev.playerId, TileSource.Wanpai));
+                ev.bus.Queue(new DrawTileEvent(ev.game, ev.playerId, TileSource.Wanpai, DiscardReason.DrawRinshan));
                 return Task.CompletedTask;
             }
+            DiscardReason reason;
             if (ev.group is Shun shun) {
                 ev.player.hand.AddChi(shun);
+                reason = DiscardReason.Chi;
             } else if (ev.group is Kou kou) {
                 ev.player.hand.AddPon(kou);
+                reason = DiscardReason.Pon;
+            } else {
+                return Task.CompletedTask;
             }
-            AfterIncreaseJun(junEv).ConfigureAwait(false);
+            AfterIncreaseJun(junEv, reason).ConfigureAwait(false);
             return Task.CompletedTask;
         }
 
@@ -29,7 +34,7 @@ namespace RabiRiichi.Event.InGame.Listener {
             }
         }
 
-        private static async Task AfterIncreaseJun(IncreaseJunEvent ev) {
+        private static async Task AfterIncreaseJun(IncreaseJunEvent ev, DiscardReason reason) {
             try {
                 await ev.WaitForFinish;
             } catch (TaskCanceledException) {
@@ -43,7 +48,7 @@ namespace RabiRiichi.Event.InGame.Listener {
             inquiry.GetByPlayerId(ev.playerId).DisableSkip();
             var waitEv = new WaitPlayerActionEvent(ev.game, inquiry);
             ev.bus.Queue(waitEv);
-            await DrawTileListener.AfterPlayerAction(waitEv);
+            await DrawTileListener.AfterPlayerAction(waitEv, reason);
         }
 
         public static void Register(EventBus eventBus) {

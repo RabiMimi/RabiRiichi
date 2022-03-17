@@ -102,6 +102,7 @@ namespace RabiRiichi.Riichi.Setup {
             BeginGameListener.Register(eventBus);
             ClaimTileListener.Register(eventBus);
             DealHandListener.Register(eventBus);
+            DiscardTileListener.Register(eventBus);
             DrawTileListener.Register(eventBus);
             IncreaseJunListener.Register(eventBus);
             KanListener.Register(eventBus);

@@ -7,10 +7,12 @@ namespace RabiRiichi.Event.InGame {
 
         #region Request
         [RabiBroadcast] public TileSource source;
+        [RabiBroadcast] public DiscardReason reason;
         #endregion
 
-        public DrawTileEvent(Game game, int playerId, TileSource source) : base(game, playerId) {
+        public DrawTileEvent(Game game, int playerId, TileSource source, DiscardReason reason) : base(game, playerId) {
             this.source = source;
+            this.reason = reason;
         }
     }
 }
