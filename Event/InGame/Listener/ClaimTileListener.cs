@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 namespace RabiRiichi.Event.InGame.Listener {
     public static class ClaimTileListener {
         public static Task ExecuteClaimTile(ClaimTileEvent ev) {
+            ev.bus.Queue(new SetMenzenEvent(ev.game, ev.playerId, false));
             var junEv = new IncreaseJunEvent(ev.game, ev.playerId);
             ev.bus.Queue(junEv);
             if (ev.group is Kan kan) {
