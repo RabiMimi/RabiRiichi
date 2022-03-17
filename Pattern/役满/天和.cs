@@ -9,7 +9,7 @@ namespace RabiRiichi.Pattern {
         }
 
         public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
-            bool flag = hand.jun == 1 && hand.player.wind == hand.game.info.wind;
+            bool flag = hand.jun == 1 && hand.player.IsBanker;
             if (flag) {
                 scores.Add(new Scoring(ScoringType.Yakuman, 1, this));
             }

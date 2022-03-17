@@ -81,9 +81,7 @@ namespace RabiRiichi.Riichi {
 
             // 初始化玩家
             for (int i = 0; i < players.Length; i++) {
-                players[i] = new Player(i, this) {
-                    wind = (Wind)i,
-                };
+                players[i] = new Player(i, this);
             }
 
             // 游戏逻辑
@@ -103,6 +101,15 @@ namespace RabiRiichi.Riichi {
         public Player NextPlayer(int id) => players[NextPlayerId(id)];
 
         public Player PrevPlayer(int id) => players[PrevPlayerId(id)];
+
+        /// <summary> 计算rhs玩家是lhs玩家后的第几个 </summary>
+        public int Dist(int lhsId, int rhsId) {
+            int dist = rhsId - lhsId;
+            if (dist < 0) {
+                dist += config.playerCount;
+            }
+            return dist;
+        }
 
         public IEnumerable<GameTile> AllDiscardedTiles =>
             players.SelectMany(player => player.hand.discarded);
