@@ -6,16 +6,16 @@ namespace RabiRiichi.Event.InGame {
         public override string name => "begin_game";
 
         #region Request
-        /// <summary> 场风 </summary>
-        [RabiBroadcast] public Wind wind;
+        /// <summary> 轮数 </summary>
+        [RabiBroadcast] public int round;
         /// <summary> 局数 </summary>
         [RabiBroadcast] public int banker;
         /// <summary> 本场 </summary>
         [RabiBroadcast] public int honba;
         #endregion
 
-        public BeginGameEvent(Game game, Wind wind, int banker, int honba) : base(game) {
-            this.wind = wind;
+        public BeginGameEvent(Game game, int round, int banker, int honba) : base(game) {
+            this.round = round;
             this.banker = banker;
             this.honba = honba;
         }

@@ -5,12 +5,19 @@ using RabiRiichi.Util;
 
 namespace RabiRiichi.Riichi {
     public class GameConfig {
+        /// <summary> 玩家数 </summary>
         public int playerCount = 2;
         /// <summary> 番缚 </summary>
         public int minHan = 1;
 
         /// <summary> 初始点数 </summary>
         public int initialPoints = 25000;
+
+        /// <summary> 入点数 </summary>
+        public int finishPoints = 30000;
+
+        /// <summary> 几庄战 </summary>
+        public int totalRound = 1;
 
         /// <summary> 注册类 </summary>
         public BaseSetup setup = new RiichiSetup();
@@ -30,8 +37,10 @@ namespace RabiRiichi.Riichi {
         public GameConfig config = new();
         /// <summary> 游戏状态 </summary>
         public GamePhase phase = GamePhase.Pending;
+        /// <summary> 第几轮 </summary>
+        public int round = 0;
         /// <summary> 场风 </summary>
-        public Wind wind = Wind.E;
+        public Wind wind => (Wind)(round % config.playerCount);
         /// <summary> 庄家ID </summary>
         public int banker = 0;
         /// <summary> 本场 </summary>

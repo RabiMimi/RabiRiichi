@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace RabiRiichi.Event.InGame.Listener {
     public static class BeginGameListener {
         public static Task UpdateGameInfo(BeginGameEvent e) {
-            e.game.info.wind = e.wind;
+            e.game.info.round = e.round;
             e.game.info.banker = e.banker;
             e.game.info.honba = e.honba;
             e.game.info.Reset();

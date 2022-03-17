@@ -85,7 +85,7 @@ namespace RabiRiichi.Riichi {
             }
 
             // 游戏逻辑
-            eventBus.Queue(new BeginGameEvent(this, Wind.E, 0, 0));
+            eventBus.Queue(new BeginGameEvent(this, 0, 0, 0));
             await eventBus.ProcessQueue();
 
             // 结束游戏
