@@ -97,16 +97,17 @@ namespace RabiRiichi.Riichi.Setup {
 
         /// <summary> 配置事件监听 </summary>
         protected virtual void RegisterEvents(EventBus eventBus) {
+            AgariListener.Register(eventBus);
+            ApplyScoreListener.Register(eventBus);
             BeginGameListener.Register(eventBus);
+            ClaimTileListener.Register(eventBus);
             DealHandListener.Register(eventBus);
             DrawTileListener.Register(eventBus);
             IncreaseJunListener.Register(eventBus);
-            RevealDoraListener.Register(eventBus);
-            WaitPlayerActionListener.Register(eventBus);
             KanListener.Register(eventBus);
-            AgariListener.Register(eventBus);
+            RevealDoraListener.Register(eventBus);
             SetMenzenListener.Register(eventBus);
-            ApplyScoreListener.Register(eventBus);
+            WaitPlayerActionListener.Register(eventBus);
 
             EventBroadcast.Register(eventBus);
         }
