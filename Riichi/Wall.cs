@@ -28,7 +28,7 @@ namespace RabiRiichi.Riichi {
             .Concat(doras.Skip(revealedDoraCount))
             .Concat(uradoras);
         /// <summary> 牌山剩下的牌数 </summary>
-        public int NumRemaining => remaining.Count;
+        public int NumRemaining => remaining.Count - (NUM_RINSHAN - rinshan.Count);
         /// <summary> 是否到了海底 </summary>
         public bool IsHaitei => NumRemaining <= 0;
 
