@@ -10,7 +10,11 @@ namespace RabiRiichi.Pattern {
         }
 
         public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
-            var grs = groups.SelectMany(gr => gr).GroupBy(tile => tile.tile.Num);
+            if (!hand.menzen || groups.Any(gr => gr is Kan)) {
+                return false;
+            }
+
+            var grs = groups.SelectMany(gr => gr).OrderBy(tile => tile).GroupBy(tile => tile.tile.Num);
             bool flag = grs.Count() == 9 && grs.First().Count() >= 3 && grs.Last().Count() >= 3;
             if (flag) {
                 scores.Remove(dependOnPatterns);
