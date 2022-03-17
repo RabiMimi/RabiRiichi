@@ -16,8 +16,8 @@ namespace RabiRiichi.Event.InGame.Listener {
             }
             DiscardReason reason;
             if (ev.group is Shun shun) {
-                ev.player.hand.AddChi(shun);
-                reason = DiscardReason.Chi;
+                ev.player.hand.AddChii(shun);
+                reason = DiscardReason.Chii;
             } else if (ev.group is Kou kou) {
                 ev.player.hand.AddPon(kou);
                 reason = DiscardReason.Pon;

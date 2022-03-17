@@ -15,7 +15,7 @@ namespace RabiRiichi.Riichi {
         /// <summary> 弃牌 </summary>
         Discard,
         /// <summary> 吃 </summary>
-        Chi,
+        Chii,
         /// <summary> 碰 </summary>
         Pon,
         /// <summary> 加杠 </summary>
@@ -33,7 +33,7 @@ namespace RabiRiichi.Riichi {
         /// <summary> 抽岭上 </summary>
         DrawRinshan,
         /// <summary> 吃 </summary>
-        Chi,
+        Chii,
         /// <summary> 碰 </summary>
         Pon,
     }

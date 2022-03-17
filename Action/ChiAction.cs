@@ -4,10 +4,10 @@ using System.Threading.Tasks;
 
 
 namespace RabiRiichi.Action {
-    public class ChiAction : ChooseTilesAction {
-        public override string name => "chi";
-        public ChiAction(int playerId, List<GameTiles> tiles, int priorityDelta = 0) : base(playerId, tiles) {
-            priority = ActionPriority.Chi + priorityDelta;
+    public class ChiiAction : ChooseTilesAction {
+        public override string name => "chii";
+        public ChiiAction(int playerId, List<GameTiles> tiles, int priorityDelta = 0) : base(playerId, tiles) {
+            priority = ActionPriority.Chii + priorityDelta;
         }
     }
 }

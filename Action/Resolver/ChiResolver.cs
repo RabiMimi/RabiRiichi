@@ -6,7 +6,7 @@ namespace RabiRiichi.Action.Resolver {
     /// <summary>
     /// 判定是否能吃
     /// </summary>
-    public class ChiResolver : ResolverBase {
+    public class ChiiResolver : ResolverBase {
         protected override IEnumerable<Player> ResolvePlayers(Player player, GameTile incoming) {
             yield return player.PrevPlayer;
         }
@@ -27,7 +27,7 @@ namespace RabiRiichi.Action.Resolver {
             if (result.Count == 0) {
                 return false;
             }
-            output.Add(new ChiAction(player.id, result, -incoming.discardInfo!.fromPlayer.Dist(player)));
+            output.Add(new ChiiAction(player.id, result, -incoming.discardInfo!.fromPlayer.Dist(player)));
             return true;
         }
     }

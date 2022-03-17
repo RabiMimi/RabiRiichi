@@ -28,9 +28,9 @@ namespace RabiRiichi.Event.InGame.Listener {
             var eventBuilder = new MultiEventBuilder();
             var resp = ev.inquiry.responses;
             foreach (var action in resp) {
-                if (action is ChiAction chi) {
-                    var option = (ChooseTilesActionOption)chi.chosen;
-                    eventBuilder.AddEvent(new ClaimTileEvent(ev.game, chi.playerId, new Shun(option.gameTiles), incoming));
+                if (action is ChiiAction chii) {
+                    var option = (ChooseTilesActionOption)chii.chosen;
+                    eventBuilder.AddEvent(new ClaimTileEvent(ev.game, chii.playerId, new Shun(option.gameTiles), incoming));
                 } else if (action is PonAction pon) {
                     var option = (ChooseTilesActionOption)pon.chosen;
                     eventBuilder.AddEvent(new ClaimTileEvent(ev.game, pon.playerId, new Kou(option.gameTiles), incoming));
@@ -48,7 +48,7 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         private static IEnumerable<ResolverBase> GetDiscardTileResolvers(Game game) {
-            if (game.TryGet<ChiResolver>(out var resolver1)) {
+            if (game.TryGet<ChiiResolver>(out var resolver1)) {
                 yield return resolver1;
             }
             if (game.TryGet<PonResolver>(out var resolver2)) {

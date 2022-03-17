@@ -138,8 +138,8 @@ namespace RabiRiichi.Riichi {
             });
         }
 
-        public void AddChi(Shun tiles) {
-            AddGroup(tiles, TileSource.Chi);
+        public void AddChii(Shun tiles) {
+            AddGroup(tiles, TileSource.Chii);
         }
 
         public void AddPon(Kou tiles) {

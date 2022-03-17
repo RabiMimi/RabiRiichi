@@ -9,7 +9,7 @@ namespace RabiRiichi.Action {
     public static class ActionPriority {
         public const int ChooseTile = 10000;
         public const int Skip = 1000;
-        public const int Chi = 2000;
+        public const int Chii = 2000;
         public const int Pon = 3000;
         public const int Kan = 4000;
 
