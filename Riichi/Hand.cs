@@ -25,10 +25,10 @@ namespace RabiRiichi.Riichi {
         public Game game => player.game;
 
         /// <summary> 第一个立直宣告牌 </summary>
-        public GameTile firstRiichiTile = null;
+        public GameTile riichiTile = null;
 
         /// <summary> 立直 </summary>
-        public bool riichi => firstRiichiTile != null;
+        public bool riichi => riichiTile != null;
 
         /// <summary> W立直 </summary>
         public bool wRiichi = false;
@@ -69,7 +69,7 @@ namespace RabiRiichi.Riichi {
                 if (riichi) {
                     // 立直振听
                     return game.AllDiscardedTiles
-                        .Where(tile => tile.discardInfo.discardTime >= firstRiichiTile.discardInfo.discardTime)
+                        .Where(tile => tile.discardInfo.discardTime >= riichiTile.discardInfo.discardTime)
                         .Any(tile => tenpai.Contains(tile.tile.WithoutDora));
                 } else {
                     // 同巡振听
@@ -106,18 +106,20 @@ namespace RabiRiichi.Riichi {
             freeTiles.Add(tile);
         }
 
-        public void Play(GameTile tile, DiscardReason reason, bool riichi = false) {
+        public void Riichi(GameTile tile) {
+            if (riichiTile == null) {
+                riichiTile = tile;
+            }
+            riichiStick++;
+            ippatsu = true;
+        }
+
+        public void Play(GameTile tile, DiscardReason reason) {
             ippatsu = false;
             tile.discardInfo = new DiscardInfo(player, reason, game.info.timeStamp.Next);
             tile.source = TileSource.Discard;
             freeTiles.Remove(tile);
             discarded.Add(tile);
-            if (riichi) {
-                Debug.Assert(menzen && !riichi);
-                tile.riichi = true;
-                ippatsu = true;
-                firstRiichiTile = tile;
-            }
         }
 
         public void Remove(GameTile tile) {

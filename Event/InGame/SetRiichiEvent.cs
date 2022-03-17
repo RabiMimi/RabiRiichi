@@ -5,11 +5,11 @@ namespace RabiRiichi.Event.InGame {
         public override string name => "set_riichi";
 
         #region Request
-        public bool riichi;
+        public GameTile riichiTile;
         #endregion
 
-        public SetRiichiEvent(Game game, int playerId, bool riichi) : base(game, playerId) {
-            this.riichi = riichi;
+        public SetRiichiEvent(Game game, int playerId, GameTile riichiTile) : base(game, playerId) {
+            this.riichiTile = riichiTile;
         }
     }
 }
