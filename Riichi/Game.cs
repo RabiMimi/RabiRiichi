@@ -113,13 +113,6 @@ namespace RabiRiichi.Riichi {
         #endregion
 
         #region Game Turns
-        public void ResetIppatsu() {
-            foreach (var player in players) {
-                // TODO: Send an event instead
-                player.hand.ippatsu = false;
-            }
-        }
-
         /// <summary> 是否是第一巡 </summary>
         public bool IsFirstJun => players.All(p => p.hand.jun <= 1);
         #endregion

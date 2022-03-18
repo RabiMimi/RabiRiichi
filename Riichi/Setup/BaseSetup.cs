@@ -109,9 +109,10 @@ namespace RabiRiichi.Riichi.Setup {
             NextGameListener.Register(eventBus);
             NextPlayerListener.Register(eventBus);
             RevealDoraListener.Register(eventBus);
+            SetFuritenListener.Register(eventBus);
+            SetIppatsuListener.Register(eventBus);
             SetMenzenListener.Register(eventBus);
             SetRiichiListener.Register(eventBus);
-            SetFuritenListener.Register(eventBus);
             WaitPlayerActionListener.Register(eventBus);
 
             EventBroadcast.Register(eventBus);

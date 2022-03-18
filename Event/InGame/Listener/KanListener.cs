@@ -40,7 +40,6 @@ namespace RabiRiichi.Event.InGame.Listener {
                         ev.bus.Queue(new RevealDoraEvent(ev.game, ev.playerId));
                         return Task.CompletedTask;
                     }, 1)
-                    .CancelOn<IncreaseJunEvent>()
                     .ScopeTo(EventScope.Game);
             }
 
