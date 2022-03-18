@@ -13,10 +13,10 @@ namespace RabiRiichi.Action.Resolver {
         }
 
         protected override bool ResolveAction(Player player, GameTile incoming, MultiPlayerInquiry output) {
-            var hand = player.hand;
-            if (hand.game.wall.IsHaitei) {
+            if (player.game.wall.IsHaitei) {
                 return false;
             }
+            var hand = player.hand;
             if (hand.riichi || incoming.IsTsumo) {
                 return false;
             }

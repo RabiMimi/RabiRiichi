@@ -24,6 +24,9 @@ namespace RabiRiichi.Action.Resolver {
                 return false;
             }
             var hand = player.hand;
+            if (!incoming.IsTsumo && hand.riichi) {
+                return false;
+            }
             var tile = incoming.tile.WithoutDora;
             var current = new List<GameTile> { incoming };
             var result = new List<GameTiles>();
