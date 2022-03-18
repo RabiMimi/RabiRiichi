@@ -1,6 +1,5 @@
 ﻿using RabiRiichi.Event.InGame;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -39,7 +38,7 @@ namespace RabiRiichi.Event {
         private readonly Dictionary<Type, List<IEventTrigger>> listeners =
             new();
 
-        private readonly BlockingCollection<EventBase> queue = new();
+        private readonly Queue<EventBase> queue = new();
         public int Count => queue.Count;
         public bool Empty => Count == 0;
 
@@ -63,13 +62,16 @@ namespace RabiRiichi.Event {
         }
 
         public void Queue(EventBase ev) {
-            queue.Add(ev);
+            queue.Enqueue(ev);
         }
 
         /// <summary> 开始处理事件队列 </summary>
         public async Task ProcessQueue() {
             while (true) {
-                var ev = queue.Take();
+                if (!queue.TryDequeue(out var ev)) {
+                    await Task.Yield();
+                    continue;
+                }
                 if (await Process(ev)) {
                     if (ev is StopGameEvent) {
                         break;
