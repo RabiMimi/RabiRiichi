@@ -66,10 +66,71 @@ namespace RabiRiichi.Event.InGame.Listener {
             return Task.CompletedTask;
         }
 
+        public static Task SuufonRendaListener(NextPlayerEvent ev) {
+            if (!ev.game.IsFirstJun) {
+                return Task.CompletedTask;
+            }
+            Tile wind = Tile.Empty;
+            foreach (var player in ev.game.players) {
+                if (player.hand.discarded.Count != 1) {
+                    return Task.CompletedTask;
+                }
+                var tile = player.hand.discarded.First().tile;
+                if (wind.IsEmpty) {
+                    wind = tile;
+                } else if (!wind.IsSame(tile)) {
+                    return Task.CompletedTask;
+                }
+            }
+            ev.Cancel();
+            ev.bus.ClearEvents();
+            ev.bus.Queue(new SuufonRenda(ev.game));
+            return Task.CompletedTask;
+        }
+
+        public static Task SuuchaRiichiListener(SetRiichiEvent ev) {
+            if (ev.game.players.Any(p => !p.hand.riichi)) {
+                return Task.CompletedTask;
+            }
+            ev.bus.ClearEvents();
+            ev.bus.Queue(new SuuchaRiichi(ev.game));
+            return Task.CompletedTask;
+        }
+
+        public static Task TripleRonListener(AgariEvent ev) {
+            if (ev.agariInfos.GroupBy(info => info.playerId).Count() != 3) {
+                return Task.CompletedTask;
+            }
+            ev.bus.ClearEvents();
+            ev.bus.Queue(new TripleRon(ev.game));
+            return Task.CompletedTask;
+        }
+
+        public static Task SuukanSanraListener(IncreaseJunEvent ev) {
+            var wall = ev.game.wall;
+            if (wall.rinshan.Count != 0) {
+                return Task.CompletedTask;
+            }
+            foreach (var player in ev.game.players) {
+                // 四杠子，不判定流局
+                if (player.hand.called.Count(gr => gr is Kan) == 4) {
+                    return Task.CompletedTask;
+                }
+            }
+            ev.Cancel();
+            ev.bus.ClearEvents();
+            ev.bus.Queue(new SuukanSanra(ev.game));
+            return Task.CompletedTask;
+        }
+
         public static void Register(EventBus eventBus) {
             eventBus.Register<EndGameRyuukyokuEvent>(PrepareEndGame, EventPriority.Prepare);
             eventBus.Register<EndGameRyuukyokuEvent>(ExecuteEndGame, EventPriority.Execute);
             eventBus.Register<MidGameRyuukyokuEvent>(ExecuteMidGameRyuukyoku, EventPriority.Execute);
+            eventBus.Register<NextPlayerEvent>(SuufonRendaListener, EventPriority.Prepare);
+            eventBus.Register<SetRiichiEvent>(SuuchaRiichiListener, EventPriority.After);
+            eventBus.Register<AgariEvent>(TripleRonListener, EventPriority.After);
+            eventBus.Register<IncreaseJunEvent>(SuukanSanraListener, EventPriority.Prepare);
         }
     }
 }

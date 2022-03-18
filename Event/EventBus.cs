@@ -61,6 +61,10 @@ namespace RabiRiichi.Event {
             list.RemoveAll(l => l is EventTrigger<T> et && et.trigger == listener);
         }
 
+        public void ClearEvents() {
+            queue.Clear();
+        }
+
         public void Queue(EventBase ev) {
             queue.Enqueue(ev);
         }

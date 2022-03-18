@@ -43,6 +43,7 @@ namespace RabiRiichi.Event.InGame {
         public SuufonRenda(Game game) : base(game) { }
     }
 
+    // TODO: Add RyuukyokuResolver
     public class KyuushuKyuuhai : MidGameRyuukyokuEvent {
         public override string name => "kyuushu_kyuuhai";
 

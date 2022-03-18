@@ -114,7 +114,7 @@ namespace RabiRiichi.Riichi {
 
         #region Game Turns
         /// <summary> 是否是第一巡 </summary>
-        public bool IsFirstJun => players.All(p => p.hand.jun <= 1);
+        public bool IsFirstJun => players.All(p => p.hand.jun <= 1 && p.hand.menzen && p.hand.called.Count == 0);
         #endregion
     }
 }
