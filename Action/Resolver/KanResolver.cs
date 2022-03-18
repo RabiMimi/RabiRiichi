@@ -33,6 +33,23 @@ namespace RabiRiichi.Action.Resolver {
 
             // 大明杠或暗杠
             CheckCombo(hand.freeTiles, result, current, tile, tile, tile);
+            if (hand.riichi) {
+                var tenpai = hand.Tenpai;
+                // 立直时，检查暗杠不会影响听牌
+                result.RemoveAll((gameTiles) => {
+                    // 假装杠了
+                    hand.freeTiles.RemoveAll(tile => gameTiles.Contains(tile));
+                    var kan = new Kan(gameTiles, TileSource.AnKan);
+                    hand.called.Add(kan);
+                    // 检查听牌
+                    var newTenpai = hand.Tenpai;
+                    bool validKan = tenpai.SequenceEqual(newTenpai);
+                    // 还原
+                    hand.called.Remove(kan);
+                    hand.freeTiles.AddRange(gameTiles.Where(tile => tile != incoming));
+                    return !validKan;
+                });
+            }
             // 加杠
             if (incoming.IsTsumo) {
                 var groups = hand.called.Where(g => g is Kou && g.First.tile.IsSame(incoming.tile));
