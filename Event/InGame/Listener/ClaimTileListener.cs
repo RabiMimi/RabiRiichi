@@ -9,12 +9,13 @@ namespace RabiRiichi.Event.InGame.Listener {
     public static class ClaimTileListener {
         public static Task ExecuteClaimTile(ClaimTileEvent ev) {
             ev.bus.Queue(new SetMenzenEvent(ev.game, ev.playerId, false));
-            var junEv = new IncreaseJunEvent(ev.game, ev.playerId);
-            ev.bus.Queue(junEv);
             if (ev.group is Kan kan) {
+                // 杠会增加巡目，在此跳过
                 ev.bus.Queue(new KanEvent(ev.game, ev.playerId, kan, ev.tile));
                 return Task.CompletedTask;
             }
+            var junEv = new IncreaseJunEvent(ev.game, ev.playerId);
+            ev.bus.Queue(junEv);
             DiscardReason reason;
             if (ev.group is Shun shun) {
                 ev.player.hand.AddChii(shun);

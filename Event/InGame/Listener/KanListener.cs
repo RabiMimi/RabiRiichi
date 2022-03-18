@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 namespace RabiRiichi.Event.InGame.Listener {
     public static class KanListener {
         public static Task ExecuteKan(KanEvent ev) {
+            ev.bus.Queue(new IncreaseJunEvent(ev.game, ev.playerId));
             var inquiry = new MultiPlayerInquiry(ev.game.info);
             if (ev.kanSource != TileSource.DaiMinKan) {
                 // 抢杠
@@ -39,6 +40,7 @@ namespace RabiRiichi.Event.InGame.Listener {
                         ev.bus.Queue(new RevealDoraEvent(ev.game, ev.playerId));
                         return Task.CompletedTask;
                     }, 1)
+                    .CancelOn<IncreaseJunEvent>()
                     .ScopeTo(EventScope.Game);
             }
 
