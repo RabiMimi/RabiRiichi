@@ -1,6 +1,7 @@
 using RabiRiichi.Action;
 using RabiRiichi.Action.Resolver;
 using RabiRiichi.Riichi;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -53,7 +54,7 @@ namespace RabiRiichi.Event.InGame.Listener {
         private static async Task AfterChanKan(WaitPlayerActionEvent waitEv, KanEvent kanEv) {
             try {
                 await waitEv.WaitForFinish;
-            } catch (TaskCanceledException) {
+            } catch (OperationCanceledException) {
                 return;
             }
             var eventBuilder = new MultiEventBuilder();

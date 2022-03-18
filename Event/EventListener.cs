@@ -74,10 +74,25 @@ namespace RabiRiichi.Event {
         }
 
         /// <summary>
-        /// 在某个事件成功触发后，取消所有监听
+        /// 在某类事件成功触发后，取消所有监听
         /// </summary>
         public EventListener<T> CancelOn<U>() where U : EventBase {
             eventBus.Register<U>(CancelHelper, EventPriority.Minimum + PRIORITY_DELTA, 1);
+            return this;
+        }
+
+        private async Task CancelOnHelper(EventBase ev) {
+            try {
+                await ev.WaitForFinish;
+            } catch (OperationCanceledException) { }
+            Cancel();
+        }
+
+        /// <summary>
+        /// 在某个事件结束或被取消后，取消所有监听
+        /// </summary>
+        public EventListener<T> CancelOn(EventBase ev) {
+            CancelOnHelper(ev).ConfigureAwait(false);
             return this;
         }
 

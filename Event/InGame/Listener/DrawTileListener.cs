@@ -48,7 +48,7 @@ namespace RabiRiichi.Event.InGame.Listener {
         public static async Task AfterPlayerAction(WaitPlayerActionEvent ev, DiscardReason reason) {
             try {
                 await ev.WaitForFinish;
-            } catch (TaskCanceledException) {
+            } catch (OperationCanceledException) {
                 return;
             }
             var resp = ev.inquiry.responses;

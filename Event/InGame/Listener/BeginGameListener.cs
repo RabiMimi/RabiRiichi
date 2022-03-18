@@ -1,6 +1,7 @@
 using RabiRiichi.Action;
 using RabiRiichi.Action.Resolver;
 using RabiRiichi.Riichi;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -34,7 +35,7 @@ namespace RabiRiichi.Event.InGame.Listener {
         private static async Task AfterBankerDealHand(IncreaseJunEvent ev) {
             try {
                 await ev.WaitForFinish;
-            } catch (TaskCanceledException) {
+            } catch (OperationCanceledException) {
                 return;
             }
             var inquiry = new MultiPlayerInquiry(ev.game.info);

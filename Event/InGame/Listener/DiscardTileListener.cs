@@ -1,6 +1,7 @@
 using RabiRiichi.Action;
 using RabiRiichi.Action.Resolver;
 using RabiRiichi.Riichi;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -8,6 +9,9 @@ namespace RabiRiichi.Event.InGame.Listener {
     public static class DiscardTileListener {
         public static Task ExecuteDiscardTile(DiscardTileEvent ev) {
             ev.player.hand.Play(ev.tile, ev.reason);
+            if (ev is RiichiEvent) {
+                ev.tile.riichi = true;
+            }
             var inquiry = new MultiPlayerInquiry(ev.game.info);
             var resolvers = GetDiscardTileResolvers(ev.game);
             foreach (var resolver in resolvers) {
@@ -15,14 +19,14 @@ namespace RabiRiichi.Event.InGame.Listener {
             }
             var waitEv = new WaitPlayerActionEvent(ev.game, inquiry);
             ev.bus.Queue(waitEv);
-            AfterPlayerAction(waitEv, ev.tile).ConfigureAwait(false);
+            AfterPlayerAction(waitEv, ev).ConfigureAwait(false);
             return Task.CompletedTask;
         }
 
-        public static async Task AfterPlayerAction(WaitPlayerActionEvent ev, GameTile incoming) {
+        public static async Task AfterPlayerAction(WaitPlayerActionEvent ev, DiscardTileEvent discardEv) {
             try {
                 await ev.WaitForFinish;
-            } catch (TaskCanceledException) {
+            } catch (OperationCanceledException) {
                 return;
             }
             var eventBuilder = new MultiEventBuilder();
@@ -30,19 +34,29 @@ namespace RabiRiichi.Event.InGame.Listener {
             foreach (var action in resp) {
                 if (action is ChiiAction chii) {
                     var option = (ChooseTilesActionOption)chii.chosen;
-                    eventBuilder.AddEvent(new ClaimTileEvent(ev.game, chii.playerId, new Shun(option.gameTiles), incoming));
+                    eventBuilder.AddEvent(new ClaimTileEvent(ev.game, chii.playerId, new Shun(option.gameTiles), discardEv.tile));
                 } else if (action is PonAction pon) {
                     var option = (ChooseTilesActionOption)pon.chosen;
-                    eventBuilder.AddEvent(new ClaimTileEvent(ev.game, pon.playerId, new Kou(option.gameTiles), incoming));
+                    eventBuilder.AddEvent(new ClaimTileEvent(ev.game, pon.playerId, new Kou(option.gameTiles), discardEv.tile));
                 } else if (action is KanAction kan) {
                     var option = (ChooseTilesActionOption)kan.chosen;
-                    eventBuilder.AddEvent(new ClaimTileEvent(ev.game, kan.playerId, new Kan(option.gameTiles), incoming));
+                    eventBuilder.AddEvent(new ClaimTileEvent(ev.game, kan.playerId, new Kan(option.gameTiles), discardEv.tile));
                 } else if (action is RonAction ron) {
-                    eventBuilder.AddAgari(ev.game, incoming.player.id, incoming, ron.agariInfo);
+                    eventBuilder.AddAgari(ev.game, discardEv.playerId, discardEv.tile, ron.agariInfo);
                 }
             }
-            // TODO: Riichi
-            if (eventBuilder.BuildAndQueue(ev.bus).Count == 0) {
+            var events = eventBuilder.BuildAndQueue(ev.bus);
+            if (discardEv is RiichiEvent) {
+                var riichiEv = new SetRiichiEvent(ev.game, discardEv.playerId, discardEv.tile);
+                ev.bus.Queue(riichiEv);
+                new EventListener<AgariEvent>(ev.bus)
+                    .After((_) => {
+                        riichiEv.Cancel();
+                        return Task.CompletedTask;
+                    })
+                    .CancelOn(riichiEv);
+            }
+            if (events.Count == 0) {
                 ev.bus.Queue(new NextPlayerEvent(ev.game, ev.playerId));
             }
         }
