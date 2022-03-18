@@ -26,15 +26,9 @@ namespace RabiRiichi.Event.InGame {
             => this.Where(x => x.to == playerId).Sum(x => x.points)
                 - this.Where(x => x.from == playerId).Sum(x => x.points);
 
-        public int[,] ToMatrix() {
-            // TODO: Allow points from nowhere
-            var matrix = new int[playerCount, playerCount];
-            foreach (var x in this) {
-                matrix[x.from, x.to] += x.points;
-                matrix[x.to, x.from] -= x.points;
-            }
-            return matrix;
-        }
+        public int ExtraScoreChange(int playerId)
+            => this.Where(x => x.from < 0 && x.to == playerId).Sum(x => x.points)
+                - this.Where(x => x.from == playerId && x.to < 0).Sum(x => x.points);
     }
 
     public class CalcScoreEvent : EventBase {

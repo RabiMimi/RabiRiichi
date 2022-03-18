@@ -14,8 +14,7 @@ namespace RabiRiichi.Event.InGame.Listener {
 
         public static Task NextPlayer(NextPlayerEvent ev) {
             if (ev.nextPlayerId < 0) {
-                // TODO: Implement Ryuukyoku
-                ev.bus.Queue(new RyuukyokuEvent(ev.game));
+                ev.bus.Queue(new EndGameRyuukyokuEvent(ev.game));
             } else {
                 ev.bus.Queue(new IncreaseJunEvent(ev.game, ev.nextPlayerId));
                 ev.bus.Queue(new DrawTileEvent(ev.game, ev.nextPlayerId, TileSource.Wall, DiscardReason.Draw));
