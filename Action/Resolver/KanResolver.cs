@@ -35,7 +35,7 @@ namespace RabiRiichi.Action.Resolver {
             CheckCombo(hand.freeTiles, result, current, tile, tile, tile);
             // 加杠
             if (incoming.IsTsumo) {
-                var groups = hand.fuuro.Where(g => g is Kou && g.First.tile.IsSame(incoming.tile));
+                var groups = hand.called.Where(g => g is Kou && g.First.tile.IsSame(incoming.tile));
                 foreach (var group in groups) {
                     current.AddRange(new GameTiles(group.Append(incoming)));
                 }

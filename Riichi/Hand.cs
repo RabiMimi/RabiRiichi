@@ -12,8 +12,8 @@ namespace RabiRiichi.Riichi {
         /// <summary> 巡目 </summary>
         public int jun = 0;
 
-        /// <summary> 副露的面子 </summary>
-        public List<MenLike> fuuro = new();
+        /// <summary> 鸣牌的面子 </summary>
+        public List<MenLike> called = new();
 
         /// <summary> 牌河 </summary>
         public GameTiles discarded = new();
@@ -84,7 +84,7 @@ namespace RabiRiichi.Riichi {
         public GameTile ron = null;
         public bool IsRon => ron != null;
         /// <summary> 牌的总数，注意：杠会被算作3张牌 </summary>
-        public int Count => fuuro.Select(gr => Math.Min(3, gr.Count)).Sum() + freeTiles.Count;
+        public int Count => called.Select(gr => Math.Min(3, gr.Count)).Sum() + freeTiles.Count;
 
         public GameTile FindTile(Tile tile) => freeTiles.Find(t => t.tile == tile);
         public GameTiles FindTiles(Tiles tiles) {
@@ -128,7 +128,7 @@ namespace RabiRiichi.Riichi {
         }
 
         public void AddGroup(MenLike tiles, TileSource source) {
-            fuuro.Add(tiles);
+            called.Add(tiles);
             tiles.ForEach(tile => {
                 tile.player = player;
                 tile.source = source;
@@ -152,9 +152,9 @@ namespace RabiRiichi.Riichi {
         }
 
         public void KaKan(Kan tiles) {
-            var original = fuuro.Find(gr => gr is Kou && (gr.Contains(tiles[0]) || gr.Contains(tiles[1]))) as Kou;
+            var original = called.Find(gr => gr is Kou && (gr.Contains(tiles[0]) || gr.Contains(tiles[1]))) as Kou;
             Debug.Assert(original != null, "加杠了个空气");
-            fuuro.Remove(original);
+            called.Remove(original);
             AddGroup(tiles, TileSource.KaKan);
         }
     }

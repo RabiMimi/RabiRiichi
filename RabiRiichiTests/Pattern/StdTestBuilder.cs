@@ -93,7 +93,7 @@ namespace RabiRiichiTests.Pattern {
             bool ret = V.Resolve(groups, new Hand {
                 player = currentPlayer.Object,
                 freeTiles = freeTiles,
-                fuuro = fuuro,
+                called = fuuro,
                 menzen = forceMenzen ?? fuuro.Count == 0,
             }, incoming, scores);
             if (shouldResolve) {

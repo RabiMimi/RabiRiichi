@@ -151,7 +151,7 @@ namespace RabiRiichi.Pattern {
             }
             // Check groups valid
             int janCnt = 0;
-            foreach (var group in hand.fuuro) {
+            foreach (var group in hand.called) {
                 if (group is Jantou) {
                     if (++janCnt > 1) {
                         return false;
@@ -164,7 +164,7 @@ namespace RabiRiichi.Pattern {
             output = new List<List<MenLike>>();
             var extraOutput = new List<List<MenLike>>();
             tileBucket = GetTileGroups(hand, incoming, false);
-            current = hand.fuuro;
+            current = hand.called;
             this.output = output;
             DFSPattern(new Tile(TileSuit.M, 1), janCnt);
             foreach (var gr in output) {
@@ -249,7 +249,7 @@ namespace RabiRiichi.Pattern {
             tileBucket = GetTileGroups(hand, incoming, false);
             M = Math.Min(9, maxShanten);
             // 是否有雀头
-            int janCnt = hand.fuuro.Count(gr => gr is Jantou);
+            int janCnt = hand.called.Count(gr => gr is Jantou);
             if (janCnt > 1) {
                 return Reject(out output);
             }

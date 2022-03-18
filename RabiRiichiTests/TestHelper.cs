@@ -7,7 +7,7 @@ namespace RabiRiichiTests {
         public static Hand CreateHand(string str, params string[] groups) {
             return new Hand {
                 freeTiles = new GameTiles(new Tiles(str)),
-                fuuro = groups.Select(gr => MenLike.From(new Tiles(gr))).ToList(),
+                called = groups.Select(gr => MenLike.From(new Tiles(gr))).ToList(),
             };
         }
 
