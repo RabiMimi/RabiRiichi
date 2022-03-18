@@ -15,6 +15,7 @@ namespace RabiRiichi.Action {
 
         public const int Ron = 5000;
         public const int Riichi = 10000;
+        public const int Ryuukyoku = 10000;
         public const int Discard = 10000;
     }
 

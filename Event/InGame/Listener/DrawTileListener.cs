@@ -29,12 +29,15 @@ namespace RabiRiichi.Event.InGame.Listener {
             if (game.TryGet<TsumoResolver>(out var resolver4)) {
                 yield return resolver4;
             }
+            if (game.TryGet<RyuukyokuResolver>(out var resolver5)) {
+                yield return resolver5;
+            }
         }
 
         public static Task DrawTile(DrawTileEvent e) {
             var gameTile = DrawFrom(e);
             var resolvers = GetDrawTileResolvers(e.game);
-            var inquiry = new MultiPlayerInquiry(e.game.info);
+            var inquiry = e.inquiry;
             foreach (var resolver in resolvers) {
                 resolver.Resolve(e.player, gameTile, inquiry);
             }

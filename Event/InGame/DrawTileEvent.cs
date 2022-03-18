@@ -1,4 +1,5 @@
-﻿using RabiRiichi.Communication;
+﻿using RabiRiichi.Action;
+using RabiRiichi.Communication;
 using RabiRiichi.Riichi;
 
 namespace RabiRiichi.Event.InGame {
@@ -10,9 +11,14 @@ namespace RabiRiichi.Event.InGame {
         [RabiBroadcast] public DiscardReason reason;
         #endregion
 
+        #region Response
+        public readonly MultiPlayerInquiry inquiry;
+        #endregion
+
         public DrawTileEvent(Game game, int playerId, TileSource source, DiscardReason reason) : base(game, playerId) {
             this.source = source;
             this.reason = reason;
+            inquiry = new MultiPlayerInquiry(game.info);
         }
     }
 }
