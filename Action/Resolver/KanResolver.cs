@@ -20,7 +20,8 @@ namespace RabiRiichi.Action.Resolver {
         }
 
         protected override bool ResolveAction(Player player, GameTile incoming, MultiPlayerInquiry output) {
-            if (player.game.wall.IsHaitei) {
+            var wall = player.game.wall;
+            if (wall.IsHaitei || wall.rinshan.Count == 0) {
                 return false;
             }
             var hand = player.hand;
