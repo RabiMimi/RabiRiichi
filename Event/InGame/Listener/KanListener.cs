@@ -35,11 +35,26 @@ namespace RabiRiichi.Event.InGame.Listener {
             if (ev.kanSource == TileSource.AnKan) {
                 ev.bus.Queue(new RevealDoraEvent(ev.game, ev.playerId));
             } else {
+                var revealDoraEv = new RevealDoraEvent(ev.game, ev.playerId);
+                bool isRevealed = false;
+                Task DelayRevealDora(EventBase _) {
+                    if (!isRevealed) {
+                        ev.bus.Queue(revealDoraEv);
+                        isRevealed = true;
+                    }
+                    return Task.CompletedTask;
+                }
                 new EventListener<DiscardTileEvent>(ev.bus)
-                    .LatePrepare((_) => {
-                        ev.bus.Queue(new RevealDoraEvent(ev.game, ev.playerId));
-                        return Task.CompletedTask;
-                    }, 1)
+                    .EarlyPrepare(DelayRevealDora, 1)
+                    .CancelOn<IncreaseJunEvent>()
+                    .ScopeTo(EventScope.Game);
+                new EventListener<KanEvent>(ev.bus)
+                    .EarlyPrepare(DelayRevealDora, 1)
+                    .CancelOn<IncreaseJunEvent>()
+                    .ScopeTo(EventScope.Game);
+                // 杠后自摸，仅当血战到底时才会翻Dora
+                new EventListener<IncreaseJunEvent>(ev.bus)
+                    .EarlyPrepare(DelayRevealDora, 1)
                     .ScopeTo(EventScope.Game);
             }
 
