@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Event.InGame.Listener {
@@ -13,8 +15,52 @@ namespace RabiRiichi.Event.InGame.Listener {
             return Task.CompletedTask;
         }
 
+        public static Task OnIncreaseJun(IncreaseJunEvent ev) {
+            ev.bus.Queue(new SetTempFuritenEvent(ev.game, ev.playerId, false));
+            return Task.CompletedTask;
+        }
+
+        public static Task OnDiscardTile(DiscardTileEvent ev) {
+            List<SetFuritenEvent> furitenEvs = new();
+            foreach (var player in ev.game.players) {
+                var hand = player.hand;
+                var tenpai = hand.Tenpai;
+                if (player.id == ev.playerId) {
+                    // 弃牌的玩家听牌牌型可能改变，需要全部重新计算
+                    // 理论上立直后听牌牌型不能改变，因此可以简化为只计算当前弃牌
+                    // 但是考虑到无限立直的情况，这里不做该优化
+                    bool discardFuriten = hand.discarded.Any(tile => tenpai.Contains(tile.tile.WithoutDora));
+                    furitenEvs.Add(new SetDiscardFuritenEvent(ev.game, player.id, discardFuriten));
+                    if (hand.riichi) {
+                        furitenEvs.Add(new SetRiichiFuritenEvent(ev.game, player.id, discardFuriten));
+                    }
+                    continue;
+                }
+                // 计算别的玩家的振听状态
+                bool tempFuriten = tenpai.Contains(ev.tile.tile.WithoutDora);
+                if (tempFuriten) {
+                    furitenEvs.Add(new SetTempFuritenEvent(ev.game, player.id, tempFuriten));
+                    if (hand.riichi) {
+                        furitenEvs.Add(new SetRiichiFuritenEvent(ev.game, player.id, tempFuriten));
+                    }
+                }
+            }
+            // 在下一个巡数增加事件发生时，更新振听（玩家不选择和牌时，才会进入振听）
+            new EventListener<IncreaseJunEvent>(ev.bus)
+                .EarlyAfter((incJunEv) => {
+                    foreach (var furitenEv in furitenEvs) {
+                        ev.bus.Queue(furitenEv);
+                    }
+                    return Task.CompletedTask;
+                }, 1)
+                .ScopeTo(EventScope.Game);
+            return Task.CompletedTask;
+        }
+
         public static void Register(EventBus eventBus) {
             eventBus.Register<SetFuritenEvent>(SetFuriten, EventPriority.Execute);
+            eventBus.Register<IncreaseJunEvent>(OnIncreaseJun, EventPriority.After);
+            eventBus.Register<DiscardTileEvent>(OnDiscardTile, EventPriority.After);
         }
     }
 }

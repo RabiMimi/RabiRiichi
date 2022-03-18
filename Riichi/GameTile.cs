@@ -43,7 +43,10 @@ namespace RabiRiichi.Riichi {
         public readonly Player fromPlayer;
         /// <summary> 弃牌原因 </summary>
         public readonly DiscardReason reason;
-        /// <summary> 弃牌时间，与<see cref="GameInfo.timeStamp"/>同步 </summary>
+        /// <summary>
+        /// 弃牌时间，与<see cref="GameInfo.timeStamp"/>同步
+        /// </summary>
+        [Obsolete("这东西好像没啥用了 留着看看")]
         public readonly int discardTime;
 
         public DiscardInfo(Player fromPlayer, DiscardReason reason, int discardTime) {

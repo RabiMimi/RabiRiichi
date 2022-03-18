@@ -47,13 +47,13 @@ namespace RabiRiichi.Riichi {
         /// <summary> 是否已经和了 </summary>
         public bool agari => agariTile != null;
 
-        /// <summary> 听牌列表，无赤宝牌。不听牌时返回null </summary>
+        /// <summary> 听牌列表，无赤宝牌。不听牌时返回空List </summary>
         public Tiles Tenpai {
             get {
                 if (game.Get<PatternResolver>().ResolveShanten(this, null, out var tiles, 0) == 0) {
                     return tiles;
                 }
-                return null;
+                return Tiles.Empty;
             }
         }
 

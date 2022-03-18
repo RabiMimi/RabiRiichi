@@ -51,11 +51,11 @@ namespace RabiRiichi.Event {
             => ListenTo(handler, EventPriority.Broadcast - PRIORITY_DELTA, times);
 
         /// <summary> 事件结束时 </summary>
-        public EventListener<T> After(Func<T, Task> handler, int times = -1)
+        public EventListener<T> EarlyAfter(Func<T, Task> handler, int times = -1)
             => ListenTo(handler, EventPriority.After + PRIORITY_DELTA, times);
 
         /// <summary> 最晚的时间点 </summary>
-        public EventListener<T> Final(Func<T, Task> handler, int times = -1)
+        public EventListener<T> LateAfter(Func<T, Task> handler, int times = -1)
             => ListenTo(handler, EventPriority.After - PRIORITY_DELTA, times);
 
         /// <summary>

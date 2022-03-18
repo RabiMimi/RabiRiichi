@@ -50,10 +50,10 @@ namespace RabiRiichi.Event.InGame.Listener {
                 var riichiEv = new SetRiichiEvent(ev.game, discardEv.playerId, discardEv.tile, ev.game.IsFirstJun);
                 ev.bus.Queue(riichiEv);
                 new EventListener<AgariEvent>(ev.bus)
-                    .After((_) => {
+                    .EarlyAfter((_) => {
                         riichiEv.Cancel();
                         return Task.CompletedTask;
-                    })
+                    }, 1)
                     .CancelOn(riichiEv);
             }
             if (events.Count == 0) {
