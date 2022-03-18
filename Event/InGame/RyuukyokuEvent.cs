@@ -1,5 +1,7 @@
 using RabiRiichi.Communication;
 using RabiRiichi.Riichi;
+using System;
+
 
 namespace RabiRiichi.Event.InGame {
     /// <summary>
@@ -23,7 +25,9 @@ namespace RabiRiichi.Event.InGame {
         public override string name => "end_game_ryuukyoku";
 
         #region Response
-        [RabiBroadcast] public int nagashiManganPlayer = -1;
+        [RabiBroadcast] public int[] remainingPlayers = Array.Empty<int>();
+        [RabiBroadcast] public int[] nagashiManganPlayers = Array.Empty<int>();
+        [RabiBroadcast] public int[] tenpaiPlayers = Array.Empty<int>();
         #endregion
 
         public EndGameRyuukyokuEvent(Game game) : base(game) { }

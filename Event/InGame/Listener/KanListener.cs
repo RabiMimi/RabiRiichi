@@ -81,6 +81,7 @@ namespace RabiRiichi.Event.InGame.Listener {
                 }
             }
             if (eventBuilder.BuildAndQueue(waitEv.bus).Count > 0) {
+                // TODO: 处理抢杠后的情况：算作杠还是刻？
                 return;
             }
 
