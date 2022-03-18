@@ -52,16 +52,12 @@ namespace RabiRiichi.Riichi {
         /// <summary> 事件ID </summary>
         public AutoIncrementInt eventId;
 
-        /// <summary> 是否是本局第一巡，用于判定天地和和W立 </summary>
-        public bool firstJun = true;
-
         public GameInfo(GameConfig config) {
             this.config = config;
         }
 
         /// <summary> 清空本局数据以开始下一局 </summary>
         public void Reset() {
-            firstJun = true;
             timeStamp.Reset();
         }
     }

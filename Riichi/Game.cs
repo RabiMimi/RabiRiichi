@@ -122,6 +122,9 @@ namespace RabiRiichi.Riichi {
                 player.hand.ippatsu = false;
             }
         }
+
+        /// <summary> 是否是第一巡 </summary>
+        public bool IsFirstJun => players.All(p => p.hand.jun <= 1);
         #endregion
     }
 }

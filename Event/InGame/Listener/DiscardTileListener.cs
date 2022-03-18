@@ -47,7 +47,7 @@ namespace RabiRiichi.Event.InGame.Listener {
             }
             var events = eventBuilder.BuildAndQueue(ev.bus);
             if (discardEv is RiichiEvent) {
-                var riichiEv = new SetRiichiEvent(ev.game, discardEv.playerId, discardEv.tile);
+                var riichiEv = new SetRiichiEvent(ev.game, discardEv.playerId, discardEv.tile, ev.game.IsFirstJun);
                 ev.bus.Queue(riichiEv);
                 new EventListener<AgariEvent>(ev.bus)
                     .After((_) => {

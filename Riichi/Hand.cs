@@ -106,10 +106,9 @@ namespace RabiRiichi.Riichi {
             freeTiles.Add(tile);
         }
 
-        public void Riichi(GameTile tile) {
-            if (riichiTile == null) {
-                riichiTile = tile;
-            }
+        public void Riichi(GameTile tile, bool wRiichi) {
+            riichiTile = tile;
+            this.wRiichi = wRiichi;
             riichiStick++;
             ippatsu = true;
         }
