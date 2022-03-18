@@ -110,9 +110,6 @@ namespace RabiRiichi.Riichi {
             }
             return dist;
         }
-
-        public IEnumerable<GameTile> AllDiscardedTiles =>
-            players.SelectMany(player => player.hand.discarded);
         #endregion
 
         #region Game Turns

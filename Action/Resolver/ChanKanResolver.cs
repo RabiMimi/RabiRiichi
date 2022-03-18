@@ -10,7 +10,7 @@ namespace RabiRiichi.Action.Resolver {
         }
 
         protected override bool ResolveAction(Player player, GameTile incoming, MultiPlayerInquiry output) {
-            if (player.hand.IsFuriten) {
+            if (player.hand.isFuriten) {
                 return false;
             }
             if (incoming.IsTsumo) {

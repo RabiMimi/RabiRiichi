@@ -42,8 +42,10 @@ namespace RabiRiichi.Riichi {
         /// <summary> 门清 </summary>
         public bool menzen = true;
 
+        /// <summary> 和了牌 </summary>
+        public GameTile agariTile;
         /// <summary> 是否已经和了 </summary>
-        public bool agari = false;
+        public bool agari => agariTile != null;
 
         /// <summary> 听牌列表，无赤宝牌。不听牌时返回null </summary>
         public Tiles Tenpai {
@@ -55,34 +57,15 @@ namespace RabiRiichi.Riichi {
             }
         }
 
+        /// <summary> 是否同巡振听 </summary>
+        public bool isTempFuriten = false;
+        /// <summary> 是否立直振听 </summary>
+        public bool isRiichiFuriten = false;
+        /// <summary> 是否摸切振听 </summary>
+        public bool isDiscardFuriten = false;
         /// <summary> 是否振听 </summary>
-        public bool IsFuriten {
-            get {
-                // TODO: 选择一个实现：
-                // 1. 在所有玩家操作以后再将牌加入弃牌列表
-                // 2. 在玩家打出牌时即将其加入弃牌表，但是在判定振听时忽略
-                var tenpai = Tenpai;
-                // 摸切振听
-                if (discarded.Any(tile => tenpai.Contains(tile.tile.WithoutDora))) {
-                    return true;
-                }
-                if (riichi) {
-                    // 立直振听
-                    return game.AllDiscardedTiles
-                        .Where(tile => tile.discardInfo.discardTime >= riichiTile.discardInfo.discardTime)
-                        .Any(tile => tenpai.Contains(tile.tile.WithoutDora));
-                } else {
-                    // 同巡振听
-                    var discarded = game.AllDiscardedTiles.ToList();
-                    int lastIndex = discarded.FindLastIndex(tile => tile.fromPlayerId == player.id);
-                    return discarded.Skip(lastIndex + 1).Any(tile => tenpai.Contains(tile.tile.WithoutDora));
-                }
-            }
-        }
+        public bool isFuriten => isTempFuriten || isRiichiFuriten || isDiscardFuriten;
 
-        /// <summary> 和 </summary>
-        public GameTile ron = null;
-        public bool IsRon => ron != null;
         /// <summary> 牌的总数，注意：杠会被算作3张牌 </summary>
         public int Count => called.Select(gr => Math.Min(3, gr.Count)).Sum() + freeTiles.Count;
 

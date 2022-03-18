@@ -188,12 +188,17 @@ namespace RabiRiichi.Riichi {
     /// 一堆牌。
     /// </summary>
     public class Tiles : List<Tile> {
+        public static readonly Tiles Empty = new();
         public Tiles(IEnumerable<Tile> tiles) : base(tiles) { }
         public Tiles(string tiles = "") : base() {
             bool isDora = false;
             foreach (char c in tiles) {
-                if (c > '0' && c <= '9') {
+                if (c >= '0' && c <= '9') {
                     byte num = (byte)(c - '0');
+                    if (num == 0) {
+                        num = 5;
+                        isDora = true;
+                    }
                     Add(new Tile {
                         Num = num,
                         Akadora = isDora,

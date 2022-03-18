@@ -21,7 +21,7 @@ namespace RabiRiichi.Action.Resolver {
 
         protected override bool ResolveAction(Player player, GameTile incoming, MultiPlayerInquiry output) {
             var hand = player.hand;
-            if (hand.IsFuriten) {
+            if (hand.isFuriten) {
                 return false;
             }
             var maxScore = patternResolver.ResolveMaxScore(hand, incoming, false);
