@@ -48,7 +48,5 @@ namespace RabiRiichi.Event.InGame {
             this.isAgari = true;
             scoreChange = new ScoreTransferList(game.config.playerCount);
         }
-
-        // TODO: Another constructor for Ryuukyoku
     }
 }

@@ -119,7 +119,7 @@ namespace RabiRiichi.Event.InGame.Listener {
             }
             ev.Cancel();
             ev.bus.ClearEvents();
-            ev.bus.Queue(new SuukanSanra(ev.game.initialEvent));
+            ev.bus.Queue(new SuukanSanra(ev));
             return Task.CompletedTask;
         }
 

@@ -10,7 +10,12 @@ namespace RabiRiichi.Action.Resolver {
             if (!player.game.IsFirstJun) {
                 return false;
             }
-            if (player.hand.freeTiles.All(t => t.tile.Is19Z) && incoming.tile.Is19Z) {
+            bool flag = player.hand.freeTiles
+                .Append(incoming)
+                .Select(t => t.tile)
+                .Distinct()
+                .Count(t => t.Is19Z) >= 9;
+            if (flag) {
                 output.Add(new RyuukyokuAction(player.id, new KyuushuKyuuhai(player.game.initialEvent)));
                 return true;
             }
