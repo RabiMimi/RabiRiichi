@@ -14,11 +14,10 @@ namespace RabiRiichi.Event.InGame.Listener {
             }
             var resolvers = GetDiscardTileResolvers(ev.game);
             foreach (var resolver in resolvers) {
-                resolver.Resolve(ev.player, ev.tile, ev.inquiry);
+                resolver.Resolve(ev.player, ev.tile, ev.waitEvent.inquiry);
             }
-            var waitEv = new WaitPlayerActionEvent(ev.game, ev.inquiry);
-            ev.bus.Queue(waitEv);
-            AfterPlayerAction(waitEv, ev).ConfigureAwait(false);
+            ev.bus.Queue(ev.waitEvent);
+            AfterPlayerAction(ev.waitEvent, ev).ConfigureAwait(false);
             return Task.CompletedTask;
         }
 

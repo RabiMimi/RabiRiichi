@@ -12,14 +12,14 @@ namespace RabiRiichi.Event.InGame {
         #endregion
 
         #region Response
-        public readonly MultiPlayerInquiry inquiry;
+        public readonly WaitPlayerActionEvent waitEvent;
         [RabiBroadcast] public DiscardReason reason = DiscardReason.None;
         #endregion
 
         public ClaimTileEvent(Game game, int playerId, MenLike group, GameTile tile) : base(game, playerId) {
             this.group = group;
             this.tile = tile;
-            inquiry = new MultiPlayerInquiry(game.info);
+            waitEvent = new WaitPlayerActionEvent(game);
         }
     }
 }

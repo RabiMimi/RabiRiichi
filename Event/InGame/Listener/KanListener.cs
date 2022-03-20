@@ -13,12 +13,11 @@ namespace RabiRiichi.Event.InGame.Listener {
                 // 抢杠
                 var resolvers = GetKanResolvers(ev.game);
                 foreach (var resolver in resolvers) {
-                    resolver.Resolve(ev.player, ev.incoming, ev.inquiry);
+                    resolver.Resolve(ev.player, ev.incoming, ev.waitEvent.inquiry);
                 }
             }
-            var waitEv = new WaitPlayerActionEvent(ev.game, ev.inquiry);
-            ev.bus.Queue(waitEv);
-            AfterChanKan(waitEv, ev).ConfigureAwait(false);
+            ev.bus.Queue(ev.waitEvent);
+            AfterChanKan(ev.waitEvent, ev).ConfigureAwait(false);
             return Task.CompletedTask;
         }
 

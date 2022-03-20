@@ -38,42 +38,34 @@ namespace RabiRiichi.Event.InGame.Listener {
             var gameTile = DrawFrom(e);
             var resolvers = GetDrawTileResolvers(e.game);
             foreach (var resolver in resolvers) {
-                resolver.Resolve(e.player, gameTile, e.inquiry);
+                resolver.Resolve(e.player, gameTile, e.waitEvent.inquiry);
             }
-            e.inquiry.GetByPlayerId(e.playerId).DisableSkip();
-            var waitEv = new WaitPlayerActionEvent(e.game, e.inquiry);
-            e.bus.Queue(waitEv);
-            AfterPlayerAction(waitEv, e.reason).ConfigureAwait(false);
+            e.waitEvent.inquiry.GetByPlayerId(e.playerId).DisableSkip();
+            AddActionHandler(e.waitEvent, e.reason);
+            e.bus.Queue(e.waitEvent);
             return Task.CompletedTask;
         }
 
-        public static async Task AfterPlayerAction(WaitPlayerActionEvent ev, DiscardReason reason) {
-            try {
-                await ev.WaitForFinish;
-            } catch (OperationCanceledException) {
-                return;
-            }
-            var resp = ev.inquiry.responses;
-            var eventBuilder = new MultiEventBuilder();
-            foreach (var action in resp) {
-                if (action is TsumoAction tsumo) {
-                    eventBuilder.AddAgari(ev.game, tsumo.playerId, tsumo.incoming, tsumo.agariInfo);
-                } else if (action is PlayTileAction play) {
-                    var option = play.chosen as ChooseTileActionOption;
-                    if (action is RiichiAction) {
-                        eventBuilder.AddEvent(
-                            new RiichiEvent(ev.game, play.playerId, option.tile.gameTile, reason));
-                    } else {
-                        eventBuilder.AddEvent(
-                            new DiscardTileEvent(ev.game, play.playerId, option.tile.gameTile, reason));
-                    }
-                } else if (action is KanAction kanAction) {
-                    var option = kanAction.chosen as ChooseTilesActionOption;
-                    var kan = new Kan(option.gameTiles);
-                    eventBuilder.AddEvent(new KanEvent(ev.game, kanAction.playerId, kan, kanAction.incoming));
+        public static void AddActionHandler(WaitPlayerActionEvent ev, DiscardReason reason) {
+            var eventBuilder = ev.eventBuilder;
+            ev.inquiry.AddHandler<TsumoAction>((action) => {
+                eventBuilder.AddAgari(ev.game, action.playerId, action.incoming, action.agariInfo);
+            });
+            ev.inquiry.AddHandler<PlayTileAction>((action) => {
+                var option = action.chosen as ChooseTileActionOption;
+                if (action is RiichiAction) {
+                    eventBuilder.AddEvent(
+                        new RiichiEvent(ev.game, action.playerId, option.tile.gameTile, reason));
+                } else {
+                    eventBuilder.AddEvent(
+                        new DiscardTileEvent(ev.game, action.playerId, option.tile.gameTile, reason));
                 }
-            }
-            eventBuilder.BuildAndQueue(ev.bus);
+            });
+            ev.inquiry.AddHandler<KanAction>((action) => {
+                var option = action.chosen as ChooseTilesActionOption;
+                var kan = new Kan(option.gameTiles);
+                eventBuilder.AddEvent(new KanEvent(ev.game, action.playerId, kan, action.incoming));
+            });
         }
 
         public static void Register(EventBus eventBus) {

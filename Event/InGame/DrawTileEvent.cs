@@ -12,13 +12,13 @@ namespace RabiRiichi.Event.InGame {
         #endregion
 
         #region Response
-        public readonly MultiPlayerInquiry inquiry;
+        public readonly WaitPlayerActionEvent waitEvent;
         #endregion
 
         public DrawTileEvent(Game game, int playerId, TileSource source, DiscardReason reason) : base(game, playerId) {
             this.source = source;
             this.reason = reason;
-            inquiry = new MultiPlayerInquiry(game.info);
+            waitEvent = new WaitPlayerActionEvent(game);
         }
     }
 }

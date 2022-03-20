@@ -16,14 +16,14 @@ namespace RabiRiichi.Event.InGame {
         #endregion
 
         #region Response
-        public readonly MultiPlayerInquiry inquiry;
+        public readonly WaitPlayerActionEvent waitEvent;
         #endregion
 
         public BeginGameEvent(Game game, int round, int banker, int honba) : base(game) {
             this.round = round;
             this.banker = banker;
             this.honba = honba;
-            this.inquiry = new MultiPlayerInquiry(game.info);
+            this.waitEvent = new WaitPlayerActionEvent(game);
         }
     }
 }

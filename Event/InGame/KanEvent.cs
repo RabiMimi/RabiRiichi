@@ -15,14 +15,14 @@ namespace RabiRiichi.Event.InGame {
         #endregion
 
         #region Response
-        [RabiBroadcast] public readonly MultiPlayerInquiry inquiry;
+        [RabiBroadcast] public readonly WaitPlayerActionEvent waitEvent;
         #endregion
 
         public KanEvent(Game game, int playerId, Kan kan, GameTile incoming) : base(game, playerId) {
             this.kan = kan;
             this.incoming = incoming;
             this.kanSource = kan.KanSource;
-            this.inquiry = new MultiPlayerInquiry(game.info);
+            this.waitEvent = new WaitPlayerActionEvent(game);
         }
     }
 }

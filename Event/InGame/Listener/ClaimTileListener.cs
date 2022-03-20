@@ -1,4 +1,3 @@
-using RabiRiichi.Action;
 using RabiRiichi.Action.Resolver;
 using RabiRiichi.Riichi;
 using System;
@@ -49,12 +48,11 @@ namespace RabiRiichi.Event.InGame.Listener {
             // Request player action
             var resolvers = GetClaimTileResolvers(ev.game);
             foreach (var resolver in resolvers) {
-                resolver.Resolve(ev.player, null, claimEv.inquiry);
+                resolver.Resolve(ev.player, null, claimEv.waitEvent.inquiry);
             }
-            claimEv.inquiry.GetByPlayerId(ev.playerId).DisableSkip();
-            var waitEv = new WaitPlayerActionEvent(ev.game, claimEv.inquiry);
-            ev.bus.Queue(waitEv);
-            await DrawTileListener.AfterPlayerAction(waitEv, claimEv.reason);
+            claimEv.waitEvent.inquiry.GetByPlayerId(ev.playerId).DisableSkip();
+            DrawTileListener.AddActionHandler(claimEv.waitEvent, claimEv.reason);
+            ev.bus.Queue(claimEv.waitEvent);
         }
 
         public static void Register(EventBus eventBus) {

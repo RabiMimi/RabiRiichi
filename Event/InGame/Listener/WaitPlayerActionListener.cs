@@ -2,16 +2,19 @@ using System.Threading.Tasks;
 
 namespace RabiRiichi.Event.InGame.Listener {
     public static class WaitPlayerActionListener {
-        public static Task Execute(WaitPlayerActionEvent e) {
+        public static async Task ExecuteWaitPlayer(WaitPlayerActionEvent e) {
             if (e.inquiry.IsEmpty) {
-                return Task.CompletedTask;
+                return;
             }
             e.game.config.actionCenter.OnInquiry(e.inquiry);
-            return e.inquiry.WaitForFinish;
+            await e.inquiry.WaitForFinish;
+            if (e.eventBuilder != null) {
+                e.responseEvents.AddRange(e.eventBuilder.BuildAndQueue(e.bus));
+            }
         }
 
         public static void Register(EventBus eventBus) {
-            eventBus.Register<WaitPlayerActionEvent>(Execute, EventPriority.Execute);
+            eventBus.Register<WaitPlayerActionEvent>(ExecuteWaitPlayer, EventPriority.Execute);
         }
     }
 }

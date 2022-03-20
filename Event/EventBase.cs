@@ -43,9 +43,9 @@ namespace RabiRiichi.Event {
         public readonly Dictionary<string, object> extraData = new();
 
         /// <summary> 事件结束后回调 </summary>
-        private readonly List<System.Action<EventBase>> finishCallbacks = new();
+        private readonly List<System.Action> finishCallbacks = new();
         /// <summary> 事件被取消后回调 </summary>
-        private readonly List<System.Action<EventBase>> cancelCallbacks = new();
+        private readonly List<System.Action> cancelCallbacks = new();
 
         public EventBase(Game game) {
             this.game = game;
@@ -56,7 +56,7 @@ namespace RabiRiichi.Event {
         public void Cancel() {
             phase = EventPriority.Cancelled;
             foreach (var callback in cancelCallbacks) {
-                callback(this);
+                callback();
             }
             finishTcs.SetCanceled();
         }
@@ -65,16 +65,16 @@ namespace RabiRiichi.Event {
         public void Finish() {
             phase = EventPriority.Finished;
             foreach (var callback in finishCallbacks) {
-                callback(this);
+                callback();
             }
             finishTcs.SetResult();
         }
 
-        public void OnFinish(Action<EventBase> callback) {
+        public void OnFinish(System.Action callback) {
             finishCallbacks.Add(callback);
         }
 
-        public void OnCancel(Action<EventBase> callback) {
+        public void OnCancel(System.Action callback) {
             cancelCallbacks.Add(callback);
         }
 
