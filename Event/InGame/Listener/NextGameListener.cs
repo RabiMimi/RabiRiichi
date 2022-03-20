@@ -20,6 +20,7 @@ namespace RabiRiichi.Event.InGame.Listener {
             ev.nextRound = ev.nextBanker == 0 ? info.round + 1 : info.round;
             return Task.CompletedTask;
         }
+
         public static Task ExecuteNextGame(NextGameEvent ev) {
             var info = ev.game.info;
             var players = ev.game.players;
@@ -38,6 +39,11 @@ namespace RabiRiichi.Event.InGame.Listener {
             info.round = ev.nextRound;
             info.banker = ev.nextBanker;
             info.honba = ev.nextHonba;
+            // 累计立直棒
+            foreach (var player in ev.game.players) {
+                info.riichiStick += player.hand.riichiStick;
+                player.hand.riichiStick = 0;
+            }
             return Task.CompletedTask;
         }
 

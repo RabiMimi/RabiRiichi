@@ -45,6 +45,8 @@ namespace RabiRiichi.Riichi {
         public int banker = 0;
         /// <summary> 本场 </summary>
         public int honba = 0;
+        /// <summary> 立直棒数量 </summary>
+        public int riichiStick = 0;
 
         /// <summary> 游戏内用时间戳 </summary>
         public AutoIncrementInt timeStamp;

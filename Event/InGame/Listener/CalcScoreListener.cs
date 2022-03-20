@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace RabiRiichi.Event.InGame.Listener {
     public static class CalcScoreListener {
         public static Task CalcScore(CalcScoreEvent ev) {
-            // TODO: 立直棒 本场棒
+            // TODO: 本场棒
             var fromPlayer = ev.game.GetPlayer(ev.agariInfos.fromPlayer);
             foreach (var info in ev.agariInfos) {
                 var toPlayer = ev.game.GetPlayer(info.playerId);
@@ -17,6 +17,18 @@ namespace RabiRiichi.Event.InGame.Listener {
                     // 荣和
                     int scoreChange = info.scores.cachedResult.BaseScore * (toPlayer.IsBanker ? 6 : 4);
                     ev.scoreChange.Add(new ScoreTransfer(fromPlayer.id, toPlayer.id, scoreChange));
+                }
+            }
+            // 立直棒
+            if (ev.agariInfos.Count > 0) {
+                int agariPlayer = ev.agariInfos[0].playerId;
+                foreach (var player in ev.game.players) {
+                    if (player.hand.riichiStick == 0) {
+                        continue;
+                    }
+                    int scoreChange = player.hand.riichiStick * 1000;
+                    player.hand.riichiStick = 0;
+                    ev.scoreChange.Add(new ScoreTransfer(player.id, agariPlayer, scoreChange));
                 }
             }
             ev.bus.Queue(new ApplyScoreEvent(ev, ev.scoreChange));
