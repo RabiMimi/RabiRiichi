@@ -1,5 +1,4 @@
 using RabiRiichi.Communication;
-using RabiRiichi.Riichi;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -8,9 +7,12 @@ namespace RabiRiichi.Event.InGame {
         public readonly int from;
         public readonly int to;
         public readonly int points;
-        public ScoreTransfer(int from, int to, int points) {
+        public ScoreTransfer(int from, int to, int points, bool roundTo100 = true) {
             this.from = from;
             this.to = to;
+            if (roundTo100) {
+                this.points = (points + 50) / 100 * 100;
+            }
             this.points = points;
         }
     }
