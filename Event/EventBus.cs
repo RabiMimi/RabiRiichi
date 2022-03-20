@@ -79,10 +79,9 @@ namespace RabiRiichi.Event {
 
         /// <summary> 开始处理事件队列 </summary>
         public async Task ProcessQueue() {
-            EventBase ev;
             while (true) {
                 await Task.Yield();
-                if (!queue.TryTake(out ev)) {
+                if (!queue.TryTake(out var ev)) {
                     continue;
                 }
                 if (await Process(ev)) {
