@@ -13,15 +13,10 @@ namespace RabiRiichi.Event.InGame {
         [RabiBroadcast] public int honba;
         #endregion
 
-        #region Response
-        public readonly WaitPlayerActionEvent waitEvent;
-        #endregion
-
         public BeginGameEvent(EventBase parent, int round, int banker, int honba) : base(parent) {
             this.round = round;
             this.banker = banker;
             this.honba = honba;
-            this.waitEvent = new WaitPlayerActionEvent(this);
         }
     }
 }
