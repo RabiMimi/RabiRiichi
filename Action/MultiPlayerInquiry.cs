@@ -46,9 +46,11 @@ namespace RabiRiichi.Action {
         public AtomicBool hasExecuted { get; private set; } = new();
         public Task WaitForFinish => IsEmpty ? Task.CompletedTask : finishTcs.Task;
         public bool IsEmpty => playerInquiries.Count == 0;
+        public readonly Game game;
 
-        public MultiPlayerInquiry(GameInfo info) {
-            id = info.eventId.Next;
+        public MultiPlayerInquiry(Game game) {
+            this.game = game;
+            id = game.info.eventId.Next;
         }
 
         public SinglePlayerInquiry GetByPlayerId(int playerId)

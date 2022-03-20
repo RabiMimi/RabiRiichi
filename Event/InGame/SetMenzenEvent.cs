@@ -1,9 +1,11 @@
+using RabiRiichi.Communication;
+
 namespace RabiRiichi.Event.InGame {
     public class SetMenzenEvent : BroadcastPlayerEvent {
         public override string name => "set_menzen";
 
         #region Request
-        public bool menzen;
+        [RabiBroadcast] public bool menzen;
         #endregion
 
         public SetMenzenEvent(EventBase parent, int playerId, bool menzen) : base(parent, playerId) {
