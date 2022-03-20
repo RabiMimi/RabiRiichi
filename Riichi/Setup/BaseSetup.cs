@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using RabiRiichi.Event;
+using RabiRiichi.Event.InGame;
 using RabiRiichi.Event.InGame.Listener;
 using RabiRiichi.Pattern;
 using System;
@@ -97,6 +98,7 @@ namespace RabiRiichi.Riichi.Setup {
 
         /// <summary> 配置事件监听 </summary>
         protected virtual void RegisterEvents(EventBus eventBus) {
+            AddKanListener.Register(eventBus);
             AgariListener.Register(eventBus);
             ApplyScoreListener.Register(eventBus);
             BeginGameListener.Register(eventBus);

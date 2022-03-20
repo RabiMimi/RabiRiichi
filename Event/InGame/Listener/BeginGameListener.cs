@@ -7,18 +7,14 @@ using System.Threading.Tasks;
 
 namespace RabiRiichi.Event.InGame.Listener {
     public static class BeginGameListener {
-        public static Task UpdateGameInfo(BeginGameEvent e) {
-            e.game.info.round = e.round;
-            e.game.info.banker = e.banker;
-            e.game.info.honba = e.honba;
-            e.game.info.Reset();
-            foreach (var player in e.game.players) {
+        public static Task UpdateGameInfo(BeginGameEvent ev) {
+            ev.game.info.round = ev.round;
+            ev.game.info.banker = ev.banker;
+            ev.game.info.honba = ev.honba;
+            ev.game.info.Reset();
+            foreach (var player in ev.game.players) {
                 player.Reset();
             }
-            return Task.CompletedTask;
-        }
-
-        public static Task AfterUpdateInfo(BeginGameEvent ev) {
             var bus = ev.bus;
             int banker = ev.game.info.banker;
             for (int i = 0; i < ev.game.config.playerCount; i++) {
@@ -67,7 +63,6 @@ namespace RabiRiichi.Event.InGame.Listener {
 
         public static void Register(EventBus eventBus) {
             eventBus.Register<BeginGameEvent>(UpdateGameInfo, EventPriority.Execute);
-            eventBus.Register<BeginGameEvent>(AfterUpdateInfo, EventPriority.After);
         }
     }
 }
