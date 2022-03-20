@@ -17,11 +17,30 @@ namespace RabiRiichi.Action {
         }
     }
 
+    public interface IResponseHandler {
+        bool Handle(IPlayerAction option);
+    }
+
+    public class ResponseHandler<T> : IResponseHandler where T : IPlayerAction {
+        public readonly Action<T> handler;
+        public ResponseHandler(Action<T> handler) {
+            this.handler = handler;
+        }
+        public bool Handle(IPlayerAction action) {
+            if (action is T t) {
+                handler(t);
+                return true;
+            }
+            return false;
+        }
+    }
+
     public class MultiPlayerInquiry {
         public readonly int id;
         public readonly List<SinglePlayerInquiry> playerInquiries = new();
-        public readonly TaskCompletionSource finishTcs = new();
+        private readonly TaskCompletionSource finishTcs = new();
         public readonly List<IPlayerAction> responses = new();
+        public readonly List<IResponseHandler> responseHandlers = new();
         /// <summary> 当前已回应的用户的最高优先级 </summary>
         private int curMaxPriority = int.MinValue;
         public AtomicBool hasExecuted { get; private set; } = new();
@@ -36,13 +55,19 @@ namespace RabiRiichi.Action {
             => playerInquiries.Find(inquiry => inquiry.playerId == playerId);
 
         /// <summary> 添加一个PlayerAction，仅在构建inquiry被调用，非线程安全 </summary>
-        internal MultiPlayerInquiry Add(IPlayerAction action, bool isDefault = false) {
+        public MultiPlayerInquiry Add(IPlayerAction action, bool isDefault = false) {
             var list = GetByPlayerId(action.playerId);
             if (list == null) {
                 list = new SinglePlayerInquiry(action.playerId, id);
                 playerInquiries.Add(list);
             }
             list.AddAction(action, isDefault);
+            return this;
+        }
+
+        /// <summary> 添加一个用户操作的处理函数，仅在构建inquiry被调用，非线程安全 </summary>
+        public MultiPlayerInquiry AddHandler<T>(Action<T> handler) where T : IPlayerAction {
+            responseHandlers.Add(new ResponseHandler<T>(handler));
             return this;
         }
 
@@ -99,6 +124,13 @@ namespace RabiRiichi.Action {
             responses.AddRange(playerInquiries
                 .Where(x => x.curPriority == curMaxPriority)
                 .Select(x => x.Selected));
+
+            // 处理操作
+            foreach (var action in responses) {
+                foreach (var handler in responseHandlers) {
+                    handler.Handle(action);
+                }
+            }
             finishTcs.SetResult();
         }
     }

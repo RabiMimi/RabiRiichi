@@ -22,7 +22,7 @@ namespace RabiRiichi.Event {
         [RabiBroadcast] public abstract string name { get; }
         [RabiBroadcast] public RabiMessageType msgType => RabiMessageType.Event;
 
-        public Game game;
+        public readonly Game game;
         public EventBus bus => game.eventBus;
         public int phase = EventPriority.Maximum;
 
@@ -40,7 +40,12 @@ namespace RabiRiichi.Event {
         public Task WaitForFinish => IsFinished ? Task.CompletedTask : finishTcs.Task;
 
         /// <summary> 事件处理过程中可能会用到的额外信息 </summary>
-        public Dictionary<string, object> extraData = new();
+        public readonly Dictionary<string, object> extraData = new();
+
+        /// <summary> 事件结束后回调 </summary>
+        private readonly List<System.Action<EventBase>> finishCallbacks = new();
+        /// <summary> 事件被取消后回调 </summary>
+        private readonly List<System.Action<EventBase>> cancelCallbacks = new();
 
         public EventBase(Game game) {
             this.game = game;
@@ -50,12 +55,27 @@ namespace RabiRiichi.Event {
         /// <summary> 强制取消该事件 </summary>
         public void Cancel() {
             phase = EventPriority.Cancelled;
+            foreach (var callback in cancelCallbacks) {
+                callback(this);
+            }
             finishTcs.SetCanceled();
         }
 
+        /// <summary> 结束事件 </summary>
         public void Finish() {
             phase = EventPriority.Finished;
+            foreach (var callback in finishCallbacks) {
+                callback(this);
+            }
             finishTcs.SetResult();
+        }
+
+        public void OnFinish(Action<EventBase> callback) {
+            finishCallbacks.Add(callback);
+        }
+
+        public void OnCancel(Action<EventBase> callback) {
+            cancelCallbacks.Add(callback);
         }
 
         public override string ToString() {
