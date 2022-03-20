@@ -7,6 +7,7 @@ namespace RabiRiichi.Riichi {
     public class GameConfig {
         /// <summary> 玩家数 </summary>
         public int playerCount = 2;
+
         /// <summary> 番缚 </summary>
         public int minHan = 1;
 
@@ -19,7 +20,7 @@ namespace RabiRiichi.Riichi {
         /// <summary> 场棒点数 </summary>
         public int honbaPoints = 300;
 
-        /// <summary> 入点数 </summary>
+        /// <summary> (西)入点数 </summary>
         public int finishPoints = 30000;
 
         /// <summary> 几庄战 </summary>

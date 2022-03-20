@@ -35,7 +35,7 @@ namespace RabiRiichi.Event.InGame.Listener {
                 ev.bus.Queue(new StopGameEvent(ev));
                 return Task.CompletedTask;
             }
-            if (ev.nextRound > info.config.totalRound) {
+            if (ev.nextRound >= info.config.totalRound) {
                 if (players.Any(p => p.points >= info.config.finishPoints)) {
                     // 游戏结束
                     ev.bus.Queue(new StopGameEvent(ev));

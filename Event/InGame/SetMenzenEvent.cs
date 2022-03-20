@@ -1,5 +1,3 @@
-using RabiRiichi.Riichi;
-
 namespace RabiRiichi.Event.InGame {
     public class SetMenzenEvent : BroadcastPlayerEvent {
         public override string name => "set_menzen";

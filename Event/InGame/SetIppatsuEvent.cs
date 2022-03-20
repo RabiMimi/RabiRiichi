@@ -1,7 +1,6 @@
 
 using RabiRiichi.Communication;
 using RabiRiichi.Event;
-using RabiRiichi.Riichi;
 
 
 namespace RabiIppatsu.Event.InGame {
