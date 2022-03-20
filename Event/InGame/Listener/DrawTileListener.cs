@@ -37,12 +37,11 @@ namespace RabiRiichi.Event.InGame.Listener {
         public static Task DrawTile(DrawTileEvent e) {
             var gameTile = DrawFrom(e);
             var resolvers = GetDrawTileResolvers(e.game);
-            var inquiry = e.inquiry;
             foreach (var resolver in resolvers) {
-                resolver.Resolve(e.player, gameTile, inquiry);
+                resolver.Resolve(e.player, gameTile, e.inquiry);
             }
-            inquiry.GetByPlayerId(e.playerId).DisableSkip();
-            var waitEv = new WaitPlayerActionEvent(e.game, inquiry);
+            e.inquiry.GetByPlayerId(e.playerId).DisableSkip();
+            var waitEv = new WaitPlayerActionEvent(e.game, e.inquiry);
             e.bus.Queue(waitEv);
             AfterPlayerAction(waitEv, e.reason).ConfigureAwait(false);
             return Task.CompletedTask;

@@ -18,27 +18,26 @@ namespace RabiRiichi.Event.InGame.Listener {
             return Task.CompletedTask;
         }
 
-        public static Task AfterUpdateInfo(BeginGameEvent e) {
-            var bus = e.bus;
-            int banker = e.game.info.banker;
-            for (int i = 0; i < e.game.config.playerCount; i++) {
-                int playerId = (i + banker) % e.game.config.playerCount;
-                bus.Queue(new DealHandEvent(e.game, playerId));
+        public static Task AfterUpdateInfo(BeginGameEvent ev) {
+            var bus = ev.bus;
+            int banker = ev.game.info.banker;
+            for (int i = 0; i < ev.game.config.playerCount; i++) {
+                int playerId = (i + banker) % ev.game.config.playerCount;
+                bus.Queue(new DealHandEvent(ev.game, playerId));
             }
-            bus.Queue(new RevealDoraEvent(e.game));
-            var lastEvent = new IncreaseJunEvent(e.game, banker);
+            bus.Queue(new RevealDoraEvent(ev.game));
+            var lastEvent = new IncreaseJunEvent(ev.game, banker);
             bus.Queue(lastEvent);
-            AfterBankerDealHand(lastEvent).ConfigureAwait(false);
+            AfterBankerDealHand(lastEvent, ev.inquiry).ConfigureAwait(false);
             return Task.CompletedTask;
         }
 
-        private static async Task AfterBankerDealHand(IncreaseJunEvent ev) {
+        private static async Task AfterBankerDealHand(IncreaseJunEvent ev, MultiPlayerInquiry inquiry) {
             try {
                 await ev.WaitForFinish;
             } catch (OperationCanceledException) {
                 return;
             }
-            var inquiry = new MultiPlayerInquiry(ev.game.info);
             var freeTiles = ev.player.hand.freeTiles;
             var lastTile = freeTiles[^1];
             freeTiles.RemoveAt(freeTiles.Count - 1);

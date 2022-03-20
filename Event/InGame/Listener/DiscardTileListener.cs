@@ -12,12 +12,11 @@ namespace RabiRiichi.Event.InGame.Listener {
             if (ev is RiichiEvent) {
                 ev.tile.riichi = true;
             }
-            var inquiry = new MultiPlayerInquiry(ev.game.info);
             var resolvers = GetDiscardTileResolvers(ev.game);
             foreach (var resolver in resolvers) {
-                resolver.Resolve(ev.player, ev.tile, inquiry);
+                resolver.Resolve(ev.player, ev.tile, ev.inquiry);
             }
-            var waitEv = new WaitPlayerActionEvent(ev.game, inquiry);
+            var waitEv = new WaitPlayerActionEvent(ev.game, ev.inquiry);
             ev.bus.Queue(waitEv);
             AfterPlayerAction(waitEv, ev).ConfigureAwait(false);
             return Task.CompletedTask;

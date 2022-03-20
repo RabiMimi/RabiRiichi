@@ -14,19 +14,23 @@ namespace RabiRiichi.Event.InGame.Listener {
                 ev.bus.Queue(new KanEvent(ev.game, ev.playerId, kan, ev.tile));
                 return Task.CompletedTask;
             }
-            var junEv = new IncreaseJunEvent(ev.game, ev.playerId);
-            ev.bus.Queue(junEv);
-            DiscardReason reason;
+
+            // Check discard reason
             if (ev.group is Shun shun) {
                 ev.player.hand.AddChii(shun);
-                reason = DiscardReason.Chii;
+                ev.reason = DiscardReason.Chii;
             } else if (ev.group is Kou kou) {
                 ev.player.hand.AddPon(kou);
-                reason = DiscardReason.Pon;
+                ev.reason = DiscardReason.Pon;
             } else {
+                // Unknown group
                 return Task.CompletedTask;
             }
-            AfterIncreaseJun(junEv, reason).ConfigureAwait(false);
+
+            // Increase jun
+            var junEv = new IncreaseJunEvent(ev.game, ev.playerId);
+            ev.bus.Queue(junEv);
+            AfterIncreaseJun(junEv, ev).ConfigureAwait(false);
             return Task.CompletedTask;
         }
 
@@ -36,21 +40,21 @@ namespace RabiRiichi.Event.InGame.Listener {
             }
         }
 
-        private static async Task AfterIncreaseJun(IncreaseJunEvent ev, DiscardReason reason) {
+        private static async Task AfterIncreaseJun(IncreaseJunEvent ev, ClaimTileEvent claimEv) {
             try {
                 await ev.WaitForFinish;
             } catch (OperationCanceledException) {
                 return;
             }
+            // Request player action
             var resolvers = GetClaimTileResolvers(ev.game);
-            var inquiry = new MultiPlayerInquiry(ev.game.info);
             foreach (var resolver in resolvers) {
-                resolver.Resolve(ev.player, null, inquiry);
+                resolver.Resolve(ev.player, null, claimEv.inquiry);
             }
-            inquiry.GetByPlayerId(ev.playerId).DisableSkip();
-            var waitEv = new WaitPlayerActionEvent(ev.game, inquiry);
+            claimEv.inquiry.GetByPlayerId(ev.playerId).DisableSkip();
+            var waitEv = new WaitPlayerActionEvent(ev.game, claimEv.inquiry);
             ev.bus.Queue(waitEv);
-            await DrawTileListener.AfterPlayerAction(waitEv, reason);
+            await DrawTileListener.AfterPlayerAction(waitEv, claimEv.reason);
         }
 
         public static void Register(EventBus eventBus) {

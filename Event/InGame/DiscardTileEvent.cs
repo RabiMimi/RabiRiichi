@@ -1,3 +1,4 @@
+using RabiRiichi.Action;
 using RabiRiichi.Communication;
 using RabiRiichi.Riichi;
 
@@ -11,11 +12,13 @@ namespace RabiRiichi.Event.InGame {
         #endregion
 
         #region Response
+        public readonly MultiPlayerInquiry inquiry;
         #endregion
 
         public DiscardTileEvent(Game game, int playerId, GameTile tile, DiscardReason reason) : base(game, playerId) {
             this.tile = tile;
             this.reason = reason;
+            inquiry = new MultiPlayerInquiry(game.info);
         }
     }
 

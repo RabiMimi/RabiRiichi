@@ -1,3 +1,4 @@
+using RabiRiichi.Action;
 using RabiRiichi.Communication;
 using RabiRiichi.Riichi;
 
@@ -14,10 +15,15 @@ namespace RabiRiichi.Event.InGame {
         [RabiBroadcast] public int honba;
         #endregion
 
+        #region Response
+        public readonly MultiPlayerInquiry inquiry;
+        #endregion
+
         public BeginGameEvent(Game game, int round, int banker, int honba) : base(game) {
             this.round = round;
             this.banker = banker;
             this.honba = honba;
+            this.inquiry = new MultiPlayerInquiry(game.info);
         }
     }
 }
