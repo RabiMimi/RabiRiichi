@@ -14,14 +14,20 @@ namespace RabiRiichi.Communication {
         }
 
         public void OnMessage(int inquiryId, int playerId, int actionIndex, string message) {
-            if (!inquiries.TryGetValue(inquiryId, out var inquiry)) {
-                return;
+            lock (inquiries) {
+                if (!inquiries.TryGetValue(inquiryId, out var inquiry)) {
+                    return;
+                }
+                if (inquiry.OnResponse(new InquiryResponse(playerId, actionIndex, message))) {
+                    inquiries.Remove(inquiryId);
+                }
             }
-            inquiry.OnResponse(new InquiryResponse(playerId, actionIndex, message));
         }
 
         public void OnInquiry(MultiPlayerInquiry inquiry) {
-            inquiries[inquiry.id] = inquiry;
+            lock (inquiries) {
+                inquiries[inquiry.id] = inquiry;
+            }
             foreach (var singlePlayerInquiry in inquiry.playerInquiries) {
                 sender(singlePlayerInquiry.playerId,
                     inquiry.game.json.Stringify(singlePlayerInquiry, singlePlayerInquiry.playerId));
