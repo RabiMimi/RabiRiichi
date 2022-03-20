@@ -100,6 +100,7 @@ namespace RabiRiichi.Riichi.Setup {
             AddKanListener.Register(eventBus);
             AgariListener.Register(eventBus);
             ApplyScoreListener.Register(eventBus);
+            BankerFirstTurnListener.Register(eventBus);
             BeginGameListener.Register(eventBus);
             ClaimTileListener.Register(eventBus);
             DealHandListener.Register(eventBus);

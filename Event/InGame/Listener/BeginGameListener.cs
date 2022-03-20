@@ -1,6 +1,3 @@
-using RabiRiichi.Action.Resolver;
-using RabiRiichi.Riichi;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Event.InGame.Listener {
@@ -20,38 +17,11 @@ namespace RabiRiichi.Event.InGame.Listener {
                 bus.Queue(new DealHandEvent(ev, playerId));
             }
             bus.Queue(new RevealDoraEvent(ev));
-            var lastEvent = new IncreaseJunEvent(ev, banker);
-            bus.Queue(lastEvent);
-            lastEvent.OnFinish(() => AfterBankerDealHand(ev.waitEvent));
+            bus.Queue(new IncreaseJunEvent(ev, banker));
+            bus.Queue(new BankerFirstTurnEvent(ev, banker));
             return Task.CompletedTask;
         }
 
-        private static void AfterBankerDealHand(WaitPlayerActionEvent ev) {
-            var freeTiles = ev.player.hand.freeTiles;
-            var lastTile = freeTiles[^1];
-            freeTiles.RemoveAt(freeTiles.Count - 1);
-            foreach (var resolver in GetBankerFirstJunResolvers(ev.game)) {
-                resolver.Resolve(ev.player, lastTile, ev.inquiry);
-            }
-            ev.inquiry.GetByPlayerId(ev.playerId).DisableSkip();
-            DrawTileListener.AddActionHandler(ev, DiscardReason.Draw);
-            ev.bus.Queue(ev);
-        }
-
-        private static IEnumerable<ResolverBase> GetBankerFirstJunResolvers(Game game) {
-            if (game.TryGet<PlayTileResolver>(out var resolver1)) {
-                yield return resolver1;
-            }
-            if (game.TryGet<RiichiResolver>(out var resolver2)) {
-                yield return resolver2;
-            }
-            if (game.TryGet<KanResolver>(out var resolver3)) {
-                yield return resolver3;
-            }
-            if (game.TryGet<TenhouResolver>(out var resolver4)) {
-                yield return resolver4;
-            }
-        }
 
         public static void Register(EventBus eventBus) {
             eventBus.Register<BeginGameEvent>(UpdateGameInfo, EventPriority.Execute);
