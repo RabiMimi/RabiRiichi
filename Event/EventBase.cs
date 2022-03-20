@@ -37,45 +37,54 @@ namespace RabiRiichi.Event {
 
         /// <summary> 等待事件被成功处理 </summary>
         private readonly TaskCompletionSource finishTcs = new();
-        public Task WaitForFinish => IsFinished ? Task.CompletedTask : finishTcs.Task;
+        public Task WaitForFinish => finishTcs.Task;
 
         /// <summary> 事件处理过程中可能会用到的额外信息 </summary>
         public readonly Dictionary<string, object> extraData = new();
 
-        /// <summary> 事件结束后回调 </summary>
-        private readonly List<System.Action> finishCallbacks = new();
-        /// <summary> 事件被取消后回调 </summary>
-        private readonly List<System.Action> cancelCallbacks = new();
+        /// <summary> 该事件的父事件 </summary>
+        public readonly EventBase parent;
 
-        public EventBase(Game game) {
-            this.game = game;
+        /// <summary> 该事件的子事件 </summary>
+        public readonly List<EventBase> children = new();
+
+        public EventBase(EventBase parent) {
+            if (parent != null) {
+                this.parent = parent;
+                this.game = parent.game;
+                this.parent.children.Add(this);
+            }
             id = game.info.eventId.Next;
         }
 
-        /// <summary> 强制取消该事件 </summary>
+        public EventBase(Game game) {
+            this.game = game;
+        }
+
+        /// <summary> 强制取消该事件及其后继事件 </summary>
         public void Cancel() {
-            phase = EventPriority.Cancelled;
-            foreach (var callback in cancelCallbacks) {
-                callback();
+            if (IsFinishedOrCancelled) {
+                return;
             }
+            phase = EventPriority.Cancelled;
             finishTcs.SetCanceled();
+            foreach (var child in children) {
+                child.Cancel();
+            }
         }
 
         /// <summary> 结束事件 </summary>
         public void Finish() {
-            phase = EventPriority.Finished;
-            foreach (var callback in finishCallbacks) {
-                callback();
+            if (IsFinishedOrCancelled) {
+                return;
             }
+            phase = EventPriority.Finished;
             finishTcs.SetResult();
         }
 
+        /// <summary> 在事件成功处理后执行回调 </summary>
         public void OnFinish(System.Action callback) {
-            finishCallbacks.Add(callback);
-        }
-
-        public void OnCancel(System.Action callback) {
-            cancelCallbacks.Add(callback);
+            WaitForFinish.ContinueWith((_) => callback(), TaskContinuationOptions.NotOnCanceled);
         }
 
         public override string ToString() {

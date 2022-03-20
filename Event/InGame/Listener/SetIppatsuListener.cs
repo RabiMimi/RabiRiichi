@@ -10,20 +10,20 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         public static Task AfterRiichi(SetRiichiEvent ev) {
-            ev.bus.Queue(new SetIppatsuEvent(ev.game, ev.playerId, true));
+            ev.bus.Queue(new SetIppatsuEvent(ev, ev.playerId, true));
             return Task.CompletedTask;
         }
 
         public static Task ResetIppatsu(DiscardTileEvent ev) {
             if (ev.player.hand.ippatsu) {
-                ev.bus.Queue(new SetIppatsuEvent(ev.game, ev.playerId, false));
+                ev.bus.Queue(new SetIppatsuEvent(ev, ev.playerId, false));
             }
             return Task.CompletedTask;
         }
 
         public static Task ResetAllIppatsu(EventBase ev) {
             foreach (var player in ev.game.players.Where(p => p.hand.ippatsu)) {
-                ev.bus.Queue(new SetIppatsuEvent(ev.game, player.id, false));
+                ev.bus.Queue(new SetIppatsuEvent(ev, player.id, false));
             }
             return Task.CompletedTask;
         }

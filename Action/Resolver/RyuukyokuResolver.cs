@@ -11,7 +11,7 @@ namespace RabiRiichi.Action.Resolver {
                 return false;
             }
             if (player.hand.freeTiles.All(t => t.tile.Is19Z) && incoming.tile.Is19Z) {
-                output.Add(new RyuukyokuAction(player.id, new KyuushuKyuuhai(player.game)));
+                output.Add(new RyuukyokuAction(player.id, new KyuushuKyuuhai(player.game.initialEvent)));
                 return true;
             }
             return false;

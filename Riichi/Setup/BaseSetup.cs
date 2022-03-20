@@ -118,6 +118,7 @@ namespace RabiRiichi.Riichi.Setup {
             SetRiichiListener.Register(eventBus);
             WaitPlayerActionListener.Register(eventBus);
 
+            InitGameEvent.Register(eventBus);
             EventBroadcast.Register(eventBus);
         }
 

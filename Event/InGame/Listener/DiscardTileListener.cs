@@ -16,48 +16,45 @@ namespace RabiRiichi.Event.InGame.Listener {
             foreach (var resolver in resolvers) {
                 resolver.Resolve(ev.player, ev.tile, ev.waitEvent.inquiry);
             }
+            AddPlayerAction(ev);
             ev.bus.Queue(ev.waitEvent);
-            AfterPlayerAction(ev.waitEvent, ev).ConfigureAwait(false);
             return Task.CompletedTask;
         }
 
-        public static async Task AfterPlayerAction(WaitPlayerActionEvent ev, DiscardTileEvent discardEv) {
-            try {
-                await ev.WaitForFinish;
-            } catch (OperationCanceledException) {
-                return;
-            }
+        public static void AddPlayerAction(DiscardTileEvent discardEv) {
             var eventBuilder = new MultiEventBuilder();
-            var resp = ev.inquiry.responses;
-            foreach (var action in resp) {
-                if (action is ChiiAction chii) {
-                    var option = (ChooseTilesActionOption)chii.chosen;
-                    eventBuilder.AddEvent(new ClaimTileEvent(ev.game, chii.playerId, new Shun(option.gameTiles), discardEv.tile));
-                } else if (action is PonAction pon) {
-                    var option = (ChooseTilesActionOption)pon.chosen;
-                    eventBuilder.AddEvent(new ClaimTileEvent(ev.game, pon.playerId, new Kou(option.gameTiles), discardEv.tile));
-                } else if (action is KanAction kan) {
-                    var option = (ChooseTilesActionOption)kan.chosen;
-                    eventBuilder.AddEvent(new ClaimTileEvent(ev.game, kan.playerId, new Kan(option.gameTiles), discardEv.tile));
-                } else if (action is RonAction ron) {
-                    eventBuilder.AddAgari(ev.game, discardEv.playerId, discardEv.tile, ron.agariInfo);
+            var ev = discardEv.waitEvent;
+            ev.inquiry.AddHandler<ChiiAction>((action) => {
+                var option = (ChooseTilesActionOption)action.chosen;
+                eventBuilder.AddEvent(new ClaimTileEvent(ev, action.playerId, new Shun(option.gameTiles), discardEv.tile));
+            });
+            ev.inquiry.AddHandler<PonAction>((action) => {
+                var option = (ChooseTilesActionOption)action.chosen;
+                eventBuilder.AddEvent(new ClaimTileEvent(ev, action.playerId, new Kou(option.gameTiles), discardEv.tile));
+            });
+            ev.inquiry.AddHandler<KanAction>((action) => {
+                var option = (ChooseTilesActionOption)action.chosen;
+                eventBuilder.AddEvent(new ClaimTileEvent(ev, action.playerId, new Kan(option.gameTiles), discardEv.tile));
+            });
+            ev.inquiry.AddHandler<RonAction>((action) => {
+                eventBuilder.AddAgari(ev, discardEv.playerId, discardEv.tile, action.agariInfo);
+            });
+            ev.OnFinish(() => {
+                if (discardEv is RiichiEvent) {
+                    var riichiEv = new SetRiichiEvent(discardEv, discardEv.playerId, discardEv.tile, ev.game.IsFirstJun);
+                    // 巡目增加说明立直牌被鸣牌或进入下一个玩家的回合，更新立直状态
+                    // 如果立直牌被荣和，立直棒在和后才会放
+                    new EventListener<IncreaseJunEvent>(ev.bus)
+                        .EarlyPrepare((_) => {
+                            ev.bus.Queue(riichiEv);
+                            return Task.CompletedTask;
+                        }, 1)
+                        .ScopeTo(EventScope.Game);
                 }
-            }
-            var events = eventBuilder.BuildAndQueue(ev.bus);
-            if (discardEv is RiichiEvent) {
-                var riichiEv = new SetRiichiEvent(ev.game, discardEv.playerId, discardEv.tile, ev.game.IsFirstJun);
-                // 巡目增加说明立直牌被鸣牌或进入下一个玩家的回合，更新立直状态
-                // 如果立直牌被荣和，立直棒在和后才会放
-                new EventListener<IncreaseJunEvent>(ev.bus)
-                    .EarlyPrepare((_) => {
-                        ev.bus.Queue(riichiEv);
-                        return Task.CompletedTask;
-                    }, 1)
-                    .ScopeTo(EventScope.Game);
-            }
-            if (events.Count == 0) {
-                ev.bus.Queue(new NextPlayerEvent(ev.game, ev.playerId));
-            }
+                if (ev.responseEvents.Count == 0) {
+                    ev.bus.Queue(new NextPlayerEvent(ev, ev.playerId));
+                }
+            });
         }
 
         private static IEnumerable<ResolverBase> GetDiscardTileResolvers(Game game) {

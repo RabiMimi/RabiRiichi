@@ -13,9 +13,9 @@ namespace RabiRiichi.Event.InGame.Listener {
             }
 
             if (ev.kanSource == TileSource.AnKan) {
-                ev.bus.Queue(new RevealDoraEvent(ev.game, ev.playerId));
+                ev.bus.Queue(new RevealDoraEvent(ev, ev.playerId));
             } else {
-                var revealDoraEv = new RevealDoraEvent(ev.game, ev.playerId);
+                var revealDoraEv = new RevealDoraEvent(ev, ev.playerId);
                 bool isRevealed = false;
                 Task DelayRevealDora(EventBase _) {
                     if (!isRevealed) {
@@ -38,7 +38,7 @@ namespace RabiRiichi.Event.InGame.Listener {
                     .ScopeTo(EventScope.Game);
             }
 
-            ev.bus.Queue(new DrawTileEvent(ev.game, ev.playerId, TileSource.Wanpai, DiscardReason.DrawRinshan));
+            ev.bus.Queue(new DrawTileEvent(ev, ev.playerId, TileSource.Wanpai, DiscardReason.DrawRinshan));
             return Task.CompletedTask;
         }
 

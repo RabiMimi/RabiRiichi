@@ -8,6 +8,6 @@ namespace RabiRiichi.Event.InGame {
         public int increasedJun;
         #endregion
 
-        public IncreaseJunEvent(Game game, int playerId) : base(game, playerId) { }
+        public IncreaseJunEvent(EventBase parent, int playerId) : base(parent, playerId) { }
     }
 }

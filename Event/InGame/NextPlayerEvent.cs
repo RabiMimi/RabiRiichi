@@ -9,6 +9,6 @@ namespace RabiRiichi.Event.InGame {
         [RabiBroadcast] public int nextPlayerId;
         #endregion
 
-        public NextPlayerEvent(Game game, int playerId) : base(game, playerId) { }
+        public NextPlayerEvent(EventBase parent, int playerId) : base(parent, playerId) { }
     }
 }

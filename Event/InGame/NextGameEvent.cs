@@ -19,7 +19,7 @@ namespace RabiRiichi.Event.InGame {
         /// <summary> 本场 </summary>
         [RabiBroadcast] public int nextHonba;
         #endregion
-        public NextGameEvent(Game game, bool switchBanker, bool isRyuukyoku) : base(game) {
+        public NextGameEvent(EventBase parent, bool switchBanker, bool isRyuukyoku) : base(parent) {
             this.switchBanker = switchBanker;
             this.isRyuukyoku = isRyuukyoku;
         }

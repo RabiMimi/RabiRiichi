@@ -7,7 +7,7 @@ namespace RabiRiichi.Event.InGame {
         [RabiBroadcast] public bool isFuriten;
         #endregion
 
-        public SetFuritenEvent(Game game, int playerId, bool isFuriten) : base(game, playerId) {
+        public SetFuritenEvent(EventBase parent, int playerId, bool isFuriten) : base(parent, playerId) {
             this.isFuriten = isFuriten;
         }
     }
@@ -15,18 +15,18 @@ namespace RabiRiichi.Event.InGame {
     public class SetTempFuritenEvent : SetFuritenEvent {
         public override string name => "set_temp_furiten";
 
-        public SetTempFuritenEvent(Game game, int playerId, bool isFuriten) : base(game, playerId, isFuriten) { }
+        public SetTempFuritenEvent(EventBase parent, int playerId, bool isFuriten) : base(parent, playerId, isFuriten) { }
     }
 
     public class SetRiichiFuritenEvent : SetFuritenEvent {
         public override string name => "set_riichi_furiten";
 
-        public SetRiichiFuritenEvent(Game game, int playerId, bool isFuriten) : base(game, playerId, isFuriten) { }
+        public SetRiichiFuritenEvent(EventBase parent, int playerId, bool isFuriten) : base(parent, playerId, isFuriten) { }
     }
 
     public class SetDiscardFuritenEvent : SetFuritenEvent {
         public override string name => "set_discard_furiten";
 
-        public SetDiscardFuritenEvent(Game game, int playerId, bool isFuriten) : base(game, playerId, isFuriten) { }
+        public SetDiscardFuritenEvent(EventBase parent, int playerId, bool isFuriten) : base(parent, playerId, isFuriten) { }
     }
 }

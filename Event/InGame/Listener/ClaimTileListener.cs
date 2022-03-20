@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 namespace RabiRiichi.Event.InGame.Listener {
     public static class ClaimTileListener {
         public static Task ExecuteClaimTile(ClaimTileEvent ev) {
-            ev.bus.Queue(new SetMenzenEvent(ev.game, ev.playerId, false));
+            ev.bus.Queue(new SetMenzenEvent(ev, ev.playerId, false));
             if (ev.group is Kan kan) {
                 // 杠会增加巡目，在此跳过
-                ev.bus.Queue(new KanEvent(ev.game, ev.playerId, kan, ev.tile));
+                ev.bus.Queue(new KanEvent(ev, ev.playerId, kan, ev.tile));
                 return Task.CompletedTask;
             }
 
@@ -27,9 +27,18 @@ namespace RabiRiichi.Event.InGame.Listener {
             }
 
             // Increase jun
-            var junEv = new IncreaseJunEvent(ev.game, ev.playerId);
+            var junEv = new IncreaseJunEvent(ev, ev.playerId);
+            junEv.OnFinish(() => {
+                // Request player action
+                var resolvers = GetClaimTileResolvers(ev.game);
+                foreach (var resolver in resolvers) {
+                    resolver.Resolve(ev.player, null, ev.waitEvent.inquiry);
+                }
+                ev.waitEvent.inquiry.GetByPlayerId(ev.playerId).DisableSkip();
+                DrawTileListener.AddActionHandler(ev.waitEvent, ev.reason);
+                ev.bus.Queue(ev.waitEvent);
+            });
             ev.bus.Queue(junEv);
-            AfterIncreaseJun(junEv, ev).ConfigureAwait(false);
             return Task.CompletedTask;
         }
 
@@ -37,22 +46,6 @@ namespace RabiRiichi.Event.InGame.Listener {
             if (game.TryGet<PlayTileResolver>(out var resolver1)) {
                 yield return resolver1;
             }
-        }
-
-        private static async Task AfterIncreaseJun(IncreaseJunEvent ev, ClaimTileEvent claimEv) {
-            try {
-                await ev.WaitForFinish;
-            } catch (OperationCanceledException) {
-                return;
-            }
-            // Request player action
-            var resolvers = GetClaimTileResolvers(ev.game);
-            foreach (var resolver in resolvers) {
-                resolver.Resolve(ev.player, null, claimEv.waitEvent.inquiry);
-            }
-            claimEv.waitEvent.inquiry.GetByPlayerId(ev.playerId).DisableSkip();
-            DrawTileListener.AddActionHandler(claimEv.waitEvent, claimEv.reason);
-            ev.bus.Queue(claimEv.waitEvent);
         }
 
         public static void Register(EventBus eventBus) {

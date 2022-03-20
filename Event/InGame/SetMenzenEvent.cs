@@ -8,7 +8,7 @@ namespace RabiRiichi.Event.InGame {
         public bool menzen;
         #endregion
 
-        public SetMenzenEvent(Game game, int playerId, bool menzen) : base(game, playerId) {
+        public SetMenzenEvent(EventBase parent, int playerId, bool menzen) : base(parent, playerId) {
             this.menzen = menzen;
         }
     }

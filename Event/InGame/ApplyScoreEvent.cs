@@ -9,7 +9,7 @@ namespace RabiRiichi.Event.InGame {
         [RabiBroadcast] public readonly ScoreTransferList scoreChange;
         #endregion
 
-        public ApplyScoreEvent(Game game, ScoreTransferList scoreChange) : base(game) {
+        public ApplyScoreEvent(EventBase parent, ScoreTransferList scoreChange) : base(parent) {
             this.scoreChange = scoreChange;
         }
     }

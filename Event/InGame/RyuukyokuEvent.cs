@@ -13,7 +13,7 @@ namespace RabiRiichi.Event.InGame {
         [RabiBroadcast] public readonly ScoreTransferList scoreChange;
         #endregion
 
-        public RyuukyokuEvent(Game game) : base(game) {
+        public RyuukyokuEvent(EventBase parent) : base(parent) {
             scoreChange = new ScoreTransferList(game.config.playerCount);
         }
 
@@ -30,40 +30,40 @@ namespace RabiRiichi.Event.InGame {
         [RabiBroadcast] public int[] tenpaiPlayers = Array.Empty<int>();
         #endregion
 
-        public EndGameRyuukyokuEvent(Game game) : base(game) { }
+        public EndGameRyuukyokuEvent(EventBase parent) : base(parent) { }
     }
 
     public abstract class MidGameRyuukyokuEvent : RyuukyokuEvent {
-        public MidGameRyuukyokuEvent(Game game) : base(game) { }
+        public MidGameRyuukyokuEvent(EventBase parent) : base(parent) { }
     }
 
     public class SuufonRenda : MidGameRyuukyokuEvent {
         public override string name => "suufon_renda";
 
-        public SuufonRenda(Game game) : base(game) { }
+        public SuufonRenda(EventBase parent) : base(parent) { }
     }
 
     public class KyuushuKyuuhai : MidGameRyuukyokuEvent {
         public override string name => "kyuushu_kyuuhai";
 
-        public KyuushuKyuuhai(Game game) : base(game) { }
+        public KyuushuKyuuhai(EventBase parent) : base(parent) { }
     }
 
     public class SuuchaRiichi : MidGameRyuukyokuEvent {
         public override string name => "suucha_riichi";
 
-        public SuuchaRiichi(Game game) : base(game) { }
+        public SuuchaRiichi(EventBase parent) : base(parent) { }
     }
 
     public class TripleRon : MidGameRyuukyokuEvent {
         public override string name => "triple_ron";
 
-        public TripleRon(Game game) : base(game) { }
+        public TripleRon(EventBase parent) : base(parent) { }
     }
 
     public class SuukanSanra : MidGameRyuukyokuEvent {
         public override string name => "suukan_sanra";
 
-        public SuukanSanra(Game game) : base(game) { }
+        public SuukanSanra(EventBase parent) : base(parent) { }
     }
 }

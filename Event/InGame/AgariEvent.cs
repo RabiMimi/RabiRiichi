@@ -28,10 +28,10 @@ namespace RabiRiichi.Event.InGame {
     [RabiBroadcast]
     public class AgariEvent : EventBase {
         public class Builder : IEventBuilder {
-            public readonly Game game;
+            public readonly EventBase parent;
             public readonly AgariInfoList agariInfos;
-            public Builder(Game game, int fromPlayer, GameTile incoming) {
-                this.game = game;
+            public Builder(EventBase parent, int fromPlayer, GameTile incoming) {
+                this.parent = parent;
                 agariInfos = new AgariInfoList(fromPlayer, incoming);
             }
             public Builder Add(AgariInfo agariInfo) {
@@ -42,7 +42,7 @@ namespace RabiRiichi.Event.InGame {
                 if (agariInfos.Count == 0) {
                     return null;
                 }
-                return new AgariEvent(game, agariInfos);
+                return new AgariEvent(parent, agariInfos);
             }
         }
         public override string name => "agari";
@@ -51,7 +51,7 @@ namespace RabiRiichi.Event.InGame {
         [RabiBroadcast] public readonly AgariInfoList agariInfos;
         #endregion
 
-        public AgariEvent(Game game, AgariInfoList info) : base(game) {
+        public AgariEvent(EventBase parent, AgariInfoList info) : base(parent) {
             agariInfos = info;
         }
     }

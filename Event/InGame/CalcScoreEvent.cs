@@ -43,7 +43,7 @@ namespace RabiRiichi.Event.InGame {
         [RabiBroadcast] public readonly ScoreTransferList scoreChange;
         #endregion
 
-        public CalcScoreEvent(Game game, AgariInfoList agariInfos) : base(game) {
+        public CalcScoreEvent(EventBase parent, AgariInfoList agariInfos) : base(parent) {
             this.agariInfos = agariInfos;
             this.isAgari = true;
             scoreChange = new ScoreTransferList(game.config.playerCount);

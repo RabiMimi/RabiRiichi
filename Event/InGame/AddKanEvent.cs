@@ -14,13 +14,7 @@ namespace RabiRiichi.Event.InGame {
         public readonly GameTile incoming;
         #endregion
 
-        public AddKanEvent(Game game, int playerId, Kan kan, GameTile incoming) : base(game, playerId) {
-            this.kan = kan;
-            this.incoming = incoming;
-            this.kanSource = kan.KanSource;
-        }
-
-        public AddKanEvent(KanEvent ev) : base(ev.game, ev.playerId) {
+        public AddKanEvent(KanEvent ev) : base(ev, ev.playerId) {
             kan = ev.kan;
             incoming = ev.incoming;
             kanSource = ev.kanSource;

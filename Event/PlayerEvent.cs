@@ -6,23 +6,23 @@ namespace RabiRiichi.Event {
         public Player player => game.GetPlayer(playerId);
         [RabiBroadcast] public int playerId { get; init; }
 
-        public PlayerEvent(Game game, int playerId) : base(game) {
+        public PlayerEvent(EventBase parent, int playerId) : base(parent) {
             this.playerId = playerId;
         }
     }
 
     [RabiPrivate]
     public abstract class PrivatePlayerEvent : PlayerEvent {
-        public PrivatePlayerEvent(Game game, int playerId) : base(game, playerId) { }
+        public PrivatePlayerEvent(EventBase parent, int playerId) : base(parent, playerId) { }
     }
 
     [RabiBroadcast]
     public abstract class BroadcastPlayerEvent : PlayerEvent {
-        public BroadcastPlayerEvent(Game game, int playerId) : base(game, playerId) { }
+        public BroadcastPlayerEvent(EventBase parent, int playerId) : base(parent, playerId) { }
     }
 
     [RabiPrivate]
     public abstract class IgnoredEvent : PlayerEvent {
-        public IgnoredEvent(Game game) : base(game, -1) { }
+        public IgnoredEvent(EventBase parent) : base(parent, -1) { }
     }
 }

@@ -12,7 +12,7 @@ namespace RabiIppatsu.Event.InGame {
         [RabiBroadcast] public bool ippatsu;
         #endregion
 
-        public SetIppatsuEvent(Game game, int playerId, bool ippatsu) : base(game, playerId) {
+        public SetIppatsuEvent(EventBase parent, int playerId, bool ippatsu) : base(parent, playerId) {
             this.ippatsu = ippatsu;
         }
     }

@@ -14,10 +14,10 @@ namespace RabiRiichi.Event.InGame.Listener {
 
         public static Task NextPlayer(NextPlayerEvent ev) {
             if (ev.nextPlayerId < 0) {
-                ev.bus.Queue(new EndGameRyuukyokuEvent(ev.game));
+                ev.bus.Queue(new EndGameRyuukyokuEvent(ev));
             } else {
-                ev.bus.Queue(new IncreaseJunEvent(ev.game, ev.nextPlayerId));
-                ev.bus.Queue(new DrawTileEvent(ev.game, ev.nextPlayerId, TileSource.Wall, DiscardReason.Draw));
+                ev.bus.Queue(new IncreaseJunEvent(ev, ev.nextPlayerId));
+                ev.bus.Queue(new DrawTileEvent(ev, ev.nextPlayerId, TileSource.Wall, DiscardReason.Draw));
             }
             return Task.CompletedTask;
         }

@@ -15,10 +15,10 @@ namespace RabiRiichi.Event.InGame {
         public readonly WaitPlayerActionEvent waitEvent;
         #endregion
 
-        public DrawTileEvent(Game game, int playerId, TileSource source, DiscardReason reason) : base(game, playerId) {
+        public DrawTileEvent(EventBase parent, int playerId, TileSource source, DiscardReason reason) : base(parent, playerId) {
             this.source = source;
             this.reason = reason;
-            waitEvent = new WaitPlayerActionEvent(game);
+            waitEvent = new WaitPlayerActionEvent(this);
         }
     }
 }

@@ -55,14 +55,14 @@ namespace RabiRiichi.Event.InGame.Listener {
                     }
                 }
             }
-            ev.bus.Queue(new ApplyScoreEvent(ev.game, ev.scoreChange));
-            ev.bus.Queue(new NextGameEvent(ev.game, !ev.tenpaiPlayers.Contains(ev.game.info.banker), true));
+            ev.bus.Queue(new ApplyScoreEvent(ev, ev.scoreChange));
+            ev.bus.Queue(new NextGameEvent(ev, !ev.tenpaiPlayers.Contains(ev.game.info.banker), true));
             return Task.CompletedTask;
         }
 
         public static Task ExecuteMidGameRyuukyoku(MidGameRyuukyokuEvent ev) {
-            ev.bus.Queue(new ApplyScoreEvent(ev.game, ev.scoreChange));
-            ev.bus.Queue(new NextGameEvent(ev.game, false, true));
+            ev.bus.Queue(new ApplyScoreEvent(ev, ev.scoreChange));
+            ev.bus.Queue(new NextGameEvent(ev, false, true));
             return Task.CompletedTask;
         }
 
@@ -84,7 +84,7 @@ namespace RabiRiichi.Event.InGame.Listener {
             }
             ev.Cancel();
             ev.bus.ClearEvents();
-            ev.bus.Queue(new SuufonRenda(ev.game));
+            ev.bus.Queue(new SuufonRenda(ev));
             return Task.CompletedTask;
         }
 
@@ -93,7 +93,7 @@ namespace RabiRiichi.Event.InGame.Listener {
                 return Task.CompletedTask;
             }
             ev.bus.ClearEvents();
-            ev.bus.Queue(new SuuchaRiichi(ev.game));
+            ev.bus.Queue(new SuuchaRiichi(ev));
             return Task.CompletedTask;
         }
 
@@ -102,7 +102,7 @@ namespace RabiRiichi.Event.InGame.Listener {
                 return Task.CompletedTask;
             }
             ev.bus.ClearEvents();
-            ev.bus.Queue(new TripleRon(ev.game));
+            ev.bus.Queue(new TripleRon(ev));
             return Task.CompletedTask;
         }
 
@@ -119,7 +119,7 @@ namespace RabiRiichi.Event.InGame.Listener {
             }
             ev.Cancel();
             ev.bus.ClearEvents();
-            ev.bus.Queue(new SuukanSanra(ev.game));
+            ev.bus.Queue(new SuukanSanra(ev.game.initialEvent));
             return Task.CompletedTask;
         }
 

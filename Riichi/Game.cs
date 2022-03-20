@@ -22,9 +22,11 @@ namespace RabiRiichi.Riichi {
         public readonly EventBus eventBus;
         public readonly JsonStringify json;
         public readonly Player[] players;
+        public readonly InitGameEvent initialEvent;
 
 
         public Game(GameConfig config) {
+            initialEvent = new(this);
             var rand = new Rand((int)(config.seed ?? (DateTimeOffset.Now.ToUnixTimeMilliseconds() & 0xffffffff)));
             players = new Player[config.playerCount];
             var serviceCollection = new ServiceCollection();
@@ -85,7 +87,7 @@ namespace RabiRiichi.Riichi {
             }
 
             // 游戏逻辑
-            eventBus.Queue(new BeginGameEvent(this, 0, 0, 0));
+            eventBus.Queue(initialEvent);
             await eventBus.ProcessQueue();
 
             // 结束游戏

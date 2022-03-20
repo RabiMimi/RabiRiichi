@@ -70,21 +70,26 @@ namespace RabiRiichi.Event {
         }
 
         public void ClearEvents() {
-            using MutexHolder mh = new(eventProcessingMutex, MUTEX_TIMEOUT);
-            queue.Clear();
+            lock (queue) {
+                queue.Clear();
+            }
         }
 
         public void Queue(EventBase ev) {
-            using MutexHolder mh = new(eventProcessingMutex, MUTEX_TIMEOUT);
-            queue.Enqueue(ev);
+            lock (queue) {
+                queue.Enqueue(ev);
+            }
         }
 
         /// <summary> 开始处理事件队列 </summary>
         public async Task ProcessQueue() {
+            EventBase ev;
             while (true) {
                 await Task.Yield();
-                if (!queue.TryDequeue(out var ev)) {
-                    continue;
+                lock (queue) {
+                    if (!queue.TryDequeue(out ev)) {
+                        continue;
+                    }
                 }
                 if (await Process(ev)) {
                     if (ev is StopGameEvent) {

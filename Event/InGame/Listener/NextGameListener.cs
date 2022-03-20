@@ -25,13 +25,13 @@ namespace RabiRiichi.Event.InGame.Listener {
             var players = ev.game.players;
             if (players.Any(p => p.points < 0)) {
                 // 击飞
-                ev.bus.Queue(new StopGameEvent(ev.game));
+                ev.bus.Queue(new StopGameEvent(ev));
                 return Task.CompletedTask;
             }
             if (ev.nextRound > info.config.totalRound) {
                 if (players.Any(p => p.points >= info.config.finishPoints)) {
                     // 游戏结束
-                    ev.bus.Queue(new StopGameEvent(ev.game));
+                    ev.bus.Queue(new StopGameEvent(ev));
                     return Task.CompletedTask;
                 }
             }

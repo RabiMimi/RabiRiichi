@@ -8,21 +8,13 @@ namespace RabiRiichi.Event.InGame.Listener {
             foreach (var info in ev.agariInfos) {
                 ev.game.GetPlayer(info.playerId).hand.agariTile = ev.agariInfos.incoming;
             }
-            var calcScoreEv = new CalcScoreEvent(ev.game, ev.agariInfos);
+            var calcScoreEv = new CalcScoreEvent(ev, ev.agariInfos);
             ev.bus.Queue(calcScoreEv);
-            AfterCalcScore(calcScoreEv, ev).ConfigureAwait(false);
+            var applyScoreEv = new ApplyScoreEvent(calcScoreEv, calcScoreEv.scoreChange);
+            ev.bus.Queue(applyScoreEv);
+            bool bankerRon = ev.agariInfos.Any(info => info.playerId == ev.game.info.banker);
+            ev.bus.Queue(new NextGameEvent(applyScoreEv, !bankerRon, false));
             return Task.CompletedTask;
-        }
-
-        private static async Task AfterCalcScore(CalcScoreEvent ev, AgariEvent agariEv) {
-            try {
-                await ev.WaitForFinish;
-            } catch (OperationCanceledException) {
-                return;
-            }
-            ev.bus.Queue(new ApplyScoreEvent(ev.game, ev.scoreChange));
-            bool bankerRon = agariEv.agariInfos.Any(info => info.playerId == ev.game.info.banker);
-            ev.bus.Queue(new NextGameEvent(ev.game, !bankerRon, false));
         }
 
         public static void Register(EventBus eventBus) {

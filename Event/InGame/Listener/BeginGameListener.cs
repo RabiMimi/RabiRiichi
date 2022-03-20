@@ -18,27 +18,25 @@ namespace RabiRiichi.Event.InGame.Listener {
             int banker = ev.game.info.banker;
             for (int i = 0; i < ev.game.config.playerCount; i++) {
                 int playerId = (i + banker) % ev.game.config.playerCount;
-                bus.Queue(new DealHandEvent(ev.game, playerId));
+                bus.Queue(new DealHandEvent(ev, playerId));
             }
-            bus.Queue(new RevealDoraEvent(ev.game));
-            var lastEvent = new IncreaseJunEvent(ev.game, banker);
+            bus.Queue(new RevealDoraEvent(ev));
+            var lastEvent = new IncreaseJunEvent(ev, banker);
             bus.Queue(lastEvent);
-            lastEvent.OnFinish(() => {
-                AfterBankerDealHand(lastEvent, ev.waitEvent);
-            });
+            lastEvent.OnFinish(() => AfterBankerDealHand(ev.waitEvent));
             return Task.CompletedTask;
         }
 
-        private static void AfterBankerDealHand(IncreaseJunEvent ev, WaitPlayerActionEvent waitEv) {
+        private static void AfterBankerDealHand(WaitPlayerActionEvent ev) {
             var freeTiles = ev.player.hand.freeTiles;
             var lastTile = freeTiles[^1];
             freeTiles.RemoveAt(freeTiles.Count - 1);
             foreach (var resolver in GetBankerFirstJunResolvers(ev.game)) {
-                resolver.Resolve(ev.player, lastTile, waitEv.inquiry);
+                resolver.Resolve(ev.player, lastTile, ev.inquiry);
             }
-            waitEv.inquiry.GetByPlayerId(ev.playerId).DisableSkip();
-            DrawTileListener.AddActionHandler(waitEv, DiscardReason.Draw);
-            ev.bus.Queue(waitEv);
+            ev.inquiry.GetByPlayerId(ev.playerId).DisableSkip();
+            DrawTileListener.AddActionHandler(ev, DiscardReason.Draw);
+            ev.bus.Queue(ev);
         }
 
         private static IEnumerable<ResolverBase> GetBankerFirstJunResolvers(Game game) {

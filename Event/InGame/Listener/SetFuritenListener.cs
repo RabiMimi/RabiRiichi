@@ -16,7 +16,7 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         public static Task OnIncreaseJun(IncreaseJunEvent ev) {
-            ev.bus.Queue(new SetTempFuritenEvent(ev.game, ev.playerId, false));
+            ev.bus.Queue(new SetTempFuritenEvent(ev, ev.playerId, false));
             return Task.CompletedTask;
         }
 
@@ -30,18 +30,18 @@ namespace RabiRiichi.Event.InGame.Listener {
                     // 理论上立直后听牌牌型不能改变，因此可以简化为只计算当前弃牌
                     // 但是考虑到无限立直的情况，这里不做该优化
                     bool discardFuriten = hand.discarded.Any(tile => tenpai.Contains(tile.tile.WithoutDora));
-                    furitenEvs.Add(new SetDiscardFuritenEvent(ev.game, player.id, discardFuriten));
+                    furitenEvs.Add(new SetDiscardFuritenEvent(ev, player.id, discardFuriten));
                     if (hand.riichi) {
-                        furitenEvs.Add(new SetRiichiFuritenEvent(ev.game, player.id, discardFuriten));
+                        furitenEvs.Add(new SetRiichiFuritenEvent(ev, player.id, discardFuriten));
                     }
                     continue;
                 }
                 // 计算别的玩家的振听状态
                 bool tempFuriten = tenpai.Contains(ev.tile.tile.WithoutDora);
                 if (tempFuriten) {
-                    furitenEvs.Add(new SetTempFuritenEvent(ev.game, player.id, tempFuriten));
+                    furitenEvs.Add(new SetTempFuritenEvent(ev, player.id, tempFuriten));
                     if (hand.riichi) {
-                        furitenEvs.Add(new SetRiichiFuritenEvent(ev.game, player.id, tempFuriten));
+                        furitenEvs.Add(new SetRiichiFuritenEvent(ev, player.id, tempFuriten));
                     }
                 }
             }

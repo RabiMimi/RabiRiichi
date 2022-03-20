@@ -10,7 +10,7 @@ namespace RabiRiichi.Event.InGame {
         [RabiBroadcast] public bool wRiichi;
         #endregion
 
-        public SetRiichiEvent(Game game, int playerId, GameTile riichiTile, bool wRiichi) : base(game, playerId) {
+        public SetRiichiEvent(EventBase parent, int playerId, GameTile riichiTile, bool wRiichi) : base(parent, playerId) {
             this.riichiTile = riichiTile;
             this.wRiichi = wRiichi;
         }

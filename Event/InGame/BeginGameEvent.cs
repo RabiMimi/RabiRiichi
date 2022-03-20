@@ -1,4 +1,3 @@
-using RabiRiichi.Action;
 using RabiRiichi.Communication;
 using RabiRiichi.Riichi;
 
@@ -19,11 +18,11 @@ namespace RabiRiichi.Event.InGame {
         public readonly WaitPlayerActionEvent waitEvent;
         #endregion
 
-        public BeginGameEvent(Game game, int round, int banker, int honba) : base(game) {
+        public BeginGameEvent(EventBase parent, int round, int banker, int honba) : base(parent) {
             this.round = round;
             this.banker = banker;
             this.honba = honba;
-            this.waitEvent = new WaitPlayerActionEvent(game);
+            this.waitEvent = new WaitPlayerActionEvent(this);
         }
     }
 }

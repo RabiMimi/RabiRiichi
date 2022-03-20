@@ -16,10 +16,10 @@ namespace RabiRiichi.Event.InGame {
         [RabiBroadcast] public DiscardReason reason = DiscardReason.None;
         #endregion
 
-        public ClaimTileEvent(Game game, int playerId, MenLike group, GameTile tile) : base(game, playerId) {
+        public ClaimTileEvent(EventBase parent, int playerId, MenLike group, GameTile tile) : base(parent, playerId) {
             this.group = group;
             this.tile = tile;
-            waitEvent = new WaitPlayerActionEvent(game);
+            waitEvent = new WaitPlayerActionEvent(this);
         }
     }
 }

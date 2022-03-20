@@ -19,7 +19,7 @@ namespace RabiRiichi.Event.InGame.Listener {
                     ev.scoreChange.Add(new ScoreTransfer(fromPlayer.id, toPlayer.id, scoreChange));
                 }
             }
-            ev.bus.Queue(new ApplyScoreEvent(ev.game, ev.scoreChange));
+            ev.bus.Queue(new ApplyScoreEvent(ev, ev.scoreChange));
             return Task.CompletedTask;
         }
 

@@ -18,11 +18,11 @@ namespace RabiRiichi.Event.InGame {
         [RabiBroadcast] public readonly WaitPlayerActionEvent waitEvent;
         #endregion
 
-        public KanEvent(Game game, int playerId, Kan kan, GameTile incoming) : base(game, playerId) {
+        public KanEvent(EventBase parent, int playerId, Kan kan, GameTile incoming) : base(parent, playerId) {
             this.kan = kan;
             this.incoming = incoming;
             this.kanSource = kan.KanSource;
-            this.waitEvent = new WaitPlayerActionEvent(game);
+            this.waitEvent = new WaitPlayerActionEvent(this);
         }
     }
 }

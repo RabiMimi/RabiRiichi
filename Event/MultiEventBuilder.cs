@@ -22,9 +22,9 @@ namespace RabiRiichi.Event {
             return this;
         }
 
-        public MultiEventBuilder AddAgari(Game game, int fromPlayer, GameTile incoming, AgariInfo info) {
+        public MultiEventBuilder AddAgari(EventBase parent, int fromPlayer, GameTile incoming, AgariInfo info) {
             if (builders.Find(b => b is AgariEvent.Builder) is not AgariEvent.Builder builder) {
-                builder = new AgariEvent.Builder(game, fromPlayer, incoming);
+                builder = new AgariEvent.Builder(parent, fromPlayer, incoming);
                 builders.Add(builder);
             }
             builder.Add(info);

@@ -16,7 +16,7 @@ namespace RabiRiichi.Event.InGame {
         public readonly List<EventBase> responseEvents = new();
         #endregion
 
-        public WaitPlayerActionEvent(Game game) : base(game) {
+        public WaitPlayerActionEvent(EventBase parent) : base(parent) {
             this.inquiry = new MultiPlayerInquiry(game.info);
         }
     }

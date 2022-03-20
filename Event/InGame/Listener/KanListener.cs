@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace RabiRiichi.Event.InGame.Listener {
     public static class KanListener {
         public static Task ExecuteKan(KanEvent ev) {
-            ev.bus.Queue(new IncreaseJunEvent(ev.game, ev.playerId));
+            ev.bus.Queue(new IncreaseJunEvent(ev, ev.playerId));
             if (ev.kanSource != TileSource.DaiMinKan) {
                 // 抢杠
                 var resolvers = GetKanResolvers(ev.game);
@@ -16,8 +16,18 @@ namespace RabiRiichi.Event.InGame.Listener {
                     resolver.Resolve(ev.player, ev.incoming, ev.waitEvent.inquiry);
                 }
             }
+            ev.waitEvent.inquiry.AddHandler<RonAction>((action) => {
+                ev.waitEvent.eventBuilder.AddAgari(ev.waitEvent, ev.playerId, ev.incoming, action.agariInfo);
+            });
             ev.bus.Queue(ev.waitEvent);
-            AfterChanKan(ev.waitEvent, ev).ConfigureAwait(false);
+            ev.waitEvent.OnFinish(() => {
+                if (ev.waitEvent.responseEvents.Count > 0) {
+                    // TODO: 处理抢杠后的情况：算作杠还是刻？
+                    return;
+                }
+                // 没有人抢杠，继续处理开杠事件
+                ev.bus.Queue(new AddKanEvent(ev));
+            });
             return Task.CompletedTask;
         }
 
@@ -25,28 +35,6 @@ namespace RabiRiichi.Event.InGame.Listener {
             if (game.TryGet<ChanKanResolver>(out var resolver)) {
                 yield return resolver;
             }
-        }
-
-        private static async Task AfterChanKan(WaitPlayerActionEvent waitEv, KanEvent kanEv) {
-            try {
-                await waitEv.WaitForFinish;
-            } catch (OperationCanceledException) {
-                return;
-            }
-            var eventBuilder = new MultiEventBuilder();
-            var resp = waitEv.inquiry.responses;
-            foreach (var action in resp) {
-                if (action is RonAction ron) {
-                    eventBuilder.AddAgari(waitEv.game, kanEv.playerId, kanEv.incoming, ron.agariInfo);
-                }
-            }
-            if (eventBuilder.BuildAndQueue(waitEv.bus).Count > 0) {
-                // TODO: 处理抢杠后的情况：算作杠还是刻？
-                return;
-            }
-
-            // 没有人抢杠，继续处理开杠事件
-            waitEv.bus.Queue(new AddKanEvent(kanEv));
         }
 
         public static void Register(EventBus eventBus) {

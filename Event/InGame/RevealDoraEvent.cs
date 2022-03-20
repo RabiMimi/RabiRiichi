@@ -12,6 +12,6 @@ namespace RabiRiichi.Event.InGame {
         [RabiBroadcast] public Tile dora;
         #endregion
 
-        public RevealDoraEvent(Game game, int playerId = -1) : base(game, playerId) { }
+        public RevealDoraEvent(EventBase parent, int playerId = -1) : base(parent, playerId) { }
     }
 }
