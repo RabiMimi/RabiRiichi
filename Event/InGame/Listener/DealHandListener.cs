@@ -5,7 +5,7 @@ namespace RabiRiichi.Event.InGame.Listener {
     public static class DealHandListener {
         public static Task DealHand(DealHandEvent e) {
             var player = e.player;
-            int count = Game.HandSize;
+            int count = Game.HAND_SIZE;
             if (player.IsBanker) {
                 count++;
             }

@@ -13,6 +13,12 @@ namespace RabiRiichi.Riichi {
         /// <summary> 初始点数 </summary>
         public int initialPoints = 25000;
 
+        /// <summary> 立直棒点数 </summary>
+        public int riichiPoints = 1000;
+
+        /// <summary> 场棒点数 </summary>
+        public int honbaPoints = 300;
+
         /// <summary> 入点数 </summary>
         public int finishPoints = 30000;
 

@@ -20,7 +20,7 @@ namespace RabiRiichi.Action.Resolver {
 
         protected override bool ResolveAction(Player player, GameTile incoming, MultiPlayerInquiry output) {
             var hand = player.hand;
-            if (hand.game.wall.NumRemaining < hand.game.config.playerCount) {
+            if (hand.game.wall.NumRemaining < hand.game.config.playerCount || player.points < player.game.config.riichiPoints) {
                 return false;
             }
             if (hand.riichi || !hand.menzen || incoming == null || !incoming.IsTsumo) {

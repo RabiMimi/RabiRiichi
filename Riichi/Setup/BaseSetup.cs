@@ -116,6 +116,7 @@ namespace RabiRiichi.Riichi.Setup {
             SetIppatsuListener.Register(eventBus);
             SetMenzenListener.Register(eventBus);
             SetRiichiListener.Register(eventBus);
+            StopGameListener.Register(eventBus);
             WaitPlayerActionListener.Register(eventBus);
 
             InitGameEvent.Register(eventBus);

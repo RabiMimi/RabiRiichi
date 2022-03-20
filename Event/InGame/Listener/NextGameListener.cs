@@ -24,6 +24,12 @@ namespace RabiRiichi.Event.InGame.Listener {
         public static Task ExecuteNextGame(NextGameEvent ev) {
             var info = ev.game.info;
             var players = ev.game.players;
+            // 累计立直棒
+            foreach (var player in players) {
+                info.riichiStick += player.hand.riichiStick;
+                player.points -= player.hand.riichiStick * ev.game.config.riichiPoints;
+                player.hand.riichiStick = 0;
+            }
             if (players.Any(p => p.points < 0)) {
                 // 击飞
                 ev.bus.Queue(new StopGameEvent(ev));
@@ -36,14 +42,7 @@ namespace RabiRiichi.Event.InGame.Listener {
                     return Task.CompletedTask;
                 }
             }
-            info.round = ev.nextRound;
-            info.banker = ev.nextBanker;
-            info.honba = ev.nextHonba;
-            // 累计立直棒
-            foreach (var player in ev.game.players) {
-                info.riichiStick += player.hand.riichiStick;
-                player.hand.riichiStick = 0;
-            }
+            ev.bus.Queue(new BeginGameEvent(ev, ev.nextRound, ev.nextBanker, ev.nextHonba));
             return Task.CompletedTask;
         }
 

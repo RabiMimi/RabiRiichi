@@ -26,9 +26,14 @@ namespace RabiRiichi.Event.InGame.Listener {
                     if (player.hand.riichiStick == 0) {
                         continue;
                     }
-                    int scoreChange = player.hand.riichiStick * 1000;
+                    int scoreChange = player.hand.riichiStick * ev.game.config.riichiPoints;
                     player.hand.riichiStick = 0;
                     ev.scoreChange.Add(new ScoreTransfer(player.id, agariPlayer, scoreChange));
+                }
+                if (ev.game.info.riichiStick > 0) {
+                    int scoreChange = ev.game.info.riichiStick * ev.game.config.riichiPoints;
+                    ev.scoreChange.Add(new ScoreTransfer(-1, agariPlayer, scoreChange));
+                    ev.game.info.riichiStick = 0;
                 }
             }
             ev.bus.Queue(new ApplyScoreEvent(ev, ev.scoreChange));

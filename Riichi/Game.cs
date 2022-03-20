@@ -13,7 +13,8 @@ using System.Threading.Tasks;
 namespace RabiRiichi.Riichi {
 
     public class Game {
-        public const int HandSize = 13;
+        public const int HAND_SIZE = 13;
+
         private readonly ServiceProvider diContainer;
 
         public readonly GameInfo info;
@@ -72,6 +73,7 @@ namespace RabiRiichi.Riichi {
             return tile.IsSangen || tile.IsSame(Tile.From(info.wind));
         }
         public Player GetPlayer(int index) => players[index];
+        public Player Banker => GetPlayer(info.banker);
         public int Time => info.timeStamp;
         #endregion
 

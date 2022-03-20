@@ -12,7 +12,7 @@ namespace RabiRiichi.Pattern {
         public override bool Resolve(Hand hand, GameTile incoming, out List<List<MenLike>> output) {
             output = null;
             // Check tile count
-            if (hand.Count != (incoming == null ? Game.HandSize + 1 : Game.HandSize)) {
+            if (hand.Count != (incoming == null ? Game.HAND_SIZE + 1 : Game.HAND_SIZE)) {
                 return false;
             }
             // Check hand & groups valid
