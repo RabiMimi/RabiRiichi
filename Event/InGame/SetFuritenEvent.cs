@@ -1,5 +1,4 @@
 using RabiRiichi.Communication;
-using RabiRiichi.Riichi;
 
 namespace RabiRiichi.Event.InGame {
     public abstract class SetFuritenEvent : PrivatePlayerEvent {

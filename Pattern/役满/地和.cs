@@ -1,6 +1,5 @@
 using RabiRiichi.Riichi;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace RabiRiichi.Pattern {
     public class 地和 : StdPattern {

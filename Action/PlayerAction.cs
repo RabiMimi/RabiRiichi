@@ -2,7 +2,6 @@ using RabiRiichi.Communication;
 using RabiRiichi.Util;
 using System;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace RabiRiichi.Action {
     /// <summary> 优先级较高的Action触发后，停止等待其他Action的触发 </summary>

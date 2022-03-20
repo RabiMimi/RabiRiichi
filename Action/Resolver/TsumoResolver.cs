@@ -1,6 +1,4 @@
-﻿using RabiRiichi.Action;
-using RabiRiichi.Event.InGame;
-using RabiRiichi.Pattern;
+﻿using RabiRiichi.Pattern;
 using RabiRiichi.Riichi;
 using System.Collections.Generic;
 

@@ -1,5 +1,3 @@
-using RabiRiichi.Riichi;
-
 namespace RabiRiichi.Action {
     /// <summary>
     /// 一般来讲，<see cref="ConfirmAction"/>的结果一定为true，

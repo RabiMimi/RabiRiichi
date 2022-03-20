@@ -1,12 +1,9 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using RabiRiichi.Action.Resolver;
 using RabiRiichi.Communication;
 using RabiRiichi.Event;
-using RabiRiichi.Event.InGame;
 using RabiRiichi.Pattern;
 using RabiRiichi.Util;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 

@@ -2,7 +2,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using RabiRiichi.Action.Resolver;
 using RabiRiichi.Pattern;
-using System;
 
 
 namespace RabiRiichi.Riichi.Setup {

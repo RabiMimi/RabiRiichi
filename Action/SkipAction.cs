@@ -1,6 +1,3 @@
-using System.Threading.Tasks;
-
-
 namespace RabiRiichi.Action {
     public class SkipAction : ConfirmAction {
         public override string name => "skip";
