@@ -1,6 +1,8 @@
 ﻿using RabiRiichi.Event.InGame;
+using RabiRiichi.Util;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Event {
@@ -41,6 +43,12 @@ namespace RabiRiichi.Event {
         private readonly Queue<EventBase> queue = new();
         public int Count => queue.Count;
         public bool Empty => Count == 0;
+        /// <summary>
+        /// Mutex lock that will be acquired upon processing events.
+        /// <para>When this lock is acquired, no other thread can add events to the queue and the game state is volatile.</para>
+        /// </summary>
+        public readonly Mutex eventProcessingMutex = new();
+        private const int MUTEX_TIMEOUT = 60000;
 
         public void Register<T>(Func<T, Task> listener, int priority, int times = -1)
             where T : EventBase {
@@ -62,10 +70,12 @@ namespace RabiRiichi.Event {
         }
 
         public void ClearEvents() {
+            using MutexHolder mh = new(eventProcessingMutex, MUTEX_TIMEOUT);
             queue.Clear();
         }
 
         public void Queue(EventBase ev) {
+            using MutexHolder mh = new(eventProcessingMutex, MUTEX_TIMEOUT);
             queue.Enqueue(ev);
         }
 
@@ -89,6 +99,7 @@ namespace RabiRiichi.Event {
         /// <returns>是否处理成功</returns>
         /// </summary>
         public async Task<bool> Process(EventBase ev) {
+            using MutexHolder mh = new(eventProcessingMutex, MUTEX_TIMEOUT);
             if (ev == null || ev.IsFinishedOrCancelled) {
                 return false;
             }
