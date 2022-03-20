@@ -1,3 +1,4 @@
+using RabiRiichi.Action;
 using RabiRiichi.Communication;
 using RabiRiichi.Riichi;
 
@@ -12,10 +13,16 @@ namespace RabiRiichi.Event.InGame {
         [RabiBroadcast] public readonly TileSource kanSource;
         public readonly GameTile incoming;
         #endregion
+
+        #region Response
+        [RabiBroadcast] public readonly MultiPlayerInquiry inquiry;
+        #endregion
+
         public KanEvent(Game game, int playerId, Kan kan, GameTile incoming) : base(game, playerId) {
             this.kan = kan;
             this.incoming = incoming;
             this.kanSource = kan.KanSource;
+            this.inquiry = new MultiPlayerInquiry(game.info);
         }
     }
 }

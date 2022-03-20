@@ -9,15 +9,14 @@ namespace RabiRiichi.Event.InGame.Listener {
     public static class KanListener {
         public static Task ExecuteKan(KanEvent ev) {
             ev.bus.Queue(new IncreaseJunEvent(ev.game, ev.playerId));
-            var inquiry = new MultiPlayerInquiry(ev.game.info);
             if (ev.kanSource != TileSource.DaiMinKan) {
                 // 抢杠
                 var resolvers = GetKanResolvers(ev.game);
                 foreach (var resolver in resolvers) {
-                    resolver.Resolve(ev.player, ev.incoming, inquiry);
+                    resolver.Resolve(ev.player, ev.incoming, ev.inquiry);
                 }
             }
-            var waitEv = new WaitPlayerActionEvent(ev.game, inquiry);
+            var waitEv = new WaitPlayerActionEvent(ev.game, ev.inquiry);
             ev.bus.Queue(waitEv);
             AfterChanKan(waitEv, ev).ConfigureAwait(false);
             return Task.CompletedTask;
