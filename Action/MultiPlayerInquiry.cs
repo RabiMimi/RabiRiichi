@@ -36,7 +36,7 @@ namespace RabiRiichi.Action {
     }
 
     public class MultiPlayerInquiry {
-        public readonly int id;
+        public int id { get; private set; }
         public readonly List<SinglePlayerInquiry> playerInquiries = new();
         private readonly TaskCompletionSource finishTcs = new();
         public readonly List<IPlayerAction> responses = new();
@@ -50,7 +50,6 @@ namespace RabiRiichi.Action {
 
         public MultiPlayerInquiry(Game game) {
             this.game = game;
-            id = game.info.eventId.Next;
         }
 
         public SinglePlayerInquiry GetByPlayerId(int playerId)
@@ -60,7 +59,7 @@ namespace RabiRiichi.Action {
         public MultiPlayerInquiry Add(IPlayerAction action, bool isDefault = false) {
             var list = GetByPlayerId(action.playerId);
             if (list == null) {
-                list = new SinglePlayerInquiry(action.playerId, id);
+                list = new SinglePlayerInquiry(action.playerId);
                 playerInquiries.Add(list);
             }
             list.AddAction(action, isDefault);
@@ -71,6 +70,14 @@ namespace RabiRiichi.Action {
         public MultiPlayerInquiry AddHandler<T>(Action<T> handler) where T : IPlayerAction {
             responseHandlers.Add(new ResponseHandler<T>(handler));
             return this;
+        }
+
+        /// <summary> 开始处理询问之前，计算ID </summary>
+        internal void BeforeProcess() {
+            id = game.info.eventId.Next;
+            foreach (var inquiry in playerInquiries) {
+                inquiry.id = id;
+            }
         }
 
         /// <summary> 处理用户的回应，但是不会触发操作 </summary>

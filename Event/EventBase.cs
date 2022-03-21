@@ -53,11 +53,15 @@ namespace RabiRiichi.Event {
                 this.game = parent.game;
                 this.parent.children.Add(this);
             }
-            id = game.info.eventId.Next;
         }
 
         public EventBase(Game game) {
             this.game = game;
+        }
+
+        /// <summary> 事件开始处理时，初始化唯一事件ID </summary>
+        internal void BeforeProcess() {
+            id = game.info.eventId.Next;
         }
 
         /// <summary> 强制取消该事件及其后继事件 </summary>

@@ -9,7 +9,7 @@ namespace RabiRiichi.Action {
         /// <summary>
         /// 对应的Event Id（和Event共享，同一次Inquiry的所有Player相同）
         /// </summary>
-        [RabiBroadcast] public readonly int id;
+        [RabiBroadcast] public int id;
         public int playerId { get; init; }
         /// <summary>
         /// 所有操作的最高优先级
@@ -28,10 +28,9 @@ namespace RabiRiichi.Action {
         public IPlayerAction Selected => actions[responseIndex];
         public bool hasResponded = false;
 
-        public SinglePlayerInquiry(int playerId, int eventId) {
+        public SinglePlayerInquiry(int playerId) {
             this.playerId = playerId;
             AddAction(new SkipAction(playerId), true);
-            id = eventId;
         }
 
         public SinglePlayerInquiry DisableSkip() {

@@ -101,6 +101,7 @@ namespace RabiRiichi.Event {
             if (ev == null || ev.IsFinishedOrCancelled) {
                 return false;
             }
+            ev.BeforeProcess();
 
             // 监听该事件及所有子类
             var list = new List<IEventTrigger>();

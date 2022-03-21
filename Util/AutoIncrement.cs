@@ -1,10 +1,13 @@
+using System.Threading;
+
 namespace RabiRiichi.Util {
     public struct AutoIncrementInt {
-        public int Value { get; private set; }
-        public int Next => ++Value;
-        public void Reset(int value = 0) => Value = value;
+        private int value;
+        public int Value => value;
+        public int Next => Interlocked.Increment(ref value);
+        public void Reset(int value = 0) => this.value = value;
         public AutoIncrementInt(int initialValue = 0) {
-            Value = initialValue;
+            value = initialValue;
         }
         public static implicit operator int(AutoIncrementInt a) => a.Value;
         public static implicit operator AutoIncrementInt(int a) => new(a);
