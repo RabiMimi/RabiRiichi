@@ -98,6 +98,7 @@ namespace RabiRiichi.Riichi {
         public void Play(GameTile tile, DiscardReason reason) {
             tile.discardInfo = new DiscardInfo(player, reason);
             tile.source = TileSource.Discard;
+            tile.player = player;
             freeTiles.Remove(tile);
             discarded.Add(tile);
         }

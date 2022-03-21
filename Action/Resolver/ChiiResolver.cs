@@ -7,7 +7,7 @@ namespace RabiRiichi.Action.Resolver {
     /// </summary>
     public class ChiiResolver : ResolverBase {
         protected override IEnumerable<Player> ResolvePlayers(Player player, GameTile incoming) {
-            yield return player.PrevPlayer;
+            yield return player.NextPlayer;
         }
 
         protected override bool ResolveAction(Player player, GameTile incoming, MultiPlayerInquiry output) {
