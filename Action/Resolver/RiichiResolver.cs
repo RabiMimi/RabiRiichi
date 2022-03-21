@@ -33,8 +33,11 @@ namespace RabiRiichi.Action.Resolver {
                 riichiTiles.AddRange(BasePattern.GetHand(hand.freeTiles, incoming).Distinct());
             }
             var handRiichiTiles = hand.freeTiles.Where(t => riichiTiles.Contains(t.tile.WithoutDora)).ToList();
-            output.Add(new RiichiAction(player.id, handRiichiTiles));
-            return true;
+            if (handRiichiTiles.Count > 0) {
+                output.Add(new RiichiAction(player.id, handRiichiTiles, null));
+                return true;
+            }
+            return false;
         }
     }
 }

@@ -10,8 +10,8 @@ namespace RabiRiichi.Event.InGame.Listener {
 
         private static GameTile DrawFrom(DrawTileEvent e) {
             return e.source switch {
-                TileSource.Wall => e.game.wall.DrawRinshan(),// 抽岭上牌
-                TileSource.Wanpai => e.game.wall.Draw(),// 从牌山随机选取一张牌
+                TileSource.Wanpai => e.game.wall.DrawRinshan(),// 抽岭上牌
+                TileSource.Wall => e.game.wall.Draw(),// 从牌山随机选取一张牌
                 _ => throw new ArgumentException($"Drawing from unsupported tile source: {e.source}"),
             };
         }
