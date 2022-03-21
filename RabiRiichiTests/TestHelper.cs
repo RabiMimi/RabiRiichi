@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using RabiRiichi.Communication;
 using RabiRiichi.Riichi;
 using System.Linq;
 
@@ -15,7 +16,9 @@ namespace RabiRiichiTests {
 
         public static Game GetGame() {
             if (cachedGame == null) {
-                cachedGame = new Game(new GameConfig());
+                cachedGame = new Game(new GameConfig {
+                    actionCenter = new JsonStringActionCenter(null)
+                });
             }
             return cachedGame;
         }

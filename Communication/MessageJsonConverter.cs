@@ -30,6 +30,9 @@ namespace RabiRiichi.Communication {
         private class RabiMessageReflectionData {
             private static readonly Dictionary<Type, RabiMessageReflectionData> reflectionDataDict = new();
             public static RabiMessageReflectionData Of(Type type) {
+                if (type.GetCustomAttribute<RabiIgnoreAttribute>() != null) {
+                    return null;
+                }
                 if (!reflectionDataDict.TryGetValue(type, out var reflectionData)) {
                     reflectionData = new RabiMessageReflectionData(type);
                     reflectionDataDict.Add(type, reflectionData);
@@ -44,6 +47,9 @@ namespace RabiRiichi.Communication {
             public RabiMessageReflectionData(Type type) {
                 if (!type.IsAssignableTo(typeof(IRabiMessage))) {
                     throw new ArgumentException($"{type} is not IRabiMessage");
+                }
+                if (type.GetCustomAttribute<RabiIgnoreAttribute>() != null) {
+                    throw new ArgumentException($"{type} is RabiIgnore");
                 }
                 isPrivate = type.GetCustomAttribute<RabiPrivateAttribute>() != null;
                 var bindingFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
@@ -97,6 +103,11 @@ namespace RabiRiichi.Communication {
 
             public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options) {
                 var reflectionData = RabiMessageReflectionData.Of(value.GetType());
+                if (reflectionData == null) {
+                    // Ignored messages
+                    writer.WriteNullValue();
+                    return;
+                }
                 // Check if entire class is private
                 if (reflectionData.isPrivate) {
                     if (((IRabiPlayerMessage)value).playerId != playerId) {

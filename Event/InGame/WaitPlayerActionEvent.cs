@@ -1,9 +1,11 @@
 using RabiRiichi.Action;
+using RabiRiichi.Communication;
 using System.Collections.Generic;
 
 
 namespace RabiRiichi.Event.InGame {
-    public class WaitPlayerActionEvent : IgnoredEvent {
+    [RabiIgnore]
+    public class WaitPlayerActionEvent : EventBase {
         public override string name => "wait_player_action";
 
         #region Request

@@ -20,9 +20,4 @@ namespace RabiRiichi.Event {
     public abstract class BroadcastPlayerEvent : PlayerEvent {
         public BroadcastPlayerEvent(EventBase parent, int playerId) : base(parent, playerId) { }
     }
-
-    [RabiPrivate]
-    public abstract class IgnoredEvent : PlayerEvent {
-        public IgnoredEvent(EventBase parent) : base(parent, -1) { }
-    }
 }

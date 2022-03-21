@@ -90,6 +90,11 @@ namespace RabiRiichiTests.Communication {
                 this.tiles = tiles;
             }
         }
+
+        [RabiIgnore]
+        private class IgnoredMessage : RabiTestMessage {
+            public IgnoredMessage() : base(0) { }
+        }
         #endregion
 
         private readonly JsonStringify jsonStringify = new(new GameConfig {
@@ -200,6 +205,13 @@ namespace RabiRiichiTests.Communication {
             var parsedMsg = jsonStringify.Parse<GameTileMessage>(json, 0);
             Assert.AreEqual(message.tile.tile, parsedMsg.tile.tile);
             CollectionAssert.AreEqual(message.tiles, parsedMsg.tiles);
+        }
+
+        [TestMethod]
+        public void TestIgnoredMessage() {
+            var message = new IgnoredMessage();
+            var json = jsonStringify.Stringify(message, 0);
+            Assert.AreEqual("null", json);
         }
     }
 }

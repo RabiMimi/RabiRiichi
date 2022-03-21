@@ -51,7 +51,7 @@ namespace RabiRiichi.Event.InGame.Listener {
                         .ScopeTo(EventScope.Game);
                 }
                 if (ev.responseEvents.Count == 0) {
-                    ev.bus.Queue(new NextPlayerEvent(ev, ev.playerId));
+                    ev.bus.Queue(new NextPlayerEvent(ev, discardEv.playerId));
                 }
             });
         }
