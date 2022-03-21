@@ -34,6 +34,9 @@ namespace RabiRiichi.Riichi {
 
         /// <summary> 随机种子 </summary>
         public int? seed;
+
+        /// <summary> 食断 </summary>
+        public bool allowChiDuan = true;
     }
 
     public enum GamePhase {
