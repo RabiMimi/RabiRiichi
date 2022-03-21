@@ -8,8 +8,9 @@ namespace RabiRiichi.Pattern {
             BaseOn(allBasePatterns);
         }
         public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
-            // TODO: 食断
             if (groups.SelectMany(gr => gr).Any(tile => tile.tile.Is19Z))
+                return false;
+            if (!hand.game.config.allowChiDuan && !hand.menzen)
                 return false;
             scores.Add(new Scoring(ScoringType.Han, 1, this));
             return true;
