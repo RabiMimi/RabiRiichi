@@ -73,7 +73,7 @@ namespace RabiRiichi.Action {
         }
 
         /// <summary> 开始处理询问之前，计算ID </summary>
-        internal void BeforeProcess() {
+        internal void BeforeBroadcast() {
             id = game.info.eventId.Next;
             foreach (var inquiry in playerInquiries) {
                 inquiry.id = id;

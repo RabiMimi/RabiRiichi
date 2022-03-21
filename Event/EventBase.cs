@@ -59,8 +59,8 @@ namespace RabiRiichi.Event {
             this.game = game;
         }
 
-        /// <summary> 事件开始处理时，初始化唯一事件ID </summary>
-        internal void BeforeProcess() {
+        /// <summary> 事件广播时再初始化唯一事件ID </summary>
+        internal void BeforeBroadcast() {
             id = game.info.eventId.Next;
         }
 

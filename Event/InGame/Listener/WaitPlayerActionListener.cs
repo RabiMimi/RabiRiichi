@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 namespace RabiRiichi.Event.InGame.Listener {
     public static class WaitPlayerActionListener {
         public static Task BeforeWaitPlayer(WaitPlayerActionEvent e) {
-            e.inquiry.BeforeProcess();
+            e.inquiry.BeforeBroadcast();
             return Task.CompletedTask;
         }
 
