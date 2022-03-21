@@ -36,7 +36,7 @@ namespace RabiRiichi.Riichi {
         public int? seed;
 
         /// <summary> 食断 </summary>
-        public bool allowChiDuan = true;
+        public bool allowKuitan = true;
     }
 
     public enum GamePhase {

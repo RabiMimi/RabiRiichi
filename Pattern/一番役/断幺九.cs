@@ -10,7 +10,7 @@ namespace RabiRiichi.Pattern {
         public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
             if (groups.SelectMany(gr => gr).Any(tile => tile.tile.Is19Z))
                 return false;
-            if (!hand.game.config.allowChiDuan && !hand.menzen)
+            if (!hand.game.config.allowKuitan && !hand.menzen)
                 return false;
             scores.Add(new Scoring(ScoringType.Han, 1, this));
             return true;
