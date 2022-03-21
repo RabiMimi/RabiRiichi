@@ -8,6 +8,7 @@ namespace RabiRiichi.Event.InGame {
         #region Request
         [RabiBroadcast] public GameTile tile;
         [RabiBroadcast] public DiscardReason reason;
+        [RabiBroadcast] public TileSource origin;
         #endregion
 
         #region Response
@@ -17,6 +18,7 @@ namespace RabiRiichi.Event.InGame {
         public DiscardTileEvent(EventBase parent, int playerId, GameTile tile, DiscardReason reason) : base(parent, playerId) {
             this.tile = tile;
             this.reason = reason;
+            origin = tile.source;
             waitEvent = new WaitPlayerActionEvent(this);
         }
     }
