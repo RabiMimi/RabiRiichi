@@ -127,6 +127,7 @@ namespace RabiRiichi.Riichi.Setup {
         /// <summary> 初始化阶段 </summary>
         public virtual void Setup(IServiceProvider services) {
             RegisterPatterns(services);
+            RegisterEvents(services.GetService<EventBus>());
         }
         #endregion
     }

@@ -29,14 +29,20 @@ namespace RabiRiichi.Communication {
                 inquiries[inquiry.id] = inquiry;
             }
             foreach (var singlePlayerInquiry in inquiry.playerInquiries) {
-                sender(singlePlayerInquiry.playerId,
-                    inquiry.game.json.Stringify(singlePlayerInquiry, singlePlayerInquiry.playerId));
+                var json = inquiry.game.json.Stringify(singlePlayerInquiry, singlePlayerInquiry.playerId);
+                if (json.StartsWith("{")) {
+                    // Ignore null objects
+                    sender(singlePlayerInquiry.playerId, json);
+                }
             }
         }
 
         public void OnEvent(int playerId, EventBase ev) {
             var json = ev.game.json.Stringify(ev, playerId);
-            sender(playerId, json);
+            if (json.StartsWith("{")) {
+                // Ignore null objects
+                sender(playerId, json);
+            }
         }
     }
 }

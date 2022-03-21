@@ -24,6 +24,9 @@ namespace RabiRiichi.Riichi {
 
 
         public Game(GameConfig config) {
+            if (config.actionCenter == null) {
+                throw new ArgumentException("config.actionCenter must be provided");
+            }
             initialEvent = new(this);
             var rand = new Rand((int)(config.seed ?? (DateTimeOffset.Now.ToUnixTimeMilliseconds() & 0xffffffff)));
             players = new Player[config.playerCount];

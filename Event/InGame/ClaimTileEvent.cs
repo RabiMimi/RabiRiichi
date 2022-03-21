@@ -11,14 +11,12 @@ namespace RabiRiichi.Event.InGame {
         #endregion
 
         #region Response
-        public readonly WaitPlayerActionEvent waitEvent;
         [RabiBroadcast] public DiscardReason reason = DiscardReason.None;
         #endregion
 
         public ClaimTileEvent(EventBase parent, int playerId, MenLike group, GameTile tile) : base(parent, playerId) {
             this.group = group;
             this.tile = tile;
-            waitEvent = new WaitPlayerActionEvent(this);
         }
     }
 }

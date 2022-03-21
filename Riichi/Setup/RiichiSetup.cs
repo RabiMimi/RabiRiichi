@@ -8,15 +8,15 @@ namespace RabiRiichi.Riichi.Setup {
     public class RiichiSetup : BaseSetup {
         protected override void InjectResolvers(IServiceCollection collection) {
             collection.TryAddSingleton<ChanKanResolver>();
-            collection.TryAddSingleton<RyuukyokuResolver>();
             collection.TryAddSingleton<ChiiResolver>();
-            collection.TryAddSingleton<PonResolver>();
             collection.TryAddSingleton<KanResolver>();
             collection.TryAddSingleton<PlayTileResolver>();
+            collection.TryAddSingleton<PonResolver>();
             collection.TryAddSingleton<RiichiResolver>();
             collection.TryAddSingleton<RonResolver>();
-            collection.TryAddSingleton<TsumoResolver>();
+            collection.TryAddSingleton<RyuukyokuResolver>();
             collection.TryAddSingleton<TenhouResolver>();
+            collection.TryAddSingleton<TsumoResolver>();
         }
 
         protected override void InitPatterns() {

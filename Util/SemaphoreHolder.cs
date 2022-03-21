@@ -2,22 +2,22 @@ using System;
 using System.Threading;
 
 namespace RabiRiichi.Util {
-    internal class MutexHolder : IDisposable {
-        private readonly Mutex mutex;
+    internal class SemaphoreHolder : IDisposable {
+        private readonly SemaphoreSlim semaphore;
 
-        public MutexHolder(Mutex mutex, int timeoutMs = -1) {
-            this.mutex = mutex;
+        public SemaphoreHolder(SemaphoreSlim semaphore, int timeoutMs = -1) {
+            this.semaphore = semaphore;
             if (timeoutMs < 0) {
-                mutex.WaitOne();
+                semaphore.Wait();
             } else {
-                if (!mutex.WaitOne(timeoutMs)) {
+                if (!semaphore.Wait(timeoutMs)) {
                     throw new TimeoutException($"Can't keep up! Is the server overloaded? Running {timeoutMs}ms behind.");
                 }
             }
         }
 
         public void Dispose() {
-            mutex.ReleaseMutex();
+            semaphore.Release();
         }
     }
 }

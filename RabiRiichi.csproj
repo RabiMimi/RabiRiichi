@@ -5,8 +5,11 @@
     <DebugType>portable</DebugType>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="RabiRiichiDev\**" />
     <Compile Remove="RabiRiichiTests\**" />
+    <EmbeddedResource Remove="RabiRiichiDev\**" />
     <EmbeddedResource Remove="RabiRiichiTests\**" />
+    <None Remove="RabiRiichiDev\**" />
     <None Remove="RabiRiichiTests\**" />
   </ItemGroup>
   <ItemGroup>
