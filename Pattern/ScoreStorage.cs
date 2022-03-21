@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RabiRiichi.Util;
+using System;
 using System.Collections.Generic;
 
 namespace RabiRiichi.Pattern {
@@ -94,8 +95,7 @@ namespace RabiRiichi.Pattern {
                 switch (score.Type) {
                     case ScoringType.Fu:
                         if (cachedResult.fu != 0) {
-                            // TODO: Log
-                            // HUtil.Warn("检测到了多个符数计算结果，可能是一个bug");
+                            Logger.Warn("检测到了多个符数计算结果，可能是一个bug");
                         }
                         cachedResult.fu += score.Val;
                         break;
@@ -106,8 +106,7 @@ namespace RabiRiichi.Pattern {
                         cachedResult.yakuman += score.Val;
                         break;
                     default:
-                        // TODO: Log
-                        // HUtil.Warn($"未知的计分类型: {score.Type}");
+                        Logger.Warn($"未知的计分类型: {score.Type}");
                         break;
                 }
             }
