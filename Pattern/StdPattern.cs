@@ -6,16 +6,12 @@ using System.Linq;
 
 namespace RabiRiichi.Pattern {
     public enum ScoringType {
-        /// <summary> 额外得分，不含本场棒/立直棒。 </summary>
-        Point,
         /// <summary> 番 </summary>
         Han,
         /// <summary> 符 </summary>
         Fu,
         /// <summary> 役满 </summary>
         Yakuman,
-        /// <summary> 流局 </summary>
-        Ryuukyoku
     }
 
     public class Scoring {

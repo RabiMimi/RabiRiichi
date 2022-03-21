@@ -43,16 +43,12 @@ namespace RabiRiichi.Pattern {
                     return Math.Min(2000, score);
                 }
             }
-            /// <summary> 额外得分 </summary>
-            public int extraPoints;
             /// <summary> 番 </summary>
             public int han;
             /// <summary> 符 </summary>
             public int fu;
             /// <summary> 役满数 </summary>
             public int yakuman;
-            /// <summary> 流局 </summary>
-            public int ryuukyoku;
 
             public bool IsKazoeYakuman => han >= KAZOE_YAKUMAN;
             public bool IsYakuman => yakuman > 0 || IsKazoeYakuman;
@@ -96,9 +92,6 @@ namespace RabiRiichi.Pattern {
             cachedResult = new ScoreCalcResult();
             foreach (var score in items) {
                 switch (score.Type) {
-                    case ScoringType.Point:
-                        cachedResult.extraPoints += score.Val;
-                        break;
                     case ScoringType.Fu:
                         if (cachedResult.fu != 0) {
                             // TODO: Log
@@ -111,10 +104,6 @@ namespace RabiRiichi.Pattern {
                         break;
                     case ScoringType.Yakuman:
                         cachedResult.yakuman += score.Val;
-                        break;
-                    case ScoringType.Ryuukyoku:
-                        // TODO: Log
-                        // HUtil.Warn($"和牌结果中发现了不合法的流局计算结果");
                         break;
                     default:
                         // TODO: Log
