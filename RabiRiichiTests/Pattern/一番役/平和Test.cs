@@ -4,7 +4,7 @@ using RabiRiichi.Pattern;
 namespace RabiRiichiTests.Pattern {
     [TestClass]
     public class 平和Test {
-        protected StdPattern V { get; set; } = new 平和(null);
+        protected StdPattern V { get; set; } = new 平和(null, null);
 
         [TestMethod]
         public void TestResolved() {
@@ -13,9 +13,10 @@ namespace RabiRiichiTests.Pattern {
                 .AddFree("456s")
                 .AddFree("789s")
                 .AddFree("11m")
-                .AddAgari("23s", "1s")
+                .AddAgari("23s", "1s", true)
                 .Resolve(true)
                 .ExpectScoring(ScoringType.Han, 1)
+                .ExpectScoring(ScoringType.Fu, 20)
                 .NoMore();
         }
 
