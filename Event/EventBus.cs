@@ -96,8 +96,8 @@ namespace RabiRiichi.Event {
         /// 直接处理一个事件
         /// <returns>是否处理成功</returns>
         /// </summary>
-        public async Task<bool> Process(EventBase ev) {
-            using var sh = new SemaphoreHolder(eventProcessingLock, EVENT_PROCESSING_TIMEOUT);
+        public async Task<bool> Process(EventBase ev, bool hasLock = false) {
+            using var sh = hasLock ? null : new SemaphoreHolder(eventProcessingLock, EVENT_PROCESSING_TIMEOUT);
             if (ev == null || ev.IsFinishedOrCancelled) {
                 return false;
             }

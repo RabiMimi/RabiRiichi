@@ -66,11 +66,11 @@ namespace RabiRiichi.Event {
 
         /// <summary> 强制取消该事件及其后继事件 </summary>
         public void Cancel() {
-            if (IsFinishedOrCancelled) {
+            if (IsCancelled) {
                 return;
             }
             phase = EventPriority.Cancelled;
-            finishTcs.SetCanceled();
+            finishTcs.TrySetCanceled();
             foreach (var child in children) {
                 child.Cancel();
             }
@@ -82,7 +82,7 @@ namespace RabiRiichi.Event {
                 return;
             }
             phase = EventPriority.Finished;
-            finishTcs.SetResult();
+            finishTcs.TrySetResult();
         }
 
         /// <summary> 在事件成功处理后执行回调 </summary>
