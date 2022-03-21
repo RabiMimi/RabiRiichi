@@ -1,7 +1,7 @@
 using RabiRiichi.Riichi;
 using System;
 using System.Text.Json;
-
+using System.Text.Json.Serialization;
 
 namespace RabiRiichi.Communication {
     public class JsonStringify {
@@ -10,13 +10,15 @@ namespace RabiRiichi.Communication {
         public JsonStringify(GameConfig config) {
             var tileConverter = new TileJsonConverter();
             var tilesConverter = new TilesJsonConverter();
+            var stringEnumConverter = new JsonStringEnumConverter(new EnumNamingPolicy());
             options = new JsonSerializerOptions[config.playerCount];
             for (int i = 0; i < config.playerCount; i++) {
                 options[i] = new JsonSerializerOptions {
                     Converters = {
                         new MessageJsonConverter(i),
                         tileConverter,
-                        tilesConverter
+                        tilesConverter,
+                        stringEnumConverter
                     },
                     IncludeFields = true,
                 };

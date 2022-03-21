@@ -1,9 +1,8 @@
 
 using RabiRiichi.Communication;
-using RabiRiichi.Event;
 
 
-namespace RabiIppatsu.Event.InGame {
+namespace RabiRiichi.Event.InGame {
     public class SetIppatsuEvent : BroadcastPlayerEvent {
         public override string name => "set_ippatsu";
 

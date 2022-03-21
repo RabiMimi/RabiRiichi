@@ -1,4 +1,3 @@
-using RabiIppatsu.Event.InGame;
 using System.Linq;
 using System.Threading.Tasks;
 

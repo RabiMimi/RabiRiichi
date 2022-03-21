@@ -199,7 +199,7 @@ namespace RabiRiichiTests.Communication {
             var json = jsonStringify.Stringify(message, 0);
             var parsed = jsonStringify.Parse<JsonElement>(json, 0);
             Assert.AreEqual("r5s", parsed.GetProperty("tile").GetProperty("tile").GetString());
-            Assert.AreEqual((int)TileSource.Wall, parsed.GetProperty("tile").GetProperty("source").GetInt32());
+            Assert.AreEqual("wall", parsed.GetProperty("tile").GetProperty("source").GetString());
             Assert.AreEqual(1, parsed.GetProperty("tile").GetProperty("fromPlayerId").GetInt32());
             Assert.AreEqual("123s123m123p", parsed.GetProperty("tiles").GetString());
             var parsedMsg = jsonStringify.Parse<GameTileMessage>(json, 0);
