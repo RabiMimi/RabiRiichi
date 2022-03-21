@@ -4,10 +4,10 @@ using System.Collections.Generic;
 
 namespace RabiRiichi.Action {
     public class ChooseTileActionOption : ActionOption {
-        [RabiBroadcast] public readonly ActionTileInfo tile;
+        [RabiBroadcast] public readonly GameTile tile;
 
         public ChooseTileActionOption(GameTile tile) {
-            this.tile = new ActionTileInfo(tile);
+            this.tile = tile;
         }
     }
 
