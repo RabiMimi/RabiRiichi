@@ -15,9 +15,10 @@ namespace RabiRiichi.Pattern {
             // 面子带来的符数
             baseFu += groups.Sum(gr => CalculateMenlikeFu(gr));
 
-            // 雀头带来的符数 
-            // TODO: Fix this
-            baseFu += hand.player.IsYaku(groups.Find(gr => gr is Jantou).First.tile) ? 2 : 0;
+            // 雀头带来的符数
+            Tile jantouTile = groups.Find(gr => gr is Jantou).First.tile;
+            baseFu += hand.game.IsYaku(jantouTile) ? 2 : 0;
+            baseFu += Tile.From(hand.player.Wind).IsSame(jantouTile) ? 2 : 0;
 
             // 听牌型带来的符数
             baseFu += CalculateTenpaiFu(groups.Find(gr => gr.Contains(incoming)), incoming);
@@ -25,8 +26,9 @@ namespace RabiRiichi.Pattern {
             // 和了牌带来的符数
             baseFu += CalculateAgariFu(hand, incoming);
 
-            // TODO: 符数切上
+            // 符数切上
             baseFu = Math.Max(baseFu, 30);
+            baseFu = (baseFu + 9) / 10 * 10;
             scores.Add(new Scoring(ScoringType.Fu, baseFu, this));
             return true;
         }
