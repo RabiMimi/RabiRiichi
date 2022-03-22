@@ -30,7 +30,7 @@ namespace RabiRiichi.Communication {
         private class RabiMessageReflectionData {
             private static readonly Dictionary<Type, RabiMessageReflectionData> reflectionDataDict = new();
             public static RabiMessageReflectionData Of(Type type) {
-                if (type.GetCustomAttribute<RabiIgnoreAttribute>() != null) {
+                if (type.IsRabiIgnore()) {
                     return null;
                 }
                 if (!reflectionDataDict.TryGetValue(type, out var reflectionData)) {
@@ -48,20 +48,18 @@ namespace RabiRiichi.Communication {
                 if (!type.IsAssignableTo(typeof(IRabiMessage))) {
                     throw new ArgumentException($"{type} is not IRabiMessage");
                 }
-                if (type.GetCustomAttribute<RabiIgnoreAttribute>() != null) {
+                if (type.IsRabiIgnore()) {
                     throw new ArgumentException($"{type} is RabiIgnore");
                 }
-                isPrivate = type.GetCustomAttribute<RabiPrivateAttribute>() != null;
+                isPrivate = type.IsRabiPrivate();
                 var bindingFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
                 var AllProperties = type.GetProperties(bindingFlags)
-                    .Where(p => p.GetCustomAttribute<RabiPrivateAttribute>() != null
-                        || p.GetCustomAttribute<RabiBroadcastAttribute>() != null);
+                    .Where(p => p.IsRabiPrivate() || p.IsRabiBroadcast());
                 var AllFields = type.GetFields(bindingFlags)
-                    .Where(f => f.GetCustomAttribute<RabiPrivateAttribute>() != null
-                        || f.GetCustomAttribute<RabiBroadcastAttribute>() != null);
+                    .Where(f => f.IsRabiPrivate() || f.IsRabiBroadcast());
 
-                var BroadCastProperties = AllProperties.Where(p => p.GetCustomAttribute<RabiBroadcastAttribute>() != null);
-                var BroadCastFields = AllFields.Where(f => f.GetCustomAttribute<RabiBroadcastAttribute>() != null);
+                var BroadCastProperties = AllProperties.Where(p => p.IsRabiBroadcast());
+                var BroadCastFields = AllFields.Where(f => f.IsRabiBroadcast());
                 AllMembers = AllProperties.Cast<MemberInfo>().Concat(AllFields).ToArray();
                 BroadCastMembers = BroadCastProperties.Cast<MemberInfo>().Concat(BroadCastFields).ToArray();
 

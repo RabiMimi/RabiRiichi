@@ -1,6 +1,5 @@
 ﻿using RabiRiichi.Communication;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Event {
@@ -8,8 +7,7 @@ namespace RabiRiichi.Event {
         public static Task Send(EventBase ev) {
             var players = ev.game.players.AsEnumerable();
             ev.BeforeBroadcast();
-            if (ev is IRabiPlayerMessage msg
-                && ev.GetType().GetCustomAttribute<RabiPrivateAttribute>() != null) {
+            if (ev is IRabiPlayerMessage msg && msg.IsRabiPrivate()) {
                 players = players.Where(p => p.id == msg.playerId);
             }
             foreach (var player in players) {
