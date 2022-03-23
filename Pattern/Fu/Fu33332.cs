@@ -5,6 +5,8 @@ using System.Linq;
 
 namespace RabiRiichi.Pattern {
     public class Fu33332 : StdPattern {
+        public override string name => "fu";
+
         public Fu33332(Base33332 base33332) {
             BaseOn(base33332);
         }

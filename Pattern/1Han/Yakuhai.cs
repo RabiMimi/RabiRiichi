@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace RabiRiichi.Pattern {
-    public abstract class 役牌 : StdPattern {
-        public 役牌(Base33332 base33332) {
+    public abstract class Yakuhai : StdPattern {
+        public Yakuhai(Base33332 base33332) {
             BaseOn(base33332);
         }
 

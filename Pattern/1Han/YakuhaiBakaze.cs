@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 
 namespace RabiRiichi.Pattern {
-    public class YakuhaiBakaze : 役牌 {
+    public class YakuhaiBakaze : Yakuhai {
         protected override Tile YakuTile => yakuTile;
         private Tile yakuTile;
         public YakuhaiBakaze(Base33332 base33332) : base(base33332) { }

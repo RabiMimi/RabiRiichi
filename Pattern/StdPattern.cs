@@ -31,8 +31,7 @@ namespace RabiRiichi.Pattern {
 
     /// <summary> 标准役种 </summary>
     public abstract class StdPattern {
-        // TODO: (Frenqy) 役种名 罗马音 自己查wiki 最好把class名也改了
-        public string name => GetType().Name;
+        public virtual string name => GetType().Name;
 
         /// <summary> 可以触发该役种的底和 </summary>
         public BasePattern[] basePatterns { get; private set; } = Array.Empty<BasePattern>();
