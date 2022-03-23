@@ -1,5 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using RabiRiichi.Communication.Json;
+using RabiRiichi.Communication;
 using RabiRiichi.Riichi;
 using System.Linq;
 

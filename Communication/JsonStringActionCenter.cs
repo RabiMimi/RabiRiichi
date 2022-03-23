@@ -1,8 +1,9 @@
 using RabiRiichi.Action;
 using RabiRiichi.Event;
+using RabiRiichi.Riichi;
 using System.Collections.Generic;
 
-namespace RabiRiichi.Communication.Json {
+namespace RabiRiichi.Communication {
     public class JsonStringActionCenter : IActionCenter {
         public delegate void MessageSender(int playerId, string message);
 
@@ -11,6 +12,14 @@ namespace RabiRiichi.Communication.Json {
 
         public JsonStringActionCenter(MessageSender sender) {
             this.sender = sender;
+        }
+
+        private void Send(int playerId, string json) {
+            if (string.IsNullOrWhiteSpace(json) || !json.StartsWith('{')) {
+                // Ignore null objects
+                return;
+            }
+            sender(playerId, json);
         }
 
         public void OnMessage(int inquiryId, int playerId, int actionIndex, string message) {
@@ -30,19 +39,18 @@ namespace RabiRiichi.Communication.Json {
             }
             foreach (var singlePlayerInquiry in inquiry.playerInquiries) {
                 var json = inquiry.game.json.Stringify(singlePlayerInquiry, singlePlayerInquiry.playerId);
-                if (json.StartsWith("{")) {
-                    // Ignore null objects
-                    sender(singlePlayerInquiry.playerId, json);
-                }
+                Send(singlePlayerInquiry.playerId, json);
             }
         }
 
         public void OnEvent(int playerId, EventBase ev) {
             var json = ev.game.json.Stringify(ev, playerId);
-            if (json.StartsWith("{")) {
-                // Ignore null objects
-                sender(playerId, json);
-            }
+            Send(playerId, json);
+        }
+
+        public void OnMessage(Game game, int playerId, IRabiMessage msg) {
+            var json = game.json.Stringify(msg, playerId);
+            Send(playerId, json);
         }
     }
 }

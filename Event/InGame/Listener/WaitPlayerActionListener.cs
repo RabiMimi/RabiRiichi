@@ -11,7 +11,7 @@ namespace RabiRiichi.Event.InGame.Listener {
             if (e.inquiry.IsEmpty) {
                 return;
             }
-            e.game.config.actionCenter.OnInquiry(e.inquiry);
+            e.game.SendInquiry(e.inquiry);
             await e.inquiry.WaitForFinish;
             if (e.eventBuilder != null) {
                 e.responseEvents.AddRange(e.eventBuilder.BuildAndQueue(e.Q));

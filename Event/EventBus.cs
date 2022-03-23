@@ -1,5 +1,8 @@
-﻿using System;
+﻿using RabiRiichi.Riichi;
+using RabiRiichi.Util;
+using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Event {
@@ -36,6 +39,12 @@ namespace RabiRiichi.Event {
 
         private readonly Dictionary<Type, List<IEventTrigger>> listeners =
             new();
+        /// <summary>
+        /// Mutex lock that will be acquired upon processing events.
+        /// <para>When this lock is acquired, no other thread can add events to the queue and the game state is volatile.</para>
+        /// </summary>
+        public readonly SemaphoreSlim eventProcessingLock = new(1, 1);
+        private const int EVENT_PROCESSING_TIMEOUT = 60 * 60 * 1000;
 
         public void Subscribe<T>(Func<T, Task> listener, int priority, int times = -1)
             where T : EventBase {
@@ -60,7 +69,8 @@ namespace RabiRiichi.Event {
         /// 处理一个事件
         /// <returns>是否处理成功</returns>
         /// </summary>
-        public async Task<bool> Process(EventBase ev) {
+        public async Task<bool> Process(EventBase ev, bool shouldLock) {
+            using var sh = shouldLock ? new SemaphoreHolder(eventProcessingLock, EVENT_PROCESSING_TIMEOUT) : null;
             if (ev == null || ev.IsFinishedOrCancelled) {
                 return false;
             }

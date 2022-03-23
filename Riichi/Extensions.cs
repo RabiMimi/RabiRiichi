@@ -1,4 +1,7 @@
-﻿using System.Linq;
+﻿using RabiRiichi.Util;
+using System.Linq;
+using System.Threading;
+
 
 namespace RabiRiichi.Riichi {
     public static class Extensions {
@@ -43,6 +46,14 @@ namespace RabiRiichi.Riichi {
 
         public static string ToUnicode(this Tiles tiles) {
             return string.Concat(tiles.Select(tile => ToUnicode(tile)));
+        }
+
+        internal static MutexHolder Lock(this Mutex mutex, int timeoutMs = -1) {
+            return new MutexHolder(mutex, timeoutMs);
+        }
+
+        internal static SemaphoreHolder Lock(this SemaphoreSlim semaphore, int timeoutMs = -1) {
+            return new SemaphoreHolder(semaphore, timeoutMs);
         }
     }
 }

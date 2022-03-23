@@ -4,6 +4,7 @@ namespace RabiRiichi.Communication {
         Action,
         Inquiry,
         Event,
+        Sync
     }
 
     public interface IRabiMessage {

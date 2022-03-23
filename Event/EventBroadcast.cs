@@ -11,7 +11,7 @@ namespace RabiRiichi.Event {
                 players = players.Where(p => p.id == msg.playerId);
             }
             foreach (var player in players) {
-                ev.game.config.actionCenter.OnEvent(player.id, ev);
+                ev.game.SendEvent(player.id, ev);
             }
             return Task.CompletedTask;
         }

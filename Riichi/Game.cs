@@ -1,10 +1,14 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using RabiRiichi.Action;
+using RabiRiichi.Communication;
 using RabiRiichi.Communication.Json;
+using RabiRiichi.Communication.Sync;
 using RabiRiichi.Event;
 using RabiRiichi.Pattern;
 using RabiRiichi.Util;
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Riichi {
@@ -89,7 +93,7 @@ namespace RabiRiichi.Riichi {
             }
 
             // 游戏逻辑
-            mainQueue = new EventQueue(eventBus, false);
+            mainQueue = new EventQueue(eventBus, true, false);
             mainQueue.Queue(initialEvent);
             await mainQueue.ProcessQueue();
 
@@ -100,7 +104,29 @@ namespace RabiRiichi.Riichi {
 
         #region Communication
         public void SyncGameStateToPlayer(int playerId) {
-            throw new NotImplementedException();
+            using (eventBus.eventProcessingLock.Lock()) {
+                var state = new GameState(this, playerId);
+                SendMessage(playerId, state);
+            }
+        }
+
+        private readonly Mutex messageMutex = new();
+        public void SendInquiry(MultiPlayerInquiry inquiry) {
+            using (messageMutex.Lock()) {
+                config.actionCenter.OnInquiry(inquiry);
+            }
+        }
+
+        public void SendEvent(int playerId, EventBase ev) {
+            using (messageMutex.Lock()) {
+                config.actionCenter.OnEvent(playerId, ev);
+            }
+        }
+
+        public void SendMessage(int playerId, IRabiMessage msg) {
+            using (messageMutex.Lock()) {
+                config.actionCenter.OnMessage(this, playerId, msg);
+            }
         }
         #endregion
 
