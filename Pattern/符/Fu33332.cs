@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace RabiRiichi.Pattern {
-    public class 符33332 : StdPattern {
-        public 符33332(Base33332 base33332) {
+    public class Fu33332 : StdPattern {
+        public Fu33332(Base33332 base33332) {
             BaseOn(base33332);
         }
 

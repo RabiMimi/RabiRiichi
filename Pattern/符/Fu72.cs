@@ -2,8 +2,8 @@ using RabiRiichi.Core;
 using System.Collections.Generic;
 
 namespace RabiRiichi.Pattern {
-    public class 符72 : StdPattern {
-        public 符72(Base72 base72) {
+    public class Fu72 : StdPattern {
+        public Fu72(Base72 base72) {
             BaseOn(base72);
         }
 

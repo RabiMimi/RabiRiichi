@@ -3,8 +3,8 @@ using RabiRiichi.Pattern;
 
 namespace RabiRiichiTests.Pattern {
     [TestClass]
-    public class 符33332Test {
-        protected StdPattern V { get; set; } = new 符33332(null);
+    public class Fu33332Test {
+        protected StdPattern V { get; set; } = new Fu33332(null);
 
         [TestMethod]
         public void TestResolved() {

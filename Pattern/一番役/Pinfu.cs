@@ -4,9 +4,9 @@ using System.Linq;
 
 namespace RabiRiichi.Pattern {
     public class Pinfu : StdPattern {
-        public Pinfu(Base33332 base33332, 符33332 符33332) {
+        public Pinfu(Base33332 base33332, Fu33332 fu33332) {
             BaseOn(base33332);
-            After(符33332);
+            After(fu33332);
         }
 
         public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {

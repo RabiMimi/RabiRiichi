@@ -2,8 +2,8 @@ using RabiRiichi.Core;
 using System.Collections.Generic;
 
 namespace RabiRiichi.Pattern {
-    public class 符13_1 : StdPattern {
-        public 符13_1(Base13_1 base13_1) {
+    public class Fu13_1 : StdPattern {
+        public Fu13_1(Base13_1 base13_1) {
             BaseOn(base13_1);
         }
 
