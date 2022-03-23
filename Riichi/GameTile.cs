@@ -38,27 +38,30 @@ namespace RabiRiichi.Riichi {
         Pon,
     }
 
-    public class DiscardInfo {
+    public class DiscardInfo : IRabiMessage {
+        public RabiMessageType msgType => RabiMessageType.Unnecessary;
         /// <summary> 哪个玩家的弃牌 </summary>
         public readonly Player fromPlayer;
+        [RabiBroadcast] public readonly int fromPlayerId;
         /// <summary> 弃牌原因 </summary>
-        public readonly DiscardReason reason;
+        [RabiBroadcast] public readonly DiscardReason reason;
 
         public DiscardInfo(Player fromPlayer, DiscardReason reason) {
             this.fromPlayer = fromPlayer;
+            this.fromPlayerId = fromPlayer?.id ?? -1;
             this.reason = reason;
         }
+
     }
 
     public class GameTile : IComparable<GameTile>, IRabiMessage {
         public RabiMessageType msgType => RabiMessageType.Unnecessary;
         [RabiBroadcast] public Tile tile = Tile.Empty;
-        [RabiBroadcast] public int? fromPlayerId => discardInfo?.fromPlayer.id;
         /// <summary> 当前归属于哪个玩家，摸切或副露时会被设置 </summary>
         public Player player;
-        [RabiBroadcast] public int? playerId => player?.id;
+        [RabiBroadcast] public int playerId => player?.id ?? -1;
         /// <summary> 弃牌信息 </summary>
-        public DiscardInfo discardInfo;
+        [RabiBroadcast] public DiscardInfo discardInfo;
         /// <summary> 该牌成为副露或暗杠的时间戳 </summary>
         public int formTime = -1;
         /// <summary> 是否是公开牌 </summary>
