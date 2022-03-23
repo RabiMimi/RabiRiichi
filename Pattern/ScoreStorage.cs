@@ -1,9 +1,10 @@
-﻿using RabiRiichi.Util;
+﻿using RabiRiichi.Communication;
+using RabiRiichi.Util;
 using System;
 using System.Collections.Generic;
 
 namespace RabiRiichi.Pattern {
-    public class ScoreStorage : IComparable<ScoreStorage> {
+    public class ScoreStorage : IComparable<ScoreStorage>, IRabiMessage {
         internal class Refrigerator : IDisposable {
             private readonly ScoreStorage scores;
             private readonly bool oldValue;
@@ -18,7 +19,8 @@ namespace RabiRiichi.Pattern {
             }
         }
 
-        public class ScoreCalcResult : IComparable<ScoreCalcResult> {
+        public class ScoreCalcResult : IComparable<ScoreCalcResult>, IRabiMessage {
+            public RabiMessageType msgType => RabiMessageType.Unnecessary;
             /// <summary> 基本点 </summary>
             public int BaseScore {
                 get {
@@ -45,11 +47,11 @@ namespace RabiRiichi.Pattern {
                 }
             }
             /// <summary> 番 </summary>
-            public int han;
+            [RabiBroadcast] public int han;
             /// <summary> 符 </summary>
-            public int fu;
+            [RabiBroadcast] public int fu;
             /// <summary> 役满数 </summary>
-            public int yakuman;
+            [RabiBroadcast] public int yakuman;
 
             public bool IsKazoeYakuman => han >= KAZOE_YAKUMAN;
             public bool IsYakuman => yakuman > 0 || IsKazoeYakuman;
@@ -73,17 +75,19 @@ namespace RabiRiichi.Pattern {
             }
         }
 
-        private readonly List<Scoring> items = new();
+        public RabiMessageType msgType => RabiMessageType.Unnecessary;
+        [RabiBroadcast] private readonly List<Scoring> items = new();
 
         /// <summary> 累计役满需要番数 </summary>
         public const int KAZOE_YAKUMAN = 13;
+
         /// <summary> 是否已冻结。已冻结的Scoring将无视所有修改操作 </summary>
         public bool isFrozen { get; private set; }
 
         /// <summary> Scoring数量 </summary>
         public int Count => items.Count;
 
-        public ScoreCalcResult cachedResult = null;
+        [RabiBroadcast] public ScoreCalcResult cachedResult = null;
 
         public ScoreStorage() { }
         public ScoreStorage(IEnumerable<Scoring> scores) {

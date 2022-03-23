@@ -1,4 +1,5 @@
-﻿using RabiRiichi.Riichi;
+﻿using RabiRiichi.Communication;
+using RabiRiichi.Riichi;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,10 +15,12 @@ namespace RabiRiichi.Pattern {
         Yakuman,
     }
 
-    public class Scoring {
-        public ScoringType Type;
-        public int Val;
+    public class Scoring : IRabiMessage {
+        public RabiMessageType msgType => RabiMessageType.Unnecessary;
+        [RabiBroadcast] public ScoringType Type;
+        [RabiBroadcast] public int Val;
         public StdPattern Source;
+        [RabiBroadcast] public string Src => Source.name;
 
         public Scoring(ScoringType type, int val, StdPattern source) {
             Type = type;
@@ -28,6 +31,8 @@ namespace RabiRiichi.Pattern {
 
     /// <summary> 标准役种 </summary>
     public abstract class StdPattern {
+        // TODO: (Frenqy) 役种名 罗马音 自己查wiki 最好把class名也改了
+        public abstract string name { get; }
 
         /// <summary> 可以触发该役种的底和 </summary>
         public BasePattern[] basePatterns { get; private set; } = Array.Empty<BasePattern>();
