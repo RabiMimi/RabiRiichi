@@ -16,8 +16,30 @@ namespace RabiRiichi.Event {
     /// 自定义事件监听器，一般临时使用
     /// </summary>
     public class EventListener<T> where T : EventBase {
+        private class ListenerData {
+            public readonly Func<T, Task> listener;
+            public readonly int priority;
+            public readonly int times;
+            public bool isListening;
+
+            public ListenerData(Func<T, Task> listener, int priority, int times) {
+                this.listener = listener;
+                this.priority = priority;
+                this.times = times;
+            }
+
+            public void Subscribe(EventBus bus) {
+                bus.Subscribe(listener, priority, times);
+                isListening = true;
+            }
+
+            public void Unsubscribe(EventBus bus) {
+                bus.Unsubscribe(listener);
+                isListening = false;
+            }
+        }
         private readonly EventBus eventBus;
-        private readonly List<Func<T, Task>> listeners = new();
+        private readonly List<ListenerData> listeners = new();
         private const int PRIORITY_DELTA = 1000;
 
         public EventListener(EventBus eventBus) {
@@ -25,8 +47,9 @@ namespace RabiRiichi.Event {
         }
 
         public EventListener<T> ListenTo(Func<T, Task> handler, int priority, int times = -1) {
-            eventBus.Subscribe(handler, priority, times);
-            listeners.Add(handler);
+            var data = new ListenerData(handler, priority, times);
+            data.Subscribe(eventBus);
+            listeners.Add(data);
             return this;
         }
 
@@ -63,9 +86,8 @@ namespace RabiRiichi.Event {
         /// </summary>
         public void Cancel() {
             foreach (var listener in listeners) {
-                eventBus.Unsubscribe(listener);
+                listener.Unsubscribe(eventBus);
             }
-            listeners.Clear();
         }
 
         private Task CancelHelper<U>(U _) where U : EventBase {
@@ -76,18 +98,41 @@ namespace RabiRiichi.Event {
         /// <summary>
         /// 在某类事件成功触发后，取消所有监听
         /// </summary>
-        public EventListener<T> CancelOn<U>() where U : EventBase {
-            eventBus.Subscribe<U>(CancelHelper, EventPriority.Minimum + PRIORITY_DELTA, 1);
+        public EventListener<T> CancelOn<U>(bool readd = false) where U : EventBase {
+            eventBus.Subscribe<U>(CancelHelper, EventPriority.Minimum + PRIORITY_DELTA, readd ? -1 : 1);
             return this;
         }
 
-        public EventListener<T> ScopeTo(EventScope scope) {
+        /// <summary>
+        /// 在某类事件成功触发后，重新添加监听
+        /// </summary>
+        public EventListener<T> ReAddOn<U>(bool readd = true) where U : EventBase {
+            if (!readd) {
+                return this;
+            }
+            eventBus.Subscribe<U>((_) => {
+                foreach (var listener in listeners) {
+                    listener.Subscribe(eventBus);
+                }
+                return Task.CompletedTask;
+            }, EventPriority.Minimum + PRIORITY_DELTA - 1, -1);
+            return this;
+        }
+
+        /// <summary> 超出scope时取消监听 </summary>
+        /// <param name="scope">监听生效范围</param>
+        /// <param name="readd">重新进入监听范围后，是否再次监听</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
+        public EventListener<T> ScopeTo(EventScope scope, bool readd = false) {
             switch (scope) {
                 case EventScope.Event:
-                    CancelOn<EventBase>();
+                    CancelOn<EventBase>(readd);
+                    ReAddOn<EventBase>(readd);
                     break;
                 case EventScope.Game:
-                    CancelOn<NextGameEvent>();
+                    CancelOn<NextGameEvent>(readd);
+                    ReAddOn<BeginGameEvent>(readd);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(scope), scope, "Unknown event scope");
