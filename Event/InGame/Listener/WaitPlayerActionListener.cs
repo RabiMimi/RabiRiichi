@@ -1,3 +1,4 @@
+using RabiRiichi.Riichi;
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Event.InGame.Listener {
@@ -12,7 +13,12 @@ namespace RabiRiichi.Event.InGame.Listener {
                 return;
             }
             e.game.SendInquiry(e.inquiry);
-            await e.inquiry.WaitForFinish;
+            try {
+                e.bus.eventProcessingLock.Release();
+                await e.inquiry.WaitForFinish;
+            } finally {
+                e.bus.eventProcessingLock.Lock(EventBus.EVENT_PROCESSING_TIMEOUT);
+            }
             if (e.eventBuilder != null) {
                 e.responseEvents.AddRange(e.eventBuilder.BuildAndQueue(e.Q));
             }

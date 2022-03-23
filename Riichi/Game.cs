@@ -104,27 +104,28 @@ namespace RabiRiichi.Riichi {
 
         #region Communication
         public void SyncGameStateToPlayer(int playerId) {
-            using (eventBus.eventProcessingLock.Lock()) {
+            using (eventBus.eventProcessingLock.Lock(EventBus.EVENT_PROCESSING_TIMEOUT)) {
                 var state = new GameState(this, playerId);
                 SendMessage(playerId, state);
             }
         }
 
         private readonly Mutex messageMutex = new();
+        private const int MESSAGE_TIMEOUT = 60 * 1000;
         public void SendInquiry(MultiPlayerInquiry inquiry) {
-            using (messageMutex.Lock()) {
+            using (messageMutex.Lock(MESSAGE_TIMEOUT)) {
                 config.actionCenter.OnInquiry(inquiry);
             }
         }
 
         public void SendEvent(int playerId, EventBase ev) {
-            using (messageMutex.Lock()) {
+            using (messageMutex.Lock(MESSAGE_TIMEOUT)) {
                 config.actionCenter.OnEvent(playerId, ev);
             }
         }
 
         public void SendMessage(int playerId, IRabiMessage msg) {
-            using (messageMutex.Lock()) {
+            using (messageMutex.Lock(MESSAGE_TIMEOUT)) {
                 config.actionCenter.OnMessage(this, playerId, msg);
             }
         }

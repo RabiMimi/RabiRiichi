@@ -44,7 +44,7 @@ namespace RabiRiichi.Event {
         /// <para>When this lock is acquired, no other thread can add events to the queue and the game state is volatile.</para>
         /// </summary>
         public readonly SemaphoreSlim eventProcessingLock = new(1, 1);
-        private const int EVENT_PROCESSING_TIMEOUT = 60 * 60 * 1000;
+        public const int EVENT_PROCESSING_TIMEOUT = 60 * 60 * 1000;
 
         public void Subscribe<T>(Func<T, Task> listener, int priority, int times = -1)
             where T : EventBase {
