@@ -44,6 +44,11 @@ namespace RabiRiichi.Action {
         /// <summary> 当前已回应的用户的最高优先级 </summary>
         private int curMaxPriority = int.MinValue;
         public AtomicBool hasExecuted { get; private set; } = new();
+        /// <summary>
+        /// 等待问询结果。
+        /// 直接等待Task后不能修改游戏状态，因为此时事件锁可能被释放
+        /// 请尽量等待WaitPlayerActionEvent
+        /// </summary>
         public Task WaitForFinish => IsEmpty ? Task.CompletedTask : finishTcs.Task;
         public bool IsEmpty => playerInquiries.Count == 0;
         public readonly Game game;

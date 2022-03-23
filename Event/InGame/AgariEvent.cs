@@ -1,8 +1,9 @@
 using RabiRiichi.Communication;
 using RabiRiichi.Pattern;
 using RabiRiichi.Riichi;
+using System.Collections;
 using System.Collections.Generic;
-
+using System.Linq;
 
 namespace RabiRiichi.Event.InGame {
     public class AgariInfo : IRabiPlayerMessage {
@@ -16,13 +17,27 @@ namespace RabiRiichi.Event.InGame {
         }
     }
 
-    public class AgariInfoList : List<AgariInfo> {
-        public readonly int fromPlayer;
-        public readonly GameTile incoming;
-        public AgariInfoList(int fromPlayer, GameTile incoming, params AgariInfo[] agariInfos) : base(agariInfos) {
+    public class AgariInfoList : IRabiMessage, IEnumerable<AgariInfo> {
+        public RabiMessageType msgType => RabiMessageType.Unnecessary;
+        [RabiBroadcast] private readonly List<AgariInfo> agariInfos;
+        [RabiBroadcast] public readonly int fromPlayer;
+        [RabiBroadcast] public readonly GameTile incoming;
+        public AgariInfoList(int fromPlayer, GameTile incoming, params AgariInfo[] agariInfos) {
             this.fromPlayer = fromPlayer;
             this.incoming = incoming;
+            this.agariInfos = agariInfos.ToList();
         }
+
+        public void Add(AgariInfo info) => agariInfos.Add(info);
+
+        public IEnumerator<AgariInfo> GetEnumerator()
+            => agariInfos.GetEnumerator();
+
+        IEnumerator IEnumerable.GetEnumerator()
+            => agariInfos.GetEnumerator();
+
+        public int Count => agariInfos.Count;
+        public AgariInfo this[int index] => agariInfos[index];
     }
 
     [RabiBroadcast]
