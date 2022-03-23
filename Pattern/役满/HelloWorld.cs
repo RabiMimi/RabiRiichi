@@ -8,9 +8,9 @@ namespace RabiRiichi.Pattern {
         private const string HELLO_WORLD = "//HELLO WORLD.";
         private static readonly byte[] MATCH_ARR = HELLO_WORLD.Select(c => (byte)(c % 10)).OrderBy(i => i).ToArray();
 
-        public HelloWorld(Base33332 base33332, 清一色 清一色) {
+        public HelloWorld(Base33332 base33332, Chinitsu chinitsu) {
             BaseOn(base33332);
-            DependOn(清一色);
+            DependOn(chinitsu);
         }
 
         public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {

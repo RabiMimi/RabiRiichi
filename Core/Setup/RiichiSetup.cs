@@ -26,38 +26,38 @@ namespace RabiRiichi.Core.Setup {
             AddBasePattern<Base13_1>();
 
             // Std patterns
-            AddStdPattern<一发>();
-            AddStdPattern<一杯口>();
-            AddStdPattern<岭上开花>();
-            AddStdPattern<平和>();
-            AddStdPattern<役牌中>();
-            AddStdPattern<役牌发>();
-            AddStdPattern<役牌场风>();
-            AddStdPattern<役牌白>();
-            AddStdPattern<役牌自风>();
-            AddStdPattern<断幺九>();
-            AddStdPattern<枪杠>();
-            AddStdPattern<河底捞鱼>();
-            AddStdPattern<海底摸月>();
-            AddStdPattern<立直>();
-            AddStdPattern<门清自摸和>();
-            AddStdPattern<纯全带幺九>();
-            AddStdPattern<一气通贯>();
-            AddStdPattern<三暗刻>();
-            AddStdPattern<三杠子>();
-            AddStdPattern<三色同刻>();
-            AddStdPattern<双立直>();
-            AddStdPattern<对对和>();
-            AddStdPattern<混全带幺九>();
-            AddStdPattern<混老头>();
-            AddStdPattern<四暗刻>();
-            AddStdPattern<四杠子>();
-            AddStdPattern<清老头>();
+            AddStdPattern<Ippatsu>();
+            AddStdPattern<Iipeikou>();
+            AddStdPattern<RinshanKaihou>();
+            AddStdPattern<Pinfu>();
+            AddStdPattern<YakuhaiChun>();
+            AddStdPattern<YakuhaiHatsu>();
+            AddStdPattern<YakuhaiBakaze>();
+            AddStdPattern<YakuhaiHaku>();
+            AddStdPattern<YakuhaiJikaze>();
+            AddStdPattern<Tanyao>();
+            AddStdPattern<Chankan>();
+            AddStdPattern<HouteiRaoyui>();
+            AddStdPattern<HaiteiRaoyue>();
+            AddStdPattern<Riichi>();
+            AddStdPattern<MenzenchinTsumohou>();
+            AddStdPattern<JunchanTaiyao>();
+            AddStdPattern<Ittsu>();
+            AddStdPattern<Sanankou>();
+            AddStdPattern<Sankantsu>();
+            AddStdPattern<SanshokuDoukou>();
+            AddStdPattern<DoubleRiichi>();
+            AddStdPattern<Toitoi>();
+            AddStdPattern<Chantaiyao>();
+            AddStdPattern<Honroutou>();
+            AddStdPattern<Suuankou>();
+            AddStdPattern<Suukantsu>();
+            AddStdPattern<Chinroutou>();
 
             // Bonus pattern
-            AddBonusPattern<赤宝牌>();
-            AddBonusPattern<宝牌>();
-            AddBonusPattern<里宝牌>();
+            AddBonusPattern<Akadora>();
+            AddBonusPattern<Dora>();
+            AddBonusPattern<Uradora>();
         }
     }
 }
