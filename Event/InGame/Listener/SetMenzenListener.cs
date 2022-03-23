@@ -8,7 +8,7 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         public static void Register(EventBus eventBus) {
-            eventBus.Register<SetMenzenEvent>(ExecuteMenzen, EventPriority.Execute);
+            eventBus.Subscribe<SetMenzenEvent>(ExecuteMenzen, EventPriority.Execute);
         }
     }
 }

@@ -72,7 +72,7 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         public static void Register(EventBus eventBus) {
-            eventBus.Register<DiscardTileEvent>(ExecuteDiscardTile, EventPriority.Execute);
+            eventBus.Subscribe<DiscardTileEvent>(ExecuteDiscardTile, EventPriority.Execute);
         }
     }
 }

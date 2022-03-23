@@ -17,7 +17,7 @@ namespace RabiRiichi.Event {
         }
 
         public static void Register(EventBus eventBus) {
-            eventBus.Register<EventBase>(Send, EventPriority.Broadcast);
+            eventBus.Subscribe<EventBase>(Send, EventPriority.Broadcast);
         }
     }
 }

@@ -25,7 +25,7 @@ namespace RabiRiichi.Event {
         }
 
         public EventListener<T> ListenTo(Func<T, Task> handler, int priority, int times = -1) {
-            eventBus.Register(handler, priority, times);
+            eventBus.Subscribe(handler, priority, times);
             listeners.Add(handler);
             return this;
         }
@@ -63,7 +63,7 @@ namespace RabiRiichi.Event {
         /// </summary>
         public void Cancel() {
             foreach (var listener in listeners) {
-                eventBus.Unregister(listener);
+                eventBus.Unsubscribe(listener);
             }
             listeners.Clear();
         }
@@ -77,7 +77,7 @@ namespace RabiRiichi.Event {
         /// 在某类事件成功触发后，取消所有监听
         /// </summary>
         public EventListener<T> CancelOn<U>() where U : EventBase {
-            eventBus.Register<U>(CancelHelper, EventPriority.Minimum + PRIORITY_DELTA, 1);
+            eventBus.Subscribe<U>(CancelHelper, EventPriority.Minimum + PRIORITY_DELTA, 1);
             return this;
         }
 

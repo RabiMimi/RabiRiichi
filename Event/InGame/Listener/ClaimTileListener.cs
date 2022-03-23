@@ -29,7 +29,7 @@ namespace RabiRiichi.Event.InGame.Listener {
             return Task.CompletedTask;
         }
         public static void Register(EventBus eventBus) {
-            eventBus.Register<ClaimTileEvent>(ExecuteClaimTile, EventPriority.Execute);
+            eventBus.Subscribe<ClaimTileEvent>(ExecuteClaimTile, EventPriority.Execute);
         }
     }
 }

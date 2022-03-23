@@ -16,7 +16,7 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         public static void Register(EventBus eventBus) {
-            eventBus.Register<StopGameEvent>(ExecuteStopGame, EventPriority.Execute);
+            eventBus.Subscribe<StopGameEvent>(ExecuteStopGame, EventPriority.Execute);
         }
     }
 }

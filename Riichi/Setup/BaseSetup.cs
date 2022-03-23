@@ -2,7 +2,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using RabiRiichi.Event;
 using RabiRiichi.Event.InGame.Listener;
-using RabiRiichi.Event.Query;
 using RabiRiichi.Event.Query.Listener;
 using RabiRiichi.Pattern;
 using System;

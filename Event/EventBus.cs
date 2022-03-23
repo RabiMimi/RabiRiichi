@@ -37,7 +37,7 @@ namespace RabiRiichi.Event {
         private readonly Dictionary<Type, List<IEventTrigger>> listeners =
             new();
 
-        public void Register<T>(Func<T, Task> listener, int priority, int times = -1)
+        public void Subscribe<T>(Func<T, Task> listener, int priority, int times = -1)
             where T : EventBase {
             var type = typeof(T);
             if (!listeners.TryGetValue(type, out var list)) {
@@ -47,7 +47,7 @@ namespace RabiRiichi.Event {
             list.Add(new EventTrigger<T>(listener, priority, times, list));
         }
 
-        public void Unregister<T>(Func<T, Task> listener)
+        public void Unsubscribe<T>(Func<T, Task> listener)
             where T : EventBase {
             var type = typeof(T);
             if (!listeners.TryGetValue(type, out var list)) {

@@ -13,8 +13,8 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         public static void Register(EventBus eventBus) {
-            eventBus.Register<IncreaseJunEvent>(PrepareJun, EventPriority.Prepare);
-            eventBus.Register<IncreaseJunEvent>(IncreaseJun, EventPriority.Execute);
+            eventBus.Subscribe<IncreaseJunEvent>(PrepareJun, EventPriority.Prepare);
+            eventBus.Subscribe<IncreaseJunEvent>(IncreaseJun, EventPriority.Execute);
         }
     }
 }

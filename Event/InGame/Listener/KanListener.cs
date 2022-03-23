@@ -37,7 +37,7 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         public static void Register(EventBus eventBus) {
-            eventBus.Register<KanEvent>(ExecuteKan, EventPriority.Execute);
+            eventBus.Subscribe<KanEvent>(ExecuteKan, EventPriority.Execute);
         }
     }
 }

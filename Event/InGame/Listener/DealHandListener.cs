@@ -16,7 +16,7 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         public static void Register(EventBus eventBus) {
-            eventBus.Register<DealHandEvent>(DealHand, EventPriority.Execute);
+            eventBus.Subscribe<DealHandEvent>(DealHand, EventPriority.Execute);
         }
     }
 }

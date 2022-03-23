@@ -24,7 +24,7 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         public static void Register(EventBus eventBus) {
-            eventBus.Register<LateClaimTileEvent>(ExecuteLateClaimTile, EventPriority.Execute);
+            eventBus.Subscribe<LateClaimTileEvent>(ExecuteLateClaimTile, EventPriority.Execute);
         }
     }
 }

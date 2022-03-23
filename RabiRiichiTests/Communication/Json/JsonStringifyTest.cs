@@ -32,7 +32,7 @@ namespace RabiRiichiTests.Communication.Json {
             [RabiPrivate] public readonly string privateMessage = "private";
             [RabiBroadcast] public RabiTestNestedMessage broadcastNested;
             [RabiPrivate] public RabiTestNestedMessage privateNested;
-            [RabiPrivate] public RabiTestNestedMessage nullNested;
+            [RabiPrivate] public RabiTestNestedMessage nullNested = null;
 
             public RabiTestMessage(int playerId) {
                 this.playerId = playerId;

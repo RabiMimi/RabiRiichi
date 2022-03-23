@@ -8,7 +8,7 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         public static void Register(EventBus eventBus) {
-            eventBus.Register<RevealDoraEvent>(RevealDora, EventPriority.Execute);
+            eventBus.Subscribe<RevealDoraEvent>(RevealDora, EventPriority.Execute);
         }
     }
 }

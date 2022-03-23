@@ -7,7 +7,7 @@ namespace RabiRiichi.Event.Query.Listener {
         }
 
         public static void Register(EventBus bus) {
-            bus.Register<SyncGameStateEvent>(PrepareSyncGameState, EventPriority.Prepare);
+            bus.Subscribe<SyncGameStateEvent>(PrepareSyncGameState, EventPriority.Prepare);
         }
     }
 }

@@ -11,7 +11,7 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         public static void Register(EventBus eventBus) {
-            eventBus.Register<ApplyScoreEvent>(ApplyScore, EventPriority.Execute);
+            eventBus.Subscribe<ApplyScoreEvent>(ApplyScore, EventPriority.Execute);
         }
     }
 }

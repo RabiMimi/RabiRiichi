@@ -14,7 +14,7 @@ namespace RabiRiichi.Event {
         }
 
         public static void Register(EventBus bus) {
-            bus.Register<InitGameEvent>(OnGameInit, EventPriority.Execute);
+            bus.Subscribe<InitGameEvent>(OnGameInit, EventPriority.Execute);
         }
     }
 }

@@ -48,7 +48,7 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         public static void Register(EventBus eventBus) {
-            eventBus.Register<CalcScoreEvent>(CalcScore, EventPriority.Execute);
+            eventBus.Subscribe<CalcScoreEvent>(CalcScore, EventPriority.Execute);
         }
     }
 }

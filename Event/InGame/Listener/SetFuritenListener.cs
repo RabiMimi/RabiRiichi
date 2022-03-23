@@ -58,9 +58,9 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         public static void Register(EventBus eventBus) {
-            eventBus.Register<SetFuritenEvent>(SetFuriten, EventPriority.Execute);
-            eventBus.Register<IncreaseJunEvent>(OnIncreaseJun, EventPriority.After);
-            eventBus.Register<DiscardTileEvent>(OnDiscardTile, EventPriority.After);
+            eventBus.Subscribe<SetFuritenEvent>(SetFuriten, EventPriority.Execute);
+            eventBus.Subscribe<IncreaseJunEvent>(OnIncreaseJun, EventPriority.After);
+            eventBus.Subscribe<DiscardTileEvent>(OnDiscardTile, EventPriority.After);
         }
     }
 }

@@ -39,11 +39,11 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         public static void Register(EventBus eventBus) {
-            eventBus.Register<SetIppatsuEvent>(ExecuteIppatsu, EventPriority.Execute);
-            eventBus.Register<SetRiichiEvent>(AfterRiichi, EventPriority.After + 10);
-            eventBus.Register<DiscardTileEvent>(ResetIppatsu, EventPriority.After + 10);
-            eventBus.Register<ClaimTileEvent>(ResetAllIppatsu, EventPriority.After + 10);
-            eventBus.Register<KanEvent>(ResetAllKan, EventPriority.After + 10);
+            eventBus.Subscribe<SetIppatsuEvent>(ExecuteIppatsu, EventPriority.Execute);
+            eventBus.Subscribe<SetRiichiEvent>(AfterRiichi, EventPriority.After + 10);
+            eventBus.Subscribe<DiscardTileEvent>(ResetIppatsu, EventPriority.After + 10);
+            eventBus.Subscribe<ClaimTileEvent>(ResetAllIppatsu, EventPriority.After + 10);
+            eventBus.Subscribe<KanEvent>(ResetAllKan, EventPriority.After + 10);
         }
     }
 }

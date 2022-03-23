@@ -124,13 +124,13 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         public static void Register(EventBus eventBus) {
-            eventBus.Register<EndGameRyuukyokuEvent>(PrepareEndGame, EventPriority.Prepare);
-            eventBus.Register<EndGameRyuukyokuEvent>(ExecuteEndGame, EventPriority.Execute);
-            eventBus.Register<MidGameRyuukyokuEvent>(ExecuteMidGameRyuukyoku, EventPriority.Execute);
-            eventBus.Register<NextPlayerEvent>(SuufonRendaListener, EventPriority.Prepare);
-            eventBus.Register<SetRiichiEvent>(SuuchaRiichiListener, EventPriority.After);
-            eventBus.Register<AgariEvent>(TripleRonListener, EventPriority.After);
-            eventBus.Register<IncreaseJunEvent>(SuukanSanraListener, EventPriority.Prepare);
+            eventBus.Subscribe<EndGameRyuukyokuEvent>(PrepareEndGame, EventPriority.Prepare);
+            eventBus.Subscribe<EndGameRyuukyokuEvent>(ExecuteEndGame, EventPriority.Execute);
+            eventBus.Subscribe<MidGameRyuukyokuEvent>(ExecuteMidGameRyuukyoku, EventPriority.Execute);
+            eventBus.Subscribe<NextPlayerEvent>(SuufonRendaListener, EventPriority.Prepare);
+            eventBus.Subscribe<SetRiichiEvent>(SuuchaRiichiListener, EventPriority.After);
+            eventBus.Subscribe<AgariEvent>(TripleRonListener, EventPriority.After);
+            eventBus.Subscribe<IncreaseJunEvent>(SuukanSanraListener, EventPriority.Prepare);
         }
     }
 }

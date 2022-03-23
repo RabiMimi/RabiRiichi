@@ -8,7 +8,7 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         public static void Register(EventBus eventBus) {
-            eventBus.Register<SetRiichiEvent>(ExecuteRiichi, EventPriority.Execute);
+            eventBus.Subscribe<SetRiichiEvent>(ExecuteRiichi, EventPriority.Execute);
         }
     }
 }

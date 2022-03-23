@@ -35,7 +35,7 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         public static void Register(EventBus eventBus) {
-            eventBus.Register<BankerFirstTurnEvent>(ExecuteBankerFirstTurn, EventPriority.Execute);
+            eventBus.Subscribe<BankerFirstTurnEvent>(ExecuteBankerFirstTurn, EventPriority.Execute);
         }
     }
 }

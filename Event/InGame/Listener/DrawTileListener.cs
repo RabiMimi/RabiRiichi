@@ -69,7 +69,7 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         public static void Register(EventBus eventBus) {
-            eventBus.Register<DrawTileEvent>(DrawTile, EventPriority.Execute);
+            eventBus.Subscribe<DrawTileEvent>(DrawTile, EventPriority.Execute);
         }
     }
 }

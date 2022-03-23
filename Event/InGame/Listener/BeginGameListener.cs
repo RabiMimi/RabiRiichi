@@ -23,7 +23,7 @@ namespace RabiRiichi.Event.InGame.Listener {
 
 
         public static void Register(EventBus eventBus) {
-            eventBus.Register<BeginGameEvent>(UpdateGameInfo, EventPriority.Execute);
+            eventBus.Subscribe<BeginGameEvent>(UpdateGameInfo, EventPriority.Execute);
         }
     }
 }

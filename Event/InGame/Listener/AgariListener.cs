@@ -17,7 +17,7 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         public static void Register(EventBus eventBus) {
-            eventBus.Register<AgariEvent>(ExecuteAgari, EventPriority.Execute);
+            eventBus.Subscribe<AgariEvent>(ExecuteAgari, EventPriority.Execute);
         }
     }
 }

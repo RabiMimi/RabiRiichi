@@ -19,8 +19,8 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         public static void Register(EventBus eventBus) {
-            eventBus.Register<WaitPlayerActionEvent>(BeforeWaitPlayer, EventPriority.Prepare);
-            eventBus.Register<WaitPlayerActionEvent>(ExecuteWaitPlayer, EventPriority.Execute);
+            eventBus.Subscribe<WaitPlayerActionEvent>(BeforeWaitPlayer, EventPriority.Prepare);
+            eventBus.Subscribe<WaitPlayerActionEvent>(ExecuteWaitPlayer, EventPriority.Execute);
         }
     }
 }
