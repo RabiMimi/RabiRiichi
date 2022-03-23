@@ -1,9 +1,9 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using RabiRiichi.Communication;
+using RabiRiichi.Communication.Json;
 
 
-namespace RabiRiichiTests.Communication {
+namespace RabiRiichiTests.Communication.Json {
     [TestClass]
     public class EnumNamingPolicyTest {
         private static readonly EnumNamingPolicy V = new();

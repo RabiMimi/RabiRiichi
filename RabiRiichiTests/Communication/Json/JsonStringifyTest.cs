@@ -1,11 +1,12 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Communication;
+using RabiRiichi.Communication.Json;
 using RabiRiichi.Riichi;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace RabiRiichiTests.Communication {
+namespace RabiRiichiTests.Communication.Json {
     [TestClass]
     public class JsonStringifyTest {
         #region Test Classes
@@ -31,6 +32,7 @@ namespace RabiRiichiTests.Communication {
             [RabiPrivate] public readonly string privateMessage = "private";
             [RabiBroadcast] public RabiTestNestedMessage broadcastNested;
             [RabiPrivate] public RabiTestNestedMessage privateNested;
+            [RabiPrivate] public RabiTestNestedMessage nullNested;
 
             public RabiTestMessage(int playerId) {
                 this.playerId = playerId;
@@ -111,6 +113,7 @@ namespace RabiRiichiTests.Communication {
             Assert.AreEqual(message.privateMessage, parsed.GetProperty("privateMessage").GetString());
             Assert.AreEqual(message.broadcastNested.broadcastMessage, parsed.GetProperty("broadcastNested").GetProperty("broadcastMessage").GetString());
             Assert.AreEqual(message.privateNested.privateMessage, parsed.GetProperty("privateNested").GetProperty("privateMessage").GetString());
+            Assert.AreEqual(JsonValueKind.Null, parsed.GetProperty("nullNested").ValueKind);
             Assert.IsFalse(parsed.TryGetProperty("notIncluded", out _));
 
             // Parse by the other player
@@ -200,7 +203,7 @@ namespace RabiRiichiTests.Communication {
             var parsed = jsonStringify.Parse<JsonElement>(json, 0);
             Assert.AreEqual("r5s", parsed.GetProperty("tile").GetProperty("tile").GetString());
             Assert.AreEqual("wall", parsed.GetProperty("tile").GetProperty("source").GetString());
-            Assert.AreEqual(1, parsed.GetProperty("tile").GetProperty("fromPlayerId").GetInt32());
+            Assert.AreEqual(1, parsed.GetProperty("tile").GetProperty("discardInfo").GetProperty("from").GetInt32());
             Assert.AreEqual("123s123m123p", parsed.GetProperty("tiles").GetString());
             var parsedMsg = jsonStringify.Parse<GameTileMessage>(json, 0);
             Assert.AreEqual(message.tile.tile, parsedMsg.tile.tile);

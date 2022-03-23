@@ -2,7 +2,7 @@ using RabiRiichi.Action;
 using RabiRiichi.Event;
 using System.Collections.Generic;
 
-namespace RabiRiichi.Communication {
+namespace RabiRiichi.Communication.Json {
     public class JsonStringActionCenter : IActionCenter {
         public delegate void MessageSender(int playerId, string message);
 

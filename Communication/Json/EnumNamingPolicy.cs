@@ -1,7 +1,7 @@
 using System.Text;
 using System.Text.Json;
 
-namespace RabiRiichi.Communication {
+namespace RabiRiichi.Communication.Json {
     public class EnumNamingPolicy : JsonNamingPolicy {
         public override string ConvertName(string name) {
             StringBuilder sb = new();

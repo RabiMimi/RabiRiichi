@@ -42,13 +42,13 @@ namespace RabiRiichi.Riichi {
         public RabiMessageType msgType => RabiMessageType.Unnecessary;
         /// <summary> 哪个玩家的弃牌 </summary>
         public readonly Player fromPlayer;
-        [RabiBroadcast] public readonly int fromPlayerId;
+        [RabiBroadcast] public readonly int from;
         /// <summary> 弃牌原因 </summary>
         [RabiBroadcast] public readonly DiscardReason reason;
 
         public DiscardInfo(Player fromPlayer, DiscardReason reason) {
             this.fromPlayer = fromPlayer;
-            this.fromPlayerId = fromPlayer?.id ?? -1;
+            this.from = fromPlayer?.id ?? -1;
             this.reason = reason;
         }
 

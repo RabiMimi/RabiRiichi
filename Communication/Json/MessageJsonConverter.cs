@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace RabiRiichi.Communication {
+namespace RabiRiichi.Communication.Json {
     public class MessageJsonConverter : JsonConverterFactory {
         public readonly int playerId;
 

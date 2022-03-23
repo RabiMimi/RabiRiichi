@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using RabiRiichi.Communication;
+using RabiRiichi.Communication.Json;
 using RabiRiichi.Event;
 using RabiRiichi.Pattern;
 using RabiRiichi.Util;

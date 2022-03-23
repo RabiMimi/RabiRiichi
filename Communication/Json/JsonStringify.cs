@@ -3,7 +3,7 @@ using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace RabiRiichi.Communication {
+namespace RabiRiichi.Communication.Json {
     public class JsonStringify {
         private readonly JsonSerializerOptions[] options;
 
