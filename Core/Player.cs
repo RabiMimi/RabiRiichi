@@ -1,4 +1,4 @@
-﻿namespace RabiRiichi.Riichi {
+﻿namespace RabiRiichi.Core {
     public enum Wind {
         E, S, W, N
     }

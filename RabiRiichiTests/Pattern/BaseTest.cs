@@ -1,5 +1,5 @@
-﻿using RabiRiichi.Pattern;
-using RabiRiichi.Riichi;
+﻿using RabiRiichi.Core;
+using RabiRiichi.Pattern;
 using System.Collections.Generic;
 
 namespace RabiRiichiTests.Pattern {

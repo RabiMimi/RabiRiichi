@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
-namespace RabiRiichi.Riichi {
+namespace RabiRiichi.Core {
     public class Hand {
         /// <summary> 手牌（不包含副露） </summary>
         public GameTiles freeTiles = new();

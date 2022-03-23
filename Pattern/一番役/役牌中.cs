@@ -1,4 +1,4 @@
-﻿using RabiRiichi.Riichi;
+﻿using RabiRiichi.Core;
 
 namespace RabiRiichi.Pattern {
     public class 役牌中 : 役牌 {

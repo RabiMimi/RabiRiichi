@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace RabiRiichi.Riichi {
+namespace RabiRiichi.Core {
     public enum TileSource {
         None,
         /// <summary> 王牌 </summary>

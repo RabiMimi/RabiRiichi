@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-namespace RabiRiichi.Riichi {
+namespace RabiRiichi.Core {
     /// <summary> 将相同的牌放入同一个bucket </summary>
     public class GameTileBucket {
         private readonly GameTiles[,] buckets = new GameTiles[5, 10];

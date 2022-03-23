@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace RabiRiichi.Riichi {
+namespace RabiRiichi.Core {
 
     /// <summary> 面子或雀头或单张 </summary>
     public abstract class MenLike : GameTiles {

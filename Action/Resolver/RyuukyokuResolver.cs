@@ -1,5 +1,5 @@
+using RabiRiichi.Core;
 using RabiRiichi.Event.InGame;
-using RabiRiichi.Riichi;
 using System.Collections.Generic;
 using System.Linq;
 

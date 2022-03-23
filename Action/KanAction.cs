@@ -1,5 +1,5 @@
 using RabiRiichi.Communication;
-using RabiRiichi.Riichi;
+using RabiRiichi.Core;
 using System.Collections.Generic;
 
 

@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading;
 
 
-namespace RabiRiichi.Riichi {
+namespace RabiRiichi.Core {
     public static class Extensions {
         public static TileSuit ToGroup(this char c) {
             c = char.ToLower(c);

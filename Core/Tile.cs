@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace RabiRiichi.Riichi {
+namespace RabiRiichi.Core {
     public enum TileSuit : byte {
         Invalid, M, P, S, Z
     }

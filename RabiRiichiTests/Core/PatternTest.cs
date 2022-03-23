@@ -1,7 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using RabiRiichi.Riichi;
+using RabiRiichi.Core;
 
-namespace RabiRiichiTests.Riichi {
+namespace RabiRiichiTests.Core {
     [TestClass]
     public class PatternTest {
         private static MenLike Create(string tiles) => MenLike.From(new Tiles(tiles));

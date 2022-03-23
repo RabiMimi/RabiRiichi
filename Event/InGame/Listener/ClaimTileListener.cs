@@ -1,4 +1,4 @@
-using RabiRiichi.Riichi;
+using RabiRiichi.Core;
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Event.InGame.Listener {

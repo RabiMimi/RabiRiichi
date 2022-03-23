@@ -1,7 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Communication;
 using RabiRiichi.Communication.Json;
-using RabiRiichi.Riichi;
+using RabiRiichi.Core;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;

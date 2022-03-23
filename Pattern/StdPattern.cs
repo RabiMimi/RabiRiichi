@@ -1,5 +1,5 @@
 ﻿using RabiRiichi.Communication;
-using RabiRiichi.Riichi;
+using RabiRiichi.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,7 +32,7 @@ namespace RabiRiichi.Pattern {
     /// <summary> 标准役种 </summary>
     public abstract class StdPattern {
         // TODO: (Frenqy) 役种名 罗马音 自己查wiki 最好把class名也改了
-        public abstract string name { get; }
+        public string name => GetType().Name;
 
         /// <summary> 可以触发该役种的底和 </summary>
         public BasePattern[] basePatterns { get; private set; } = Array.Empty<BasePattern>();

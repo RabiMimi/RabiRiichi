@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace RabiRiichi.Riichi.Setup {
+namespace RabiRiichi.Core.Setup {
     public class BaseSetup {
         /// <summary> 底和 </summary>
         private readonly List<Type> basePatterns = new();

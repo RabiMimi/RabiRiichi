@@ -1,6 +1,6 @@
+using RabiRiichi.Core;
 using RabiRiichi.Event.InGame;
 using RabiRiichi.Pattern;
-using RabiRiichi.Riichi;
 
 namespace RabiRiichi.Action {
     public abstract class AgariAction : ConfirmAction {

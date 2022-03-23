@@ -1,5 +1,5 @@
+using RabiRiichi.Core;
 using RabiRiichi.Pattern;
-using RabiRiichi.Riichi;
 
 
 namespace RabiRiichi.Action.Resolver {

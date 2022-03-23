@@ -1,6 +1,6 @@
 using RabiRiichi.Communication;
+using RabiRiichi.Core;
 using RabiRiichi.Pattern;
-using RabiRiichi.Riichi;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;

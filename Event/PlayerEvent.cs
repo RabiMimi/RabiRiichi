@@ -1,5 +1,5 @@
 using RabiRiichi.Communication;
-using RabiRiichi.Riichi;
+using RabiRiichi.Core;
 
 namespace RabiRiichi.Event {
     public abstract class PlayerEvent : EventBase, IRabiPlayerMessage {

@@ -1,4 +1,4 @@
-﻿using RabiRiichi.Riichi;
+﻿using RabiRiichi.Core;
 using RabiRiichi.Util;
 using System;
 using System.Collections.Generic;

@@ -11,7 +11,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace RabiRiichi.Riichi {
+namespace RabiRiichi.Core {
 
     public class Game {
         public const int HAND_SIZE = 13;

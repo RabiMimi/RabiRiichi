@@ -1,5 +1,5 @@
 using RabiRiichi.Action.Resolver;
-using RabiRiichi.Riichi;
+using RabiRiichi.Core;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 

@@ -1,9 +1,9 @@
 using RabiRiichi.Communication;
-using RabiRiichi.Riichi.Setup;
+using RabiRiichi.Core.Setup;
 using RabiRiichi.Util;
 
 
-namespace RabiRiichi.Riichi {
+namespace RabiRiichi.Core {
 
     public class GameConfig : IRabiMessage {
         public RabiMessageType msgType => RabiMessageType.Unnecessary;

@@ -4,7 +4,7 @@ using RabiRiichi.Action.Resolver;
 using RabiRiichi.Pattern;
 
 
-namespace RabiRiichi.Riichi.Setup {
+namespace RabiRiichi.Core.Setup {
     public class RiichiSetup : BaseSetup {
         protected override void InjectResolvers(IServiceCollection collection) {
             collection.TryAddSingleton<ChanKanResolver>();

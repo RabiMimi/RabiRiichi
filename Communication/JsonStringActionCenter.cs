@@ -1,6 +1,6 @@
 using RabiRiichi.Action;
+using RabiRiichi.Core;
 using RabiRiichi.Event;
-using RabiRiichi.Riichi;
 using System.Collections.Generic;
 
 namespace RabiRiichi.Communication {

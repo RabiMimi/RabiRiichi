@@ -1,7 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using RabiRiichi.Core;
 using RabiRiichi.Pattern;
-using RabiRiichi.Riichi;
 using System.Collections.Generic;
 using System.Linq;
 

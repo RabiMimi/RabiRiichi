@@ -1,6 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Communication;
-using RabiRiichi.Riichi;
+using RabiRiichi.Core;
 using System.Linq;
 
 namespace RabiRiichiTests {
