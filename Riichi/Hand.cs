@@ -92,6 +92,8 @@ namespace RabiRiichi.Riichi {
         public void Riichi(GameTile tile, bool wRiichi) {
             riichiTile = tile;
             this.wRiichi = wRiichi;
+            player.points -= game.config.riichiPoints;
+            game.info.riichiStick++;
             riichiStick++;
         }
 

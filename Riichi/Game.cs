@@ -21,7 +21,7 @@ namespace RabiRiichi.Riichi {
         public readonly JsonStringify json;
         public readonly Player[] players;
         public readonly InitGameEvent initialEvent;
-
+        private EventQueue mainQueue;
 
         public Game(GameConfig config) {
             if (config.actionCenter == null) {
@@ -89,12 +89,18 @@ namespace RabiRiichi.Riichi {
             }
 
             // 游戏逻辑
-            var mainQueue = new EventQueue(eventBus, false);
+            mainQueue = new EventQueue(eventBus, false);
             mainQueue.Queue(initialEvent);
             await mainQueue.ProcessQueue();
 
             // 结束游戏
             info.phase = GamePhase.Finished;
+        }
+        #endregion
+
+        #region Communication
+        public void SyncGameStateToPlayer(int playerId) {
+            throw new NotImplementedException();
         }
         #endregion
 
