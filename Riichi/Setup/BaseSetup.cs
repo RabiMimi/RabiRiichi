@@ -2,6 +2,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using RabiRiichi.Event;
 using RabiRiichi.Event.InGame.Listener;
+using RabiRiichi.Event.Query;
+using RabiRiichi.Event.Query.Listener;
 using RabiRiichi.Pattern;
 using System;
 using System.Collections.Generic;
@@ -97,6 +99,7 @@ namespace RabiRiichi.Riichi.Setup {
 
         /// <summary> 配置事件监听 </summary>
         protected virtual void RegisterEvents(EventBus eventBus) {
+            // InGame
             AddKanListener.Register(eventBus);
             AgariListener.Register(eventBus);
             ApplyScoreListener.Register(eventBus);
@@ -120,6 +123,10 @@ namespace RabiRiichi.Riichi.Setup {
             StopGameListener.Register(eventBus);
             WaitPlayerActionListener.Register(eventBus);
 
+            // Query
+            SyncGameStateListener.Register(eventBus);
+
+            // Essential
             InitGameEvent.Register(eventBus);
             EventBroadcast.Register(eventBus);
         }

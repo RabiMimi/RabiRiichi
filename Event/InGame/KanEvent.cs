@@ -5,7 +5,7 @@ namespace RabiRiichi.Event.InGame {
     /// <summary>
     /// 加杠/暗杠/大明杠
     /// </summary>
-    public class KanEvent : PlayerEvent {
+    public class KanEvent : BroadcastPlayerEvent {
         public override string name => "kan";
         #region Request
         [RabiBroadcast] public readonly Kan kan;
