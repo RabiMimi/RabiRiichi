@@ -17,12 +17,18 @@ namespace RabiRiichi.Event {
     }
 
     public abstract class EventBase : IRabiMessage {
+        /// <summary> 广播时的ID，保证递增 </summary>
         [RabiBroadcast] public int id;
         [RabiBroadcast] public abstract string name { get; }
         [RabiBroadcast] public RabiMessageType msgType => RabiMessageType.Event;
 
+        /// <summary> 游戏实例 </summary>
         public readonly Game game;
+        /// <summary> 事件总线 </summary>
         public EventBus bus => game.eventBus;
+        /// <summary> 该事件所在的队列 </summary>
+        public EventQueue Q;
+        /// <summary> 事件状态 </summary>
         public int phase = EventPriority.Maximum;
 
         /// <summary> 是否已经处理完毕或被取消 </summary>
@@ -52,6 +58,7 @@ namespace RabiRiichi.Event {
                 this.parent = parent;
                 this.game = parent.game;
                 this.parent.children.Add(this);
+                this.Q = parent.Q;
             }
         }
 

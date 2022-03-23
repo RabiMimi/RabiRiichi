@@ -36,7 +36,7 @@ namespace RabiRiichi.Event.InGame.Listener {
                     ev.game.info.riichiStick = 0;
                 }
             }
-            ev.bus.Queue(new ApplyScoreEvent(ev, ev.scoreChange));
+            ev.Q.Queue(new ApplyScoreEvent(ev, ev.scoreChange));
             return Task.CompletedTask;
         }
 

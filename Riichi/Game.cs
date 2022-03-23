@@ -89,8 +89,9 @@ namespace RabiRiichi.Riichi {
             }
 
             // 游戏逻辑
-            eventBus.Queue(initialEvent);
-            await eventBus.ProcessQueue();
+            var mainQueue = new EventQueue(eventBus, false);
+            mainQueue.Queue(initialEvent);
+            await mainQueue.ProcessQueue();
 
             // 结束游戏
             info.phase = GamePhase.Finished;

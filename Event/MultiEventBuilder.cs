@@ -37,10 +37,10 @@ namespace RabiRiichi.Event {
             return events;
         }
 
-        public List<EventBase> BuildAndQueue(EventBus bus) {
+        public List<EventBase> BuildAndQueue(EventQueue queue) {
             var ret = Build();
             foreach (var e in ret) {
-                bus.Queue(e);
+                queue.Queue(e);
             }
             return ret;
         }

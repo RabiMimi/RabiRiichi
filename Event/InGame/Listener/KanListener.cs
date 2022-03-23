@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace RabiRiichi.Event.InGame.Listener {
     public static class KanListener {
         public static Task ExecuteKan(KanEvent ev) {
-            ev.bus.Queue(new IncreaseJunEvent(ev, ev.playerId));
+            ev.Q.Queue(new IncreaseJunEvent(ev, ev.playerId));
             if (ev.kanSource != TileSource.DaiMinKan) {
                 // 抢杠
                 var resolvers = GetKanResolvers(ev.game);
@@ -18,14 +18,14 @@ namespace RabiRiichi.Event.InGame.Listener {
             ev.waitEvent.inquiry.AddHandler<RonAction>((action) => {
                 ev.waitEvent.eventBuilder.AddAgari(ev.waitEvent, ev.playerId, ev.incoming, action.agariInfo);
             });
-            ev.bus.Queue(ev.waitEvent);
+            ev.Q.Queue(ev.waitEvent);
             ev.waitEvent.OnFinish(() => {
                 if (ev.waitEvent.responseEvents.Count > 0) {
                     // TODO: 处理抢杠后的情况：算作杠还是刻？
                     return;
                 }
                 // 没有人抢杠，继续处理开杠事件
-                ev.bus.Queue(new AddKanEvent(ev));
+                ev.Q.Queue(new AddKanEvent(ev));
             });
             return Task.CompletedTask;
         }

@@ -10,15 +10,14 @@ namespace RabiRiichi.Event.InGame.Listener {
             foreach (var player in ev.game.players) {
                 player.Reset();
             }
-            var bus = ev.bus;
             int banker = ev.game.info.banker;
             for (int i = 0; i < ev.game.config.playerCount; i++) {
                 int playerId = (i + banker) % ev.game.config.playerCount;
-                bus.Queue(new DealHandEvent(ev, playerId));
+                ev.Q.Queue(new DealHandEvent(ev, playerId));
             }
-            bus.Queue(new RevealDoraEvent(ev));
-            bus.Queue(new IncreaseJunEvent(ev, banker));
-            bus.Queue(new BankerFirstTurnEvent(ev, banker));
+            ev.Q.Queue(new RevealDoraEvent(ev));
+            ev.Q.Queue(new IncreaseJunEvent(ev, banker));
+            ev.Q.Queue(new BankerFirstTurnEvent(ev, banker));
             return Task.CompletedTask;
         }
 

@@ -32,17 +32,17 @@ namespace RabiRiichi.Event.InGame.Listener {
             }
             if (players.Any(p => p.points < 0)) {
                 // 击飞
-                ev.bus.Queue(new StopGameEvent(ev));
+                ev.Q.Queue(new StopGameEvent(ev));
                 return Task.CompletedTask;
             }
             if (ev.nextRound >= info.config.totalRound) {
                 if (players.Any(p => p.points >= info.config.finishPoints)) {
                     // 游戏结束
-                    ev.bus.Queue(new StopGameEvent(ev));
+                    ev.Q.Queue(new StopGameEvent(ev));
                     return Task.CompletedTask;
                 }
             }
-            ev.bus.Queue(new BeginGameEvent(ev, ev.nextRound, ev.nextBanker, ev.nextHonba));
+            ev.Q.Queue(new BeginGameEvent(ev, ev.nextRound, ev.nextBanker, ev.nextHonba));
             return Task.CompletedTask;
         }
 

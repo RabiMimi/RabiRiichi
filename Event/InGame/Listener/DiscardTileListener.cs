@@ -16,7 +16,7 @@ namespace RabiRiichi.Event.InGame.Listener {
                 resolver.Resolve(ev.player, ev.tile, ev.waitEvent.inquiry);
             }
             AddPlayerAction(ev);
-            ev.bus.Queue(ev.waitEvent);
+            ev.Q.Queue(ev.waitEvent);
             return Task.CompletedTask;
         }
 
@@ -45,13 +45,13 @@ namespace RabiRiichi.Event.InGame.Listener {
                     // 如果立直牌被荣和，立直棒在和后才会放
                     new EventListener<IncreaseJunEvent>(ev.bus)
                         .EarlyPrepare((_) => {
-                            ev.bus.Queue(riichiEv);
+                            ev.Q.Queue(riichiEv);
                             return Task.CompletedTask;
                         }, 1)
                         .ScopeTo(EventScope.Game);
                 }
                 if (ev.responseEvents.Count == 0) {
-                    ev.bus.Queue(new NextPlayerEvent(ev, discardEv.playerId));
+                    ev.Q.Queue(new NextPlayerEvent(ev, discardEv.playerId));
                 }
             });
         }

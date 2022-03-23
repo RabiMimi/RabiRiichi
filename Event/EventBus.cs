@@ -1,9 +1,5 @@
-﻿using RabiRiichi.Event.InGame;
-using RabiRiichi.Util;
-using System;
-using System.Collections.Concurrent;
+﻿using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Event {
@@ -40,15 +36,6 @@ namespace RabiRiichi.Event {
 
         private readonly Dictionary<Type, List<IEventTrigger>> listeners =
             new();
-        private readonly BlockingCollection<EventBase> queue = new();
-        public int Count => queue.Count;
-        public bool Empty => Count == 0;
-        /// <summary>
-        /// Mutex lock that will be acquired upon processing events.
-        /// <para>When this lock is acquired, no other thread can add events to the queue and the game state is volatile.</para>
-        /// </summary>
-        public readonly SemaphoreSlim eventProcessingLock = new(1, 1);
-        private const int EVENT_PROCESSING_TIMEOUT = 60 * 60 * 1000;
 
         public void Register<T>(Func<T, Task> listener, int priority, int times = -1)
             where T : EventBase {
@@ -69,35 +56,11 @@ namespace RabiRiichi.Event {
             list.RemoveAll(l => l is EventTrigger<T> et && et.trigger == listener);
         }
 
-        public void ClearEvents() {
-            while (queue.TryTake(out _)) { }
-        }
-
-        public void Queue(EventBase ev) {
-            queue.Add(ev);
-        }
-
-        /// <summary> 开始处理事件队列 </summary>
-        public async Task ProcessQueue() {
-            while (true) {
-                await Task.Yield();
-                if (!queue.TryTake(out var ev)) {
-                    continue;
-                }
-                if (await Process(ev)) {
-                    if (ev is StopGameEvent) {
-                        break;
-                    }
-                }
-            }
-        }
-
         /// <summary>
-        /// 直接处理一个事件
+        /// 处理一个事件
         /// <returns>是否处理成功</returns>
         /// </summary>
-        public async Task<bool> Process(EventBase ev, bool hasLock = false) {
-            using var sh = hasLock ? null : new SemaphoreHolder(eventProcessingLock, EVENT_PROCESSING_TIMEOUT);
+        public async Task<bool> Process(EventBase ev) {
             if (ev == null || ev.IsFinishedOrCancelled) {
                 return false;
             }

@@ -4,10 +4,10 @@ using System.Threading.Tasks;
 namespace RabiRiichi.Event.InGame.Listener {
     public static class ClaimTileListener {
         public static Task ExecuteClaimTile(ClaimTileEvent ev) {
-            ev.bus.Queue(new SetMenzenEvent(ev, ev.playerId, false));
+            ev.Q.Queue(new SetMenzenEvent(ev, ev.playerId, false));
             if (ev.group is Kan kan) {
                 // 杠会增加巡目，在此跳过
-                ev.bus.Queue(new KanEvent(ev, ev.playerId, kan, ev.tile));
+                ev.Q.Queue(new KanEvent(ev, ev.playerId, kan, ev.tile));
                 return Task.CompletedTask;
             }
 
@@ -24,8 +24,8 @@ namespace RabiRiichi.Event.InGame.Listener {
             }
 
             // Increase jun
-            ev.bus.Queue(new IncreaseJunEvent(ev, ev.playerId));
-            ev.bus.Queue(new LateClaimTileEvent(ev));
+            ev.Q.Queue(new IncreaseJunEvent(ev, ev.playerId));
+            ev.Q.Queue(new LateClaimTileEvent(ev));
             return Task.CompletedTask;
         }
         public static void Register(EventBus eventBus) {

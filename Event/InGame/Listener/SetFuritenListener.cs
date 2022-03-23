@@ -16,7 +16,7 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         public static Task OnIncreaseJun(IncreaseJunEvent ev) {
-            ev.bus.Queue(new SetTempFuritenEvent(ev, ev.playerId, false));
+            ev.Q.Queue(new SetTempFuritenEvent(ev, ev.playerId, false));
             return Task.CompletedTask;
         }
 
@@ -49,7 +49,7 @@ namespace RabiRiichi.Event.InGame.Listener {
             new EventListener<IncreaseJunEvent>(ev.bus)
                 .EarlyAfter((incJunEv) => {
                     foreach (var furitenEv in furitenEvs) {
-                        ev.bus.Queue(furitenEv);
+                        ev.Q.Queue(furitenEv);
                     }
                     return Task.CompletedTask;
                 }, 1)

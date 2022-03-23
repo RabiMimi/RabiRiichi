@@ -42,7 +42,7 @@ namespace RabiRiichi.Event.InGame.Listener {
             }
             e.waitEvent.inquiry.GetByPlayerId(e.playerId).DisableSkip();
             AddActionHandler(e.waitEvent, e.reason);
-            e.bus.Queue(e.waitEvent);
+            e.Q.Queue(e.waitEvent);
             return Task.CompletedTask;
         }
 
