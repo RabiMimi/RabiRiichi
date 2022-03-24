@@ -11,13 +11,20 @@ namespace RabiRiichi.Event.InGame.Listener {
                 player.Reset();
             }
             int dealer = ev.game.info.dealer;
-            for (int i = 0; i < ev.game.config.playerCount; i++) {
-                int playerId = (i + dealer) % ev.game.config.playerCount;
-                ev.Q.Queue(new DealHandEvent(ev, playerId));
+            int curPlayer = dealer;
+            for (int r = 0; r < 4; r++) {
+                for (int i = 0; i < ev.game.config.playerCount; i++) {
+                    ev.Q.Queue(new DealHandEvent(ev, curPlayer, r == 3 ? 1 : 4));
+                    curPlayer = ev.game.NextPlayerId(curPlayer);
+                }
             }
+            var lastDrawEv = new DealHandEvent(ev, curPlayer, 1);
+            ev.Q.Queue(lastDrawEv);
             ev.Q.Queue(new RevealDoraEvent(ev));
             ev.Q.Queue(new IncreaseJunEvent(ev, dealer));
-            ev.Q.Queue(new DealerFirstTurnEvent(ev, dealer));
+            lastDrawEv.OnFinish(() => {
+                ev.Q.Queue(new DealerFirstTurnEvent(ev, dealer, lastDrawEv.tiles[0]));
+            });
             return Task.CompletedTask;
         }
 
