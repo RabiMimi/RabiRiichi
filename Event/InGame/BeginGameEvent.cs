@@ -8,14 +8,14 @@ namespace RabiRiichi.Event.InGame {
         /// <summary> 轮数 </summary>
         [RabiBroadcast] public int round;
         /// <summary> 局数 </summary>
-        [RabiBroadcast] public int banker;
+        [RabiBroadcast] public int dealer;
         /// <summary> 本场 </summary>
         [RabiBroadcast] public int honba;
         #endregion
 
-        public BeginGameEvent(EventBase parent, int round, int banker, int honba) : base(parent) {
+        public BeginGameEvent(EventBase parent, int round, int dealer, int honba) : base(parent) {
             this.round = round;
-            this.banker = banker;
+            this.dealer = dealer;
             this.honba = honba;
         }
     }

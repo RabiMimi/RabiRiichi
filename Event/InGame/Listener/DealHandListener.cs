@@ -6,7 +6,7 @@ namespace RabiRiichi.Event.InGame.Listener {
         public static Task DealHand(DealHandEvent e) {
             var player = e.player;
             int count = Game.HAND_SIZE;
-            if (player.IsBanker) {
+            if (player.IsDealer) {
                 count++;
             }
             foreach (var tile in e.game.wall.Draw(count)) {

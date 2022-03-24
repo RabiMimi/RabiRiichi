@@ -32,7 +32,7 @@ namespace RabiRiichi.Event.InGame.Listener {
                 foreach (var player in ev.remainingPlayers.Except(ev.nagashiManganPlayers)) {
                     foreach (var manganPlayer in ev.nagashiManganPlayers) {
                         int score = NAGASHI_MANGAN_BASE_PT;
-                        if (ev.game.info.banker == player || ev.game.info.banker == manganPlayer) {
+                        if (ev.game.info.dealer == player || ev.game.info.dealer == manganPlayer) {
                             score *= 2;
                         }
                         ev.AddScoreTransfer(player, manganPlayer, score);
@@ -56,7 +56,7 @@ namespace RabiRiichi.Event.InGame.Listener {
                 }
             }
             ev.Q.Queue(new ApplyScoreEvent(ev, ev.scoreChange));
-            ev.Q.Queue(new NextGameEvent(ev, !ev.tenpaiPlayers.Contains(ev.game.info.banker), true));
+            ev.Q.Queue(new NextGameEvent(ev, !ev.tenpaiPlayers.Contains(ev.game.info.dealer), true));
             return Task.CompletedTask;
         }
 

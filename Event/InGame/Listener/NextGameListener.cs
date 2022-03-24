@@ -5,9 +5,9 @@ namespace RabiRiichi.Event.InGame.Listener {
     public static class NextGameListener {
         public static Task PrepareNextGame(NextGameEvent ev) {
             var info = ev.game.info;
-            if (!ev.switchBanker) {
+            if (!ev.switchDealer) {
                 ev.nextRound = info.round;
-                ev.nextBanker = info.banker;
+                ev.nextDealer = info.dealer;
                 ev.nextHonba = info.honba + 1;
                 return Task.CompletedTask;
             }
@@ -16,8 +16,8 @@ namespace RabiRiichi.Event.InGame.Listener {
             } else {
                 ev.nextHonba = 0;
             }
-            ev.nextBanker = ev.game.NextPlayerId(info.banker);
-            ev.nextRound = ev.nextBanker == 0 ? info.round + 1 : info.round;
+            ev.nextDealer = ev.game.NextPlayerId(info.dealer);
+            ev.nextRound = ev.nextDealer == 0 ? info.round + 1 : info.round;
             return Task.CompletedTask;
         }
 
@@ -42,7 +42,7 @@ namespace RabiRiichi.Event.InGame.Listener {
                     return Task.CompletedTask;
                 }
             }
-            ev.Q.Queue(new BeginGameEvent(ev, ev.nextRound, ev.nextBanker, ev.nextHonba));
+            ev.Q.Queue(new BeginGameEvent(ev, ev.nextRound, ev.nextDealer, ev.nextHonba));
             return Task.CompletedTask;
         }
 

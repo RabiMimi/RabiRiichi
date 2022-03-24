@@ -5,7 +5,7 @@ namespace RabiRiichi.Event.InGame {
         public override string name => "next_game";
         #region Request
         /// <summary> 是否换庄 </summary>
-        [RabiBroadcast] public readonly bool switchBanker;
+        [RabiBroadcast] public readonly bool switchDealer;
         /// <summary> 是否流局 </summary>
         [RabiBroadcast] public readonly bool isRyuukyoku;
         #endregion
@@ -14,15 +14,15 @@ namespace RabiRiichi.Event.InGame {
         /// <summary> 轮数 </summary>
         [RabiBroadcast] public int nextRound;
         /// <summary> 局数 </summary>
-        [RabiBroadcast] public int nextBanker;
+        [RabiBroadcast] public int nextDealer;
         /// <summary> 本场 </summary>
         [RabiBroadcast] public int nextHonba;
         /// <summary> 立直棒 </summary>
         [RabiBroadcast] public int riichiStick;
         #endregion
 
-        public NextGameEvent(EventBase parent, bool switchBanker, bool isRyuukyoku) : base(parent) {
-            this.switchBanker = switchBanker;
+        public NextGameEvent(EventBase parent, bool switchDealer, bool isRyuukyoku) : base(parent) {
+            this.switchDealer = switchDealer;
             this.isRyuukyoku = isRyuukyoku;
         }
     }

@@ -77,7 +77,7 @@ namespace RabiRiichi.Core {
             return tile.IsSangen || tile.IsSame(Tile.From(info.wind));
         }
         public Player GetPlayer(int index) => players[index];
-        public Player Banker => GetPlayer(info.banker);
+        public Player Dealer => GetPlayer(info.dealer);
         public int Time => info.timeStamp;
         #endregion
 

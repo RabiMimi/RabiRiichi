@@ -11,8 +11,8 @@ namespace RabiRiichi.Event.InGame.Listener {
             ev.Q.Queue(calcScoreEv);
             var applyScoreEv = new ApplyScoreEvent(calcScoreEv, calcScoreEv.scoreChange);
             ev.Q.Queue(applyScoreEv);
-            bool bankerRon = ev.agariInfos.Any(info => info.playerId == ev.game.info.banker);
-            ev.Q.Queue(new NextGameEvent(applyScoreEv, !bankerRon, false));
+            bool dealerRon = ev.agariInfos.Any(info => info.playerId == ev.game.info.dealer);
+            ev.Q.Queue(new NextGameEvent(applyScoreEv, !dealerRon, false));
             return Task.CompletedTask;
         }
 

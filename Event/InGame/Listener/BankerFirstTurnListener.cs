@@ -4,13 +4,13 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Event.InGame.Listener {
-    public static class BankerFirstTurnListener {
+    public static class DealerFirstTurnListener {
 
-        public static Task ExecuteBankerFirstTurn(BankerFirstTurnEvent ev) {
+        public static Task ExecuteDealerFirstTurn(DealerFirstTurnEvent ev) {
             var freeTiles = ev.player.hand.freeTiles;
             var lastTile = freeTiles[^1];
             freeTiles.RemoveAt(freeTiles.Count - 1);
-            foreach (var resolver in GetBankerFirstTurnResolvers(ev.game)) {
+            foreach (var resolver in GetDealerFirstTurnResolvers(ev.game)) {
                 resolver.Resolve(ev.player, lastTile, ev.waitEvent.inquiry);
             }
             ev.waitEvent.inquiry.GetByPlayerId(ev.playerId).DisableSkip();
@@ -19,7 +19,7 @@ namespace RabiRiichi.Event.InGame.Listener {
             return Task.CompletedTask;
         }
 
-        private static IEnumerable<ResolverBase> GetBankerFirstTurnResolvers(Game game) {
+        private static IEnumerable<ResolverBase> GetDealerFirstTurnResolvers(Game game) {
             if (game.TryGet<PlayTileResolver>(out var resolver1)) {
                 yield return resolver1;
             }
@@ -35,7 +35,7 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         public static void Register(EventBus eventBus) {
-            eventBus.Subscribe<BankerFirstTurnEvent>(ExecuteBankerFirstTurn, EventPriority.Execute);
+            eventBus.Subscribe<DealerFirstTurnEvent>(ExecuteDealerFirstTurn, EventPriority.Execute);
         }
     }
 }

@@ -55,7 +55,7 @@ namespace RabiRiichi.Core {
         /// <summary> 场风 </summary>
         [RabiBroadcast] public Wind wind => (Wind)(round % config.playerCount);
         /// <summary> 庄家ID </summary>
-        [RabiBroadcast] public int banker = 0;
+        [RabiBroadcast] public int dealer = 0;
         /// <summary> 本场 </summary>
         [RabiBroadcast] public int honba = 0;
         /// <summary> 立直棒数量 </summary>

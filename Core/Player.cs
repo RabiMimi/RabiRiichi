@@ -6,7 +6,7 @@
         public int id;
         public Game game;
         /// <summary> 本局游戏中该玩家的自风 </summary>
-        public Wind Wind => (Wind)game.Dist(game.info.banker, id);
+        public Wind Wind => (Wind)game.Dist(game.info.dealer, id);
         /// <summary> 手牌 </summary>
         public Hand hand;
         /// <summary> 点数 </summary>
@@ -27,7 +27,7 @@
         public bool SamePlayer(Player rhs) => rhs != null && id == rhs.id;
 
         /// <summary> 是否是庄家 </summary>
-        public bool IsBanker => id == game.info.banker;
+        public bool IsDealer => id == game.info.dealer;
 
         /// <summary> 是否是役牌 </summary>
         public virtual bool IsYaku(Tile tile) => game.IsYaku(tile) || tile.IsSame(Tile.From(Wind));
