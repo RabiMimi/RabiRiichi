@@ -179,7 +179,66 @@ namespace RabiRiichiTests.Scenario {
 
         #region Wall
         public class WallBuilder {
-            private readonly Tiles remaining;
+            private readonly Tiles reserved = new();
+            private readonly Tiles doras = new();
+            private readonly Tiles uradoras = new();
+            private readonly Tiles rinshan = new();
+            private int revealedDoraNum = 1;
+            private int[] riverTileNum;
+
+            public WallBuilder(int playerCount) {
+                riverTileNum = new int[playerCount];
+                for (var i = 0; i < playerCount; i++) {
+                    riverTileNum[i] = 2;
+                }
+            }
+
+            /// <summary> 保留一些牌。这些牌不会被用于填充牌河。 </summary>
+            public WallBuilder Reserve(IEnumerable<Tile> tiles) {
+                reserved.AddRange(tiles);
+                return this;
+            }
+            public WallBuilder Reserve(string tiles) => Reserve(new Tiles(tiles));
+            public WallBuilder Reserve(Tile tile) => Reserve(Enumerable.Repeat(tile, 1));
+
+            /// <summary> 添加宝牌。第一个宝牌的下标为0。 </summary>
+            public WallBuilder AddDoras(IEnumerable<Tile> tiles) {
+                doras.AddRange(tiles);
+                return this;
+            }
+            public WallBuilder AddDoras(string tiles) => AddDoras(new Tiles(tiles));
+            public WallBuilder AddDoras(Tile tile) => AddDoras(Enumerable.Repeat(tile, 1));
+
+            /// <summary> 添加里宝牌。第一个里宝牌的下标为0。 </summary>
+            public WallBuilder AddUradoras(IEnumerable<Tile> tiles) {
+                uradoras.AddRange(tiles);
+                return this;
+            }
+            public WallBuilder AddUradoras(string tiles) => AddUradoras(new Tiles(tiles));
+            public WallBuilder AddUradoras(Tile tile) => AddUradoras(Enumerable.Repeat(tile, 1));
+
+            /// <summary> 添加岭上牌。最后一张岭上牌的下标为0。 </summary>
+            public WallBuilder AddRinshan(IEnumerable<Tile> tiles) {
+                rinshan.AddRange(tiles);
+                return this;
+            }
+            public WallBuilder AddRinshan(string tiles) => AddRinshan(new Tiles(tiles));
+            public WallBuilder AddRinshan(Tile tile) => AddRinshan(Enumerable.Repeat(tile, 1));
+
+            /// <summary> 设置有多少Dora已经翻开了，默认为1。 </summary>
+            public WallBuilder SetRevealedDoraCount(int num) {
+                revealedDoraNum = num;
+                return this;
+            }
+
+            /// <summary> 设置每个玩家牌河里的牌数，默认为2 </summary>
+            public WallBuilder SetRiverTileNum(params int[] num) {
+                if (num.Length != riverTileNum.Length) {
+                    throw new ArgumentException("River count length must be equal to player count.");
+                }
+                riverTileNum = num;
+                return this;
+            }
         }
         #endregion
         public ScenarioBuilder(int playerCount) {
