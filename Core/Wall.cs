@@ -63,6 +63,9 @@ namespace RabiRiichi.Core {
 
         /// <summary> 翻一张宝牌 </summary>
         public GameTile RevealDora() {
+            if (revealedDoraCount >= doras.Count) {
+                return null;
+            }
             var ret = doras[revealedDoraCount++];
             ret.source = TileSource.Wanpai;
             return ret;
@@ -142,10 +145,28 @@ namespace RabiRiichi.Core {
             throw new ArgumentException("tile is already drawn or revealed, cannot swap");
         }
 
+        /// <summary>
+        /// 用tile替换target的targetIndex位置的牌
+        /// </summary>
+        /// <returns>被替换的牌</returns>
+        private static GameTile Replace(ListStack<GameTile> target, int targetIndex, GameTile tile) {
+            var ret = target[targetIndex];
+            target[targetIndex] = tile;
+            return ret;
+        }
+
         /// <summary> 将一张牌作为牌山第i前的牌（从0开始） </summary>
         public void Insert(int i, GameTile tile) {
             Remove(tile);
             remaining.Insert(remaining.Count - i, tile);
+        }
+
+        /// <summary> 用一张不在牌山里的牌替换牌山里第i张牌 </summary>
+        /// <returns>被替换的牌</returns>
+        public GameTile Replace(int i, GameTile tile) {
+            var ret = remaining[i];
+            remaining[i] = tile;
+            return ret;
         }
 
         /// <summary> 将一张牌放到牌山最前 </summary>
@@ -153,9 +174,21 @@ namespace RabiRiichi.Core {
             Insert(0, tile);
         }
 
+        /// <summary> 用一张不在牌山里的牌替换牌山最前的牌 </summary>
+        /// <returns>被替换的牌</returns>
+        public GameTile ReplaceFirst(GameTile tile) {
+            return Replace(0, tile);
+        }
+
         /// <summary> 将一张牌放到牌山最后 </summary>
         public void InsertLast(GameTile tile) {
             Insert(remaining.Count - 1, tile);
+        }
+
+        /// <summary> 用一张不在牌山里的牌替换牌山最后的牌 </summary>
+        /// <returns>被替换的牌</returns>
+        public GameTile ReplaceLast(GameTile tile) {
+            return Replace(remaining.Count - 1, tile);
         }
 
         /// <summary> 将一张牌作为第i张里宝牌 </summary>
@@ -163,9 +196,21 @@ namespace RabiRiichi.Core {
             Swap(uradoras, i, tile);
         }
 
+        /// <summary> 用一张不在牌山里的牌替换第i张里宝牌 </summary>
+        /// <returns>被替换的牌</returns>
+        public GameTile ReplaceUradora(int i, GameTile tile) {
+            return Replace(uradoras, i, tile);
+        }
+
         /// <summary> 将一张牌作为第i张宝牌 </summary>
         public void PlaceDora(int i, GameTile tile) {
             Swap(doras, i, tile);
+        }
+
+        /// <summary> 用一张不在牌山里的牌替换第i张宝牌 </summary>
+        /// <returns>被替换的牌</returns>
+        public GameTile ReplaceDora(int i, GameTile tile) {
+            return Replace(doras, i, tile);
         }
 
         /// <summary> 将一张牌作为第i张岭上牌 </summary>
@@ -173,14 +218,32 @@ namespace RabiRiichi.Core {
             Swap(rinshan, i, tile);
         }
 
+        /// <summary> 用一张不在牌山里的牌替换第i张岭上牌 </summary>
+        /// <returns>被替换的牌</returns>
+        public GameTile ReplaceRinshan(int i, GameTile tile) {
+            return Replace(rinshan, i, tile);
+        }
+
         /// <summary> 将一张牌放到岭上牌最前 </summary>
         public void PlaceRinshanFirst(GameTile tile) {
             PlaceRinshan(rinshan.Count - 1, tile);
         }
 
+        /// <summary> 用一张不在牌山里的牌替换岭上牌最前的牌 </summary>
+        /// <returns>被替换的牌</returns>
+        public GameTile ReplaceRinshanFirst(GameTile tile) {
+            return Replace(rinshan, rinshan.Count - 1, tile);
+        }
+
         /// <summary> 将一张牌放到岭上牌最后 </summary>
         public void PlaceRinshanLast(GameTile tile) {
             PlaceRinshan(0, tile);
+        }
+
+        /// <summary> 用一张不在牌山里的牌替换岭上牌最后的牌 </summary>
+        /// <returns>被替换的牌</returns>
+        public GameTile ReplaceRinshanLast(GameTile tile) {
+            return Replace(rinshan, 0, tile);
         }
     }
 }
