@@ -1,6 +1,8 @@
 using RabiRiichi.Core;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+
 
 namespace RabiRiichiTests.Scenario {
     public class ScenarioBuilder {
@@ -16,6 +18,7 @@ namespace RabiRiichiTests.Scenario {
                 config.playerCount = playerCount;
             }
 
+            /// <summary> 覆盖当前config，但保留setup和actionCenter </summary>
             public GameConfigBuilder OverwriteConfig(GameConfig config) {
                 config.setup = this.config.setup;
                 config.actionCenter = this.config.actionCenter;
@@ -23,46 +26,49 @@ namespace RabiRiichiTests.Scenario {
                 return this;
             }
 
-            public GameConfigBuilder SetPlayerCount(int playerCount) {
-                config.playerCount = playerCount;
-                return this;
-            }
-
+            /// <summary> 设置番缚，默认为1 </summary>
             public GameConfigBuilder SetMinHan(int minHan) {
                 config.minHan = minHan;
                 return this;
             }
 
+            /// <summary> 设置初始点，默认为25000 </summary>
             public GameConfigBuilder SetInitialPoints(int initialPoints) {
                 config.initialPoints = initialPoints;
                 return this;
             }
 
+            /// <summary> 设置立直棒点数，默认为1000 </summary>
             public GameConfigBuilder SetRiichiPoints(int riichiPoints) {
                 config.riichiPoints = riichiPoints;
                 return this;
             }
 
+            /// <summary> 设置本场棒总点数，默认为300 </summary>
             public GameConfigBuilder SetHonbaPoints(int honbaPoints) {
                 config.honbaPoints = honbaPoints;
                 return this;
             }
 
+            /// <summary> 设置终局点数，默认为30000 </summary>
             public GameConfigBuilder SetFinishPoints(int finishPoints) {
                 config.finishPoints = finishPoints;
                 return this;
             }
 
+            /// <summary> 是否允许食断，默认允许 </summary>
             public GameConfigBuilder SetAllowKuitan(bool allowKuitan) {
                 config.allowKuitan = allowKuitan;
                 return this;
             }
 
+            /// <summary> 总局数，默认东风战 </summary>
             public GameConfigBuilder SetTotalRound(int totalRound) {
                 config.totalRound = totalRound;
                 return this;
             }
 
+            /// <summary> 设置随机种子，默认为当前时间 </summary>
             public GameConfigBuilder SetSeed(int? seed) {
                 config.seed = seed;
                 return this;
@@ -88,6 +94,7 @@ namespace RabiRiichiTests.Scenario {
                 public readonly Tiles tiles;
                 public readonly int fuuroIndex;
                 public readonly int fromPlayer;
+                public bool IsClosed => fuuroIndex == -1;
 
                 public MenInfo(Tiles tiles, int fuuroIndex, int fromPlayer) {
                     this.tiles = tiles;
@@ -102,33 +109,33 @@ namespace RabiRiichiTests.Scenario {
             private Tiles freeTiles;
             private List<MenInfo> called = new();
 
+            /// <summary> 设置点数 </summary>
             public PlayerHandBuilder SetPoints(int points) {
                 this.points = points;
                 return this;
             }
 
+            /// <summary> 设置是否门清，默认按照是否有副露来计算 </summary>
             public PlayerHandBuilder SetMenzen(bool menzen) {
                 this.menzen = menzen;
                 return this;
             }
 
+            /// <summary> 设置立直牌，默认不立直 </summary>
             public PlayerHandBuilder SetRiichiTile(Tile riichiTile, bool? wRiichi = null) {
                 this.riichiTile = riichiTile;
                 this.wRiichi = wRiichi;
                 return this;
             }
 
-            public PlayerHandBuilder SetWRiichi(bool wRiichi) {
-                this.wRiichi = wRiichi;
-                return this;
-            }
-
+            /// <summary> 设置手牌 </summary>
             public PlayerHandBuilder SetFreeTiles(string freeTiles) {
                 this.freeTiles = new Tiles(freeTiles);
                 return this;
             }
 
-            public PlayerHandBuilder SetCalled(string called, int fuuroIndex = -1, int fromPlayer = -1) {
+            /// <summary> 添加一个面子 </summary>
+            public PlayerHandBuilder AddCalled(string called, int fuuroIndex = -1, int fromPlayer = -1) {
                 if (this.called == null) {
                     this.called = new List<MenInfo>();
                 }
@@ -143,6 +150,8 @@ namespace RabiRiichiTests.Scenario {
                 }
                 if (menzen.HasValue) {
                     player.hand.menzen = menzen.Value;
+                } else {
+                    player.hand.menzen = called?.Any(x => !x.IsClosed) ?? false;
                 }
                 if (riichiTile.HasValue) {
                     // TODO: Create a wall for testing
@@ -168,6 +177,11 @@ namespace RabiRiichiTests.Scenario {
         }
         #endregion
 
+        #region Wall
+        public class WallBuilder {
+            private readonly Tiles remaining;
+        }
+        #endregion
         public ScenarioBuilder(int playerCount) {
             configBuilder = new GameConfigBuilder(playerCount);
             playerHandBuilders = new PlayerHandBuilder[playerCount];
