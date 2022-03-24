@@ -8,10 +8,12 @@ namespace RabiRiichi.Event.InGame.Listener {
 
         public static Task ExecuteDealerFirstTurn(DealerFirstTurnEvent ev) {
             var freeTiles = ev.player.hand.freeTiles;
-            var lastTile = freeTiles[^1];
-            freeTiles.RemoveAt(freeTiles.Count - 1);
+            var incoming = ev.incoming;
+            freeTiles.Remove(incoming);
+            incoming.player = null;
+            incoming.source = TileSource.Wall;
             foreach (var resolver in GetDealerFirstTurnResolvers(ev.game)) {
-                resolver.Resolve(ev.player, lastTile, ev.waitEvent.inquiry);
+                resolver.Resolve(ev.player, incoming, ev.waitEvent.inquiry);
             }
             ev.waitEvent.inquiry.GetByPlayerId(ev.playerId).DisableSkip();
             DrawTileListener.AddActionHandler(ev.waitEvent, DiscardReason.Draw);
