@@ -108,6 +108,9 @@ namespace RabiRiichiTests.Scenario {
             private bool? wRiichi;
             private Tiles freeTiles;
             private List<MenInfo> called = new();
+            private bool? isTempFuriten;
+            private bool? isRiichiFuriten;
+            private bool? isDiscardFuriten;
 
             /// <summary> 设置点数 </summary>
             public PlayerHandBuilder SetPoints(int points) {
@@ -118,6 +121,24 @@ namespace RabiRiichiTests.Scenario {
             /// <summary> 设置是否门清，默认按照是否有副露来计算 </summary>
             public PlayerHandBuilder SetMenzen(bool menzen) {
                 this.menzen = menzen;
+                return this;
+            }
+
+            /// <summary> 设置是否立直振听，默认没有 </summary>
+            public PlayerHandBuilder SetRiichiFuriten(bool isFuriten) {
+                this.isRiichiFuriten = isFuriten;
+                return this;
+            }
+
+            /// <summary> 设置是否同巡振听，默认没有 </summary>
+            public PlayerHandBuilder SetTempFuriten(bool isFuriten) {
+                this.isTempFuriten = isFuriten;
+                return this;
+            }
+
+            /// <summary> 设置是否舍牌振听，默认没有 </summary>
+            public PlayerHandBuilder SetDiscardFuriten(bool isFuriten) {
+                this.isDiscardFuriten = isFuriten;
                 return this;
             }
 
@@ -152,6 +173,15 @@ namespace RabiRiichiTests.Scenario {
                     player.hand.menzen = menzen.Value;
                 } else {
                     player.hand.menzen = called?.Any(x => !x.IsClosed) ?? false;
+                }
+                if (isTempFuriten.HasValue) {
+                    player.hand.isTempFuriten = isTempFuriten.Value;
+                }
+                if (isRiichiFuriten.HasValue) {
+                    player.hand.isRiichiFuriten = isRiichiFuriten.Value;
+                }
+                if (isDiscardFuriten.HasValue) {
+                    player.hand.isDiscardFuriten = isDiscardFuriten.Value;
                 }
                 if (riichiTile.HasValue) {
                     // TODO: Create a wall for testing
