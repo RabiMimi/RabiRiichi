@@ -55,10 +55,10 @@ namespace RabiRiichi.Event.InGame.Listener {
                 var option = action.chosen as ChooseTileActionOption;
                 if (action is RiichiAction) {
                     eventBuilder.AddEvent(
-                        new RiichiEvent(ev, action.playerId, option.tile, reason));
+                        new RiichiEvent(ev, action.playerId, option.tile, action.defaultTile, reason));
                 } else {
                     eventBuilder.AddEvent(
-                        new DiscardTileEvent(ev, action.playerId, option.tile, reason));
+                        new DiscardTileEvent(ev, action.playerId, option.tile, action.defaultTile, reason));
                 }
             });
             ev.inquiry.AddHandler<KanAction>((action) => {

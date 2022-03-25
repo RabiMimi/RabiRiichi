@@ -8,9 +8,23 @@ namespace RabiRiichiTests.Util {
         public readonly int[] source = new int[] { 1, 1, 4, 5, 1, 4 };
 
         [TestMethod]
+        public void TestMaxBy() {
+            Assert.AreEqual(1, source.MaxBy(x => -x));
+            Assert.ThrowsException<InvalidOperationException>(() => Enumerable.Empty<int>().MaxBy(x => x));
+        }
+
+        [TestMethod]
         public void TestAll() {
             Assert.IsTrue(source.All((x, idx) => x == 1 || idx > 1));
             Assert.IsFalse(source.All((x, idx) => x == 1 || idx > 2));
+        }
+
+        [TestMethod]
+        public void TestSequenceEqualAfterSort() {
+            var target = new int[] { 4, 4, 5, 1, 1, 1 };
+            Assert.IsTrue(source.SequenceEqualAfterSort(target));
+            target[1] = 1;
+            Assert.IsFalse(source.SequenceEqualAfterSort(target));
         }
 
         [TestMethod]
@@ -42,12 +56,6 @@ namespace RabiRiichiTests.Util {
         public void TestInvalidSubset() {
             Assert.AreEqual(0, source.Subset(-1).Count());
             Assert.AreEqual(0, source.Subset(source.Length + 1).Count());
-        }
-
-        [TestMethod]
-        public void TestMaxBy() {
-            Assert.AreEqual(1, source.MaxBy(x => -x));
-            Assert.ThrowsException<InvalidOperationException>(() => Enumerable.Empty<int>().MaxBy(x => x));
         }
     }
 }

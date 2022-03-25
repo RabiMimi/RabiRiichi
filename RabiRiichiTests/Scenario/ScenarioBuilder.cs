@@ -77,6 +77,27 @@ namespace RabiRiichiTests.Scenario {
             return ret;
         }
 
+        /// <summary> 等待玩家i的回合，并对其中的询问操作全部采用默认选项 </summary>
+        public async Task<ScenarioInquiryMatcher> WaitPlayerTurn(int playerId) {
+            var listener = new EventListener<IncreaseJunEvent>(game.eventBus);
+            var tcs = new TaskCompletionSource();
+            listener.EarlyAfter((ev) => {
+                if (ev.playerId == playerId) {
+                    tcs.SetResult();
+                    listener.Cancel();
+                }
+                return Task.CompletedTask;
+            });
+            for (int i = 0; i < 10; i++) {
+                var inquiry = await WaitInquiry();
+                if (tcs.Task.IsCompleted) {
+                    return inquiry;
+                }
+                inquiry.Finish();
+            }
+            throw new Exception($"Player {playerId} did not start their turn in 10 inquiries");
+        }
+
         /// <summary> 测试现有事件并忽略其中的询问操作。（令所有用户选择默认操作） </summary>
         /// <param name="skipCount"> 最多跳过多少询问操作 </param>
         public async Task Resolve(int skipCount = 1) {

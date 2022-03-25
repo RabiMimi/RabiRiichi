@@ -76,6 +76,9 @@ namespace RabiRiichi.Event.InGame.Listener {
                     return Task.CompletedTask;
                 }
                 var tile = player.hand.discarded.First().tile;
+                if (!tile.IsWind) {
+                    return Task.CompletedTask;
+                }
                 if (wind.IsEmpty) {
                     wind = tile;
                 } else if (!wind.IsSame(tile)) {

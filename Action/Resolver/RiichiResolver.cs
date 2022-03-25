@@ -34,7 +34,7 @@ namespace RabiRiichi.Action.Resolver {
             }
             var handRiichiTiles = hand.freeTiles.Where(t => riichiTiles.Contains(t.tile.WithoutDora)).ToList();
             if (handRiichiTiles.Count > 0) {
-                output.Add(new RiichiAction(player.id, handRiichiTiles, null));
+                output.Add(new RiichiAction(player.id, handRiichiTiles, incoming));
                 return true;
             }
             return false;

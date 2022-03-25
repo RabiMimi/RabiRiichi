@@ -39,9 +39,6 @@ namespace RabiRiichiTests.Scenario.Tests {
         [TestMethod]
         public async Task NonDealerChiihou() {
             var scenario = new ScenarioBuilder()
-                .WithPlayer(0, (playerBuilder) => {
-                    playerBuilder.SetFreeTiles("149p258s369m12347z");
-                })
                 .WithPlayer(1, (playerBuilder) => {
                     playerBuilder.SetFreeTiles("1112345678999s");
                 })
@@ -84,14 +81,11 @@ namespace RabiRiichiTests.Scenario.Tests {
             (await scenario.WaitInquiry()).ForPlayer(0, (playerInquiry) => {
                 playerInquiry
                     .AssertAction<PlayTileAction>()
-                    .ApplyAction<RiichiAction>(12)
+                    .ChooseTile<RiichiAction>("7s")
                     .AssertNoMoreActions();
             }).AssertAutoFinish();
 
-            (await scenario.WaitInquiry()).Finish();
-            (await scenario.WaitInquiry()).Finish();
-            (await scenario.WaitInquiry()).Finish();
-            (await scenario.WaitInquiry()).ForPlayer(0, (playerInquiry) => {
+            (await scenario.WaitPlayerTurn(0)).ForPlayer(0, (playerInquiry) => {
                 playerInquiry
                     .AssertAction<PlayTileAction>()
                     .ApplyAction<TsumoAction>()
@@ -100,7 +94,7 @@ namespace RabiRiichiTests.Scenario.Tests {
 
             await scenario.AssertEvent<AgariEvent>((ev) => {
                 ev.agariInfos
-                    .AssertTsumo(1)
+                    .AssertTsumo(0)
                     .AssertScore(4, 25)
                     .AssertYaku<DoubleRiichi>(han: 2)
                     .AssertYaku<Chiitoitsu>(han: 2);

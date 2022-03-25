@@ -31,6 +31,10 @@ namespace System.Linq {
             return ret;
         }
 
+        public static bool SequenceEqualAfterSort<TSource>(this IEnumerable<TSource> source, IEnumerable<TSource> other) {
+            return source.OrderBy(x => x).SequenceEqual(other.OrderBy(x => x));
+        }
+
         #region Subset
 
         private static List<int[]>[] subsetIndices;

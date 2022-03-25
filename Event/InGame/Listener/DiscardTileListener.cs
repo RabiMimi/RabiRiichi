@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 namespace RabiRiichi.Event.InGame.Listener {
     public static class DiscardTileListener {
         public static Task ExecuteDiscardTile(DiscardTileEvent ev) {
+            if (ev.incoming != null && ev.tile != ev.incoming) {
+                ev.player.hand.Add(ev.incoming);
+            }
             ev.player.hand.Play(ev.tile, ev.reason);
             if (ev is RiichiEvent) {
                 ev.tile.riichi = true;

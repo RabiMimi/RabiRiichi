@@ -39,7 +39,29 @@ namespace RabiRiichiTests.Scenario {
                 => ApplyAction(true, matcher);
 
             public ScenarioPlayerInquiryMatcher ApplyAction<T>(int response, Predicate<T> matcher = null) where T : PlayerAction<int>
-                => ApplyAction(response, matcher);
+                => ApplyAction<T, int>(response, matcher);
+
+            public ScenarioPlayerInquiryMatcher ChooseTile<T>(string response, Predicate<T> matcher = null) where T : ChooseTileAction {
+                var tile = new Tile(response);
+                var action = parent.FindAction(playerId, matcher);
+                Assert.IsNotNull(action);
+                int index = action.choices.FindIndex(x => (x as ChooseTileActionOption).tile.tile == tile);
+                Assert.IsTrue(index >= 0);
+                return ApplyAction(index, matcher);
+            }
+
+            public ScenarioPlayerInquiryMatcher ChooseTiles<T>(string response, Predicate<T> matcher = null) where T : ChooseTilesAction {
+                var tiles = new Tiles(response);
+                var action = parent.FindAction(playerId, matcher);
+                Assert.IsNotNull(action);
+                int index = action.choices.FindIndex(x =>
+                    (x as ChooseTilesActionOption).tiles
+                        .Select(t => t.tile)
+                        .SequenceEqualAfterSort(tiles));
+                Assert.IsTrue(index >= 0);
+                return ApplyAction(index, matcher);
+            }
+
 
             public ScenarioPlayerInquiryMatcher AssertNoMoreActions() {
                 parent.AssertNoMoreActions(playerId);
@@ -66,10 +88,11 @@ namespace RabiRiichiTests.Scenario {
             return this;
         }
 
-        private IPlayerAction FindAction<T>(int playerId, Predicate<T> matcher = null) where T : IPlayerAction
-            => inquiry.GetByPlayerId(playerId).actions.Find(a => {
-                if (a.GetType() != typeof(T))
+        private T FindAction<T>(int playerId, Predicate<T> matcher = null, bool includeSubtypes = false) where T : IPlayerAction
+            => (T)inquiry.GetByPlayerId(playerId).actions.Find(a => {
+                if (includeSubtypes ? a is not T : a.GetType() != typeof(T)) {
                     return false;
+                }
                 return matcher == null || matcher((T)a);
             });
 
@@ -136,6 +159,9 @@ namespace RabiRiichiTests.Scenario {
         }
 
         public void OnInquiry(MultiPlayerInquiry inquiry) {
+            foreach (var playerInquiry in inquiry.playerInquiries) {
+                OnMessage(inquiry.game, playerInquiry.playerId, playerInquiry);
+            }
             currentInquirySource = new();
             nextInquirySource.SetResult(new ScenarioInquiryMatcher(inquiry, () => {
                 nextInquirySource = new();
