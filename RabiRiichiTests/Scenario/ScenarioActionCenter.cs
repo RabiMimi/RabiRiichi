@@ -38,6 +38,9 @@ namespace RabiRiichiTests.Scenario {
             public ScenarioPlayerInquiryMatcher ApplyAction<T>(Predicate<T> matcher = null) where T : PlayerAction<bool>
                 => ApplyAction(true, matcher);
 
+            public ScenarioPlayerInquiryMatcher ApplyAction<T>(int response, Predicate<T> matcher = null) where T : PlayerAction<int>
+                => ApplyAction(response, matcher);
+
             public ScenarioPlayerInquiryMatcher AssertNoMoreActions() {
                 parent.AssertNoMoreActions(playerId);
                 return this;
