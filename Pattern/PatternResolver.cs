@@ -30,7 +30,7 @@ namespace RabiRiichi.Pattern {
             public List<MenLike> group;
             public Hand hand;
             public GameTile incoming;
-            public readonly HashSet<BasePattern> baseSuccess = new();
+            public BasePattern basePattern;
             public readonly HashSet<StdPattern> stdSuccess = new();
             public readonly HashSet<StdPattern> stdFailure = new();
         }
@@ -45,7 +45,7 @@ namespace RabiRiichi.Pattern {
             }
 
             // 检查底和
-            if (!pattern.basePatterns.Any((basePattern) => context.baseSuccess.Contains(basePattern))) {
+            if (!pattern.basePatterns.Contains(context.basePattern)) {
                 // 不满足底和
                 context.stdFailure.Add(pattern);
                 return false;
@@ -80,39 +80,36 @@ namespace RabiRiichi.Pattern {
         /// 检查是否和牌并计算得分最高的牌型
         /// </summary>
         public ScoreStorage ResolveMaxScore(Hand hand, GameTile incoming, bool applyBonus) {
-            var groupList = new List<List<MenLike>>();
             var context = new ResolutionContext {
                 hand = hand,
                 incoming = incoming
             };
 
-            foreach (var pattern in basePatterns) {
-                if (pattern.Resolve(hand, incoming, out var groups)) {
-                    context.baseSuccess.Add(pattern);
-                    groupList.AddRange(groups);
+            IEnumerable<ScoreStorage> CalculateScores(BasePattern pattern) {
+                if (!pattern.Resolve(hand, incoming, out var groups)) {
+                    yield break;
                 }
-            }
-
-            if (groupList.Count == 0) {
-                return null;
-            }
-
-            var maxScore = groupList.Max(group => {
-                context.stdSuccess.Clear();
-                context.stdFailure.Clear();
-                context.group = group;
-                var scores = new ScoreStorage();
-                foreach (var pattern in stdPatterns) {
-                    ResolveStdPattern(context, pattern, scores);
-                }
-                if (applyBonus) {
-                    foreach (var pattern in bonusPatterns) {
-                        ResolveStdPattern(context, pattern, scores);
+                context.basePattern = pattern;
+                foreach (var group in groups) {
+                    context.group = group;
+                    context.stdSuccess.Clear();
+                    context.stdFailure.Clear();
+                    var scores = new ScoreStorage();
+                    foreach (var stdPattern in stdPatterns) {
+                        ResolveStdPattern(context, stdPattern, scores);
+                        if (applyBonus) {
+                            foreach (var bonusPattern in bonusPatterns) {
+                                ResolveStdPattern(context, bonusPattern, scores);
+                            }
+                        }
                     }
+                    scores.Calc();
+                    yield return scores;
                 }
-                scores.Calc();
-                return scores;
-            });
+            }
+
+            var maxScore = basePatterns.SelectMany(CalculateScores).Max();
+
             return maxScore;
         }
 

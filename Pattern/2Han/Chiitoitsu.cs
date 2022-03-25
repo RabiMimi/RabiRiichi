@@ -3,8 +3,8 @@ using System.Collections.Generic;
 
 namespace RabiRiichi.Pattern {
     public class Chiitoitsu : StdPattern {
-        public Chiitoitsu(Base72 allBasePatterns) {
-            BaseOn(allBasePatterns);
+        public Chiitoitsu(Base72 base72) {
+            BaseOn(base72);
         }
 
         public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
