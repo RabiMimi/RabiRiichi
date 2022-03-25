@@ -43,6 +43,7 @@ namespace RabiRiichiTests.Scenario {
                 Assert.IsTrue(inquiry.hasExecuted);
             } else {
                 Assert.IsFalse(inquiry.hasExecuted);
+                inquiry.Finish();
             }
             onFinish();
             return this;
