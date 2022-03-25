@@ -599,7 +599,10 @@ namespace RabiRiichiTests.Scenario {
         public ScenarioBuilder SetFirstJun() {
             isFirstJun = true;
             foreach (var playerBuilder in playerHandBuilders) {
-                playerBuilder.SetDiscarded(0).SetMenzen(true);
+                if (playerBuilder.discardedNum > 1) {
+                    playerBuilder.SetDiscarded(0);
+                }
+                playerBuilder.SetMenzen(true);
             }
             wallBuilder.SetRevealedDoraCount(1);
             return this;

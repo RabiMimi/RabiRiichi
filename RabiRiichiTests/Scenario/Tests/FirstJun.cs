@@ -19,7 +19,8 @@ namespace RabiRiichiTests.Scenario.Tests {
                 .Start(0);
 
             (await scenario.WaitInquiry()).ForPlayer(0, (playerInquiry) => {
-                playerInquiry.AssertAction<RiichiAction>()
+                playerInquiry
+                    .AssertAction<RiichiAction>()
                     .AssertAction<PlayTileAction>()
                     .ApplyAction<TsumoAction>()
                     .AssertNoMoreActions();
