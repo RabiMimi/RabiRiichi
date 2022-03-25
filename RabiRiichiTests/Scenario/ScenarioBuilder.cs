@@ -427,14 +427,25 @@ namespace RabiRiichiTests.Scenario {
                 playerBuilders = players.ToList();
             }
 
-            /// <summary> 保留一些牌。这些牌会被放在牌山最前。 </summary>
+            /// <summary>
+            /// 保留一些牌。
+            /// 这些牌会被放在牌山最前，下标为0的是第一张牌。
+            /// </summary>
             public WallBuilder Reserve(IEnumerable<Tile> tiles) {
                 reserved.AddRange(tiles);
                 return this;
             }
-            /// <summary> 保留一些牌。这些牌会被放在牌山最前。 </summary>
+
+            /// <summary>
+            /// 保留一些牌。
+            /// 这些牌会被放在牌山最前，下标为0的是第一张牌。
+            /// </summary>
             public WallBuilder Reserve(string tiles) => Reserve(new Tiles(tiles));
-            /// <summary> 保留一些牌。这些牌会被放在牌山最前。 </summary>
+
+            /// <summary>
+            /// 保留一张牌。
+            /// 这张牌会被放在牌山最前。
+            /// </summary>
             public WallBuilder Reserve(Tile tile) => Reserve(Enumerable.Repeat(tile, 1));
 
             /// <summary> 添加宝牌。第一个宝牌的下标为0。 </summary>
@@ -572,7 +583,8 @@ namespace RabiRiichiTests.Scenario {
                 for (int i = rinshan.Count; i < Wall.NUM_RINSHAN; i++) {
                     wall.rinshan.Add(DrawNext());
                 }
-                wall.remaining.InsertRange(0, allTiles);
+                wall.remaining.AddRange(allTiles);
+                wall.remaining.Reverse();
                 return wall;
             }
         }
