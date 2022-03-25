@@ -1,22 +1,102 @@
 using RabiRiichi.Core;
+using RabiRiichi.Event;
 using RabiRiichi.Event.InGame;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+
 
 namespace RabiRiichiTests.Scenario {
+    public class Scenario {
+        private readonly Game game;
+        private readonly ScenarioActionCenter actionCenter;
+        private readonly List<Predicate<EventBase>> eventMatchers = new();
+        private readonly List<EventBase> events = new();
+
+        public Scenario(Game game) {
+            this.game = game;
+            actionCenter = (ScenarioActionCenter)game.config.actionCenter;
+        }
+
+        /// <summary> 获取游戏实例 </summary>
+        public Scenario WithGame(Action<Game> action) {
+            action(game);
+            return this;
+        }
+
+        /// <summary> 以玩家playerId的回合开始游戏 </summary>
+        public Scenario Start(int playerId) {
+            game.Start().ConfigureAwait(false);
+            game.eventBus.Subscribe<EventBase>((ev) => {
+                events.Add(ev);
+                return Task.CompletedTask;
+            }, EventPriority.After);
+            if (game.IsFirstJun && game.Dealer.id == playerId) {
+                // First jun of dealer
+                game.mainQueue.Queue(new IncreaseJunEvent(game.initialEvent, playerId));
+                game.mainQueue.Queue(new DealerFirstTurnEvent(game.initialEvent, playerId, game.Dealer.hand.freeTiles[^1]));
+
+            } else {
+                // Otherwise
+                game.mainQueue.Queue(new NextPlayerEvent(game.initialEvent, game.PrevPlayerId(playerId)));
+            }
+            return this;
+        }
+
+        /// <summary> 测试是否有对应的事件发生 </summary>
+        public Scenario AssertEvent<T>(Predicate<T> predicate = null) where T : EventBase {
+            eventMatchers.Add((ev) => {
+                if (ev is T tEv) {
+                    return predicate?.Invoke(tEv) ?? true;
+                }
+                return false;
+            });
+            return this;
+        }
+
+        /// <summary> 立即测试现有事件是否匹配 </summary>
+        public Scenario ResolveImmediately() {
+            foreach (var matcher in eventMatchers) {
+                if (!events.Any((e) => matcher(e))) {
+                    throw new Exception($"No event matched: {string.Join(", ", events.Select(ev => ev.GetType().Name))}");
+                }
+            }
+            eventMatchers.Clear();
+            events.Clear();
+            return this;
+        }
+
+        /// <summary> 等待下一次询问操作，并强制匹配现有的事件 </summary>
+        public async Task<ScenarioInquiryMatcher> WaitInquiry() {
+            var ret = await actionCenter.NextInquiry;
+            ResolveImmediately();
+            return ret;
+        }
+
+        /// <summary> 测试现有事件并忽略其中的询问操作。（令所有用户选择默认操作） </summary>
+        /// <param name="skipCount"> 最多跳过多少询问操作 </param>
+        public async Task Resolve(int skipCount = 0) {
+            for (var i = 0; i < skipCount; i++) {
+                (await actionCenter.NextInquiry).Finish();
+            }
+            ResolveImmediately();
+        }
+    }
+
     public class ScenarioBuilder {
         #region GameConfig
         public class GameConfigBuilder {
-            private GameConfig config = new() {
-                setup = new ScenarioSetup(),
-                actionCenter = new ScenarioActionCenter(),
-                seed = 114514,
-            };
-            public ScenarioActionCenter actionCenter => (ScenarioActionCenter)config.actionCenter;
+            private GameConfig config;
 
             public GameConfigBuilder(int playerCount) {
                 config.playerCount = playerCount;
+                var actionCenter = new ScenarioActionCenter();
+                config = new() {
+                    setup = new ScenarioSetup(actionCenter),
+                    actionCenter = actionCenter,
+                    seed = 114514,
+                };
             }
 
             /// <summary> 覆盖当前config，但保留setup和actionCenter </summary>
@@ -81,7 +161,6 @@ namespace RabiRiichiTests.Scenario {
         }
 
         private readonly GameConfigBuilder configBuilder;
-        private ScenarioActionCenter actionCenter => configBuilder.actionCenter;
 
         public ScenarioBuilder WithConfig(Action<GameConfigBuilder> action) {
             action(configBuilder);
@@ -507,8 +586,6 @@ namespace RabiRiichiTests.Scenario {
         }
         #endregion
 
-        private Game game;
-
         public ScenarioBuilder(int playerCount) {
             configBuilder = new GameConfigBuilder(playerCount);
             playerHandBuilders = new PlayerHandBuilder[playerCount];
@@ -529,8 +606,8 @@ namespace RabiRiichiTests.Scenario {
         }
 
         /// <summary> 根据设置的状态创建游戏实例 </summary>
-        public ScenarioBuilder Setup() {
-            game = new Game(configBuilder.Build());
+        public Scenario Build() {
+            var game = new Game(configBuilder.Build());
             gameStateBuilder.Setup(game.info);
             for (int i = 0; i < playerHandBuilders.Length; i++) {
                 var player = game.GetPlayer(i);
@@ -538,28 +615,7 @@ namespace RabiRiichiTests.Scenario {
                     game.IsFirstJun && player.IsDealer ? Game.HAND_SIZE + 1 : Game.HAND_SIZE);
             }
             wallBuilder.Setup(game.wall);
-            return this;
-        }
-
-        /// <summary> 以玩家playerId的回合开始游戏 </summary>
-        public ScenarioBuilder Start(int playerId) {
-            game.Start().ConfigureAwait(false);
-            if (game.IsFirstJun && game.Dealer.id == playerId) {
-                // First jun of dealer
-                game.mainQueue.Queue(new IncreaseJunEvent(game.initialEvent, playerId));
-                game.mainQueue.Queue(new DealerFirstTurnEvent(game.initialEvent, playerId, game.Dealer.hand.freeTiles[^1]));
-
-            } else {
-                // Otherwise
-                game.mainQueue.Queue(new NextPlayerEvent(game.initialEvent, game.PrevPlayerId(playerId)));
-            }
-            return this;
-        }
-
-        /// <summary> 获取游戏实例 </summary>
-        public ScenarioBuilder WithGame(Action<Game> action) {
-            action(game);
-            return this;
+            return new Scenario(game);
         }
     }
 }
