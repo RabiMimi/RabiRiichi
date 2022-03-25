@@ -30,12 +30,12 @@ namespace RabiRiichiTests.Scenario {
                 return this;
             }
 
-            public ScenarioPlayerInquiryMatcher ApplyAction<T, R>(R response, Predicate<T> matcher = null) where T : IPlayerAction {
+            public ScenarioPlayerInquiryMatcher ApplyAction<T, R>(R response, Predicate<T> matcher = null) where T : PlayerAction<R> {
                 parent.ApplyAction(playerId, response, matcher);
                 return this;
             }
 
-            public ScenarioPlayerInquiryMatcher ApplyAction<T>(Predicate<T> matcher = null) where T : IPlayerAction
+            public ScenarioPlayerInquiryMatcher ApplyAction<T>(Predicate<T> matcher = null) where T : PlayerAction<bool>
                 => ApplyAction(true, matcher);
 
             public ScenarioPlayerInquiryMatcher AssertNoMoreActions() {
@@ -78,7 +78,7 @@ namespace RabiRiichiTests.Scenario {
             return this;
         }
 
-        public ScenarioInquiryMatcher ApplyAction<T, R>(int playerId, R response, Predicate<T> matcher = null) where T : IPlayerAction {
+        public ScenarioInquiryMatcher ApplyAction<T, R>(int playerId, R response, Predicate<T> matcher = null) where T : PlayerAction<R> {
             var action = FindAction(playerId, matcher);
             var index = inquiry.GetByPlayerId(playerId).actions.IndexOf(action);
             Assert.IsNotNull(action);
@@ -87,7 +87,7 @@ namespace RabiRiichiTests.Scenario {
             return this;
         }
 
-        public ScenarioInquiryMatcher ApplyAction<T>(int playerId, Predicate<T> matcher = null) where T : IPlayerAction
+        public ScenarioInquiryMatcher ApplyAction<T>(int playerId, Predicate<T> matcher = null) where T : PlayerAction<bool>
             => ApplyAction(playerId, true, matcher);
 
         public ScenarioInquiryMatcher AssertAutoFinish(bool autoFinish = true) {
