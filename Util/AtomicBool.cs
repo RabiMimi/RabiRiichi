@@ -1,7 +1,7 @@
 using System.Threading;
 
 namespace RabiRiichi.Util {
-    public struct AtomicBool {
+    public class AtomicBool {
         private const int FALSE = 0;
         private const int TRUE = 1;
         private int value;

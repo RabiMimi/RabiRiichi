@@ -69,6 +69,9 @@ namespace RabiRiichi.Core {
                 players[i] = new Player(i, this);
             }
 
+            // Queue initial event
+            mainQueue.Queue(initialEvent);
+
             // Custom setup
             config.setup.Setup(diContainer);
         }
@@ -94,7 +97,6 @@ namespace RabiRiichi.Core {
             info.phase = GamePhase.Running;
 
             // 游戏逻辑
-            mainQueue.Queue(initialEvent);
             await mainQueue.ProcessQueue();
 
             // 结束游戏

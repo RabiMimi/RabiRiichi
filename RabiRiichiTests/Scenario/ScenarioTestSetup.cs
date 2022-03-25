@@ -11,18 +11,12 @@ namespace RabiRiichiTests.Scenario {
             this.actionCenter = actionCenter;
         }
 
-        private static Task CancelInitGameEvent(InitGameEvent ev) {
-            ev.Cancel();
-            return Task.CompletedTask;
-        }
-
         private Task DelayFinishPlayerAction(WaitPlayerActionEvent ev) {
             return actionCenter.CurrentInquiry;
         }
 
         protected override void RegisterEvents(EventBus eventBus) {
             base.RegisterEvents(eventBus);
-            eventBus.Subscribe<InitGameEvent>(CancelInitGameEvent, EventPriority.Prepare);
             eventBus.Subscribe<WaitPlayerActionEvent>(DelayFinishPlayerAction, EventPriority.After);
         }
     }

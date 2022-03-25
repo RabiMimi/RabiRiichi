@@ -27,20 +27,21 @@ namespace RabiRiichiTests.Scenario {
 
         /// <summary> 以玩家playerId的回合开始游戏 </summary>
         public Scenario Start(int playerId) {
-            game.Start().ConfigureAwait(false);
+            // Clear events, so that the initial event will not be processed
+            game.mainQueue.ClearEvents();
             game.eventBus.Subscribe<EventBase>((ev) => {
                 events.Add(ev);
                 return Task.CompletedTask;
-            }, EventPriority.After);
+            }, EventPriority.Broadcast);
             if (game.IsFirstJun && game.Dealer.id == playerId) {
                 // First jun of dealer
                 game.mainQueue.Queue(new IncreaseJunEvent(game.initialEvent, playerId));
                 game.mainQueue.Queue(new DealerFirstTurnEvent(game.initialEvent, playerId, game.Dealer.hand.freeTiles[^1]));
-
             } else {
                 // Otherwise
                 game.mainQueue.Queue(new NextPlayerEvent(game.initialEvent, game.PrevPlayerId(playerId)));
             }
+            game.Start().ConfigureAwait(false);
             return this;
         }
 
