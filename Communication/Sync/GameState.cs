@@ -31,6 +31,19 @@ namespace RabiRiichi.Communication.Sync {
         }
     }
 
+    public class WallState : IRabiMessage {
+        public RabiMessageType msgType => RabiMessageType.Unnecessary;
+        [RabiBroadcast] public readonly List<GameTile> doras;
+        [RabiBroadcast] public readonly int remaining;
+        [RabiBroadcast] public readonly int rinshanRemaining;
+
+        public WallState(Wall wall) {
+            doras = wall.doras.Take(wall.revealedDoraCount).ToList();
+            remaining = wall.NumRemaining;
+            rinshanRemaining = wall.rinshan.Count;
+        }
+    }
+
     public class PlayerState : IRabiPlayerMessage {
         public RabiMessageType msgType => RabiMessageType.Unnecessary;
         public int playerId { get; init; }
@@ -46,7 +59,6 @@ namespace RabiRiichi.Communication.Sync {
             points = player.points;
             hand = new PlayerHandState(player.hand, receiverId);
         }
-
     }
 
     public class GameState : IRabiPlayerMessage {
@@ -55,12 +67,14 @@ namespace RabiRiichi.Communication.Sync {
 
         [RabiBroadcast] public readonly GameConfig config;
         [RabiBroadcast] public readonly GameInfo info;
+        [RabiBroadcast] public readonly WallState wall;
         [RabiBroadcast] public readonly PlayerState[] players;
 
         public GameState(Game game, int playerId) {
             this.playerId = playerId;
             config = game.config;
             info = game.info;
+            wall = new WallState(game.wall);
             players = game.players.Select(p => new PlayerState(p, playerId)).ToArray();
         }
     }
