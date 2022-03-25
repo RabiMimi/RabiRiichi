@@ -124,6 +124,7 @@ namespace RabiRiichi.Core.Setup {
             // Essential
             InitGameEvent.Register(eventBus);
             EventBroadcast.Register(eventBus);
+            SyncGameStateListener.Register(eventBus);
         }
 
         /// <summary> 初始化阶段 </summary>

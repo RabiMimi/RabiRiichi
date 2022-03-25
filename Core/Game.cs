@@ -4,6 +4,7 @@ using RabiRiichi.Communication;
 using RabiRiichi.Communication.Json;
 using RabiRiichi.Communication.Sync;
 using RabiRiichi.Event;
+using RabiRiichi.Event.InGame;
 using RabiRiichi.Pattern;
 using RabiRiichi.Util;
 using System;
@@ -103,11 +104,8 @@ namespace RabiRiichi.Core {
         #endregion
 
         #region Communication
-        public void SyncGameStateToPlayer(int playerId) {
-            using (eventBus.eventProcessingLock.Lock(EventBus.EVENT_PROCESSING_TIMEOUT)) {
-                var state = new GameState(this, playerId);
-                SendMessage(playerId, state);
-            }
+        public Task SyncGameStateToPlayer(int playerId) {
+            return eventBus.Process(new SyncGameStateEvent(initialEvent, playerId), true);
         }
 
         private readonly Mutex messageMutex = new();
