@@ -2,7 +2,6 @@
 using RabiRiichi.Action;
 using RabiRiichi.Communication;
 using RabiRiichi.Communication.Json;
-using RabiRiichi.Communication.Sync;
 using RabiRiichi.Event;
 using RabiRiichi.Event.InGame;
 using RabiRiichi.Pattern;
@@ -34,7 +33,6 @@ namespace RabiRiichi.Core {
             }
             initialEvent = new(this);
             var rand = new Rand((int)(config.seed ?? (DateTimeOffset.Now.ToUnixTimeMilliseconds() & 0xffffffff)));
-            players = new Player[config.playerCount];
             var serviceCollection = new ServiceCollection();
 
             // Existing instances
@@ -65,6 +63,12 @@ namespace RabiRiichi.Core {
             json = Get<JsonStringify>();
             mainQueue = new EventQueue(eventBus, true, false);
 
+            // Init Players
+            players = new Player[config.playerCount];
+            for (int i = 0; i < players.Length; i++) {
+                players[i] = new Player(i, this);
+            }
+
             // Custom setup
             config.setup.Setup(diContainer);
         }
@@ -89,11 +93,6 @@ namespace RabiRiichi.Core {
             // 开始游戏
             info.phase = GamePhase.Running;
 
-            // 初始化玩家
-            for (int i = 0; i < players.Length; i++) {
-                players[i] = new Player(i, this);
-            }
-
             // 游戏逻辑
             mainQueue.Queue(initialEvent);
             await mainQueue.ProcessQueue();
@@ -104,7 +103,7 @@ namespace RabiRiichi.Core {
         #endregion
 
         #region Communication
-        public Task SyncGameStateToPlayer(int playerId) {
+        public Task<bool> SyncGameStateToPlayer(int playerId) {
             return eventBus.Process(new SyncGameStateEvent(initialEvent, playerId), true);
         }
 

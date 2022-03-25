@@ -76,7 +76,7 @@ namespace RabiRiichiTests.Scenario {
 
         /// <summary> 测试现有事件并忽略其中的询问操作。（令所有用户选择默认操作） </summary>
         /// <param name="skipCount"> 最多跳过多少询问操作 </param>
-        public async Task Resolve(int skipCount = 0) {
+        public async Task Resolve(int skipCount = 1) {
             for (var i = 0; i < skipCount; i++) {
                 (await actionCenter.NextInquiry).Finish();
             }
@@ -90,9 +90,9 @@ namespace RabiRiichiTests.Scenario {
             private GameConfig config;
 
             public GameConfigBuilder(int playerCount) {
-                config.playerCount = playerCount;
                 var actionCenter = new ScenarioActionCenter();
                 config = new() {
+                    playerCount = playerCount,
                     setup = new ScenarioSetup(actionCenter),
                     actionCenter = actionCenter,
                     seed = 114514,
@@ -206,6 +206,7 @@ namespace RabiRiichiTests.Scenario {
             return this;
         }
 
+        /// <summary> 设置场风，局数，和本场数。默认为东1局0本场。 </summary>
         public ScenarioBuilder SetRound(Wind bakaze, Wind dealer, int honba = 0) {
             gameStateBuilder.SetRound(bakaze, dealer, honba);
             return this;
@@ -327,8 +328,8 @@ namespace RabiRiichiTests.Scenario {
             /// <param name="reservedDiscarded">自动填充时，禁止出现在舍牌里的牌</param>
             public PlayerHandBuilder SetDiscarded(int count, string discarded = null, string blocked = null)
                 => SetDiscarded(count,
-                    discarded == null ? new Tiles(discarded) : null,
-                    blocked == null ? new Tiles(blocked) : null);
+                    discarded == null ? null : new Tiles(discarded),
+                    blocked == null ? null : new Tiles(blocked));
 
             /// <summary> 设置手牌 </summary>
             public PlayerHandBuilder SetFreeTiles(Tiles freeTiles) {
@@ -371,8 +372,10 @@ namespace RabiRiichiTests.Scenario {
                 if (discarded.Any(x => blockedDiscarded.Contains(x))) {
                     throw new Exception($"P{player.id}: Cannot discard reserved tile");
                 }
+
                 // Set data
                 this.player = player;
+                player.Reset();
                 this.handSize = handSize;
                 if (points.HasValue) {
                     player.points = points.Value;
@@ -520,12 +523,6 @@ namespace RabiRiichiTests.Scenario {
                 // Try draw tiles for each player
                 foreach (var playerBuilder in playerBuilders) {
                     var hand = playerBuilder.player.hand;
-                    // Reset hand
-                    hand.freeTiles.Clear();
-                    hand.discarded.Clear();
-                    hand.called.Clear();
-                    hand.riichiTile = null;
-                    hand.agariTile = null;
 
                     // Draw free tiles
                     foreach (var tile in playerBuilder.freeTiles) {
@@ -586,7 +583,7 @@ namespace RabiRiichiTests.Scenario {
         }
         #endregion
 
-        public ScenarioBuilder(int playerCount) {
+        public ScenarioBuilder(int playerCount = 4) {
             configBuilder = new GameConfigBuilder(playerCount);
             playerHandBuilders = new PlayerHandBuilder[playerCount];
             for (var i = 0; i < playerCount; i++) {
@@ -596,8 +593,10 @@ namespace RabiRiichiTests.Scenario {
             wallBuilder = new WallBuilder(playerHandBuilders);
         }
 
+        private bool isFirstJun = false;
         /// <summary> 将游戏设为第一巡刚开始的状态 </summary>
         public ScenarioBuilder SetFirstJun() {
+            isFirstJun = true;
             foreach (var playerBuilder in playerHandBuilders) {
                 playerBuilder.SetDiscarded(0).SetMenzen(true);
             }
@@ -612,10 +611,15 @@ namespace RabiRiichiTests.Scenario {
             for (int i = 0; i < playerHandBuilders.Length; i++) {
                 var player = game.GetPlayer(i);
                 playerHandBuilders[i].Setup(player,
-                    game.IsFirstJun && player.IsDealer ? Game.HAND_SIZE + 1 : Game.HAND_SIZE);
+                    isFirstJun && player.IsDealer ? Game.HAND_SIZE + 1 : Game.HAND_SIZE);
             }
             wallBuilder.Setup(game.wall);
             return new Scenario(game);
+        }
+
+        /// <summary> 根据设置的状态创建游戏实例，并以playerId的回合开始游戏 </summary>
+        public Scenario Start(int playerId) {
+            return Build().Start(playerId);
         }
     }
 }

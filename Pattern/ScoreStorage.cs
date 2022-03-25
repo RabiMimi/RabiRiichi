@@ -1,10 +1,11 @@
 ﻿using RabiRiichi.Communication;
 using RabiRiichi.Util;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace RabiRiichi.Pattern {
-    public class ScoreStorage : IComparable<ScoreStorage>, IRabiMessage {
+    public class ScoreStorage : IComparable<ScoreStorage>, IEnumerable<Scoring>, IRabiMessage {
         internal class Refrigerator : IDisposable {
             private readonly ScoreStorage scores;
             private readonly bool oldValue;
@@ -158,6 +159,14 @@ namespace RabiRiichi.Pattern {
 
         public int CompareTo(ScoreStorage other) {
             return cachedResult.CompareTo(other.cachedResult);
+        }
+
+        public IEnumerator<Scoring> GetEnumerator() {
+            return items.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() {
+            return items.GetEnumerator();
         }
 
         public static bool operator <(ScoreStorage lhs, ScoreStorage rhs) {
