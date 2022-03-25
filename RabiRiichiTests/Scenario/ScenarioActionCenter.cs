@@ -67,7 +67,11 @@ namespace RabiRiichiTests.Scenario {
         }
 
         private IPlayerAction FindAction<T>(int playerId, Predicate<T> matcher = null) where T : IPlayerAction
-            => inquiry.GetByPlayerId(playerId).actions.Find(a => a is T t && (matcher == null || matcher(t)));
+            => inquiry.GetByPlayerId(playerId).actions.Find(a => {
+                if (a.GetType() != typeof(T))
+                    return false;
+                return matcher == null || matcher((T)a);
+            });
 
         public ScenarioInquiryMatcher AssertAction<T>(int playerId, Predicate<T> matcher = null) where T : IPlayerAction {
             var action = FindAction(playerId, matcher);
