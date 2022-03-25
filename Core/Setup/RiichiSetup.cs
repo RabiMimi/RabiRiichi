@@ -43,6 +43,7 @@ namespace RabiRiichi.Core.Setup {
             AddStdPattern<YakuhaiJikaze>();
 
             // 2 han
+            AddStdPattern<Chiitoitsu>();
             AddStdPattern<Chantaiyao>();
             AddStdPattern<DoubleRiichi>();
             AddStdPattern<Honroutou>();
@@ -81,8 +82,7 @@ namespace RabiRiichi.Core.Setup {
             AddStdPattern<Ryuuiisou>();
             AddStdPattern<Shousuushii>();
             AddStdPattern<Suuankou>();
-            // TODO: Uncomment when ready
-            // AddStdPattern<SuuankouTanki>();
+            AddStdPattern<SuuankouTanki>();
             AddStdPattern<Suukantsu>();
             AddStdPattern<Tenhou>();
             AddStdPattern<Tsuuiisou>();
