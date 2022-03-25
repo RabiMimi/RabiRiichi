@@ -46,7 +46,7 @@ namespace RabiRiichiTests.Scenario.Tests {
                     playerBuilder.SetFreeTiles("1112345678999s");
                 })
                 .WithWall(wallBuilder => {
-                    wallBuilder.Reserve("123456789s");
+                    wallBuilder.Reserve("2345678s");
                 })
                 .SetFirstJun()
                 .Start(1);
@@ -63,7 +63,7 @@ namespace RabiRiichiTests.Scenario.Tests {
                 ev.agariInfos
                     .AssertTsumo(1)
                     .AssertScore(1, 40, 3)
-                    .AssertYaku<Tenhou>(yakuman: 1)
+                    .AssertYaku<Chiihou>(yakuman: 1)
                     .AssertYaku<JunseiChuurenPoutou>(yakuman: 2);
                 return true;
             }).Resolve();
