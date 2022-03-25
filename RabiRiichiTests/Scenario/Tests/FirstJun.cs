@@ -27,11 +27,11 @@ namespace RabiRiichiTests.Scenario.Tests {
                 .AssertAutoFinish();
 
             await scenario.AssertEvent<AgariEvent>((ev) => {
-                Assert.AreEqual(0, ev.agariInfos.fromPlayer);
-                Assert.IsTrue(ev.agariInfos.All(info => info.playerId == 0));
-                Assert.IsTrue(ev.agariInfos.Any(info => (
-                    info.scores.cachedResult.IsYakuman && info.scores.Any(score => score.Source is Tenhou)
-                )));
+                ev.agariInfos
+                    .AssertTsumo(0)
+                    .AssertScore(1, 40, 3)
+                    .AssertYaku<Tenhou>(yakuman: 1)
+                    .AssertYaku<JunseiChuurenPoutou>(yakuman: 2);
                 return true;
             }).Resolve();
         }

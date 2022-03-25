@@ -22,7 +22,7 @@ namespace RabiRiichi.Action.Resolver {
             var hand = player.hand;
             // 不需要判定振听，因为这里已经保证是自摸了
             var maxScore = patternResolver.ResolveMaxScore(hand, incoming, false);
-            if (maxScore != null && maxScore.cachedResult.IsValid(player.game.config.minHan)) {
+            if (maxScore != null && maxScore.result.IsValid(player.game.config.minHan)) {
                 output.Add(new TsumoAction(hand.player.id, maxScore, incoming), true);
                 return true;
             }

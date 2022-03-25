@@ -88,34 +88,34 @@ namespace RabiRiichi.Pattern {
         /// <summary> Scoring数量 </summary>
         public int Count => items.Count;
 
-        [RabiBroadcast] public ScoreCalcResult cachedResult = null;
+        [RabiBroadcast] public ScoreCalcResult result = null;
 
         public ScoreStorage() { }
         public ScoreStorage(IEnumerable<Scoring> scores) {
             items.AddRange(scores);
         }
         public ScoreCalcResult Calc() {
-            cachedResult = new ScoreCalcResult();
+            result = new ScoreCalcResult();
             foreach (var score in items) {
                 switch (score.Type) {
                     case ScoringType.Fu:
-                        if (cachedResult.fu != 0) {
+                        if (result.fu != 0) {
                             Logger.Warn("检测到了多个符数计算结果，可能是一个bug");
                         }
-                        cachedResult.fu += score.Val;
+                        result.fu += score.Val;
                         break;
                     case ScoringType.Han:
-                        cachedResult.han += score.Val;
+                        result.han += score.Val;
                         break;
                     case ScoringType.Yakuman:
-                        cachedResult.yakuman += score.Val;
+                        result.yakuman += score.Val;
                         break;
                     default:
                         Logger.Warn($"未知的计分类型: {score.Type}");
                         break;
                 }
             }
-            return cachedResult;
+            return result;
         }
 
         /// <summary> 冻结当前的Scoring（临时变为只读） </summary>
@@ -158,7 +158,7 @@ namespace RabiRiichi.Pattern {
         }
 
         public int CompareTo(ScoreStorage other) {
-            return cachedResult.CompareTo(other.cachedResult);
+            return result.CompareTo(other.result);
         }
 
         public IEnumerator<Scoring> GetEnumerator() {

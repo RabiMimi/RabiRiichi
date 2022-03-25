@@ -33,7 +33,7 @@ namespace RabiRiichi.Action.Resolver {
                 freeTiles.Insert(i, tile);
             }
             freeTiles.Remove(incoming);
-            if (maxScore != null && maxScore.cachedResult.IsValid(player.game.config.minHan)) {
+            if (maxScore != null && maxScore.result.IsValid(player.game.config.minHan)) {
                 if (maxTile != incoming) {
                     freeTiles.Remove(maxTile);
                     freeTiles.Add(incoming);
