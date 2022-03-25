@@ -25,34 +25,67 @@ namespace RabiRiichi.Core.Setup {
             AddBasePattern<Base72>();
             AddBasePattern<Base13_1>();
 
-            // Std patterns
-            AddStdPattern<Ippatsu>();
-            AddStdPattern<Iipeikou>();
-            AddStdPattern<RinshanKaihou>();
-            AddStdPattern<Pinfu>();
-            AddStdPattern<YakuhaiChun>();
-            AddStdPattern<YakuhaiHatsu>();
-            AddStdPattern<YakuhaiBakaze>();
-            AddStdPattern<YakuhaiHaku>();
-            AddStdPattern<YakuhaiJikaze>();
-            AddStdPattern<Tanyao>();
+            // 1 han
             AddStdPattern<Chankan>();
-            AddStdPattern<HouteiRaoyui>();
             AddStdPattern<HaiteiRaoyue>();
-            AddStdPattern<Riichi>();
+            AddStdPattern<HouteiRaoyui>();
+            AddStdPattern<Iipeikou>();
+            AddStdPattern<Ippatsu>();
             AddStdPattern<MenzenchinTsumohou>();
-            AddStdPattern<JunchanTaiyao>();
+            AddStdPattern<Pinfu>();
+            AddStdPattern<Riichi>();
+            AddStdPattern<RinshanKaihou>();
+            AddStdPattern<Tanyao>();
+            AddStdPattern<YakuhaiBakaze>();
+            AddStdPattern<YakuhaiChun>();
+            AddStdPattern<YakuhaiHaku>();
+            AddStdPattern<YakuhaiHatsu>();
+            AddStdPattern<YakuhaiJikaze>();
+
+            // 2 han
+            AddStdPattern<Chantaiyao>();
+            AddStdPattern<DoubleRiichi>();
+            AddStdPattern<Honroutou>();
             AddStdPattern<Ittsu>();
             AddStdPattern<Sanankou>();
             AddStdPattern<Sankantsu>();
+            AddStdPattern<SanshokuDoujun>();
             AddStdPattern<SanshokuDoukou>();
-            AddStdPattern<DoubleRiichi>();
+            AddStdPattern<JunchanTaiyao>();
+            AddStdPattern<Shousangen>();
             AddStdPattern<Toitoi>();
-            AddStdPattern<Chantaiyao>();
-            AddStdPattern<Honroutou>();
-            AddStdPattern<Suuankou>();
-            AddStdPattern<Suukantsu>();
+
+            // 3 han
+            AddStdPattern<Honitsu>();
+            AddStdPattern<JunchanTaiyao>();
+            AddStdPattern<Ryanpeikou>();
+
+            // 4 han+
+            AddStdPattern<Chinitsu>();
+
+            // Fu
+            AddStdPattern<Fu13_1>();
+            AddStdPattern<Fu72>();
+            AddStdPattern<Fu33332>();
+
+            // Yakuman
+            AddStdPattern<Chiihou>();
             AddStdPattern<Chinroutou>();
+            AddStdPattern<ChuurenPoutou>();
+            AddStdPattern<Daisangen>();
+            AddStdPattern<Daisuushii>();
+            AddStdPattern<HelloWorld>();
+            AddStdPattern<JunseiChuurenPoutou>();
+            AddStdPattern<KokushiMusou>();
+            AddStdPattern<KokushiMusouJuusanmenMachi>();
+            AddStdPattern<Ryuuiisou>();
+            AddStdPattern<Shousuushii>();
+            AddStdPattern<Suuankou>();
+            // TODO: Uncomment when ready
+            // AddStdPattern<SuuankouTanki>();
+            AddStdPattern<Suukantsu>();
+            AddStdPattern<Tenhou>();
+            AddStdPattern<Tsuuiisou>();
 
             // Bonus pattern
             AddBonusPattern<Akadora>();
