@@ -126,6 +126,11 @@ namespace RabiRiichiTests.Scenario {
         private TaskCompletionSource currentInquirySource = null;
         public Task CurrentInquiry => currentInquirySource.Task;
 
+        public void ForceFail(Exception e) {
+            currentInquirySource?.TrySetException(e);
+            nextInquirySource?.TrySetException(e);
+        }
+
         public void OnEvent(int playerId, EventBase ev) {
             OnMessage(ev.game, playerId, ev);
         }

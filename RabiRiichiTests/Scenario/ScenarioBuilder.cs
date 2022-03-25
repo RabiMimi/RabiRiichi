@@ -41,7 +41,9 @@ namespace RabiRiichiTests.Scenario {
                 // Otherwise
                 game.mainQueue.Queue(new NextPlayerEvent(game.initialEvent, game.PrevPlayerId(playerId)));
             }
-            game.Start().ConfigureAwait(false);
+            game.Start().ContinueWith((e) => {
+                actionCenter.ForceFail(e.Exception);
+            }, TaskContinuationOptions.OnlyOnFaulted);
             return this;
         }
 
