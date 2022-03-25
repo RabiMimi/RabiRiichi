@@ -67,7 +67,45 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertYaku<JunseiChuurenPoutou>(yakuman: 2);
                 return true;
             }).Resolve();
+        }
 
+        [TestMethod]
+        public async Task DoubleRiichi() {
+            var scenario = new ScenarioBuilder()
+                .WithPlayer(0, playerBuilder => {
+                    playerBuilder.SetFreeTiles("11223344556678s");
+                })
+                .WithWall(wallBuilder => {
+                    wallBuilder.Reserve("777888s");
+                })
+                .SetFirstJun()
+                .Start(0);
+
+            (await scenario.WaitInquiry()).ForPlayer(0, (playerInquiry) => {
+                playerInquiry
+                    .AssertAction<PlayTileAction>()
+                    .ApplyAction<RiichiAction>(12)
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+
+            (await scenario.WaitInquiry()).Finish();
+            (await scenario.WaitInquiry()).Finish();
+            (await scenario.WaitInquiry()).Finish();
+            (await scenario.WaitInquiry()).ForPlayer(0, (playerInquiry) => {
+                playerInquiry
+                    .AssertAction<PlayTileAction>()
+                    .ApplyAction<TsumoAction>()
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+
+            await scenario.AssertEvent<AgariEvent>((ev) => {
+                ev.agariInfos
+                    .AssertTsumo(1)
+                    .AssertScore(4, 25)
+                    .AssertYaku<DoubleRiichi>(han: 2)
+                    .AssertYaku<Chiitoitsu>(han: 2);
+                return true;
+            }).Resolve();
         }
     }
 }
