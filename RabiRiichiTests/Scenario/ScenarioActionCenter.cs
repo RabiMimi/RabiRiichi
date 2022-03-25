@@ -38,11 +38,6 @@ namespace RabiRiichiTests.Scenario {
             public ScenarioPlayerInquiryMatcher ApplyAction<T>(Predicate<T> matcher = null) where T : IPlayerAction
                 => ApplyAction(true, matcher);
 
-            public ScenarioPlayerInquiryMatcher AssertAutoFinish(bool autoFinish = true) {
-                parent.AssertAutoFinish(autoFinish);
-                return this;
-            }
-
             public ScenarioPlayerInquiryMatcher AssertNoMoreActions() {
                 parent.AssertNoMoreActions(playerId);
                 return this;
@@ -63,8 +58,9 @@ namespace RabiRiichiTests.Scenario {
             this.onFinish = onFinish;
         }
 
-        public ScenarioPlayerInquiryMatcher ForPlayer(int playerId) {
-            return new ScenarioPlayerInquiryMatcher(this, playerId);
+        public ScenarioInquiryMatcher ForPlayer(int playerId, Action<ScenarioPlayerInquiryMatcher> action) {
+            action(new ScenarioPlayerInquiryMatcher(this, playerId));
+            return this;
         }
 
         private IPlayerAction FindAction<T>(int playerId, Predicate<T> matcher = null) where T : IPlayerAction

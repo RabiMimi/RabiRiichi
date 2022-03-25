@@ -3,7 +3,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Action;
 using RabiRiichi.Event.InGame;
 using RabiRiichi.Pattern;
-using System.Linq;
 using System.Threading.Tasks;
 
 
@@ -19,12 +18,12 @@ namespace RabiRiichiTests.Scenario.Tests {
                 .SetFirstJun()
                 .Start(0);
 
-            (await scenario.WaitInquiry()).ForPlayer(0)
-                .AssertAction<RiichiAction>()
-                .AssertAction<PlayTileAction>()
-                .ApplyAction<TsumoAction>()
-                .AssertNoMoreActions()
-                .AssertAutoFinish();
+            (await scenario.WaitInquiry()).ForPlayer(0, (playerInquiry) => {
+                playerInquiry.AssertAction<RiichiAction>()
+                    .AssertAction<PlayTileAction>()
+                    .ApplyAction<TsumoAction>()
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
 
             await scenario.AssertEvent<AgariEvent>((ev) => {
                 ev.agariInfos
