@@ -1,8 +1,8 @@
 using RabiRiichi.Core;
+using RabiRiichi.Event.InGame;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
 
 namespace RabiRiichiTests.Scenario {
     public class ScenarioBuilder {
@@ -222,13 +222,13 @@ namespace RabiRiichiTests.Scenario {
                 => SetRiichiTile(new Tile(riichiTile), wRiichi);
 
             /// <summary>
-            /// 设置舍牌，默认为5张
+            /// 设置舍牌，默认为6张
             /// 若指定的舍牌数量不够则用别的牌填充
             /// </summary>
             /// <param name="count">舍牌数量</param>
             /// <param name="discarded">舍牌</param>
             /// <param name="reservedDiscarded">自动填充时，禁止出现在舍牌里的牌</param>
-            public PlayerHandBuilder SetDiscarded(int count, Tiles discarded = null, Tiles blocked = null) {
+            public PlayerHandBuilder SetDiscarded(int count, Tiles discarded, Tiles blocked) {
                 if (discarded != null) {
                     this.discarded = discarded;
                 }
@@ -239,11 +239,26 @@ namespace RabiRiichiTests.Scenario {
                 return this;
             }
 
+            /// <summary>
+            /// 设置舍牌，默认为6张
+            /// 若指定的舍牌数量不够则用别的牌填充
+            /// </summary>
+            /// <param name="count">舍牌数量</param>
+            /// <param name="discarded">舍牌</param>
+            /// <param name="reservedDiscarded">自动填充时，禁止出现在舍牌里的牌</param>
+            public PlayerHandBuilder SetDiscarded(int count, string discarded = null, string blocked = null)
+                => SetDiscarded(count,
+                    discarded == null ? new Tiles(discarded) : null,
+                    blocked == null ? new Tiles(blocked) : null);
+
             /// <summary> 设置手牌 </summary>
-            public PlayerHandBuilder SetFreeTiles(string freeTiles) {
-                this.freeTiles = new Tiles(freeTiles);
+            public PlayerHandBuilder SetFreeTiles(Tiles freeTiles) {
+                this.freeTiles = freeTiles;
                 return this;
             }
+            /// <summary> 设置手牌 </summary>
+            public PlayerHandBuilder SetFreeTiles(string freeTiles)
+                => SetFreeTiles(new Tiles(freeTiles));
 
             /// <summary> 添加一个面子 </summary>
             public PlayerHandBuilder AddCalled(string called, int fuuroIndex = -1, int fromPlayer = -1, DiscardReason reason = DiscardReason.None) {
@@ -326,7 +341,7 @@ namespace RabiRiichiTests.Scenario {
             private int revealedDoraNum = 1;
 
             public WallBuilder(IEnumerable<PlayerHandBuilder> players) {
-                this.playerBuilders = players.ToList();
+                playerBuilders = players.ToList();
             }
 
             /// <summary> 保留一些牌。这些牌会被放在牌山最前。 </summary>
@@ -334,7 +349,9 @@ namespace RabiRiichiTests.Scenario {
                 reserved.AddRange(tiles);
                 return this;
             }
+            /// <summary> 保留一些牌。这些牌会被放在牌山最前。 </summary>
             public WallBuilder Reserve(string tiles) => Reserve(new Tiles(tiles));
+            /// <summary> 保留一些牌。这些牌会被放在牌山最前。 </summary>
             public WallBuilder Reserve(Tile tile) => Reserve(Enumerable.Repeat(tile, 1));
 
             /// <summary> 添加宝牌。第一个宝牌的下标为0。 </summary>
@@ -342,7 +359,9 @@ namespace RabiRiichiTests.Scenario {
                 doras.AddRange(tiles);
                 return this;
             }
+            /// <summary> 添加宝牌。第一个宝牌的下标为0。 </summary>
             public WallBuilder AddDoras(string tiles) => AddDoras(new Tiles(tiles));
+            /// <summary> 添加宝牌。第一个宝牌的下标为0。 </summary>
             public WallBuilder AddDoras(Tile tile) => AddDoras(Enumerable.Repeat(tile, 1));
 
             /// <summary> 添加里宝牌。第一个里宝牌的下标为0。 </summary>
@@ -350,7 +369,9 @@ namespace RabiRiichiTests.Scenario {
                 uradoras.AddRange(tiles);
                 return this;
             }
+            /// <summary> 添加里宝牌。第一个里宝牌的下标为0。 </summary>
             public WallBuilder AddUradoras(string tiles) => AddUradoras(new Tiles(tiles));
+            /// <summary> 添加里宝牌。第一个里宝牌的下标为0。 </summary>
             public WallBuilder AddUradoras(Tile tile) => AddUradoras(Enumerable.Repeat(tile, 1));
 
             /// <summary> 添加岭上牌。最后一张岭上牌的下标为0。 </summary>
@@ -358,18 +379,14 @@ namespace RabiRiichiTests.Scenario {
                 rinshan.AddRange(tiles);
                 return this;
             }
+            /// <summary> 添加岭上牌。最后一张岭上牌的下标为0。 </summary>
             public WallBuilder AddRinshan(string tiles) => AddRinshan(new Tiles(tiles));
+            /// <summary> 添加岭上牌。最后一张岭上牌的下标为0。 </summary>
             public WallBuilder AddRinshan(Tile tile) => AddRinshan(Enumerable.Repeat(tile, 1));
 
             /// <summary> 设置有多少Dora已经翻开了，默认为1。 </summary>
             public WallBuilder SetRevealedDoraCount(int num) {
                 revealedDoraNum = num;
-                return this;
-            }
-
-            /// <summary> </summary>
-            public WallBuilder AddPlayer(PlayerHandBuilder builder) {
-                playerBuilders.Add(builder);
                 return this;
             }
 
@@ -502,6 +519,16 @@ namespace RabiRiichiTests.Scenario {
             wallBuilder = new WallBuilder(playerHandBuilders);
         }
 
+        /// <summary> 将游戏设为第一巡刚开始的状态 </summary>
+        public ScenarioBuilder SetFirstJun() {
+            foreach (var playerBuilder in playerHandBuilders) {
+                playerBuilder.SetDiscarded(0).SetMenzen(true);
+            }
+            wallBuilder.SetRevealedDoraCount(1);
+            return this;
+        }
+
+        /// <summary> 根据设置的状态创建游戏实例 </summary>
         public ScenarioBuilder Setup() {
             game = new Game(configBuilder.Build());
             gameStateBuilder.Setup(game.info);
@@ -511,6 +538,27 @@ namespace RabiRiichiTests.Scenario {
                     game.IsFirstJun && player.IsDealer ? Game.HAND_SIZE + 1 : Game.HAND_SIZE);
             }
             wallBuilder.Setup(game.wall);
+            return this;
+        }
+
+        /// <summary> 以玩家playerId的回合开始游戏 </summary>
+        public ScenarioBuilder Start(int playerId) {
+            game.Start().ConfigureAwait(false);
+            if (game.IsFirstJun && game.Dealer.id == playerId) {
+                // First jun of dealer
+                game.mainQueue.Queue(new IncreaseJunEvent(game.initialEvent, playerId));
+                game.mainQueue.Queue(new DealerFirstTurnEvent(game.initialEvent, playerId, game.Dealer.hand.freeTiles[^1]));
+
+            } else {
+                // Otherwise
+                game.mainQueue.Queue(new NextPlayerEvent(game.initialEvent, game.PrevPlayerId(playerId)));
+            }
+            return this;
+        }
+
+        /// <summary> 获取游戏实例 </summary>
+        public ScenarioBuilder WithGame(Action<Game> action) {
+            action(game);
             return this;
         }
     }

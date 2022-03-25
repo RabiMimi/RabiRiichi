@@ -25,7 +25,7 @@ namespace RabiRiichi.Core {
         public readonly JsonStringify json;
         public readonly Player[] players;
         public readonly InitGameEvent initialEvent;
-        private EventQueue mainQueue;
+        public readonly EventQueue mainQueue;
 
         public Game(GameConfig config) {
             if (config.actionCenter == null) {
@@ -62,6 +62,7 @@ namespace RabiRiichi.Core {
             info = Get<GameInfo>();
             wall = Get<Wall>();
             json = Get<JsonStringify>();
+            mainQueue = new EventQueue(eventBus, true, false);
 
             // Custom setup
             config.setup.Setup(diContainer);
@@ -93,7 +94,6 @@ namespace RabiRiichi.Core {
             }
 
             // 游戏逻辑
-            mainQueue = new EventQueue(eventBus, true, false);
             mainQueue.Queue(initialEvent);
             await mainQueue.ProcessQueue();
 

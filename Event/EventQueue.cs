@@ -34,7 +34,7 @@ namespace RabiRiichi.Event {
                 await Task.Yield();
                 EventBase ev;
                 lock (queue) {
-                    if (!queue.TryPeek(out ev)) {
+                    if (!queue.TryDequeue(out ev)) {
                         if (stopOnEmptyQueue) {
                             break;
                         }
