@@ -96,6 +96,7 @@ namespace RabiRiichiTests.Scenario.Tests {
                 ev.agariInfos
                     .AssertTsumo(0)
                     .AssertScore(13, 30)
+                    .AssertKazoeYakuman()
                     .AssertYaku<DoubleRiichi>(han: 2)
                     .AssertYaku<Ryanpeikou>(han: 3)
                     .AssertYaku<Ippatsu>(han: 1)
