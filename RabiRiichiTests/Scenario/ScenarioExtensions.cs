@@ -27,16 +27,14 @@ namespace RabiRiichiTests.Scenario {
             return info;
         }
 
-        public static AgariInfo AssertScore(this AgariInfo info, int? han = null, int? fu = null, int? yakuman = null) {
+        public static AgariInfo AssertScore(this AgariInfo info, int? han = null, int? fu = null, int yakuman = 0) {
             if (han != null) {
                 Assert.AreEqual(han, info.scores.result.han);
             }
             if (fu != null) {
                 Assert.AreEqual(fu, info.scores.result.fu);
             }
-            if (yakuman != null) {
-                Assert.AreEqual(yakuman.Value, info.scores.result.yakuman);
-            }
+            Assert.AreEqual(yakuman, info.scores.result.yakuman);
             return info;
         }
 

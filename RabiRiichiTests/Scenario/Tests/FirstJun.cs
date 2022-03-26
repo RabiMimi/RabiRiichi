@@ -95,9 +95,12 @@ namespace RabiRiichiTests.Scenario.Tests {
             await scenario.AssertEvent<AgariEvent>((ev) => {
                 ev.agariInfos
                     .AssertTsumo(0)
-                    .AssertScore(4, 25)
+                    .AssertScore(13, 30)
                     .AssertYaku<DoubleRiichi>(han: 2)
-                    .AssertYaku<Chiitoitsu>(han: 2);
+                    .AssertYaku<Ryanpeikou>(han: 3)
+                    .AssertYaku<Ippatsu>(han: 1)
+                    .AssertYaku<Chinitsu>(han: 6)
+                    .AssertYaku<MenzenchinTsumohou>(han: 1);
                 return true;
             }).Resolve();
         }
