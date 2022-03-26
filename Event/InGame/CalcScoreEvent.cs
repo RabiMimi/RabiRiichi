@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace RabiRiichi.Event.InGame {
-    public class ScoreTransfer {
-        public readonly int from;
-        public readonly int to;
-        public readonly int points;
+    public class ScoreTransfer : IRabiMessage {
+        public RabiMessageType msgType => RabiMessageType.Unnecessary;
+        [RabiBroadcast] public readonly int from;
+        [RabiBroadcast] public readonly int to;
+        [RabiBroadcast] public readonly int points;
         public ScoreTransfer(int from, int to, int points, bool roundTo100 = true) {
             this.from = from;
             this.to = to;

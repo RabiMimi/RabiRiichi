@@ -102,6 +102,7 @@ namespace RabiRiichi.Core.Setup {
             AgariListener.Register(eventBus);
             ApplyScoreListener.Register(eventBus);
             BeginGameListener.Register(eventBus);
+            CalcScoreListener.Register(eventBus);
             ClaimTileListener.Register(eventBus);
             DealerFirstTurnListener.Register(eventBus);
             DealHandListener.Register(eventBus);
