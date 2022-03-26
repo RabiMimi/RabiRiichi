@@ -25,7 +25,7 @@ namespace RabiRiichi.Pattern {
             /// <summary> 基本点 </summary>
             public int BaseScore {
                 get {
-                    if (IsYakuman) {
+                    if (yakuman > 0) {
                         return yakuman * 8000;
                     }
                     if (IsKazoeYakuman) {

@@ -108,9 +108,9 @@ namespace RabiRiichi.Pattern {
                 }
             }
 
-            var maxScore = basePatterns.SelectMany(CalculateScores).Max();
+            var scoreStores = basePatterns.SelectMany(CalculateScores);
 
-            return maxScore;
+            return scoreStores.Max();
         }
 
         /// <summary>
