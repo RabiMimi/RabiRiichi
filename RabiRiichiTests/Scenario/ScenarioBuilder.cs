@@ -1,3 +1,4 @@
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Core;
 using RabiRiichi.Event;
 using RabiRiichi.Event.InGame;
@@ -12,6 +13,7 @@ namespace RabiRiichiTests.Scenario {
         private readonly Game game;
         private readonly ScenarioActionCenter actionCenter;
         private readonly List<Predicate<EventBase>> eventMatchers = new();
+        private readonly List<Predicate<EventBase>> noEventMatchers = new();
         private readonly List<EventBase> events = new();
 
         public Scenario(Game game) {
@@ -47,7 +49,7 @@ namespace RabiRiichiTests.Scenario {
             return this;
         }
 
-        /// <summary> 测试是否有对应的事件发生 </summary>
+        /// <summary> 测试有对应的事件发生 </summary>
         public Scenario AssertEvent<T>(Predicate<T> predicate = null) where T : EventBase {
             eventMatchers.Add((ev) => {
                 if (ev is T tEv) {
@@ -58,17 +60,40 @@ namespace RabiRiichiTests.Scenario {
             return this;
         }
 
+
+        /// <summary> 测试没有对应的事件发生 </summary>
+        public Scenario AssertNoEvent<T>(Predicate<T> predicate = null) where T : EventBase {
+            noEventMatchers.Add((ev) => {
+                if (ev is T tEv) {
+                    return predicate?.Invoke(tEv) ?? true;
+                }
+                return false;
+            });
+            return this;
+        }
+
+        /// <summary> 测试流局事件发生 </summary>
         public Scenario AssertRyuukyoku<T>(Predicate<T> predicate = null) where T : RyuukyokuEvent
             => AssertEvent(predicate);
+
+        /// <summary> 测试没有流局事件发生 </summary>
+        public Scenario AssertNoRyuukyoku<T>(Predicate<T> predicate = null) where T : RyuukyokuEvent
+            => AssertNoEvent(predicate);
 
         /// <summary> 立即测试现有事件是否匹配 </summary>
         public Scenario ResolveImmediately() {
             foreach (var matcher in eventMatchers) {
                 if (!events.Any((e) => matcher(e))) {
-                    throw new Exception($"No event matched: {string.Join(", ", events.Select(ev => ev.GetType().Name))}");
+                    Assert.Fail($"No event matched: {string.Join(", ", events.Select(ev => ev.GetType().Name))}");
+                }
+            }
+            foreach (var matcher in noEventMatchers) {
+                if (events.Any((e) => matcher(e))) {
+                    Assert.Fail($"Event matched: {string.Join(", ", events.Select(ev => ev.GetType().Name))}");
                 }
             }
             eventMatchers.Clear();
+            noEventMatchers.Clear();
             events.Clear();
             return this;
         }

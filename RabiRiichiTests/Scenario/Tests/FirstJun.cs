@@ -1,4 +1,3 @@
-using Microsoft.VisualBasic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Action;
 using RabiRiichi.Event.InGame;
@@ -132,6 +131,27 @@ namespace RabiRiichiTests.Scenario.Tests {
                     return true;
                 })
                 .Resolve();
+        }
+
+
+        [TestMethod]
+        public async Task SuufonRendaNoRyuukyoku() {
+            var scenario = new ScenarioBuilder()
+                .WithPlayer(0, playerBuilder => {
+                    playerBuilder.SetFreeTiles("1112223334555z");
+                })
+                .WithWall(wallBuilder => {
+                    wallBuilder.Reserve("1444z");
+                })
+                .Start(0);
+
+            for (int i = 0; i < 4; i++) {
+                (await scenario.WaitInquiry()).ForPlayer(i, (playerInquiry) => {
+                    playerInquiry.ChooseTile<PlayTileAction>("4z");
+                }).AssertAutoFinish();
+            }
+
+            await scenario.AssertNoEvent<SuufonRenda>().Resolve();
         }
     }
 }

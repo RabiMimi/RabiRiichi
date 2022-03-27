@@ -14,8 +14,8 @@ namespace RabiRiichiTests.Pattern {
         protected GameTile incoming;
         protected ScoreStorage scores = new();
         protected bool? forceMenzen = null;
-        public Mock<Player> currentPlayer = new(MockBehavior.Default, 0, TestHelper.GetGame());
-        public Mock<Player> anotherPlayer = new(MockBehavior.Default, 1, TestHelper.GetGame());
+        public Mock<Player> currentPlayer = new(MockBehavior.Default, 0, TestHelper.Game.Value);
+        public Mock<Player> anotherPlayer = new(MockBehavior.Default, 1, TestHelper.Game.Value);
 
         protected MenLike Create(string tiles, int fuuroIndex) {
             var t = new GameTiles(new Tiles(tiles));

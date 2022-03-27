@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Communication;
 using RabiRiichi.Core;
+using System;
 using System.Linq;
 
 namespace RabiRiichiTests {
@@ -12,16 +13,9 @@ namespace RabiRiichiTests {
             };
         }
 
-        private static Game cachedGame;
-
-        public static Game GetGame() {
-            if (cachedGame == null) {
-                cachedGame = new Game(new GameConfig {
-                    actionCenter = new JsonStringActionCenter(null)
-                });
-            }
-            return cachedGame;
-        }
+        public static Lazy<Game> Game = new(() => new Game(new GameConfig {
+            actionCenter = new JsonStringActionCenter(null)
+        }));
 
         public static void AssertEq(this Tiles tiles, string str) {
             var newTiles = new Tiles(str);
