@@ -33,9 +33,12 @@ namespace RabiRiichi.Communication.Json {
                 if (type.IsRabiIgnore()) {
                     return null;
                 }
-                if (!reflectionDataDict.TryGetValue(type, out var reflectionData)) {
-                    reflectionData = new RabiMessageReflectionData(type);
-                    reflectionDataDict.Add(type, reflectionData);
+                RabiMessageReflectionData reflectionData;
+                lock (reflectionDataDict) {
+                    if (!reflectionDataDict.TryGetValue(type, out reflectionData)) {
+                        reflectionData = new RabiMessageReflectionData(type);
+                        reflectionDataDict.Add(type, reflectionData);
+                    }
                 }
                 return reflectionData;
             }
