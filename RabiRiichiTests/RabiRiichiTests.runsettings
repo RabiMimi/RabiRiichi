@@ -27,15 +27,12 @@
 	<!-- Configurations for data collectors -->
 	<DataCollectionRunSettings>
 		<DataCollectors>
-			<DataCollector friendlyName="Code Coverage" uri="datacollector://Microsoft/CodeCoverage/2.0" assemblyQualifiedName="Microsoft.VisualStudio.Coverage.DynamicCoverageDataCollector, Microsoft.VisualStudio.TraceCollector, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+			<DataCollector friendlyName="Code Coverage">
 				<Configuration>
-					<CodeCoverage>
-						<!-- We recommend you do not change the following values: -->
-						<UseVerifiableInstrumentation>True</UseVerifiableInstrumentation>
-						<AllowLowIntegrityProcesses>True</AllowLowIntegrityProcesses>
-						<CollectFromChildProcesses>True</CollectFromChildProcesses>
-						<CollectAspDotNet>False</CollectAspDotNet>
-					</CodeCoverage>
+					<Format>json,cobertura,lcov,teamcity,opencover</Format>          
+					<ExcludeByAttribute>Obsolete,GeneratedCodeAttribute,CompilerGeneratedAttribute</ExcludeByAttribute>
+					<UseSourceLink>true</UseSourceLink>
+					<SkipAutoProps>true</SkipAutoProps>
 				</Configuration>
 			</DataCollector>
 
