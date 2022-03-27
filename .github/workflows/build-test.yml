@@ -26,8 +26,9 @@ jobs:
       - name: Build
         run: dotnet build --configuration Release --no-restore ./RabiRiichiTests/RabiRiichiTests.csproj
       - name: Test
-        run: dotnet test --no-restore --verbosity normal ./RabiRiichiTests/RabiRiichiTests.csproj
+        run: dotnet test --no-restore --verbosity normal --collect:"XPlat Code Coverage" ./RabiRiichiTests/RabiRiichiTests.csproj
       - name: Upload to CodeCov
         uses: codecov/codecov-action@v2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          root_dir: ./RabiRiichiTests/

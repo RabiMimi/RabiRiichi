@@ -27,10 +27,10 @@
 	<!-- Configurations for data collectors -->
 	<DataCollectionRunSettings>
 		<DataCollectors>
-			<DataCollector friendlyName="Code Coverage">
+			<DataCollector friendlyName="XPlat Code Coverage">
 				<Configuration>
 					<CoverageFileName>cov</CoverageFileName>
-					<Format>json,cobertura,lcov,teamcity,opencover</Format>          
+					<Format>json</Format>          
 					<ExcludeByAttribute>Obsolete,GeneratedCodeAttribute,CompilerGeneratedAttribute</ExcludeByAttribute>
 					<SkipAutoProps>true</SkipAutoProps>
 				</Configuration>
