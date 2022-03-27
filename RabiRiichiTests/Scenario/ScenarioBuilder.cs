@@ -10,14 +10,16 @@ using System.Threading.Tasks;
 
 namespace RabiRiichiTests.Scenario {
     public class Scenario {
+        private readonly bool runToEnd;
         private readonly Game game;
         private readonly ScenarioActionCenter actionCenter;
         private readonly List<Predicate<EventBase>> eventMatchers = new();
         private readonly List<Predicate<EventBase>> noEventMatchers = new();
         private readonly List<EventBase> events = new();
 
-        public Scenario(Game game) {
+        public Scenario(Game game, bool runToEnd) {
             this.game = game;
+            this.runToEnd = runToEnd;
             actionCenter = (ScenarioActionCenter)game.config.actionCenter;
         }
 
@@ -44,8 +46,14 @@ namespace RabiRiichiTests.Scenario {
                 game.mainQueue.Queue(new NextPlayerEvent(game.initialEvent, game.PrevPlayerId(playerId)));
             }
             game.Start().ContinueWith((e) => {
-                actionCenter.ForceFail(e.Exception);
-            }, TaskContinuationOptions.OnlyOnFaulted);
+                if (e.IsFaulted) {
+                    actionCenter.ForceFail(e.Exception);
+                } else if (e.IsCanceled) {
+                    actionCenter.ForceFail(new Exception("Game cancelled"));
+                } else if (!runToEnd) {
+                    actionCenter.ForceFail(new Exception("Game ended"));
+                }
+            });
             return this;
         }
 
@@ -658,6 +666,7 @@ namespace RabiRiichiTests.Scenario {
         }
 
         private bool isFirstJun = false;
+        private bool runToEnd = false;
         /// <summary> 将游戏设为第一巡刚开始的状态 </summary>
         public ScenarioBuilder SetFirstJun() {
             isFirstJun = true;
@@ -681,12 +690,18 @@ namespace RabiRiichiTests.Scenario {
                     isFirstJun && player.IsDealer ? Game.HAND_SIZE + 1 : Game.HAND_SIZE);
             }
             wallBuilder.Setup(game.wall);
-            return new Scenario(game);
+            return new Scenario(game, runToEnd);
         }
 
         /// <summary> 根据设置的状态创建游戏实例，并以playerId的回合开始游戏 </summary>
         public Scenario Start(int playerId) {
             return Build().Start(playerId);
+        }
+
+        /// <summary> 若test运行过程中游戏终止，不抛出异常 </summary>
+        public ScenarioBuilder RunToEnd() {
+            runToEnd = true;
+            return this;
         }
     }
 }

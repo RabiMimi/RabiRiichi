@@ -11,7 +11,10 @@ namespace RabiRiichiTests.Scenario.Tests {
         [TestMethod]
         public async Task DealerTenhou() {
             var scenario = new ScenarioBuilder()
-                .WithPlayer(0, (playerBuilder) => {
+                .WithConfig(configBuilder => {
+                    configBuilder.SetInitialPoints(100000);
+                })
+                .WithPlayer(0, playerBuilder => {
                     playerBuilder.SetFreeTiles("11123455678999s");
                 })
                 .SetFirstJun()
@@ -38,6 +41,9 @@ namespace RabiRiichiTests.Scenario.Tests {
         [TestMethod]
         public async Task NonDealerChiihou() {
             var scenario = new ScenarioBuilder()
+                .WithConfig(configBuilder => {
+                    configBuilder.SetInitialPoints(100000);
+                })
                 .WithPlayer(1, (playerBuilder) => {
                     playerBuilder.SetFreeTiles("1112345678999s");
                 })
