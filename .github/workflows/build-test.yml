@@ -27,10 +27,7 @@ jobs:
         run: dotnet build --configuration Release --no-restore ./RabiRiichiTests/RabiRiichiTests.csproj
       - name: Test
         run: dotnet test --no-restore --verbosity normal --collect:"XPlat Code Coverage" ./RabiRiichiTests/RabiRiichiTests.csproj
-      - name: Copy Coverage Report
-        run: find ./RabiRiichiTests/TestResults/ -name coverage.json | xargs -i cp {} ./cov.json
       - name: Upload to CodeCov
         uses: codecov/codecov-action@v2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./cov.json
