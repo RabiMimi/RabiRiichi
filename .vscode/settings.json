@@ -87,5 +87,9 @@
         "Yakuhai",
         "Yakuman"
     ],
-    "cSpell.enabled": true
+    "cSpell.enabled": true,
+    "cSpell.ignoreWords": [
+        "shopt",
+        "globstar"
+    ]
 }
