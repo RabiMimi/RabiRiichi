@@ -36,5 +36,5 @@ jobs:
         with:
           name: results-${{ matrix.dotnet-version }}
           path: ./RabiRiichiTests/TestResults
-          retention-days: 7
+          retention-days: 3
         if: ${{ always() }}
