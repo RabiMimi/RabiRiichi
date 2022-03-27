@@ -10,16 +10,15 @@ using System.Threading.Tasks;
 
 namespace RabiRiichiTests.Scenario {
     public class Scenario {
-        private readonly bool runToEnd;
+        private Task runToEnd;
         private readonly Game game;
         private readonly ScenarioActionCenter actionCenter;
         private readonly List<Predicate<EventBase>> eventMatchers = new();
         private readonly List<Predicate<EventBase>> noEventMatchers = new();
         private readonly List<EventBase> events = new();
 
-        public Scenario(Game game, bool runToEnd) {
+        public Scenario(Game game) {
             this.game = game;
-            this.runToEnd = runToEnd;
             actionCenter = (ScenarioActionCenter)game.config.actionCenter;
         }
 
@@ -45,13 +44,11 @@ namespace RabiRiichiTests.Scenario {
                 // Otherwise
                 game.mainQueue.Queue(new NextPlayerEvent(game.initialEvent, game.PrevPlayerId(playerId)));
             }
-            game.Start().ContinueWith((e) => {
+            runToEnd = game.Start().ContinueWith((e) => {
                 if (e.IsFaulted) {
                     actionCenter.ForceFail(e.Exception);
                 } else if (e.IsCanceled) {
                     actionCenter.ForceFail(new Exception("Game cancelled"));
-                } else if (!runToEnd) {
-                    actionCenter.ForceFail(new Exception("Game ended"));
                 }
             });
             return this;
@@ -113,6 +110,13 @@ namespace RabiRiichiTests.Scenario {
             return ret;
         }
 
+        /// <summary> 等待游戏结束（无询问操作），并强制匹配现有的事件 </summary>
+        public async Task<Scenario> WaitEnd() {
+            await runToEnd;
+            ResolveImmediately();
+            return this;
+        }
+
         /// <summary> 等待玩家i的回合，并对其中的询问操作全部采用默认选项 </summary>
         public async Task<ScenarioInquiryMatcher> WaitPlayerTurn(int playerId) {
             var listener = new EventListener<IncreaseJunEvent>(game.eventBus);
@@ -138,7 +142,12 @@ namespace RabiRiichiTests.Scenario {
         /// <param name="skipCount"> 最多跳过多少询问操作 </param>
         public async Task Resolve(int skipCount = 1) {
             for (var i = 0; i < skipCount; i++) {
-                (await actionCenter.NextInquiry).Finish();
+                var task = WaitInquiry().ContinueWith((t) => {
+                    t.Result.Finish();
+                });
+                if (await Task.WhenAny(runToEnd, task) == runToEnd) {
+                    break;
+                }
             }
             ResolveImmediately();
         }
@@ -666,7 +675,6 @@ namespace RabiRiichiTests.Scenario {
         }
 
         private bool isFirstJun = false;
-        private bool runToEnd = false;
         /// <summary> 将游戏设为第一巡刚开始的状态 </summary>
         public ScenarioBuilder SetFirstJun() {
             isFirstJun = true;
@@ -690,18 +698,12 @@ namespace RabiRiichiTests.Scenario {
                     isFirstJun && player.IsDealer ? Game.HAND_SIZE + 1 : Game.HAND_SIZE);
             }
             wallBuilder.Setup(game.wall);
-            return new Scenario(game, runToEnd);
+            return new Scenario(game);
         }
 
         /// <summary> 根据设置的状态创建游戏实例，并以playerId的回合开始游戏 </summary>
         public Scenario Start(int playerId) {
             return Build().Start(playerId);
-        }
-
-        /// <summary> 若test运行过程中游戏终止，不抛出异常 </summary>
-        public ScenarioBuilder RunToEnd() {
-            runToEnd = true;
-            return this;
         }
     }
 }
