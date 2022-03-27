@@ -58,6 +58,9 @@ namespace RabiRiichiTests.Scenario {
             return this;
         }
 
+        public Scenario AssertRyuukyoku<T>(Predicate<T> predicate = null) where T : RyuukyokuEvent
+            => AssertEvent(predicate);
+
         /// <summary> 立即测试现有事件是否匹配 </summary>
         public Scenario ResolveImmediately() {
             foreach (var matcher in eventMatchers) {

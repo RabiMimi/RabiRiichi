@@ -105,5 +105,33 @@ namespace RabiRiichiTests.Scenario.Tests {
                 return true;
             }).Resolve();
         }
+
+        [TestMethod]
+        public async Task SuufonRendaRyuukyoku() {
+            var scenario = new ScenarioBuilder()
+                .WithPlayer(0, playerBuilder => {
+                    playerBuilder.SetFreeTiles("11122233345556z");
+                })
+                .WithWall(wallBuilder => {
+                    wallBuilder.Reserve("444z");
+                })
+                .SetFirstJun()
+                .Start(0);
+
+            for (int i = 0; i < 4; i++) {
+                (await scenario.WaitInquiry()).ForPlayer(i, (playerInquiry) => {
+                    playerInquiry.ChooseTile<PlayTileAction>("4z");
+                }).AssertAutoFinish();
+            }
+
+            await scenario.AssertRyuukyoku<SuufonRenda>()
+                .AssertEvent<BeginGameEvent>(ev => {
+                    Assert.AreEqual(0, ev.round);
+                    Assert.AreEqual(0, ev.dealer);
+                    Assert.AreEqual(1, ev.honba);
+                    return true;
+                })
+                .Resolve();
+        }
     }
 }
