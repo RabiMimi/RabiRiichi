@@ -31,3 +31,10 @@ jobs:
         uses: codecov/codecov-action@v2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+      - name: Save Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: results-${{ matrix.dotnet-version }}
+          path: ./RabiRiichiTests/TestResults
+          retention-days: 7
+        if: ${{ always() }}
