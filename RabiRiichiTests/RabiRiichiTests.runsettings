@@ -10,7 +10,6 @@
 		<!-- Omit the whole tag for auto-detection. -->
 		<!-- [x86] or x64, ARM, ARM64, s390x  -->
 		<!-- You can also change it from the Test menu; choose "Processor Architecture for AnyCPU Projects" -->
-		<TargetPlatform>x86</TargetPlatform>
 
 		<!-- Any TargetFramework moniker or omit the whole tag for auto-detection. -->
 		<!-- net48, [net40], net6.0, net5.0, netcoreapp3.1, uap10.0 etc. -->
@@ -18,7 +17,7 @@
 
 		<!-- TestSessionTimeout was introduced in Visual Studio 2017 version 15.5 -->
 		<!-- Specify timeout in milliseconds. A valid value should be greater than 0 -->
-		<TestSessionTimeout>10000</TestSessionTimeout>
+		<TestSessionTimeout>60000</TestSessionTimeout>
 
 		<!-- true or false -->
 		<!-- Value that specifies the exit code when no tests are discovered -->
@@ -77,6 +76,7 @@
 		<CaptureTraceOutput>False</CaptureTraceOutput>
 		<DeleteDeploymentDirectoryAfterTestRunIsComplete>False</DeleteDeploymentDirectoryAfterTestRunIsComplete>
 		<DeploymentEnabled>False</DeploymentEnabled>
+		<TestTimeout>5000</TestTimeout>
 	</MSTest>
 
 </RunSettings>
