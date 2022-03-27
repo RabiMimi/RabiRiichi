@@ -27,23 +27,12 @@ namespace RabiRiichi.Event.InGame.Listener {
             return Task.CompletedTask;
         }
 
-        public static Task ResetAllKan(KanEvent ev) {
-            // 由于可能会枪杠，将取消一发的时点延迟至抽岭上牌时
-            new EventListener<DrawTileEvent>(ev.bus)
-                .LatePrepare((_) => {
-                    ResetAllIppatsu(ev);
-                    return Task.CompletedTask;
-                }, 1)
-                .ScopeTo(EventScope.Game);
-            return Task.CompletedTask;
-        }
-
         public static void Register(EventBus eventBus) {
             eventBus.Subscribe<SetIppatsuEvent>(ExecuteIppatsu, EventPriority.Execute);
             eventBus.Subscribe<SetRiichiEvent>(AfterRiichi, EventPriority.After + 10);
             eventBus.Subscribe<DiscardTileEvent>(ResetIppatsu, EventPriority.After + 10);
             eventBus.Subscribe<ClaimTileEvent>(ResetAllIppatsu, EventPriority.After + 10);
-            eventBus.Subscribe<KanEvent>(ResetAllKan, EventPriority.After + 10);
+            eventBus.Subscribe<AddKanEvent>(ResetAllIppatsu, EventPriority.After + 10);
         }
     }
 }
