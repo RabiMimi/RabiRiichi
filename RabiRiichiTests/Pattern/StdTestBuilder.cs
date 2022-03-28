@@ -15,8 +15,9 @@ namespace RabiRiichiTests.Pattern {
         protected GameTile incoming;
         protected ScoreStorage scores = new();
         protected bool? forceMenzen = null;
-        public Mock<Player> currentPlayer = new(MockBehavior.Default, 0, TestHelper.Game.Value);
-        public Mock<Player> anotherPlayer = new(MockBehavior.Default, 1, TestHelper.Game.Value);
+        protected readonly RabiMockGame mockGame = new();
+        public readonly Mock<Player> currentPlayer;
+        public readonly Mock<Player> anotherPlayer;
 
         protected MenLike Create(string tiles, int fuuroIndex) {
             var t = new GameTiles(new Tiles(tiles));
@@ -33,7 +34,9 @@ namespace RabiRiichiTests.Pattern {
         /// <param name="pattern"></param>
         public StdTestBuilder(StdPattern pattern) {
             V = pattern;
+            currentPlayer = new(MockBehavior.Default, 0, mockGame.Object);
             currentPlayer.Setup(p => p.IsYaku(It.IsAny<Tile>())).Returns(false);
+            anotherPlayer = new(MockBehavior.Default, 1, mockGame.Object);
             anotherPlayer.Setup(p => p.IsYaku(It.IsAny<Tile>())).Returns(false);
         }
 
@@ -135,7 +138,23 @@ namespace RabiRiichiTests.Pattern {
         /// 修改游戏选项
         /// </summary>
         public StdTestBuilder WithConfig(Action<GameConfig> action) {
-            action(TestHelper.Game.Value.config);
+            action(mockGame.Object.config);
+            return this;
+        }
+
+        /// <summary>
+        /// Mock游戏实例
+        /// </summary>
+        public StdTestBuilder MockGame(Action<RabiMockGame> action) {
+            action(mockGame);
+            return this;
+        }
+
+        /// <summary>
+        /// Mock牌山
+        /// </summary>
+        public StdTestBuilder MockWall(Action<RabiMockWall> action) {
+            action(mockGame.wall);
             return this;
         }
     }

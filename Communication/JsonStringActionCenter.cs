@@ -19,7 +19,7 @@ namespace RabiRiichi.Communication {
                 // Ignore null objects
                 return;
             }
-            sender(playerId, json);
+            sender?.Invoke(playerId, json);
         }
 
         public void OnMessage(int inquiryId, int playerId, int actionIndex, string message) {
