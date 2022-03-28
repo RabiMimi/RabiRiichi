@@ -48,6 +48,14 @@ namespace RabiRiichiTests.Pattern {
                 .AddFree("44p")
                 .AddAgari("1s", "1s")
                 .Resolve(false);
+            new StdTestBuilder(V)
+                .WithConfig(config => config.allowKuitan = false)
+                .AddFuuro("234s", 0)
+                .AddFree("345p")
+                .AddFree("456m")
+                .AddFree("22m")
+                .AddAgari("23s", "4s")
+                .Resolve(false);
         }
     }
 }
