@@ -26,7 +26,9 @@ namespace RabiRiichiTests {
 
     public class RabiMockWall : RabiMock<Wall> {
         public RabiMockWall() {
-            mock = new Mock<Wall>(new Rand(114514));
+            mock = new Mock<Wall>(new Rand(114514)) {
+                CallBase = true
+            };
         }
 
         public void SetIsHaitei() {
@@ -56,7 +58,9 @@ namespace RabiRiichiTests {
             mock = new Mock<Game>(new GameConfig {
                 actionCenter = new JsonStringActionCenter(null),
                 setup = new MockSetup(wall)
-            });
+            }) {
+                CallBase = true
+            };
         }
     }
 }

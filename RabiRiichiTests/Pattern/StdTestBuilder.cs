@@ -34,8 +34,12 @@ namespace RabiRiichiTests.Pattern {
         /// <param name="pattern"></param>
         public StdTestBuilder(StdPattern pattern) {
             V = pattern;
-            currentPlayer = new(MockBehavior.Default, 0, mockGame.Object);
-            anotherPlayer = new(MockBehavior.Default, 1, mockGame.Object);
+            currentPlayer = new(MockBehavior.Loose, 0, mockGame.Object) {
+                CallBase = true
+            };
+            anotherPlayer = new(MockBehavior.Loose, 1, mockGame.Object) {
+                CallBase = true
+            };
         }
 
         /// <summary>
