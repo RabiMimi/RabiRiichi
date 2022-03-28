@@ -21,7 +21,7 @@ namespace RabiRiichi.Event.InGame.Listener {
             }
             // 立直棒
             if (ev.agariInfos.Count > 0) {
-                int agariPlayer = ev.agariInfos[0].playerId;
+                int agariPlayer = ev.agariInfos.MinBy(info => fromPlayer.Dist(info.playerId)).playerId;
                 foreach (var player in ev.game.players) {
                     player.hand.riichiStick = 0;
                 }

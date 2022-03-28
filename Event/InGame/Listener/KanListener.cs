@@ -16,6 +16,7 @@ namespace RabiRiichi.Event.InGame.Listener {
                 }
             }
             ev.waitEvent.inquiry.AddHandler<RonAction>((action) => {
+                ev.incoming.player = ev.player;
                 ev.waitEvent.eventBuilder.AddAgari(ev.waitEvent, ev.playerId, ev.incoming, action.agariInfo);
             });
             ev.Q.Queue(ev.waitEvent);

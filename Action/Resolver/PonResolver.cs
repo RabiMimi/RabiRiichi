@@ -26,7 +26,7 @@ namespace RabiRiichi.Action.Resolver {
             if (result.Count == 0) {
                 return false;
             }
-            output.Add(new PonAction(player.id, result, -incoming.discardInfo!.fromPlayer.Dist(player)));
+            output.Add(new PonAction(player.id, result, -incoming.discardInfo.fromPlayer.Dist(player)));
             return true;
         }
     }

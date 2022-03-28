@@ -14,6 +14,12 @@ namespace RabiRiichiTests.Util {
         }
 
         [TestMethod]
+        public void TestMinBy() {
+            Assert.AreEqual(5, source.MinBy(x => -x));
+            Assert.ThrowsException<InvalidOperationException>(() => Enumerable.Empty<int>().MinBy(x => x));
+        }
+
+        [TestMethod]
         public void TestAll() {
             Assert.IsTrue(source.All((x, idx) => x == 1 || idx > 1));
             Assert.IsFalse(source.All((x, idx) => x == 1 || idx > 2));
