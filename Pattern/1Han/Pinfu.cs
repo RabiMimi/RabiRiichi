@@ -22,7 +22,7 @@ namespace RabiRiichi.Pattern {
             if (incoming == gr[1])
                 return false;
             var jantou = groups.Find(gr => gr is Jantou);
-            if (jantou == null || hand.player.IsYaku(jantou.First.tile))
+            if (hand.player.IsYaku(jantou.First.tile))
                 return false;
 
             scores.Add(new Scoring(ScoringType.Han, 1, this));

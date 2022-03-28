@@ -35,9 +35,7 @@ namespace RabiRiichiTests.Pattern {
         public StdTestBuilder(StdPattern pattern) {
             V = pattern;
             currentPlayer = new(MockBehavior.Default, 0, mockGame.Object);
-            currentPlayer.Setup(p => p.IsYaku(It.IsAny<Tile>())).Returns(false);
             anotherPlayer = new(MockBehavior.Default, 1, mockGame.Object);
-            anotherPlayer.Setup(p => p.IsYaku(It.IsAny<Tile>())).Returns(false);
         }
 
         /// <summary>
