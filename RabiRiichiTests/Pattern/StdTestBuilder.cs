@@ -2,6 +2,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using RabiRiichi.Core;
 using RabiRiichi.Pattern;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -121,8 +122,19 @@ namespace RabiRiichiTests.Pattern {
             return this;
         }
 
+        /// <summary>
+        /// 检查是否没有更多计分结果了
+        /// </summary>
         public StdTestBuilder NoMore() {
             Assert.IsTrue(scores.Count == 0, "Expect no more scores but found");
+            return this;
+        }
+
+        /// <summary>
+        /// 修改游戏选项
+        /// </summary>
+        public StdTestBuilder WithConfig(Action<GameConfig> action) {
+            action(TestHelper.Game.Value.config);
             return this;
         }
     }
