@@ -49,7 +49,14 @@ namespace RabiRiichi.Action {
         /// 直接等待Task后不能修改游戏状态，因为此时事件锁可能被释放
         /// 请尽量等待WaitPlayerActionEvent
         /// </summary>
-        public Task WaitForFinish => IsEmpty ? Task.CompletedTask : finishTcs.Task;
+        public Task WaitForFinish {
+            get {
+                if (IsEmpty) {
+                    Finish();
+                }
+                return finishTcs.Task;
+            }
+        }
         public bool IsEmpty => playerInquiries.Count == 0;
         public readonly Game game;
 
@@ -125,6 +132,7 @@ namespace RabiRiichi.Action {
                 return;
             }
             if (IsEmpty) {
+                finishTcs.SetResult();
                 return;
             }
             if (curMaxPriority == int.MinValue) {
