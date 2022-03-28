@@ -22,9 +22,9 @@ namespace RabiRiichi.Event.InGame.Listener {
             ev.Q.Queue(lastDrawEv);
             ev.Q.Queue(new RevealDoraEvent(ev));
             ev.Q.Queue(new IncreaseJunEvent(ev, dealer));
-            lastDrawEv.OnFinish(() => {
+            lastDrawEv.OnFinish += () => {
                 ev.Q.Queue(new DealerFirstTurnEvent(ev, dealer, lastDrawEv.tiles[0]));
-            });
+            };
             return Task.CompletedTask;
         }
 

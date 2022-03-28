@@ -41,7 +41,7 @@ namespace RabiRiichi.Event.InGame.Listener {
             ev.inquiry.AddHandler<RonAction>((action) => {
                 eventBuilder.AddAgari(ev, discardEv.playerId, discardEv.tile, action.agariInfo);
             });
-            ev.OnFinish(() => {
+            ev.OnFinish += () => {
                 if (discardEv is RiichiEvent) {
                     var riichiEv = new SetRiichiEvent(discardEv, discardEv.playerId, discardEv.tile, ev.game.IsFirstJun);
                     // 巡目增加说明立直牌被鸣牌或进入下一个玩家的回合，更新立直状态
@@ -56,7 +56,7 @@ namespace RabiRiichi.Event.InGame.Listener {
                 if (ev.responseEvents.Count == 0) {
                     ev.Q.Queue(new NextPlayerEvent(ev, discardEv.playerId));
                 }
-            });
+            };
         }
 
         private static IEnumerable<ResolverBase> GetDiscardTileResolvers(Game game) {

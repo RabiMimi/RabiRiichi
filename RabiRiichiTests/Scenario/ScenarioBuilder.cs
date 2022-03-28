@@ -144,11 +144,8 @@ namespace RabiRiichiTests.Scenario {
         /// <param name="skipCount"> 最多跳过多少询问操作 </param>
         public async Task Resolve(int skipCount = 1) {
             for (var i = 0; i < skipCount; i++) {
-                var task = WaitInquiry().ContinueWith((t) => {
-                    t.Result.Finish();
-                }, TaskContinuationOptions.OnlyOnRanToCompletion);
                 try {
-                    await task;
+                    (await WaitInquiry()).Finish();
                 } catch (OperationCanceledException) {
                     await runToEnd;
                     break;

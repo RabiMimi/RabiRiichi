@@ -19,14 +19,14 @@ namespace RabiRiichi.Event.InGame.Listener {
                 ev.waitEvent.eventBuilder.AddAgari(ev.waitEvent, ev.playerId, ev.incoming, action.agariInfo);
             });
             ev.Q.Queue(ev.waitEvent);
-            ev.waitEvent.OnFinish(() => {
+            ev.waitEvent.OnFinish += () => {
                 if (ev.waitEvent.responseEvents.Count > 0) {
                     // TODO: 处理抢杠后的情况：算作杠还是刻？
                     return;
                 }
                 // 没有人抢杠，继续处理开杠事件
                 ev.Q.Queue(new AddKanEvent(ev));
-            });
+            };
             return Task.CompletedTask;
         }
 

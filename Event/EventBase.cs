@@ -1,8 +1,6 @@
 ﻿using RabiRiichi.Communication;
 using RabiRiichi.Core;
 using System.Collections.Generic;
-using System.Threading.Tasks;
-
 
 namespace RabiRiichi.Event {
     public static class EventPriority {
@@ -47,8 +45,8 @@ namespace RabiRiichi.Event {
 
         /// <summary> 该事件的子事件 </summary>
         public readonly List<EventBase> children = new();
-        /// <summary> 结束时触发事件 </summary>
-        private System.Action onFinish;
+        /// <summary> 在事件成功处理后执行回调 </summary>
+        public System.Action OnFinish;
 
         public EventBase(EventBase parent) {
             if (parent != null) {
@@ -85,12 +83,7 @@ namespace RabiRiichi.Event {
                 return;
             }
             phase = EventPriority.Finished;
-            onFinish?.Invoke();
-        }
-
-        /// <summary> 在事件成功处理后执行回调 </summary>
-        public void OnFinish(System.Action callback) {
-            onFinish += callback;
+            OnFinish?.Invoke();
         }
 
         public override string ToString() {
