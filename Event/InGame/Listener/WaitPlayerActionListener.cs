@@ -9,9 +9,6 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         public static async Task ExecuteWaitPlayer(WaitPlayerActionEvent e) {
-            if (e.inquiry.IsEmpty) {
-                return;
-            }
             e.game.SendInquiry(e.inquiry);
             try {
                 e.bus.eventProcessingLock.Release();

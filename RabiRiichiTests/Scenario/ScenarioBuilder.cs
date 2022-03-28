@@ -49,6 +49,8 @@ namespace RabiRiichiTests.Scenario {
                     actionCenter.ForceFail(e.Exception);
                 } else if (e.IsCanceled) {
                     actionCenter.ForceFail(new Exception("Game cancelled"));
+                } else {
+                    actionCenter.ForceCancel();
                 }
             });
             return this;
@@ -144,8 +146,11 @@ namespace RabiRiichiTests.Scenario {
             for (var i = 0; i < skipCount; i++) {
                 var task = WaitInquiry().ContinueWith((t) => {
                     t.Result.Finish();
-                });
-                if (await Task.WhenAny(runToEnd, task) == runToEnd) {
+                }, TaskContinuationOptions.OnlyOnRanToCompletion);
+                try {
+                    await task;
+                } catch (OperationCanceledException) {
+                    await runToEnd;
                     break;
                 }
             }

@@ -66,6 +66,9 @@ namespace RabiRiichi.Event.InGame.Listener {
                 var kan = new Kan(option.tiles);
                 eventBuilder.AddEvent(new KanEvent(ev, action.playerId, kan, action.incoming));
             });
+            ev.inquiry.AddHandler<RyuukyokuAction>((action) => {
+                eventBuilder.AddEvent(action.ev);
+            });
         }
 
         public static void Register(EventBus eventBus) {

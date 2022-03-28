@@ -39,11 +39,6 @@ namespace RabiRiichi.Event {
 
         /// <summary> 是否被取消 </summary>
         public bool IsCancelled => phase == EventPriority.Cancelled;
-
-        /// <summary> 等待事件被成功处理 </summary>
-        private readonly TaskCompletionSource finishTcs = new();
-        public Task WaitForFinish => finishTcs.Task;
-
         /// <summary> 事件处理过程中可能会用到的额外信息 </summary>
         public readonly Dictionary<string, object> extraData = new();
 
@@ -52,6 +47,8 @@ namespace RabiRiichi.Event {
 
         /// <summary> 该事件的子事件 </summary>
         public readonly List<EventBase> children = new();
+        /// <summary> 结束时触发事件 </summary>
+        private System.Action onFinish;
 
         public EventBase(EventBase parent) {
             if (parent != null) {
@@ -77,7 +74,6 @@ namespace RabiRiichi.Event {
                 return;
             }
             phase = EventPriority.Cancelled;
-            finishTcs.TrySetCanceled();
             foreach (var child in children) {
                 child.Cancel();
             }
@@ -89,12 +85,12 @@ namespace RabiRiichi.Event {
                 return;
             }
             phase = EventPriority.Finished;
-            finishTcs.TrySetResult();
+            onFinish?.Invoke();
         }
 
         /// <summary> 在事件成功处理后执行回调 </summary>
         public void OnFinish(System.Action callback) {
-            WaitForFinish.ContinueWith((_) => callback(), TaskContinuationOptions.NotOnCanceled);
+            onFinish += callback;
         }
 
         public override string ToString() {

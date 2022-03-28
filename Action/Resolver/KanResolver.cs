@@ -50,11 +50,20 @@ namespace RabiRiichi.Action.Resolver {
                     return !validKan;
                 });
             }
-            // 加杠
             if (incoming.IsTsumo) {
+                // 加杠
                 var groups = hand.called.Where(g => g is Kou && g.First.tile.IsSame(incoming.tile));
                 foreach (var group in groups) {
                     current.AddRange(new GameTiles(group.Append(incoming)));
+                }
+                // 暗杠
+                var grs = hand.freeTiles.GroupBy(t => t.tile.WithoutDora);
+                foreach (var gr in grs) {
+                    if (gr.Count() >= 4) {
+                        var list = gr.ToList();
+                        var key = gr.Key;
+                        CheckCombo(list, result, new List<GameTile>(), key, key, key, key);
+                    }
                 }
             }
 

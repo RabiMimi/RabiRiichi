@@ -34,7 +34,9 @@ namespace RabiRiichi.Action {
         }
 
         public SinglePlayerInquiry DisableSkip() {
+            var selected = Selected;
             actions.RemoveAll(action => action is SkipAction);
+            responseIndex = selected is SkipAction ? 0 : actions.IndexOf(selected);
             return this;
         }
 

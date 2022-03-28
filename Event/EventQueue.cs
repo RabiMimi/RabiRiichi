@@ -7,12 +7,10 @@ namespace RabiRiichi.Event {
         private readonly Queue<EventBase> queue = new();
         public readonly EventBus bus;
         public readonly bool shouldLock;
-        public readonly bool stopOnEmptyQueue;
 
-        public EventQueue(EventBus bus, bool shouldLock = false, bool stopOnEmptyQueue = true) {
+        public EventQueue(EventBus bus, bool shouldLock = false) {
             this.bus = bus;
             this.shouldLock = shouldLock;
-            this.stopOnEmptyQueue = stopOnEmptyQueue;
         }
 
         public void Queue(EventBase ev) {
@@ -35,10 +33,7 @@ namespace RabiRiichi.Event {
                 EventBase ev;
                 lock (queue) {
                     if (!queue.TryDequeue(out ev)) {
-                        if (stopOnEmptyQueue) {
-                            break;
-                        }
-                        continue;
+                        break;
                     }
                 }
                 if (await bus.Process(ev, shouldLock)) {

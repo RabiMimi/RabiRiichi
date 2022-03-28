@@ -154,11 +154,19 @@ namespace RabiRiichiTests.Scenario {
             nextInquirySource?.TrySetException(e);
         }
 
+        public void ForceCancel() {
+            currentInquirySource?.TrySetCanceled();
+            nextInquirySource?.TrySetCanceled();
+        }
+
         public void OnEvent(int playerId, EventBase ev) {
             OnMessage(ev.game, playerId, ev);
         }
 
         public void OnInquiry(MultiPlayerInquiry inquiry) {
+            if (inquiry.IsEmpty) {
+                return;
+            }
             foreach (var playerInquiry in inquiry.playerInquiries) {
                 OnMessage(inquiry.game, playerInquiry.playerId, playerInquiry);
             }

@@ -61,7 +61,7 @@ namespace RabiRiichi.Core {
             info = Get<GameInfo>();
             wall = Get<Wall>();
             json = Get<JsonStringify>();
-            mainQueue = new EventQueue(eventBus, true, false);
+            mainQueue = new EventQueue(eventBus, true);
 
             // Init Players
             players = new Player[config.playerCount];

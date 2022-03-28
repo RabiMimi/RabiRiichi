@@ -34,6 +34,9 @@ namespace RabiRiichi.Communication {
         }
 
         public void OnInquiry(MultiPlayerInquiry inquiry) {
+            if (inquiry.IsEmpty) {
+                return;
+            }
             lock (inquiries) {
                 inquiries[inquiry.id] = inquiry;
             }

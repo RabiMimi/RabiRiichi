@@ -135,7 +135,7 @@ namespace RabiRiichiTests.Scenario.Tests {
 
 
         [TestMethod]
-        public async Task SuufonRendaNoRyuukyoku() {
+        public async Task SuufonRendaNoRyuukyoku_NotFirstJun() {
             var scenario = new ScenarioBuilder()
                 .WithPlayer(0, playerBuilder => {
                     playerBuilder.SetFreeTiles("1112223334555z");
@@ -152,6 +152,87 @@ namespace RabiRiichiTests.Scenario.Tests {
             }
 
             await scenario.AssertNoEvent<SuufonRenda>().Resolve();
+        }
+
+        [TestMethod]
+        public async Task SuufonRendaNoRyuukyoku_NotSameWind() {
+            var scenario = new ScenarioBuilder()
+                .WithPlayer(0, playerBuilder => {
+                    playerBuilder.SetFreeTiles("11122233345556z");
+                })
+                .WithWall(wallBuilder => {
+                    wallBuilder.Reserve("444z");
+                })
+                .SetFirstJun()
+                .Start(0);
+
+            for (int i = 0; i < 4; i++) {
+                (await scenario.WaitInquiry()).ForPlayer(i, (playerInquiry) => {
+                    playerInquiry.ChooseTile<PlayTileAction>(i == 0 ? "1z" : "4z");
+                }).AssertAutoFinish();
+            }
+
+            await scenario.AssertNoEvent<SuufonRenda>().Resolve();
+        }
+
+        [TestMethod]
+        public async Task KyuushuKyuuhaiRyuukyoku() {
+            var scenario = new ScenarioBuilder()
+                .WithPlayer(1, playerBuilder => {
+                    playerBuilder.SetFreeTiles("19s19m1234569p17z");
+                })
+                .WithWall(wallBuilder => {
+                    wallBuilder.Reserve("234z");
+                })
+                .SetFirstJun()
+                .Start(0);
+
+            (await scenario.WaitPlayerTurn(1)).ForPlayer(1, playerInquiry => {
+                playerInquiry.ApplyAction<RyuukyokuAction>();
+            }).AssertAutoFinish();
+
+            await scenario.AssertEvent<KyuushuKyuuhai>().Resolve();
+        }
+
+        [TestMethod]
+        public async Task KyuushuKyuuhaiNoRyuukyoku_Fuuro() {
+            var scenario = new ScenarioBuilder()
+                .WithPlayer(0, playerBuilder => {
+                    playerBuilder.SetFreeTiles("22223333444455s");
+                })
+                .WithPlayer(1, playerBuilder => {
+                    playerBuilder.SetFreeTiles("19s19m19p1234567z");
+                })
+                .WithWall(wallBuilder => {
+                    wallBuilder.Reserve("1234567z");
+                })
+                .SetFirstJun()
+                .Start(0);
+
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry.ChooseTiles<KanAction>("3333s");
+            }).AssertAutoFinish();
+
+            (await scenario.WaitPlayerTurn(1)).ForPlayer(1, playerInquiry => {
+                playerInquiry.AssertNoAction<RyuukyokuAction>();
+            }).AssertAutoFinish(false);
+        }
+
+        [TestMethod]
+        public async Task KyuushuKyuuhaiNoRyuukyoku_Only8() {
+            var scenario = new ScenarioBuilder()
+                .WithPlayer(1, playerBuilder => {
+                    playerBuilder.SetFreeTiles("19s19m1234569p17z");
+                })
+                .WithWall(wallBuilder => {
+                    wallBuilder.Reserve("123z");
+                })
+                .SetFirstJun()
+                .Start(0);
+
+            (await scenario.WaitPlayerTurn(1)).ForPlayer(1, playerInquiry => {
+                playerInquiry.AssertNoAction<RyuukyokuAction>();
+            }).AssertAutoFinish(false);
         }
     }
 }
