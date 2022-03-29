@@ -8,8 +8,8 @@ namespace RabiRiichi.Event.InGame {
     public class KanEvent : BroadcastPlayerEvent {
         public override string name => "kan";
         #region Request
-        [RabiBroadcast] public readonly Kan kan;
-        [RabiBroadcast] public readonly TileSource kanSource;
+        [RabiBroadcast] public Kan kan;
+        [RabiBroadcast] public TileSource kanSource;
         public readonly GameTile incoming;
         #endregion
 

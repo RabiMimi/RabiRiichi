@@ -60,5 +60,9 @@ namespace RabiRiichi.Action {
         public virtual bool ValidateResponse(T response) {
             return true;
         }
+
+        public override string ToString() {
+            return name;
+        }
     }
 }

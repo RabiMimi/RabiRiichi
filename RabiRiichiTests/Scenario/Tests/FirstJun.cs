@@ -204,7 +204,7 @@ namespace RabiRiichiTests.Scenario.Tests {
                     playerBuilder.SetFreeTiles("19s19m19p1234567z");
                 })
                 .WithWall(wallBuilder => {
-                    wallBuilder.Reserve("1234567z");
+                    wallBuilder.Reserve("1234567z").AddRinshan("3p");
                 })
                 .SetFirstJun()
                 .Start(0);

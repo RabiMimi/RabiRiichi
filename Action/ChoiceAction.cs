@@ -8,17 +8,17 @@ namespace RabiRiichi.Action {
     }
 
     public abstract class ChoiceAction<T> : PlayerAction<T> {
-        [RabiBroadcast] public List<ActionOption> choices = new();
+        [RabiBroadcast] public List<ActionOption> options = new();
 
         public ChoiceAction(int playerId) : base(playerId) { }
 
         public void AddOption(ActionOption option) {
-            choices.Add(option);
+            options.Add(option);
         }
     }
 
     public abstract class MultiChoiceAction : ChoiceAction<List<int>> {
-        public IEnumerable<ActionOption> chosen => response.Select(r => choices[r]);
+        public IEnumerable<ActionOption> chosen => response.Select(r => options[r]);
         public MultiChoiceAction(int playerId) : base(playerId) {
             response = new List<int>();
         }
@@ -28,7 +28,7 @@ namespace RabiRiichi.Action {
                 return false;
             }
             response = resp
-                .Where(i => i >= 0 && i < choices.Count)
+                .Where(i => i >= 0 && i < options.Count)
                 .OrderBy(i => i)
                 .Distinct()
                 .ToList();
@@ -37,12 +37,12 @@ namespace RabiRiichi.Action {
     }
 
     public abstract class SingleChoiceAction : ChoiceAction<int> {
-        public ActionOption chosen => choices[response];
+        public ActionOption chosen => options[response];
         public SingleChoiceAction(int playerId) : base(playerId) {
             response = 0;
         }
 
         public override bool ValidateResponse(int response)
-            => response >= 0 && response < choices.Count;
+            => response >= 0 && response < options.Count;
     }
 }

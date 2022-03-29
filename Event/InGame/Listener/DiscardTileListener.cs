@@ -24,7 +24,7 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         public static void AddPlayerAction(DiscardTileEvent discardEv) {
-            var eventBuilder = new MultiEventBuilder();
+            var eventBuilder = discardEv.waitEvent.eventBuilder;
             var ev = discardEv.waitEvent;
             ev.inquiry.AddHandler<ChiiAction>((action) => {
                 var option = (ChooseTilesActionOption)action.chosen;

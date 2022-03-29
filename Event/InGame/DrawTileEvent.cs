@@ -11,6 +11,7 @@ namespace RabiRiichi.Event.InGame {
         #endregion
 
         #region Response
+        [RabiPrivate] public GameTile tile;
         public readonly WaitPlayerActionEvent waitEvent;
         #endregion
 

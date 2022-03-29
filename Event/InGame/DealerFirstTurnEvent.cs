@@ -5,7 +5,7 @@ namespace RabiRiichi.Event.InGame {
         public override string name => "dealer_first_turn";
 
         #region request
-        public readonly GameTile incoming;
+        public GameTile incoming;
         #endregion
 
         #region Response

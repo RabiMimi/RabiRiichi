@@ -8,12 +8,9 @@ namespace RabiRiichi.Event.InGame.Listener {
     public static class KanListener {
         public static Task ExecuteKan(KanEvent ev) {
             ev.Q.Queue(new IncreaseJunEvent(ev, ev.playerId));
-            if (ev.kanSource != TileSource.DaiMinKan) {
-                // 抢杠
-                var resolvers = GetKanResolvers(ev.game);
-                foreach (var resolver in resolvers) {
-                    resolver.Resolve(ev.player, ev.incoming, ev.waitEvent.inquiry);
-                }
+            var resolvers = GetKanResolvers(ev.game, ev.kanSource);
+            foreach (var resolver in resolvers) {
+                resolver.Resolve(ev.player, ev.incoming, ev.waitEvent.inquiry);
             }
             ev.waitEvent.inquiry.AddHandler<RonAction>((action) => {
                 ev.incoming.player = ev.player;
@@ -31,9 +28,16 @@ namespace RabiRiichi.Event.InGame.Listener {
             return Task.CompletedTask;
         }
 
-        private static IEnumerable<ResolverBase> GetKanResolvers(Game game) {
-            if (game.TryGet<ChanKanResolver>(out var resolver)) {
-                yield return resolver;
+        private static IEnumerable<ResolverBase> GetKanResolvers(Game game, TileSource kanSource) {
+            if (kanSource != TileSource.DaiMinKan && game.TryGet<ChanKanResolver>(out var resolver1)) {
+                // 抢杠
+                yield return resolver1;
+            }
+            if (game.TryGet<KanResolver>(out var resolver2)) {
+                yield return resolver2;
+            }
+            if (game.TryGet<TsumoResolver>(out var resolver3)) {
+                yield return resolver3;
             }
         }
 

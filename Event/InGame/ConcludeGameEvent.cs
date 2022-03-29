@@ -6,8 +6,8 @@ namespace RabiRiichi.Event.InGame {
         public override string name => "conclude_game";
 
         #region Request
-        public readonly bool switchDealer;
-        public readonly bool isRyuukyoku;
+        public bool switchDealer;
+        public bool isRyuukyoku;
         #endregion
 
         #region Response

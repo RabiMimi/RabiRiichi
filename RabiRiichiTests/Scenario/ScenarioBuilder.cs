@@ -538,14 +538,14 @@ namespace RabiRiichiTests.Scenario {
             /// <summary> 添加里宝牌。第一个里宝牌的下标为0。 </summary>
             public WallBuilder AddUradoras(Tile tile) => AddUradoras(Enumerable.Repeat(tile, 1));
 
-            /// <summary> 添加岭上牌。最后一张岭上牌的下标为0。 </summary>
+            /// <summary> 添加岭上牌。第一张岭上牌的下标为0。 </summary>
             public WallBuilder AddRinshan(IEnumerable<Tile> tiles) {
                 rinshan.AddRange(tiles);
                 return this;
             }
-            /// <summary> 添加岭上牌。最后一张岭上牌的下标为0。 </summary>
+            /// <summary> 添加岭上牌。第一张岭上牌的下标为0。 </summary>
             public WallBuilder AddRinshan(string tiles) => AddRinshan(new Tiles(tiles));
-            /// <summary> 添加岭上牌。最后一张岭上牌的下标为0。 </summary>
+            /// <summary> 添加岭上牌。第一张岭上牌的下标为0。 </summary>
             public WallBuilder AddRinshan(Tile tile) => AddRinshan(Enumerable.Repeat(tile, 1));
 
             /// <summary> 设置有多少Dora已经翻开了，默认为1。 </summary>
@@ -655,6 +655,7 @@ namespace RabiRiichiTests.Scenario {
                 }
                 wall.remaining.AddRange(allTiles);
                 wall.remaining.Reverse();
+                wall.rinshan.Reverse();
                 return wall;
             }
         }

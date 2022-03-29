@@ -35,10 +35,10 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         public static Task DrawTile(DrawTileEvent e) {
-            var gameTile = DrawFrom(e);
+            e.tile = DrawFrom(e);
             var resolvers = GetDrawTileResolvers(e.game);
             foreach (var resolver in resolvers) {
-                resolver.Resolve(e.player, gameTile, e.waitEvent.inquiry);
+                resolver.Resolve(e.player, e.tile, e.waitEvent.inquiry);
             }
             e.waitEvent.inquiry.GetByPlayerId(e.playerId).DisableSkip();
             AddActionHandler(e.waitEvent, e.reason);

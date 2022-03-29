@@ -30,6 +30,11 @@ namespace RabiRiichiTests.Scenario {
                 return this;
             }
 
+            public ScenarioPlayerInquiryMatcher AssertSkip(bool canSkip = true) {
+                parent.AssertSkip(playerId, canSkip);
+                return this;
+            }
+
             public ScenarioPlayerInquiryMatcher ApplyAction<T, R>(R response, Predicate<T> matcher = null) where T : PlayerAction<R> {
                 parent.ApplyAction(playerId, response, matcher);
                 return this;
@@ -44,24 +49,23 @@ namespace RabiRiichiTests.Scenario {
             public ScenarioPlayerInquiryMatcher ChooseTile<T>(string response, Predicate<T> matcher = null) where T : ChooseTileAction {
                 var tile = new Tile(response);
                 var action = parent.FindAction(playerId, matcher);
-                Assert.IsNotNull(action);
-                int index = action.choices.FindIndex(x => (x as ChooseTileActionOption).tile.tile == tile);
-                Assert.IsTrue(index >= 0);
+                Assert.IsNotNull(action, $"action {typeof(T).Name} not found");
+                int index = action.options.FindIndex(x => (x as ChooseTileActionOption).tile.tile == tile);
+                Assert.IsTrue(index >= 0, $"tile {tile} not found in {action.options.Select(x => (x as ChooseTileActionOption).tile.tile)}");
                 return ApplyAction(index, matcher);
             }
 
             public ScenarioPlayerInquiryMatcher ChooseTiles<T>(string response, Predicate<T> matcher = null) where T : ChooseTilesAction {
                 var tiles = new Tiles(response);
                 var action = parent.FindAction(playerId, matcher);
-                Assert.IsNotNull(action);
-                int index = action.choices.FindIndex(x =>
+                Assert.IsNotNull(action, $"action {typeof(T).Name} not found");
+                int index = action.options.FindIndex(x =>
                     (x as ChooseTilesActionOption).tiles
                         .Select(t => t.tile)
                         .SequenceEqualAfterSort(tiles));
-                Assert.IsTrue(index >= 0);
+                Assert.IsTrue(index >= 0, $"{tiles} not found in {action.options.Select(x => (x as ChooseTilesActionOption).tiles)}");
                 return ApplyAction(index, matcher);
             }
-
 
             public ScenarioPlayerInquiryMatcher AssertNoMoreActions() {
                 parent.AssertNoMoreActions(playerId);
@@ -98,20 +102,23 @@ namespace RabiRiichiTests.Scenario {
 
         public ScenarioInquiryMatcher AssertAction<T>(int playerId, Predicate<T> matcher = null) where T : IPlayerAction {
             var action = FindAction(playerId, matcher);
-            Assert.IsNotNull(action);
+            Assert.IsNotNull(action, $"action {typeof(T).Name} not found");
             foundActions.Add(action);
             return this;
         }
 
         public ScenarioInquiryMatcher AssertNoAction<T>(int playerId, Predicate<T> matcher = null) where T : IPlayerAction {
-            Assert.IsNull(FindAction(playerId, matcher));
+            Assert.IsNull(FindAction(playerId, matcher), $"action {typeof(T).Name} found");
             return this;
         }
+
+        public ScenarioInquiryMatcher AssertSkip(int playerId, bool canSkip = true)
+            => canSkip ? AssertAction<SkipAction>(playerId) : AssertNoAction<SkipAction>(playerId);
 
         public ScenarioInquiryMatcher ApplyAction<T, R>(int playerId, R response, Predicate<T> matcher = null) where T : PlayerAction<R> {
             var action = FindAction(playerId, matcher);
             var index = inquiry.GetByPlayerId(playerId).actions.IndexOf(action);
-            Assert.IsNotNull(action);
+            Assert.IsNotNull(action, $"action {typeof(T).Name} not found");
             foundActions.Add(action);
             inquiry.OnResponse(new InquiryResponse(playerId, index, JsonSerializer.Serialize(response)));
             return this;
@@ -122,9 +129,9 @@ namespace RabiRiichiTests.Scenario {
 
         public ScenarioInquiryMatcher AssertAutoFinish(bool autoFinish = true) {
             if (autoFinish) {
-                Assert.IsTrue(inquiry.hasExecuted);
+                Assert.IsTrue(inquiry.hasExecuted, "Inquiry not executed");
             } else {
-                Assert.IsFalse(inquiry.hasExecuted);
+                Assert.IsFalse(inquiry.hasExecuted, "Inquiry auto executed");
                 inquiry.Finish();
             }
             onFinish();
@@ -132,7 +139,8 @@ namespace RabiRiichiTests.Scenario {
         }
 
         public ScenarioInquiryMatcher AssertNoMoreActions(int playerId) {
-            Assert.IsTrue(inquiry.GetByPlayerId(playerId).actions.All(action => foundActions.Contains(action)));
+            var notFound = inquiry.GetByPlayerId(playerId).actions.Where(a => !foundActions.Contains(a)).ToArray();
+            Assert.AreEqual(0, notFound.Length, $"Unexpected actions {string.Join(',', notFound.Select(a => a.ToString()))}");
             return this;
         }
 
