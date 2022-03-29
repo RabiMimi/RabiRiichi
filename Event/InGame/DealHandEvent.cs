@@ -1,6 +1,6 @@
 ﻿using RabiRiichi.Communication;
 using RabiRiichi.Core;
-
+using System.Collections.Generic;
 
 namespace RabiRiichi.Event.InGame {
     public class DealHandEvent : PrivatePlayerEvent {
@@ -10,7 +10,7 @@ namespace RabiRiichi.Event.InGame {
         #endregion
 
         #region  response
-        [RabiBroadcast] public GameTiles tiles;
+        [RabiBroadcast] public List<GameTile> tiles;
         #endregion
 
         public DealHandEvent(EventBase parent, int playerId, int count) : base(parent, playerId) {

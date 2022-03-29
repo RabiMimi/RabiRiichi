@@ -12,7 +12,7 @@ namespace RabiRiichi.Core {
         /// <summary> 岭上牌数量 </summary>
         public const int NUM_RINSHAN = 4;
         /// <summary> 牌山剩下的牌 </summary>
-        public readonly ListStack<GameTile> remaining = new(new GameTiles(Tiles.All));
+        public readonly ListStack<GameTile> remaining = new(Tiles.All.ToGameTiles());
         /// <summary> 岭上牌 </summary>
         public readonly ListStack<GameTile> rinshan = new();
         /// <summary> 宝牌 </summary>
@@ -53,8 +53,8 @@ namespace RabiRiichi.Core {
         }
 
         /// <summary> 抽若干张牌 </summary>
-        public GameTiles Draw(int count) {
-            var ret = new GameTiles(remaining.PopMany(count));
+        public List<GameTile> Draw(int count) {
+            var ret = remaining.PopMany(count).ToList();
             foreach (var tile in ret) {
                 tile.source = TileSource.Wall;
             }

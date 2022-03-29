@@ -1,10 +1,24 @@
 ﻿using RabiRiichi.Util;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
 
 namespace RabiRiichi.Core {
     public static class Extensions {
+        #region Tiles
+        public static Tiles ToTiles(this IEnumerable<GameTile> tiles) {
+            return new Tiles(tiles.Select(gameTile => gameTile.tile));
+        }
+
+        public static IEnumerable<GameTile> ToGameTiles(this IEnumerable<Tile> tiles) {
+            return tiles.Select(t => new GameTile(t));
+        }
+
+        public static List<GameTile> ToGameTileList(this IEnumerable<Tile> tiles) {
+            return tiles.ToGameTiles().ToList();
+        }
+
         public static TileSuit ToGroup(this char c) {
             c = char.ToLower(c);
             return c switch {
@@ -47,7 +61,9 @@ namespace RabiRiichi.Core {
         public static string ToUnicode(this Tiles tiles) {
             return string.Concat(tiles.Select(tile => ToUnicode(tile)));
         }
+        #endregion
 
+        #region Threading
         internal static MutexHolder Lock(this Mutex mutex, int timeoutMs = -1) {
             return new MutexHolder(mutex, timeoutMs);
         }
@@ -55,5 +71,6 @@ namespace RabiRiichi.Core {
         internal static SemaphoreHolder Lock(this SemaphoreSlim semaphore, int timeoutMs = -1) {
             return new SemaphoreHolder(semaphore, timeoutMs);
         }
+        #endregion
     }
 }

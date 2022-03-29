@@ -21,7 +21,7 @@ namespace RabiRiichi.Action.Resolver {
             }
             var tile = incoming.tile.WithoutDora;
             var current = new List<GameTile> { incoming };
-            var result = new List<GameTiles>();
+            var result = new List<List<GameTile>>();
             CheckCombo(hand.freeTiles, result, current, tile, tile);
             if (result.Count == 0) {
                 return false;

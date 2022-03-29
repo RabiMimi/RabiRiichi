@@ -19,7 +19,7 @@ namespace RabiRiichi.Action.Resolver {
                 return false;
             }
             var current = new List<GameTile> { incoming };
-            var result = new List<GameTiles>();
+            var result = new List<List<GameTile>>();
             CheckCombo(hand.freeTiles, result, current, incoming.tile.Prev.Prev, incoming.tile.Prev);
             CheckCombo(hand.freeTiles, result, current, incoming.tile.Prev, incoming.tile.Next);
             CheckCombo(hand.freeTiles, result, current, incoming.tile.Next, incoming.tile.Next.Next);

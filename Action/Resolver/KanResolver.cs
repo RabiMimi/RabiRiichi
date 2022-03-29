@@ -29,7 +29,7 @@ namespace RabiRiichi.Action.Resolver {
             }
             var tile = incoming.tile.WithoutDora;
             var current = new List<GameTile> { incoming };
-            var result = new List<GameTiles>();
+            var result = new List<List<GameTile>>();
 
             // 大明杠或暗杠
             CheckCombo(hand.freeTiles, result, current, tile, tile, tile);
@@ -54,7 +54,7 @@ namespace RabiRiichi.Action.Resolver {
                 // 加杠
                 var groups = hand.called.Where(g => g is Kou && g.First.tile.IsSame(incoming.tile));
                 foreach (var group in groups) {
-                    current.AddRange(new GameTiles(group.Append(incoming)));
+                    current.AddRange(group.Append(incoming));
                 }
                 // 暗杠
                 var grs = hand.freeTiles.GroupBy(t => t.tile.WithoutDora);

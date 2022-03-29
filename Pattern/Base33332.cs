@@ -109,8 +109,8 @@ namespace RabiRiichi.Pattern {
             // 先存下来后面两张牌用于顺子计算
             var nxt1 = curTile.Next;
             var nxt2 = nxt1.Next;
-            GameTiles bucket1 = null;
-            GameTiles bucket2 = null;
+            List<GameTile> bucket1 = null;
+            List<GameTile> bucket2 = null;
             if (nxt2.IsValid) {
                 bucket1 = tileBucket.GetBucket(nxt1.Suit, nxt1.Num);
                 bucket2 = tileBucket.GetBucket(nxt2.Suit, nxt2.Num);

@@ -12,7 +12,7 @@ namespace RabiRiichiTests.Pattern {
         protected virtual StdPattern V { get; set; }
         protected List<MenLike> groups = new();
         protected List<MenLike> fuuro = new();
-        protected GameTiles freeTiles = new();
+        protected List<GameTile> freeTiles = new();
         protected GameTile incoming;
         protected ScoreStorage scores = new();
         protected bool? forceMenzen = null;
@@ -21,7 +21,7 @@ namespace RabiRiichiTests.Pattern {
         public readonly Mock<Player> anotherPlayer;
 
         protected MenLike Create(string tiles, int fuuroIndex) {
-            var t = new GameTiles(new Tiles(tiles));
+            var t = new Tiles(tiles).ToGameTileList();
             for (int i = 0; i < t.Count; i++) {
                 t[i].player = currentPlayer.Object;
                 t[i].discardInfo = fuuroIndex == i ? new DiscardInfo(anotherPlayer.Object, DiscardReason.Draw) : null;
@@ -86,7 +86,7 @@ namespace RabiRiichiTests.Pattern {
                     : new DiscardInfo(anotherPlayer.Object, DiscardReason.Draw),
                 source = tileSource,
             };
-            var group = new GameTiles(new Tiles(tiles));
+            var group = new Tiles(tiles).ToGameTileList();
             group.ForEach(g => g.player = currentPlayer.Object);
             freeTiles.AddRange(group.ToList());
             group.Add(this.incoming);

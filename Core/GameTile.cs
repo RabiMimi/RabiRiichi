@@ -94,20 +94,4 @@ namespace RabiRiichi.Core {
             return tile.ToString();
         }
     }
-
-    public class GameTiles : List<GameTile> {
-        public GameTiles() { }
-        public GameTiles(IEnumerable<GameTile> tiles) : base(tiles) { }
-        public GameTiles(IEnumerable<Tile> tiles)
-            : base(tiles.Select(tile => new GameTile(tile))) { }
-        public Tiles ToTiles() {
-            return new Tiles(this.Select(gameTile => gameTile.tile));
-        }
-
-        public override string ToString() {
-            var ret = this.ToTiles();
-            ret.Sort();
-            return ret.ToString();
-        }
-    }
 }

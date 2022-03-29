@@ -7,7 +7,7 @@ namespace RabiRiichiTests.Helper {
     static class TestHelper {
         public static Hand CreateHand(string str, params string[] groups) {
             return new Hand {
-                freeTiles = new GameTiles(new Tiles(str)),
+                freeTiles = new Tiles(str).ToGameTileList(),
                 called = groups.Select(gr => MenLike.From(new Tiles(gr))).ToList(),
             };
         }

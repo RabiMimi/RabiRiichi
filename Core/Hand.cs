@@ -7,7 +7,7 @@ using System.Linq;
 namespace RabiRiichi.Core {
     public class Hand {
         /// <summary> 手牌（不包含副露） </summary>
-        public GameTiles freeTiles = new();
+        public List<GameTile> freeTiles = new();
 
         /// <summary> 巡目 </summary>
         public int jun = 0;
@@ -16,7 +16,7 @@ namespace RabiRiichi.Core {
         public List<MenLike> called = new();
 
         /// <summary> 牌河 </summary>
-        public GameTiles discarded = new();
+        public List<GameTile> discarded = new();
 
         /// <summary> 当前玩家 </summary>
         public Player player;
@@ -70,17 +70,14 @@ namespace RabiRiichi.Core {
         public int Count => called.Select(gr => Math.Min(3, gr.Count)).Sum() + freeTiles.Count;
 
         public GameTile FindTile(Tile tile) => freeTiles.Find(t => t.tile == tile);
-        public GameTiles FindTiles(Tiles tiles) {
+        public IEnumerable<GameTile> FindTiles(Tiles tiles) {
             var tmp = new Tiles(tiles);
-            var ret = new GameTiles();
             foreach (var tile in freeTiles) {
                 if (tmp.Contains(tile.tile)) {
-                    ret.Add(tile);
                     tmp.Remove(tile.tile);
+                    yield return tile;
                 }
             }
-            Debug.Assert(ret.Count == tiles.Count);
-            return ret;
         }
 
         public void Add(GameTile tile) {

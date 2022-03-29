@@ -9,10 +9,10 @@ namespace RabiRiichi.Core {
     /// <summary> 面子或雀头或单张 </summary>
     public abstract class MenLike : ReadOnlyCollection<GameTile> {
         /// <summary> 唯一确定该面子的值（忽略赤宝） </summary>
-        public ulong Value { get; protected set; }
+        public readonly ulong Value;
 
         /// <summary> 明暗 </summary>
-        public bool IsClose { get; protected set; }
+        public readonly bool IsClose;
 
         /// <summary> 花色 </summary>
         public TileSuit Suit => First.tile.Suit;
@@ -20,20 +20,14 @@ namespace RabiRiichi.Core {
         /// <summary> 第一张牌 </summary>
         public GameTile First => this[0];
 
-        private void Init() {
+        public MenLike(IEnumerable<GameTile> tiles) : base(tiles.OrderBy(t => t.tile).ToList()) {
             Value = 0;
             foreach (var tile in this) {
                 Value = (Value << 8) | tile.tile.NoDoraVal;
             }
             IsClose = this.All(t => t.IsTsumo);
         }
-
-        public MenLike(IEnumerable<GameTile> tiles) : base(tiles.OrderBy(t => t.tile).ToList()) {
-            Init();
-        }
-        public MenLike(IEnumerable<Tile> tiles) : this(new GameTiles(tiles)) {
-            Init();
-        }
+        public MenLike(IEnumerable<Tile> tiles) : this(tiles.ToGameTiles()) { }
 
         public abstract bool IsSame(MenLike other);
 
@@ -104,13 +98,13 @@ namespace RabiRiichi.Core {
         }
 
         /// <summary> 根据牌返回最适合的类 </summary>
-        public static MenLike From(List<GameTile> tiles) {
-            return From(tiles.AsReadOnly());
+        public static MenLike From(IEnumerable<GameTile> tiles) {
+            return From(tiles.ToList().AsReadOnly());
         }
 
         /// <summary> 根据牌返回最适合的类 </summary>
         public static MenLike From(IEnumerable<Tile> tiles) {
-            return From(new GameTiles(tiles));
+            return From(tiles.ToGameTiles());
         }
     }
 

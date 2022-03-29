@@ -22,15 +22,12 @@ namespace RabiRiichi.Action.Resolver {
 
         private static bool CheckComboDfs(
             List<GameTile> current,
-            List<GameTiles> output,
+            List<List<GameTile>> output,
             List<GameTile> hand, int handIndex,
             List<Tile> tiles, int tileIndex) {
             if (tileIndex >= tiles.Count) {
-                var toAdd = new GameTiles(current);
-                toAdd.Sort();
-                var str = tiles.ToString();
-                if (output.All(t => t.ToString() != toAdd.ToString())) {
-                    output.Add(toAdd);
+                if (output.All(t => !t.SequenceEqual(current))) {
+                    output.Add(current.ToList());
                     return true;
                 }
                 return false;
@@ -58,7 +55,7 @@ namespace RabiRiichi.Action.Resolver {
         /// tiles对赤宝牌不敏感，output中普通版本和赤宝牌版本会被看作不同的组合
         /// </summary>
         /// <returns>是否至少有一个合法组合</returns>
-        public static bool CheckCombo(List<GameTile> hand, List<GameTiles> output, List<GameTile> current, params Tile[] tiles) {
+        public static bool CheckCombo(List<GameTile> hand, List<List<GameTile>> output, List<GameTile> current, params Tile[] tiles) {
             var tileList = tiles.ToList();
             tileList.Sort();
             hand.Sort();
