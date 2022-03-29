@@ -12,8 +12,9 @@ namespace RabiRiichi.Pattern {
             bool flag = groups.Where(gr => gr is not Jantou && gr.First.tile.IsSangen).Count() == 3;
             if (flag) {
                 scores.Add(new Scoring(ScoringType.Yakuman, 1, this));
+                return true;
             }
-            return flag;
+            return false;
         }
     }
 }

@@ -15,8 +15,9 @@ namespace RabiRiichi.Pattern {
             if (flag) {
                 scores.Remove(dependOnPatterns);
                 scores.Add(new Scoring(ScoringType.Yakuman, 2, this));
+                return true;
             }
-            return flag;
+            return false;
         }
     }
 }

@@ -34,6 +34,15 @@ namespace RabiRiichiTests.Pattern {
                 .AddFuuro("3333z", 2)
                 .Resolve(true)
                 .ExpectScoring(ScoringType.Fu, 50);
+
+            new StdTestBuilder(V)
+                .AddAgari("8p", "8p")
+                .AddFree("333p")
+                .AddFree("222s")
+                .AddFree("234p")
+                .AddFree("4444m")
+                .Resolve(true)
+                .ExpectScoring(ScoringType.Fu, 60);
         }
     }
 }
