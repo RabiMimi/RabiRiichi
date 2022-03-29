@@ -9,7 +9,7 @@ namespace RabiRiichi.Pattern {
         }
 
         public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
-            bool jantouFlag = groups.Any(gr => gr is Jantou && gr.First.tile.IsSangen);
+            bool jantouFlag = groups.Find(gr => gr is Jantou).First.tile.IsSangen;
             bool kouFlag = groups
                 .Where(gr => gr is not Jantou)
                 .Subset(2)
