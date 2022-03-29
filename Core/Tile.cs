@@ -101,6 +101,10 @@ namespace RabiRiichi.Core {
                 ThrowInvalidArgument(original);
             }
             Num = (byte)(num - '0');
+            if (Num == 0) {
+                Num = 5;
+                Akadora = true;
+            }
             Suit = str[1].ToGroup();
             if (!IsValid) {
                 ThrowInvalidArgument(original);
@@ -235,14 +239,6 @@ namespace RabiRiichi.Core {
             foreach (var tile in tiles) {
                 Remove(tile);
             }
-        }
-
-        /// <summary>
-        /// 求交集，赤宝不敏感
-        /// </summary>
-        /// <param name="tiles">不能包含赤宝</param>
-        public IEnumerable<Tile> Intersect(Tiles tiles) {
-            return this.Where(t => tiles.Contains(t.WithoutDora));
         }
 
         public override string ToString() {
