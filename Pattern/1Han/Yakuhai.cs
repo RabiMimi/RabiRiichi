@@ -11,7 +11,7 @@ namespace RabiRiichi.Pattern {
         protected abstract Tile YakuTile { get; }
 
         public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
-            bool hasYaku = groups.Any(tiles => (tiles is Kou || tiles is Kan) && tiles.HasTile(YakuTile));
+            bool hasYaku = groups.Any(tiles => (tiles is Kou || tiles is Kan) && tiles.Contains(YakuTile));
             if (hasYaku) {
                 scores.Add(new Scoring(ScoringType.Han, 1, this));
                 return true;

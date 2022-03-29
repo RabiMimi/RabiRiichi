@@ -1,12 +1,13 @@
 using RabiRiichi.Util;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace RabiRiichi.Core {
 
     /// <summary> 面子或雀头或单张 </summary>
-    public abstract class MenLike : GameTiles {
+    public abstract class MenLike : ReadOnlyCollection<GameTile> {
         /// <summary> 唯一确定该面子的值（忽略赤宝） </summary>
         public ulong Value { get; protected set; }
 
@@ -20,7 +21,6 @@ namespace RabiRiichi.Core {
         public GameTile First => this[0];
 
         private void Init() {
-            Sort();
             Value = 0;
             foreach (var tile in this) {
                 Value = (Value << 8) | tile.tile.NoDoraVal;
@@ -28,22 +28,36 @@ namespace RabiRiichi.Core {
             IsClose = this.All(t => t.IsTsumo);
         }
 
-        public MenLike() { }
-        public MenLike(IEnumerable<GameTile> tiles) : base(tiles) {
+        public MenLike(IEnumerable<GameTile> tiles) : base(tiles.OrderBy(t => t.tile).ToList()) {
             Init();
         }
-        public MenLike(IEnumerable<Tile> tiles) : base(tiles) {
+        public MenLike(IEnumerable<Tile> tiles) : this(new GameTiles(tiles)) {
             Init();
         }
 
-        public static bool IsShun(List<GameTile> tiles) {
+        public abstract bool IsSame(MenLike other);
+
+        /// <summary> 判定是否有给出的牌，赤宝牌视为相同牌 </summary>
+        public bool Contains(Tile tile) {
+            return this.Any(t => t.tile.IsSame(tile));
+        }
+
+        public GameTile Find(Func<GameTile, bool> predicate) {
+            return this.FirstOrDefault(predicate);
+        }
+
+        public Tiles ToTiles() {
+            return new Tiles(this.Select(gameTile => gameTile.tile));
+        }
+
+        public static bool IsShun(ReadOnlyCollection<GameTile> tiles) {
             if (tiles.Count != 3)
                 return false;
-            tiles.Sort();
-            return tiles[0].NextIs(tiles[1]) && tiles[1].NextIs(tiles[2]);
+            var sorted = tiles.OrderBy(t => t.tile).ToList();
+            return sorted[0].NextIs(sorted[1]) && sorted[1].NextIs(sorted[2]);
         }
 
-        public static bool IsKou(List<GameTile> tiles, bool allowKan = false) {
+        public static bool IsKou(ReadOnlyCollection<GameTile> tiles, bool allowKan = false) {
             if (tiles.Count != 3 && tiles.Count != 4) {
                 return false;
             }
@@ -58,22 +72,22 @@ namespace RabiRiichi.Core {
             return true;
         }
 
-        public static bool IsJan(List<GameTile> tiles) {
+        public static bool IsJan(ReadOnlyCollection<GameTile> tiles) {
             return tiles.Count == 2 && tiles[0].IsSame(tiles[1]);
         }
 
-        public static bool IsKan(List<GameTile> tiles) {
+        public static bool IsKan(ReadOnlyCollection<GameTile> tiles) {
             if (tiles.Count != 4)
                 return false;
             return IsKou(tiles, true);
         }
 
-        public static bool IsMusou(List<GameTile> tiles) {
+        public static bool IsMusou(ReadOnlyCollection<GameTile> tiles) {
             return tiles.Count == 1;
         }
 
         /// <summary> 根据牌返回最适合的类 </summary>
-        public static MenLike From(List<GameTile> tiles) {
+        public static MenLike From(ReadOnlyCollection<GameTile> tiles) {
             if (IsJan(tiles)) {
                 return new Jantou(tiles);
             } else if (IsKan(tiles)) {
@@ -90,7 +104,12 @@ namespace RabiRiichi.Core {
         }
 
         /// <summary> 根据牌返回最适合的类 </summary>
-        public static MenLike From(List<Tile> tiles) {
+        public static MenLike From(List<GameTile> tiles) {
+            return From(tiles.AsReadOnly());
+        }
+
+        /// <summary> 根据牌返回最适合的类 </summary>
+        public static MenLike From(IEnumerable<Tile> tiles) {
             return From(new GameTiles(tiles));
         }
     }
@@ -104,7 +123,7 @@ namespace RabiRiichi.Core {
             Logger.Assert(IsShun(this), "顺子必须是顺子");
         }
 
-        public override bool IsSame(GameTiles other) {
+        public override bool IsSame(MenLike other) {
             if (other is not Shun shun)
                 return false;
             return First.IsSame(shun.First);
@@ -121,10 +140,10 @@ namespace RabiRiichi.Core {
         }
 
         /// <summary> 判定是否相同，赤宝牌视为相同牌，杠和刻视为相同 </summary>
-        public override bool IsSame(GameTiles other) {
+        public override bool IsSame(MenLike other) {
             if (other is not (Kou or Kan))
                 return false;
-            return First.IsSame((other as MenLike).First);
+            return First.IsSame(other.First);
         }
     }
 
@@ -153,10 +172,10 @@ namespace RabiRiichi.Core {
         }
 
         /// <summary> 判定是否相同，赤宝牌视为相同牌，杠和刻视为相同 </summary>
-        public override bool IsSame(GameTiles other) {
+        public override bool IsSame(MenLike other) {
             if (other is not (Kou or Kan))
                 return false;
-            return First.IsSame((other as MenLike).First);
+            return First.IsSame(other.First);
         }
     }
 
@@ -169,7 +188,7 @@ namespace RabiRiichi.Core {
             Logger.Assert(IsJan(this), "雀头必须是雀头");
         }
 
-        public override bool IsSame(GameTiles other) {
+        public override bool IsSame(MenLike other) {
             if (other is not Jantou jantou)
                 return false;
             return First.IsSame(jantou.First);
@@ -185,7 +204,7 @@ namespace RabiRiichi.Core {
             Logger.Assert(IsMusou(this), "单牌必须是单牌");
         }
 
-        public override bool IsSame(GameTiles other) {
+        public override bool IsSame(MenLike other) {
             if (other is not Musou musou)
                 return false;
             return First.IsSame(musou.First);

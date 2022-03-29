@@ -96,34 +96,12 @@ namespace RabiRiichi.Core {
     }
 
     public class GameTiles : List<GameTile> {
-        public TileSource source = TileSource.Hand;
         public GameTiles() { }
         public GameTiles(IEnumerable<GameTile> tiles) : base(tiles) { }
         public GameTiles(IEnumerable<Tile> tiles)
             : base(tiles.Select(tile => new GameTile(tile))) { }
         public Tiles ToTiles() {
             return new Tiles(this.Select(gameTile => gameTile.tile));
-        }
-
-        /// <summary> 判定两个搭子是否相同，赤宝牌视为相同牌 </summary>
-        public virtual bool IsSame(GameTiles other) {
-            if (this.Count != other.Count)
-                return false;
-
-            var thisTiles = this.ToTiles();
-            var otherTiles = other.ToTiles();
-            thisTiles.Sort();
-            otherTiles.Sort();
-            for (int i = 0; i < thisTiles.Count; i++) {
-                if (!thisTiles[i].IsSame(otherTiles[i]))
-                    return false;
-            }
-            return true;
-        }
-
-        /// <summary> 判定是否有给出的牌，赤宝牌视为相同牌 </summary>
-        public bool HasTile(Tile tile) {
-            return this.Any(t => t.tile.IsSame(tile));
         }
 
         public override string ToString() {

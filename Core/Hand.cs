@@ -113,14 +113,14 @@ namespace RabiRiichi.Core {
 
         public void AddGroup(MenLike tiles, TileSource source) {
             called.Add(tiles);
-            tiles.ForEach(tile => {
+            foreach (var tile in tiles) {
                 tile.player = player;
                 tile.source = source;
                 if (tile.formTime == -1) {
                     tile.formTime = game.info.timeStamp.Next;
                 }
                 Remove(tile);
-            });
+            }
         }
 
         public void AddChii(Shun tiles) {

@@ -18,7 +18,6 @@ namespace RabiRiichi.Pattern {
             // 确认两面听
             if (gr.Any(tile => tile.tile.Is19Z && tile != incoming))
                 return false;
-            gr.Sort();
             if (incoming == gr[1])
                 return false;
             var jantou = groups.Find(gr => gr is Jantou);

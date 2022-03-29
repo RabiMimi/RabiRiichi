@@ -59,7 +59,6 @@ namespace RabiRiichi.Pattern {
             if (group.Any(tile => tile.tile.Is19Z && tile != incoming))
                 return 2;
             // 嵌张
-            group.Sort();
             if (incoming == group[1])
                 return 2;
             // 单骑
