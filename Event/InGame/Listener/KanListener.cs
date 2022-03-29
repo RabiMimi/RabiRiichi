@@ -33,12 +33,6 @@ namespace RabiRiichi.Event.InGame.Listener {
                 // 抢杠
                 yield return resolver1;
             }
-            if (game.TryGet<KanResolver>(out var resolver2)) {
-                yield return resolver2;
-            }
-            if (game.TryGet<TsumoResolver>(out var resolver3)) {
-                yield return resolver3;
-            }
         }
 
         public static void Register(EventBus eventBus) {
