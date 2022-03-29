@@ -53,12 +53,12 @@ namespace RabiRiichi.Core {
         }
 
         /// <summary> 抽若干张牌 </summary>
-        public IEnumerable<GameTile> Draw(int count) {
-            var ret = remaining.PopMany(count);
+        public GameTiles Draw(int count) {
+            var ret = new GameTiles(remaining.PopMany(count));
             foreach (var tile in ret) {
                 tile.source = TileSource.Wall;
-                yield return tile;
             }
+            return ret;
         }
 
         /// <summary> 翻一张宝牌 </summary>
@@ -74,11 +74,11 @@ namespace RabiRiichi.Core {
 
         /// <summary> 计算tile算几番宝牌（不考虑里宝牌/红宝牌）。非宝牌返回0 </summary>
         public int CountDora(Tile tile)
-            => doras.Count(dora => dora.tile.NextDora.IsSame(tile));
+            => doras.Take(revealedDoraCount).Count(dora => dora.tile.NextDora.IsSame(tile));
 
         /// <summary> 计算tile中几番里宝牌。非里宝牌返回0 </summary>
         public int CountUradora(Tile tile)
-            => uradoras.Count(uradora => uradora.tile.NextDora.IsSame(tile));
+            => uradoras.Take(revealedDoraCount).Count(uradora => uradora.tile.NextDora.IsSame(tile));
 
         /// <summary> 抽一张岭上牌 </summary>
         public GameTile DrawRinshan() {
@@ -121,7 +121,7 @@ namespace RabiRiichi.Core {
         /// </summary>
         private static bool Swap(ListStack<GameTile> target, int targetIndex, ListStack<GameTile> searchFrom, GameTile tile) {
             int index = searchFrom.IndexOf(tile);
-            if (index < -1)
+            if (index < 0)
                 return false;
             (target[targetIndex], searchFrom[index]) = (searchFrom[index], target[targetIndex]);
             return true;
@@ -155,15 +155,23 @@ namespace RabiRiichi.Core {
             return ret;
         }
 
+        /// <summary>
+        /// 在hiddenTiles中寻找tile对应的牌
+        /// </summary>
+        public GameTile FindInHidden(Tile tile, bool ignoreAkadora = true) {
+            return hiddenTiles.FirstOrDefault(t => ignoreAkadora ? t.tile.IsSame(tile) : t.tile == tile);
+        }
+
         /// <summary> 将一张牌作为牌山第i前的牌（从0开始） </summary>
         public void Insert(int i, GameTile tile) {
             Remove(tile);
             remaining.Insert(remaining.Count - i, tile);
         }
 
-        /// <summary> 用一张不在牌山里的牌替换牌山里第i张牌 </summary>
+        /// <summary> 用一张不在牌山里的牌替换牌山里第i张牌（从0开始） </summary>
         /// <returns>被替换的牌</returns>
         public GameTile Replace(int i, GameTile tile) {
+            i = remaining.Count - i - 1;
             var ret = remaining[i];
             remaining[i] = tile;
             return ret;
@@ -182,7 +190,11 @@ namespace RabiRiichi.Core {
 
         /// <summary> 将一张牌放到牌山最后 </summary>
         public void InsertLast(GameTile tile) {
-            Insert(remaining.Count - 1, tile);
+            if (remaining.Contains(tile)) {
+                Insert(remaining.Count - 1, tile);
+            } else {
+                Insert(remaining.Count, tile);
+            }
         }
 
         /// <summary> 用一张不在牌山里的牌替换牌山最后的牌 </summary>
@@ -213,20 +225,20 @@ namespace RabiRiichi.Core {
             return Replace(doras, i, tile);
         }
 
-        /// <summary> 将一张牌作为第i张岭上牌 </summary>
+        /// <summary> 将一张牌作为第i张岭上牌（从0开始） </summary>
         public void PlaceRinshan(int i, GameTile tile) {
-            Swap(rinshan, i, tile);
+            Swap(rinshan, rinshan.Count - i - 1, tile);
         }
 
-        /// <summary> 用一张不在牌山里的牌替换第i张岭上牌 </summary>
+        /// <summary> 用一张不在牌山里的牌替换第i张岭上牌（从0开始） </summary>
         /// <returns>被替换的牌</returns>
         public GameTile ReplaceRinshan(int i, GameTile tile) {
-            return Replace(rinshan, i, tile);
+            return Replace(rinshan, rinshan.Count - i - 1, tile);
         }
 
         /// <summary> 将一张牌放到岭上牌最前 </summary>
         public void PlaceRinshanFirst(GameTile tile) {
-            PlaceRinshan(rinshan.Count - 1, tile);
+            PlaceRinshan(0, tile);
         }
 
         /// <summary> 用一张不在牌山里的牌替换岭上牌最前的牌 </summary>
@@ -237,7 +249,7 @@ namespace RabiRiichi.Core {
 
         /// <summary> 将一张牌放到岭上牌最后 </summary>
         public void PlaceRinshanLast(GameTile tile) {
-            PlaceRinshan(0, tile);
+            PlaceRinshan(rinshan.Count - 1, tile);
         }
 
         /// <summary> 用一张不在牌山里的牌替换岭上牌最后的牌 </summary>
