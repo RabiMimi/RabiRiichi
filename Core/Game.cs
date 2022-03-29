@@ -32,7 +32,7 @@ namespace RabiRiichi.Core {
                 throw new ArgumentException("config.actionCenter must be provided");
             }
             initialEvent = new(this);
-            var rand = new Rand((int)(config.seed ?? (DateTimeOffset.Now.ToUnixTimeMilliseconds() & 0xffffffff)));
+            var rand = new RabiRand(config.seed ?? (ulong)DateTimeOffset.Now.ToUnixTimeMilliseconds());
             var serviceCollection = new ServiceCollection();
 
             // Existing instances

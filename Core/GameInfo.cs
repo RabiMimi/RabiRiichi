@@ -38,7 +38,7 @@ namespace RabiRiichi.Core {
         public IActionCenter actionCenter = null;
 
         /// <summary> 随机种子 </summary>
-        public int? seed;
+        public ulong? seed;
     }
 
     public enum GamePhase {

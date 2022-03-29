@@ -221,7 +221,7 @@ namespace RabiRiichiTests.Scenario {
             }
 
             /// <summary> 设置随机种子，默认为114514 </summary>
-            public GameConfigBuilder SetSeed(int? seed) {
+            public GameConfigBuilder SetSeed(ulong seed) {
                 config.seed = seed;
                 return this;
             }

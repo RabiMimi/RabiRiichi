@@ -32,7 +32,7 @@ namespace RabiRiichi.Core {
         /// <summary> 是否到了海底 </summary>
         public bool IsHaitei => NumRemaining <= 0;
 
-        public Wall(Rand rand) {
+        public Wall(RabiRand rand) {
             rand.Shuffle(remaining);
             rinshan.AddRange(remaining.PopMany(NUM_RINSHAN));
             doras.AddRange(remaining.PopMany(NUM_DORA));

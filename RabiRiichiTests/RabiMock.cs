@@ -26,7 +26,7 @@ namespace RabiRiichiTests {
 
     public class RabiMockWall : RabiMock<Wall> {
         public RabiMockWall() {
-            mock = new Mock<Wall>(new Rand(114514)) {
+            mock = new Mock<Wall>(new RabiRand(114514)) {
                 CallBase = true
             };
         }
