@@ -1,5 +1,6 @@
 ﻿using RabiRiichi.Core;
 using RabiRiichi.Pattern;
+using RabiRiichiTests.Helper;
 using System.Collections.Generic;
 
 namespace RabiRiichiTests.Pattern {

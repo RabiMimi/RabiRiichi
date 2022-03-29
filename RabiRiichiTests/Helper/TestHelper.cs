@@ -3,7 +3,7 @@ using RabiRiichi.Communication;
 using RabiRiichi.Core;
 using System.Linq;
 
-namespace RabiRiichiTests {
+namespace RabiRiichiTests.Helper {
     static class TestHelper {
         public static Hand CreateHand(string str, params string[] groups) {
             return new Hand {

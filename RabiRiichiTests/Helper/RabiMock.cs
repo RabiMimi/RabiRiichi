@@ -8,7 +8,7 @@ using RabiRiichi.Util;
 using System;
 using System.Linq.Expressions;
 
-namespace RabiRiichiTests {
+namespace RabiRiichiTests.Helper {
     public abstract class RabiMock<T> where T : class {
         public Mock<T> mock { get; protected set; }
         public T Object => mock.Object;
