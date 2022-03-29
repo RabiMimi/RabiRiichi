@@ -94,11 +94,11 @@ namespace RabiRiichi.Core {
                 str = str[1..];
             }
             if (str.Length != 2) {
-                ThrowInvalidArgument(original);
+                throw new ArgumentException("Invalid cast to tile: " + original);
             }
             char num = str[0];
             if (num < '0' || num > '9') {
-                ThrowInvalidArgument(original);
+                throw new ArgumentException("Invalid cast to tile: " + original);
             }
             Num = (byte)(num - '0');
             if (Num == 0) {
@@ -107,7 +107,7 @@ namespace RabiRiichi.Core {
             }
             Suit = str[1].ToGroup();
             if (!IsValid) {
-                ThrowInvalidArgument(original);
+                throw new ArgumentException("Invalid cast to tile: " + original);
             }
         }
 
@@ -176,9 +176,6 @@ namespace RabiRiichi.Core {
         }
 
         public static implicit operator byte(Tile t) => t.Val;
-        private static void ThrowInvalidArgument(string arg) {
-            throw new ArgumentException("Invalid cast to tile: " + arg);
-        }
 
         public static bool operator ==(Tile lhs, Tile rhs) {
             return lhs.Val == rhs.Val;
@@ -211,7 +208,7 @@ namespace RabiRiichi.Core {
                     continue;
                 }
                 if (isDora) {
-                    ThrowInvalidArgument(tiles);
+                    throw new ArgumentException("Invalid cast to tiles: " + tiles);
                 }
                 if (c == 'r') {
                     isDora = true;
@@ -219,7 +216,7 @@ namespace RabiRiichi.Core {
                 }
                 var g = c.ToGroup();
                 if (g == TileSuit.Invalid) {
-                    ThrowInvalidArgument(tiles);
+                    throw new ArgumentException("Invalid cast to tiles: " + tiles);
                 }
                 for (int i = Count - 1; i >= 0; i--) {
                     var tile = this[i];
@@ -231,7 +228,7 @@ namespace RabiRiichi.Core {
                 }
             }
             if (this.Any(tile => !tile.IsValid)) {
-                ThrowInvalidArgument(tiles);
+                throw new ArgumentException("Invalid cast to tiles: " + tiles);
             }
         }
 
@@ -258,10 +255,6 @@ namespace RabiRiichi.Core {
                 builder.Append(group);
             }
             return builder.ToString();
-        }
-
-        private static void ThrowInvalidArgument(string arg) {
-            throw new ArgumentException("Invalid tiles: " + arg);
         }
 
         public bool IsKou => Count == 3
