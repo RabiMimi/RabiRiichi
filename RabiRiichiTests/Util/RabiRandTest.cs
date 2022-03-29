@@ -1,6 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Util;
-
+using System.Collections.Generic;
 
 namespace RabiRiichiTests.Util {
     [TestClass]
@@ -21,6 +21,19 @@ namespace RabiRiichiTests.Util {
 
             for (var i = 0; i < 100; i++) {
                 Assert.IsTrue(histogram[i] >= minValue && histogram[i] <= maxValue, $"histogram {i} is {histogram[i]}, out of range [{minValue}, {maxValue}]");
+            }
+        }
+
+        [TestMethod]
+        public void TestRabiRandPeriod() {
+            int randCount = 1000000;
+            ulong seed = 114514;
+            HashSet<ulong> seedSet = new() { seed };
+            var rand = new RabiRand(seed);
+            for (var i = 0; i < randCount; i++) {
+                seed = rand.Next();
+                Assert.IsFalse(seedSet.Contains(seed), $"seed {seed} is duplicated");
+                seedSet.Add(seed);
             }
         }
     }
