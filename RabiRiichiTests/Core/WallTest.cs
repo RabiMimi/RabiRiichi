@@ -27,6 +27,8 @@ namespace RabiRiichiTests.Core {
 
             // Num remaining
             int NumRemaining = wall.NumRemaining;
+            Assert.IsTrue(wall.Has(NumRemaining));
+            Assert.IsFalse(wall.Has(NumRemaining + 1));
             wall.DrawRinshan();
             Assert.AreEqual(NumRemaining - 1, wall.NumRemaining);
             wall.Draw();
@@ -36,6 +38,8 @@ namespace RabiRiichiTests.Core {
             Assert.IsFalse(wall.IsHaitei);
             wall.Draw(NumRemaining - 2);
             Assert.IsTrue(wall.IsHaitei);
+            Assert.IsTrue(wall.Has(0));
+            Assert.IsFalse(wall.Has(1));
         }
 
         [TestMethod]
@@ -72,36 +76,36 @@ namespace RabiRiichiTests.Core {
         public void TestCountDora() {
             // First Dora
             wall.ReplaceDora(0, wall.FindInHidden(new Tile("4s")));
-            wall.ReplaceUradora(0, wall.FindInHidden(new Tile("4p")));
+            wall.ReplaceUradora(0, wall.FindInHidden(new Tile("4z")));
             wall.RevealDora();
             Assert.AreEqual(0, wall.CountDora(new Tile("6s")));
             Assert.AreEqual(1, wall.CountDora(new Tile("5s")));
             Assert.AreEqual(1, wall.CountDora(new Tile("r5s")));
-            Assert.AreEqual(0, wall.CountUradora(new Tile("5s")));
-            Assert.AreEqual(1, wall.CountUradora(new Tile("5p")));
-            Assert.AreEqual(0, wall.CountUradora(new Tile("6p")));
+            Assert.AreEqual(0, wall.CountUradora(new Tile("6z")));
+            Assert.AreEqual(1, wall.CountUradora(new Tile("1z")));
+            Assert.AreEqual(0, wall.CountUradora(new Tile("5z")));
 
             // Second Dora
             wall.ReplaceDora(1, wall.FindInHidden(new Tile("4s")));
-            wall.ReplaceUradora(1, wall.FindInHidden(new Tile("r5p")));
+            wall.ReplaceUradora(1, wall.FindInHidden(new Tile("r7z")));
             wall.RevealDora();
             Assert.AreEqual(0, wall.CountDora(new Tile("6s")));
             Assert.AreEqual(2, wall.CountDora(new Tile("5s")));
             Assert.AreEqual(2, wall.CountDora(new Tile("r5s")));
-            Assert.AreEqual(0, wall.CountUradora(new Tile("5s")));
-            Assert.AreEqual(1, wall.CountUradora(new Tile("5p")));
-            Assert.AreEqual(1, wall.CountUradora(new Tile("6p")));
+            Assert.AreEqual(0, wall.CountUradora(new Tile("6z")));
+            Assert.AreEqual(1, wall.CountUradora(new Tile("1z")));
+            Assert.AreEqual(1, wall.CountUradora(new Tile("5z")));
 
             // Third Dora
             wall.ReplaceDora(2, wall.FindInHidden(new Tile("5s")));
-            wall.ReplaceUradora(2, wall.FindInHidden(new Tile("5p")));
+            wall.ReplaceUradora(2, wall.FindInHidden(new Tile("7z")));
             wall.RevealDora();
             Assert.AreEqual(1, wall.CountDora(new Tile("6s")));
             Assert.AreEqual(2, wall.CountDora(new Tile("5s")));
             Assert.AreEqual(2, wall.CountDora(new Tile("r5s")));
-            Assert.AreEqual(0, wall.CountUradora(new Tile("5s")));
-            Assert.AreEqual(1, wall.CountUradora(new Tile("5p")));
-            Assert.AreEqual(2, wall.CountUradora(new Tile("6p")));
+            Assert.AreEqual(0, wall.CountUradora(new Tile("6z")));
+            Assert.AreEqual(1, wall.CountUradora(new Tile("1z")));
+            Assert.AreEqual(2, wall.CountUradora(new Tile("5z")));
         }
 
         [TestMethod]
@@ -155,6 +159,11 @@ namespace RabiRiichiTests.Core {
 
             // Fail to remove revealed dora
             tile = wall.doras[0];
+            Assert.IsFalse(wall.Remove(tile));
+
+            // Fail to remove dora when haitei
+            tile = wall.uradoras[2];
+            wall.Draw(wall.NumRemaining);
             Assert.IsFalse(wall.Remove(tile));
         }
 
