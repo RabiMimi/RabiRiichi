@@ -141,17 +141,22 @@ namespace RabiRiichiTests.Scenario {
         }
 
         /// <summary> 测试现有事件并忽略其中的询问操作。（令所有用户选择默认操作） </summary>
-        /// <param name="skipCount"> 最多跳过多少询问操作 </param>
-        public async Task Resolve(int skipCount = 1) {
-            for (var i = 0; i < skipCount; i++) {
+        /// <param name="waitCount"> 等待多少询问操作 </param>
+        /// <returns>最后一个Inquiry，或null（表示游戏已结束）</returns>
+        public async Task<ScenarioInquiryMatcher> Resolve(int waitCount = 1) {
+            ScenarioInquiryMatcher inquiry = null;
+            for (var i = 0; i < waitCount; i++) {
                 try {
-                    (await WaitInquiry()).Finish();
+                    inquiry?.Finish();
+                    inquiry = await actionCenter.NextInquiry;
                 } catch (OperationCanceledException) {
                     await runToEnd;
+                    inquiry = null;
                     break;
                 }
             }
             ResolveImmediately();
+            return inquiry;
         }
     }
 
