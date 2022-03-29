@@ -92,7 +92,7 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         public static Task SuuchaRiichiListener(SetRiichiEvent ev) {
-            if (ev.game.players.Any(p => !p.hand.riichi)) {
+            if (ev.game.players.Any(p => !p.hand.riichi || p.hand.agari)) {
                 return Task.CompletedTask;
             }
             ev.Q.ClearEvents();
