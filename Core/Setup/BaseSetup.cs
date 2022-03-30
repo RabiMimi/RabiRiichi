@@ -99,6 +99,7 @@ namespace RabiRiichi.Core.Setup {
         protected virtual void RegisterEvents(EventBus eventBus) {
             // InGame
             AddKanListener.Register(eventBus);
+            AddTileListener.Register(eventBus);
             AgariListener.Register(eventBus);
             ApplyScoreListener.Register(eventBus);
             BeginGameListener.Register(eventBus);
