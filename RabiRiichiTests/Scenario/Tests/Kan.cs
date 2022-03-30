@@ -2,6 +2,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Action;
 using RabiRiichi.Core;
 using RabiRiichi.Event.InGame;
+using RabiRiichiTests.Helper;
 using System.Threading.Tasks;
 
 
@@ -32,15 +33,47 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertNoMoreActions();
             }).AssertAutoFinish();
 
-            Kan kan = null;
-            await scenario.AssertEvent<AddKanEvent>((ev) => {
-                kan = ev.kan;
+            scenario.AssertEvent<AddKanEvent>((ev) => {
                 Assert.AreEqual(TileSource.DaiMinKan, ev.kanSource);
+                return true;
+            });
+
+            // AnKan after DaiMinKan
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry
+                    .AssertAction<PlayTileAction>()
+                    .ChooseTiles<KanAction>("1111s", action => {
+                        Assert.AreEqual(2, action.options.Count);
+                        return true;
+                    })
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+
+            scenario.AssertEvent<AddKanEvent>((ev) => {
+                Assert.AreEqual(TileSource.AnKan, ev.kanSource);
+                return true;
+            });
+
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry
+                    .AssertAction<PlayTileAction>()
+                    .ChooseTiles<KanAction>("3333s", action => {
+                        Assert.AreEqual(1, action.options.Count);
+                        return true;
+                    })
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+
+            await scenario.AssertEvent<AddKanEvent>((ev) => {
+                Assert.AreEqual(TileSource.AnKan, ev.kanSource);
                 return true;
             }).Resolve();
 
-            scenario.WithGame(game => {
-                CollectionAssert.Contains(game.GetPlayer(0).hand.called, kan);
+            // Check Kans exist
+            scenario.WithPlayer(0, player => {
+                player.hand.called.AssertContains("1111s");
+                player.hand.called.AssertContains("2222s");
+                player.hand.called.AssertContains("3333s");
             });
         }
 

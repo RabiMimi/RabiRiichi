@@ -42,7 +42,7 @@ namespace RabiRiichiTests.Core {
             Assert.AreEqual("345s678p333m1122z", tiles.ToString());
             Assert.AreEqual(new Tile("6p"), tiles[3]);
 
-            new Tiles("0r5s").AssertEq("00s");
+            new Tiles("0r5s").AssertEquals("00s");
         }
 
         [TestMethod]
@@ -56,7 +56,7 @@ namespace RabiRiichiTests.Core {
         public void TestRemove() {
             var tiles = new Tiles("1112233r5s123z");
             tiles.Remove(new Tiles("123s"));
-            tiles.AssertEq("1123r5s123z");
+            tiles.AssertEquals("1123r5s123z");
         }
 
         [TestMethod]

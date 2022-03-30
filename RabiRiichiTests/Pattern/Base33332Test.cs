@@ -64,34 +64,34 @@ namespace RabiRiichiTests.Pattern {
         public void TestShanten() {
 
             Assert.AreEqual(-1, Shanten("2233445566778s", "8s"));
-            tiles.AssertEq("");
+            tiles.AssertEquals("");
 
             Assert.AreEqual(0, Shanten("2233445566778s", null));
-            tiles.AssertEq("258s");
+            tiles.AssertEquals("258s");
 
             Assert.AreEqual(0, Shanten("1112345678999s", "1p"));
-            tiles.AssertEq("258s1p");
+            tiles.AssertEquals("258s1p");
 
             Assert.AreEqual(0, Shanten("1112345678999s", null));
-            tiles.AssertEq("123456789s");
+            tiles.AssertEquals("123456789s");
 
             Assert.AreEqual(8, Shanten("159s159p159m1234z", "5z"));
-            tiles.AssertEq("159s159p159m12345z");
+            tiles.AssertEquals("159s159p159m12345z");
 
             Assert.AreEqual(8, Shanten("159s159p159m1234z", null));
-            tiles.AssertEq("123456789s123456789p123456789m1234z");
+            tiles.AssertEquals("123456789s123456789p123456789m1234z");
 
             Assert.AreEqual(5, Shanten("25569m2589p5s357z", "3s"));
-            tiles.AssertEq("2569m25p357z");
+            tiles.AssertEquals("2569m25p357z");
 
             Assert.AreEqual(6, Shanten("25569m2589p5s357z", null));
-            tiles.AssertEq("123456789m1234567p34567s357z");
+            tiles.AssertEquals("123456789m1234567p34567s357z");
         }
 
         [TestMethod]
         public void TestShantenMax() {
             Assert.AreEqual(5, Shanten("25569m2589p5s357z", "3s", 5));
-            tiles.AssertEq("2569m25p357z");
+            tiles.AssertEquals("2569m25p357z");
 
             Assert.AreEqual(int.MaxValue, Shanten("25569m2589p5s357z", null, 5));
             Assert.IsNull(tiles);
@@ -100,7 +100,7 @@ namespace RabiRiichiTests.Pattern {
             Assert.IsNull(tiles);
 
             Assert.AreEqual(6, Shanten("25569m2589p5s357z", null, 6));
-            tiles.AssertEq("123456789m1234567p34567s357z");
+            tiles.AssertEquals("123456789m1234567p34567s357z");
         }
 
         [TestMethod]
@@ -111,50 +111,50 @@ namespace RabiRiichiTests.Pattern {
 
             Assert.AreEqual(-1, Shanten("1s", "1s", 8,
                 "222s", "345s", "111p", "111z"));
-            tiles.AssertEq("");
+            tiles.AssertEquals("");
 
             Assert.AreEqual(0, Shanten("1s", "2s", 8,
                 "222s", "345s", "111p", "111z"));
-            tiles.AssertEq("12s");
+            tiles.AssertEquals("12s");
 
             Assert.AreEqual(0, Shanten("1s", null, 8,
                 "222s", "345s", "111p", "111z"));
-            tiles.AssertEq("1s");
+            tiles.AssertEquals("1s");
 
             Assert.AreEqual(0, Shanten("45s", "2s", 8,
                 "222s", "345s", "111p", "11z"));
-            tiles.AssertEq("25s");
+            tiles.AssertEquals("25s");
 
             Assert.AreEqual(0, Shanten("45s", null, 8,
                 "222s", "345s", "111p", "11z"));
-            tiles.AssertEq("36s");
+            tiles.AssertEquals("36s");
         }
 
         [TestMethod]
         public void TestShantenSpecial() {
             Assert.AreEqual(0, Shanten("6666666666666z", "7z"));
-            tiles.AssertEq("67z");
+            tiles.AssertEquals("67z");
 
             Assert.AreEqual(0, Shanten("6666666666666z", null));
-            tiles.AssertEq("6z");
+            tiles.AssertEquals("6z");
         }
 
         [TestMethod]
         public void TestShantenFrenqy() {
             Assert.AreEqual(-1, Shanten("1113335557779s", "9s"));
-            tiles.AssertEq("");
+            tiles.AssertEquals("");
 
             Assert.AreEqual(0, Shanten("1113335557799s", null));
-            tiles.AssertEq("79s");
+            tiles.AssertEquals("79s");
 
             Assert.AreEqual(5, Shanten("1246m1p2688s1257z", "2m"));
-            tiles.AssertEq("126m268s1p1257z");
+            tiles.AssertEquals("126m268s1p1257z");
 
             Assert.AreEqual(1, Shanten("1224r5p56668889p", "7p"));
-            tiles.AssertEq("12456789p");
+            tiles.AssertEquals("12456789p");
 
             Assert.AreEqual(6, Shanten("348m247p159s1234z", "5z"));
-            tiles.AssertEq("12345z159s8m7p");
+            tiles.AssertEquals("12345z159s8m7p");
         }
     }
 }

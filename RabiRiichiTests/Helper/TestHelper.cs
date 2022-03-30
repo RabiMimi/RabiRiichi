@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Communication;
 using RabiRiichi.Core;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace RabiRiichiTests.Helper {
@@ -16,11 +17,19 @@ namespace RabiRiichiTests.Helper {
             actionCenter = new JsonStringActionCenter(null)
         });
 
-        public static void AssertEq(this Tiles tiles, string str) {
+        public static void AssertEquals(this Tiles tiles, string str) {
             var newTiles = new Tiles(str);
             tiles.Sort();
             newTiles.Sort();
             Assert.AreEqual(newTiles.ToString(), tiles.ToString());
         }
+
+        public static void AssertContains(this IEnumerable<Tiles> tiles, string str) {
+            var newTiles = new Tiles(str);
+            Assert.IsTrue(tiles.Any(t => t.SequenceEqualAfterSort(newTiles)));
+        }
+
+        public static void AssertContains(this IEnumerable<IEnumerable<GameTile>> tiles, string str)
+            => tiles.Select(t => t.ToTiles()).AssertContains(str);
     }
 }

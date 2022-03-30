@@ -28,6 +28,12 @@ namespace RabiRiichiTests.Scenario {
             return this;
         }
 
+        /// <summary> 获取玩家实例 </summary>
+        public Scenario WithPlayer(int playerId, Action<Player> action) {
+            action(game.GetPlayer(playerId));
+            return this;
+        }
+
         /// <summary> 以玩家playerId的回合开始游戏 </summary>
         public Scenario Start(int playerId) {
             // Clear events, so that the initial event will not be processed
