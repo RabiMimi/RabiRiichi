@@ -62,7 +62,7 @@ namespace RabiRiichiTests.Scenario {
             return this;
         }
 
-        /// <summary> 测试有对应的事件发生 </summary>
+        /// <summary> 测试有对应的事件按顺序发生 </summary>
         public Scenario AssertEvent<T>(Predicate<T> predicate = null) where T : EventBase {
             eventMatchers.Add((ev) => {
                 if (ev is T tEv) {
@@ -95,8 +95,12 @@ namespace RabiRiichiTests.Scenario {
 
         /// <summary> 立即测试现有事件是否匹配 </summary>
         public Scenario ResolveImmediately() {
+            int eventI = 0;
             foreach (var matcher in eventMatchers) {
-                if (!events.Any((e) => matcher(e))) {
+                while (eventI < events.Count && !matcher(events[eventI])) {
+                    eventI++;
+                }
+                if (eventI > events.Count) {
                     Assert.Fail($"No event matched: {string.Join(", ", events.Select(ev => ev.GetType().Name))}");
                 }
             }
