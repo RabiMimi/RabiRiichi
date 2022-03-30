@@ -18,6 +18,7 @@ namespace RabiRiichi.Event.InGame.Listener {
             ev.waitEvent.inquiry.GetByPlayerId(ev.playerId).DisableSkip();
             DrawTileListener.AddActionHandler(ev.waitEvent, DiscardReason.Draw);
             ev.Q.Queue(ev.waitEvent);
+            ev.Q.Queue(new AddTileEvent(ev, incoming));
             return Task.CompletedTask;
         }
 

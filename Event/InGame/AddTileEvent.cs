@@ -14,5 +14,9 @@ namespace RabiRiichi.Event.InGame {
         public AddTileEvent(DrawTileEvent ev) : base(ev, ev.playerId) {
             incoming = ev.tile;
         }
+
+        public AddTileEvent(PlayerEvent ev, GameTile incoming) : base(ev, ev.playerId) {
+            this.incoming = incoming;
+        }
     }
 }

@@ -1,5 +1,4 @@
-﻿using RabiRiichi.Core;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace RabiRiichi.Event.InGame.Listener {
     public static class DealHandListener {
