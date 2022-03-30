@@ -87,6 +87,9 @@ namespace RabiRiichi.Event {
             list.Sort((a, b) => b.Priority.CompareTo(a.Priority));
 
             foreach (var listener in list) {
+                if (ev.phase < listener.Priority) {
+                    continue;
+                }
                 await listener.Trigger(ev);
                 if (listener.Times == 0) {
                     listener.ParentList.Remove(listener);
@@ -94,7 +97,7 @@ namespace RabiRiichi.Event {
                 if (ev.IsCancelled) {
                     return false;
                 }
-                ev.phase = listener.Priority;
+                ev.phase = Math.Min(ev.phase, listener.Priority);
             }
 
             ev.Finish();
