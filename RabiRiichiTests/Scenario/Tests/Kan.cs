@@ -81,27 +81,56 @@ namespace RabiRiichiTests.Scenario.Tests {
         public async Task SuccessAnKan() {
             var scenario = new ScenarioBuilder()
                 .WithPlayer(0, playerBuilder => {
-                    playerBuilder.SetFreeTiles("11122233345s19m");
+                    playerBuilder.SetFreeTiles("11112223334s19m");
                 })
-                .WithWall(wall => wall.Reserve("1s"))
-                .WithWall(wall => wall.AddRinshan("29s"))
-                .Start(0);
+                .WithWall(wall => wall.Reserve("3s"))
+                .WithWall(wall => wall.AddRinshan("2s"))
+                .Start(1);
+
+            // DaiMinKan
+            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
+                playerInquiry.ChooseTile<PlayTileAction>("3s");
+            }).AssertAutoFinish();
 
             (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
                 playerInquiry
-                    .AssertAction<PlayTileAction>()
-                    .ChooseTiles<KanAction>("1111s", action => {
+                    .AssertSkip()
+                    .AssertAction<PonAction>()
+                    .ChooseTiles<KanAction>("3333s", action => {
                         Assert.AreEqual(1, action.options.Count);
                         return true;
                     })
                     .AssertNoMoreActions();
             }).AssertAutoFinish();
 
-            Kan kan1 = null;
             scenario
-                .AssertEvent<KanEvent>((ev) => {
-                    kan1 = ev.kan;
+                .AssertEvent<AddKanEvent>((ev) => {
+                    Assert.AreEqual(TileSource.DaiMinKan, ev.kanSource);
+                    return true;
+                })
+                .AssertNoEvent<RevealDoraEvent>();
+
+            // When tsumo, ok to AnKan but not DaiMinKan
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry
+                    .AssertAction<PlayTileAction>()
+                    // If multiple kans in hand, have the option to choose which one
+                    .ChooseTiles<KanAction>("1111s", action => {
+                        Assert.AreEqual(2, action.options.Count);
+                        return true;
+                    })
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+
+            // Dora is revealed immediately after AnKan
+            // Dora is revealed after playing a tile when DaiMinKan
+            scenario
+                .AssertEvent<AddKanEvent>((ev) => {
                     Assert.AreEqual(TileSource.AnKan, ev.kanSource);
+                    return true;
+                })
+                .AssertEvent<RevealDoraEvent>(ev => {
+                    Assert.AreEqual(0, ev.playerId);
                     return true;
                 })
                 .AssertEvent<RevealDoraEvent>(ev => {
@@ -109,6 +138,7 @@ namespace RabiRiichiTests.Scenario.Tests {
                     return true;
                 });
 
+            // Can AnKan after AnKan
             (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
                 playerInquiry
                     .AssertAction<PlayTileAction>()
@@ -119,22 +149,22 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertNoMoreActions();
             }).AssertAutoFinish();
 
-            Kan kan2 = null;
-            scenario
+            await scenario
                 .AssertEvent<AddKanEvent>((ev) => {
-                    kan2 = ev.kan;
                     Assert.AreEqual(TileSource.AnKan, ev.kanSource);
                     return true;
                 })
                 .AssertEvent<RevealDoraEvent>(ev => {
                     Assert.AreEqual(0, ev.playerId);
                     return true;
-                });
+                }).Resolve();
 
-            // scenario.WithGame(game => {
-            //     CollectionAssert.Contains(game.GetPlayer(0).hand.freeTiles, kan1);
-            //     CollectionAssert.Contains(game.GetPlayer(0).hand.freeTiles, kan2);
-            // });
+            // Check Kans exist
+            scenario.WithPlayer(0, player => {
+                player.hand.called.AssertContains("1111s");
+                player.hand.called.AssertContains("2222s");
+                player.hand.called.AssertContains("3333s");
+            });
         }
     }
 }
