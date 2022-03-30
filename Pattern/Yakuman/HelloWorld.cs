@@ -5,6 +5,7 @@ using System.Linq;
 namespace RabiRiichi.Pattern {
     public class HelloWorld : StdPattern {
 
+        // 22266667778999
         private const string HELLO_WORLD = "//HELLO WORLD.";
         private static readonly byte[] MATCH_ARR = HELLO_WORLD.Select(c => (byte)(c % 10)).OrderBy(i => i).ToArray();
 

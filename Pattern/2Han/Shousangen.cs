@@ -9,12 +9,10 @@ namespace RabiRiichi.Pattern {
         }
 
         public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
-            bool jantouFlag = groups.Find(gr => gr is Jantou).First.tile.IsSangen;
-            bool kouFlag = groups
-                .Where(gr => gr is not Jantou)
-                .Subset(2)
-                .Any(grs => grs.All(gr => gr.First.tile.IsSangen));
-            if (jantouFlag && kouFlag) {
+            var sangenGroups = groups.Where(gr => gr.First.tile.IsSangen);
+            bool flag = sangenGroups.Any(gr => gr is Jantou)
+                && sangenGroups.GroupBy(gr => gr.First.tile).Count() == 3;
+            if (flag) {
                 scores.Add(new Scoring(ScoringType.Han, 2, this));
                 return true;
             }

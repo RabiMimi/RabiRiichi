@@ -9,7 +9,9 @@ namespace RabiRiichi.Pattern {
         }
 
         public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
-            bool flag = groups.Where(gr => gr is not Jantou && gr.First.tile.IsSangen).Count() == 3;
+            var sangenGroups = groups.Where(gr => gr.First.tile.IsSangen);
+            bool flag = sangenGroups.All(gr => gr is not Jantou)
+                && sangenGroups.GroupBy(gr => gr.First.tile).Count() == 3;
             if (flag) {
                 scores.Add(new Scoring(ScoringType.Yakuman, 1, this));
                 return true;

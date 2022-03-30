@@ -4,8 +4,8 @@ using RabiRiichi.Pattern;
 
 namespace RabiRiichiTests.Pattern {
     [TestClass]
-    public class DaisuushiiTest {
-        protected StdPattern V { get; set; } = new Daisuushii(null);
+    public class ShousuushiiTest {
+        protected StdPattern V { get; set; } = new Shousuushii(null);
 
         [TestMethod]
         public void TestResolved() {
@@ -13,19 +13,10 @@ namespace RabiRiichiTests.Pattern {
                 .AddFree("111z")
                 .AddFree("222z")
                 .AddFree("333z")
-                .AddFree("444z")
-                .AddAgari("5z", "5z")
+                .AddFree("44z")
+                .AddAgari("55z", "5z")
                 .Resolve(true)
-                .ExpectScoring(ScoringType.Yakuman, 2)
-                .NoMore();
-            new StdTestBuilder(V)
-                .AddFree("1111z")
-                .AddFree("2222z")
-                .AddFree("3333z")
-                .AddFree("4444z")
-                .AddAgari("8s", "8s")
-                .Resolve(true)
-                .ExpectScoring(ScoringType.Yakuman, 2)
+                .ExpectScoring(ScoringType.Yakuman, 1)
                 .NoMore();
         }
 
@@ -35,8 +26,15 @@ namespace RabiRiichiTests.Pattern {
                 .AddFree("111z")
                 .AddFree("222z")
                 .AddFree("333z")
-                .AddFree("123s")
-                .AddAgari("4z", "4z")
+                .AddFree("55z")
+                .AddAgari("44z", "4z")
+                .Resolve(false);
+            new StdTestBuilder(V)
+                .AddFree("111z")
+                .AddFree("111z")
+                .AddFree("111z")
+                .AddFree("11z")
+                .AddAgari("11z", "1z")
                 .Resolve(false);
         }
     }

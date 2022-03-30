@@ -9,11 +9,14 @@ namespace RabiRiichi.Pattern {
         }
 
         public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
-            bool flag = groups.Where(gr => gr.First.tile.IsWind).Count() == 4;
+            var windGroups = groups.Where(gr => gr.First.tile.IsWind);
+            bool flag = windGroups.Any(gr => gr is Jantou)
+                && windGroups.GroupBy(gr => gr.First.tile).Count() == 4;
             if (flag) {
                 scores.Add(new Scoring(ScoringType.Yakuman, 1, this));
+                return true;
             }
-            return true;
+            return false;
         }
     }
 }
