@@ -28,11 +28,10 @@ namespace RabiRiichi.Action.Resolver {
                 return false;
             }
             var tile = incoming.tile.WithoutDora;
-            var current = new List<GameTile> { incoming };
             var result = new List<List<GameTile>>();
 
             // 大明杠或暗杠
-            CheckCombo(hand.freeTiles, result, current, tile, tile, tile);
+            CheckCombo(hand.freeTiles, result, new List<GameTile> { incoming }, tile, tile, tile);
             if (hand.riichi) {
                 var tenpai = hand.Tenpai;
                 // 立直时，检查暗杠不会影响听牌
@@ -52,9 +51,15 @@ namespace RabiRiichi.Action.Resolver {
             }
             if (incoming.IsTsumo) {
                 // 加杠
-                var groups = hand.called.Where(g => g is Kou && g.First.tile.IsSame(incoming.tile));
+                var groups = hand.called.Where(g => g is Kou);
                 foreach (var group in groups) {
-                    current.AddRange(group.Append(incoming));
+                    var groupKey = group.First.tile;
+                    if (incoming.tile.IsSame(groupKey)) {
+                        result.Add(group.Append(incoming).ToList());
+                    }
+                    foreach (var handTile in hand.freeTiles.Where(t => t.tile.IsSame(groupKey))) {
+                        result.Add(group.Append(handTile).ToList());
+                    }
                 }
                 // 暗杠
                 var grs = hand.freeTiles.GroupBy(t => t.tile.WithoutDora);
@@ -70,7 +75,7 @@ namespace RabiRiichi.Action.Resolver {
             if (result.Count == 0) {
                 return false;
             }
-            output.Add(new KanAction(player.id, result, incoming, -incoming.discardInfo?.fromPlayer.Dist(player) ?? 0));
+            output.Add(new KanAction(player.id, result, -incoming.discardInfo?.fromPlayer.Dist(player) ?? 0));
             return true;
         }
     }

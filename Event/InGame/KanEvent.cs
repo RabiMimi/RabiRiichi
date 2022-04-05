@@ -10,6 +10,9 @@ namespace RabiRiichi.Event.InGame {
         #region Request
         [RabiBroadcast] public Kan kan;
         [RabiBroadcast] public TileSource kanSource;
+        /// <summary>
+        /// 杠里的牌，对于暗杠来说不一定是刚摸到的
+        /// </summary>
         public readonly GameTile incoming;
         #endregion
 

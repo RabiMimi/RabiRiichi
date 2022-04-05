@@ -606,6 +606,7 @@ namespace RabiRiichiTests.Scenario {
                 if (playerBuilders.Any(builder => builder.player == null)) {
                     throw new InvalidOperationException("Must set up PlayerHandBuilder before setting up wall.");
                 }
+                wall.Reset();
                 var players = playerBuilders.Select(builder => builder.player).ToArray();
                 var allTiles = wall.doras.Concat(wall.uradoras).Concat(wall.rinshan).Concat(wall.remaining).ToList();
                 wall.revealedDoraCount = revealedDoraNum;

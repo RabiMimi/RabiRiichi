@@ -10,12 +10,10 @@ namespace RabiRiichi.Event.InGame {
         #region Request
         [RabiBroadcast] public Kan kan;
         [RabiBroadcast] public TileSource kanSource;
-        public GameTile incoming;
         #endregion
 
         public AddKanEvent(KanEvent ev) : base(ev, ev.playerId) {
             kan = ev.kan;
-            incoming = ev.incoming;
             kanSource = ev.kanSource;
         }
     }

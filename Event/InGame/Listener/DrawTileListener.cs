@@ -65,7 +65,7 @@ namespace RabiRiichi.Event.InGame.Listener {
             ev.inquiry.AddHandler<KanAction>((action) => {
                 var option = action.chosen as ChooseTilesActionOption;
                 var kan = new Kan(option.tiles);
-                eventBuilder.AddEvent(new KanEvent(ev, action.playerId, kan, action.incoming));
+                eventBuilder.AddEvent(new KanEvent(ev, action.playerId, kan, option.tiles[^1]));
             });
             ev.inquiry.AddHandler<RyuukyokuAction>((action) => {
                 eventBuilder.AddEvent(action.ev);

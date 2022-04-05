@@ -42,6 +42,7 @@ namespace RabiRiichiTests.Helper {
 
             public MockSetup(Wall wall) {
                 this.wall = wall;
+                wall.Reset();
             }
 
             public override void Inject(Game game, IServiceCollection collection) {

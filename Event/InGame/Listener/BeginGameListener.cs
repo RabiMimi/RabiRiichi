@@ -10,6 +10,7 @@ namespace RabiRiichi.Event.InGame.Listener {
             foreach (var player in ev.game.players) {
                 player.Reset();
             }
+            ev.game.wall.Reset();
             int dealer = ev.game.info.dealer;
             int curPlayer = dealer;
             for (int r = 0; r < 4; r++) {

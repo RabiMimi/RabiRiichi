@@ -13,6 +13,7 @@ namespace RabiRiichiTests.Core {
         [TestInitialize]
         public void Init() {
             wall = new Wall(new RabiRand(114514));
+            wall.Reset();
         }
 
         [TestMethod]

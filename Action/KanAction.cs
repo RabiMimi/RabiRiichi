@@ -7,9 +7,7 @@ namespace RabiRiichi.Action {
     [RabiPrivate]
     public class KanAction : ChooseTilesAction {
         public override string name => "kan";
-        [RabiBroadcast] public GameTile incoming;
-        public KanAction(int playerId, List<List<GameTile>> tiles, GameTile incoming, int priorityDelta = 0) : base(playerId, tiles) {
-            this.incoming = incoming;
+        public KanAction(int playerId, List<List<GameTile>> tiles, int priorityDelta = 0) : base(playerId, tiles) {
             priority = ActionPriority.Kan + priorityDelta;
         }
     }

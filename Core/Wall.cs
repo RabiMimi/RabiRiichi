@@ -6,13 +6,14 @@ using System.Linq;
 namespace RabiRiichi.Core {
     public class Wall {
         public Game game;
+        public RabiRand rand;
 
         /// <summary> 宝牌数量 </summary>
         public const int NUM_DORA = 5;
         /// <summary> 岭上牌数量 </summary>
         public const int NUM_RINSHAN = 4;
         /// <summary> 牌山剩下的牌 </summary>
-        public readonly ListStack<GameTile> remaining = new(Tiles.All.ToGameTiles());
+        public readonly ListStack<GameTile> remaining = new();
         /// <summary> 岭上牌 </summary>
         public readonly ListStack<GameTile> rinshan = new();
         /// <summary> 宝牌 </summary>
@@ -33,6 +34,16 @@ namespace RabiRiichi.Core {
         public bool IsHaitei => NumRemaining <= 0;
 
         public Wall(RabiRand rand) {
+            this.rand = rand;
+        }
+
+        /// <summary> 重置牌山 </summary>
+        public void Reset() {
+            remaining.Clear();
+            rinshan.Clear();
+            doras.Clear();
+            uradoras.Clear();
+            remaining.AddRange(Tiles.All.ToGameTiles());
             rand.Shuffle(remaining);
             rinshan.AddRange(remaining.PopMany(NUM_RINSHAN));
             doras.AddRange(remaining.PopMany(NUM_DORA));

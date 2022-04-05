@@ -40,7 +40,7 @@ namespace RabiRiichiTests.Scenario.Tests {
             scenario.AssertEvent<AddKanEvent>((ev) => {
                 Assert.AreEqual(TileSource.DaiMinKan, ev.kanSource);
                 return true;
-            });
+            }).AssertNoEvent<RevealDoraEvent>();
 
             // AnKan after DaiMinKan
             (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
@@ -55,6 +55,12 @@ namespace RabiRiichiTests.Scenario.Tests {
 
             scenario.AssertEvent<AddKanEvent>((ev) => {
                 Assert.AreEqual(TileSource.AnKan, ev.kanSource);
+                return true;
+            }).AssertEvent<RevealDoraEvent>((ev) => {
+                Assert.AreEqual(0, ev.playerId);
+                return true;
+            }).AssertEvent<RevealDoraEvent>((ev) => {
+                Assert.AreEqual(0, ev.playerId);
                 return true;
             });
 
@@ -72,6 +78,9 @@ namespace RabiRiichiTests.Scenario.Tests {
             scenario.AssertEvent<AddKanEvent>((ev) => {
                 Assert.AreEqual(TileSource.AnKan, ev.kanSource);
                 return true;
+            }).AssertEvent<RevealDoraEvent>((ev) => {
+                Assert.AreEqual(0, ev.playerId);
+                return true;
             });
 
             // 4th AnKan
@@ -87,6 +96,9 @@ namespace RabiRiichiTests.Scenario.Tests {
 
             scenario.AssertEvent<AddKanEvent>((ev) => {
                 Assert.AreEqual(TileSource.AnKan, ev.kanSource);
+                return true;
+            }).AssertEvent<RevealDoraEvent>((ev) => {
+                Assert.AreEqual(0, ev.playerId);
                 return true;
             });
 
@@ -217,6 +229,146 @@ namespace RabiRiichiTests.Scenario.Tests {
                 player.hand.called.AssertContains("2222s");
                 player.hand.called.AssertContains("3333s");
             });
+        }
+
+        [TestMethod]
+        public async Task SuccessKaKanAndSuuKanSanRa() {
+            var scenario = new ScenarioBuilder()
+                .WithPlayer(0, playerBuilder => {
+                    playerBuilder.SetFreeTiles("111122334s1239m");
+                })
+                .WithPlayer(1, playerBuilder => {
+                    playerBuilder.SetFreeTiles("111222334p1234z");
+                })
+                .WithWall(wall => wall.Reserve("234563s"))
+                .WithWall(wall => wall.AddRinshan("2s1p"))
+                .Start(1);
+
+            // Pon 2s
+            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
+                playerInquiry.ChooseTile<PlayTileAction>("2s");
+            }).AssertAutoFinish();
+
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry
+                    .AssertSkip()
+                    .ChooseTiles<PonAction>("222s", action => {
+                        Assert.AreEqual(1, action.options.Count);
+                        return true;
+                    })
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry.ChooseTile<PlayTileAction>("3m");
+            }).AssertAutoFinish();
+
+            // Pon 3s
+            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
+                playerInquiry.ChooseTile<PlayTileAction>("3s");
+            }).AssertAutoFinish();
+
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry
+                    .AssertSkip()
+                    .ChooseTiles<PonAction>("333s", action => {
+                        Assert.AreEqual(1, action.options.Count);
+                        return true;
+                    })
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry.ChooseTile<PlayTileAction>("2m");
+            }).AssertAutoFinish();
+
+            // KaKan 3s
+            (await scenario.WaitPlayerTurn(0)).ForPlayer(0, playerInquiry => {
+                playerInquiry
+                    .AssertAction<PlayTileAction>()
+                    .ChooseTiles<KanAction>("3333s", action => {
+                        Assert.AreEqual(2, action.options.Count);
+                        return true;
+                    })
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+
+            scenario.AssertEvent<AddKanEvent>((ev) => {
+                Assert.AreEqual(TileSource.KaKan, ev.kanSource);
+                return true;
+            }).AssertNoEvent<RevealDoraEvent>();
+
+            // AnKan 1s
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry
+                    .AssertAction<PlayTileAction>()
+                    .ChooseTiles<KanAction>("1111s", action => {
+                        Assert.AreEqual(2, action.options.Count);
+                        return true;
+                    })
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+
+            scenario.AssertEvent<AddKanEvent>((ev) => {
+                Assert.AreEqual(TileSource.AnKan, ev.kanSource);
+                return true;
+            }).AssertEvent<RevealDoraEvent>(ev => {
+                Assert.AreEqual(0, ev.playerId);
+                return true;
+            }).AssertEvent<RevealDoraEvent>(ev => {
+                Assert.AreEqual(0, ev.playerId);
+                return true;
+            });
+
+            // KaKan 2s
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry
+                    .AssertAction<PlayTileAction>()
+                    .ChooseTiles<KanAction>("2222s", action => {
+                        Assert.AreEqual(1, action.options.Count);
+                        return true;
+                    })
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+
+            scenario.AssertEvent<AddKanEvent>((ev) => {
+                Assert.AreEqual(TileSource.KaKan, ev.kanSource);
+                return true;
+            }).AssertNoEvent<RevealDoraEvent>();
+
+            // Play 1p
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry
+                    .ChooseTile<PlayTileAction>("1p")
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+
+            scenario.AssertEvent<RevealDoraEvent>(ev => {
+                Assert.AreEqual(0, ev.playerId);
+                return true;
+            });
+
+            // DaiMinKan 1p
+            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
+                playerInquiry
+                    .AssertSkip()
+                    .AssertAction<ChiiAction>()
+                    .AssertAction<PonAction>()
+                    .ChooseTiles<KanAction>("1111p", action => {
+                        Assert.AreEqual(1, action.options.Count);
+                        return true;
+                    })
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+
+            scenario.AssertEvent<AddKanEvent>((ev) => {
+                Assert.AreEqual(TileSource.DaiMinKan, ev.kanSource);
+                return true;
+            }).AssertNoEvent<RevealDoraEvent>();
+
+            (await scenario.WaitInquiry()).Finish();
+
+            await scenario.AssertRyuukyoku<SuukanSanra>().Resolve();
         }
 
         [TestMethod]
