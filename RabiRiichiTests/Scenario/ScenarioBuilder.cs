@@ -162,7 +162,10 @@ namespace RabiRiichiTests.Scenario {
             return this;
         }
 
-        /// <summary> 等待玩家i的回合，并对其中的询问操作全部采用默认选项 </summary>
+        /// <summary>
+        /// 等待玩家i的回合，并对其中的询问操作全部采用默认选项
+        /// 如果下一次询问就是玩家i的回合，不要使用该方法，改为<see cref="WaitInquiry"/>
+        /// </summary>
         public async Task<ScenarioInquiryMatcher> WaitPlayerTurn(int playerId) {
             var listener = new EventListener<IncreaseJunEvent>(game.eventBus);
             var tcs = new TaskCompletionSource();

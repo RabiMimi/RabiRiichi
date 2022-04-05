@@ -1,7 +1,8 @@
-﻿using RabiRiichi.Core;
-using RabiRiichi.Util;
+﻿using RabiRiichi.Util;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -37,7 +38,7 @@ namespace RabiRiichi.Event {
             }
         }
 
-        private readonly Dictionary<Type, List<IEventTrigger>> listeners =
+        private readonly ConcurrentDictionary<Type, List<IEventTrigger>> listeners =
             new();
         /// <summary>
         /// Mutex lock that will be acquired upon processing events.
@@ -46,23 +47,30 @@ namespace RabiRiichi.Event {
         public readonly SemaphoreSlim eventProcessingLock = new(1, 1);
         public const int EVENT_PROCESSING_TIMEOUT = 60 * 60 * 1000;
 
+        /// <summary>
+        /// Thread-safe method to add a listener to the event bus.
+        /// </summary>
         public void Subscribe<T>(Func<T, Task> listener, int priority, int times = -1)
             where T : EventBase {
             var type = typeof(T);
-            if (!listeners.TryGetValue(type, out var list)) {
-                list = new List<IEventTrigger>();
-                listeners.Add(type, list);
+            var list = listeners.GetOrAdd(type, _ => new List<IEventTrigger>());
+            lock (list) {
+                list.Add(new EventTrigger<T>(listener, priority, times, list));
             }
-            list.Add(new EventTrigger<T>(listener, priority, times, list));
         }
 
+        /// <summary>
+        /// Thread-safe method to remove a listener from the event bus.
+        /// </summary>
         public void Unsubscribe<T>(Func<T, Task> listener)
             where T : EventBase {
             var type = typeof(T);
             if (!listeners.TryGetValue(type, out var list)) {
                 return;
             }
-            list.RemoveAll(l => l is EventTrigger<T> et && et.trigger == listener);
+            lock (list) {
+                list.RemoveAll(l => l is EventTrigger<T> et && et.trigger == listener);
+            }
         }
 
         /// <summary>
@@ -77,8 +85,8 @@ namespace RabiRiichi.Event {
 
             // 监听该事件及所有子类
             var list = new List<IEventTrigger>();
-            foreach (var (key, value) in listeners) {
-                if (key.IsAssignableFrom(ev.GetType())) {
+            foreach (var (key, value) in listeners.Where(l => l.Key.IsAssignableFrom(ev.GetType()))) {
+                lock (value) {
                     list.AddRange(value);
                 }
             }

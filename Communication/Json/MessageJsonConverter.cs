@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
@@ -28,19 +28,12 @@ namespace RabiRiichi.Communication.Json {
         }
 
         private class RabiMessageReflectionData {
-            private static readonly Dictionary<Type, RabiMessageReflectionData> reflectionDataDict = new();
+            private static readonly ConcurrentDictionary<Type, RabiMessageReflectionData> reflectionDataDict = new();
             public static RabiMessageReflectionData Of(Type type) {
                 if (type.IsRabiIgnore()) {
                     return null;
                 }
-                RabiMessageReflectionData reflectionData;
-                lock (reflectionDataDict) {
-                    if (!reflectionDataDict.TryGetValue(type, out reflectionData)) {
-                        reflectionData = new RabiMessageReflectionData(type);
-                        reflectionDataDict.Add(type, reflectionData);
-                    }
-                }
-                return reflectionData;
+                return reflectionDataDict.GetOrAdd(type, _ => new RabiMessageReflectionData(type));
             }
 
             public readonly MemberInfo[] AllMembers;
