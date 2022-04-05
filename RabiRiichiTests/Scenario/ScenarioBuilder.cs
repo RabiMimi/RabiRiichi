@@ -1,4 +1,5 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using RabiRiichi.Action;
 using RabiRiichi.Core;
 using RabiRiichi.Event;
 using RabiRiichi.Event.InGame;
@@ -16,10 +17,41 @@ namespace RabiRiichiTests.Scenario {
         private readonly List<Predicate<EventBase>> eventMatchers = new();
         private readonly List<Predicate<EventBase>> noEventMatchers = new();
         private readonly List<EventBase> events = new();
+        private bool sanityCheckOnInquiry = true;
+
+        /// <summary> 检查当前游戏状态是否合法 </summary>
+        private void GameSanityCheck(ScenarioInquiryMatcher inquiry) {
+            if (!sanityCheckOnInquiry) {
+                return;
+            }
+            // Player
+            foreach (var player in game.players) {
+                int expectedCount = Game.HAND_SIZE;
+                var action = (PlayTileAction)inquiry.inquiry.GetByPlayerId(player.id)?.actions.Find(action => action is PlayTileAction);
+                if (action?.options.All(x => player.hand.freeTiles.Contains((x as ChooseTileActionOption).tile)) == true) {
+                    expectedCount++;
+                }
+                Assert.AreEqual(expectedCount, player.hand.Count, $"Player {player.id} hand count is not {Game.HAND_SIZE}");
+                if (player.hand.wRiichi) {
+                    Assert.IsTrue(player.hand.riichi, $"Player {player.id} is wRiichi but not riichi");
+                }
+            }
+            // Wall
+            Assert.IsTrue(game.wall.NumRemaining >= 0, $"Wall remaining is {game.wall.NumRemaining} < 0");
+            Assert.AreEqual(Wall.NUM_DORA, game.wall.uradoras.Count, $"Wall uradoras count is {game.wall.uradoras.Count} != {Wall.NUM_DORA}");
+            Assert.AreEqual(Wall.NUM_DORA, game.wall.doras.Count, $"Wall doras count is {game.wall.doras.Count} != {Wall.NUM_DORA}");
+            Assert.IsTrue(game.wall.rinshan.Count <= Wall.NUM_RINSHAN, $"Wall rinshan count is {game.wall.rinshan.Count} > {Wall.NUM_RINSHAN}");
+        }
 
         public Scenario(Game game) {
             this.game = game;
             actionCenter = (ScenarioActionCenter)game.config.actionCenter;
+        }
+
+        /// <summary> 启用或禁用游戏询问玩家时的状态检查。默认启用 </summary>
+        public Scenario SanityCheckOnInquiry(bool enabled) {
+            sanityCheckOnInquiry = enabled;
+            return this;
         }
 
         /// <summary> 获取游戏实例 </summary>
@@ -119,6 +151,7 @@ namespace RabiRiichiTests.Scenario {
         public async Task<ScenarioInquiryMatcher> WaitInquiry() {
             var ret = await actionCenter.NextInquiry;
             ResolveImmediately();
+            GameSanityCheck(ret);
             return ret;
         }
 
@@ -707,21 +740,21 @@ namespace RabiRiichiTests.Scenario {
         }
 
         /// <summary> 根据设置的状态创建游戏实例 </summary>
-        public Scenario Build() {
+        public Scenario Build(int startPlayerId) {
             var game = new Game(configBuilder.Build());
             gameStateBuilder.Setup(game.info);
             for (int i = 0; i < playerHandBuilders.Length; i++) {
                 var player = game.GetPlayer(i);
                 playerHandBuilders[i].Setup(player,
-                    isFirstJun && player.IsDealer ? Game.HAND_SIZE + 1 : Game.HAND_SIZE);
+                    isFirstJun && player.IsDealer && player.id == startPlayerId ? Game.HAND_SIZE + 1 : Game.HAND_SIZE);
             }
             wallBuilder.Setup(game.wall);
             return new Scenario(game);
         }
 
         /// <summary> 根据设置的状态创建游戏实例，并以playerId的回合开始游戏 </summary>
-        public Scenario Start(int playerId) {
-            return Build().Start(playerId);
+        public Scenario Start(int startPlayerId) {
+            return Build(startPlayerId).Start(startPlayerId);
         }
     }
 }
