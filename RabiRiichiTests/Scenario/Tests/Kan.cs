@@ -16,7 +16,10 @@ namespace RabiRiichiTests.Scenario.Tests {
                 .WithPlayer(0, playerBuilder => {
                     playerBuilder.SetFreeTiles("11112223333s19m");
                 })
-                .WithWall(wall => wall.Reserve("2s").AddRinshan("1119m"))
+                .WithPlayer(1, playerBuilder => {
+                    playerBuilder.SetFreeTiles("4689s1135p66669m");
+                })
+                .WithWall(wall => wall.Reserve("2s").AddRinshan("1118m"))
                 .Start(1);
 
             (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
@@ -82,10 +85,17 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertNoMoreActions();
             }).AssertAutoFinish();
 
-            var inquiry = await scenario.AssertEvent<AddKanEvent>((ev) => {
+            scenario.AssertEvent<AddKanEvent>((ev) => {
                 Assert.AreEqual(TileSource.AnKan, ev.kanSource);
                 return true;
-            }).WaitInquiry();
+            });
+
+            // Play a tile after 4 kans
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry
+                    .ChooseTile<PlayTileAction>("8m")
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
 
             // Check Kans exist
             scenario.WithPlayer(0, player => {
@@ -95,17 +105,24 @@ namespace RabiRiichiTests.Scenario.Tests {
                 player.hand.called.AssertContains("1111m");
             });
 
-            // Suukantsu
-            inquiry.ForPlayer(0, playerInquiry => {
+            // Other player plays waited tile, not allowed to AnKan
+            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
                 playerInquiry
-                    .AssertAction<PlayTileAction>()
-                    .ApplyAction<TsumoAction>()
+                    .ChooseTile<PlayTileAction>("9m")
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+
+            // Player 0 wins
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry
+                    .AssertSkip()
+                    .ApplyAction<RonAction>()
                     .AssertNoMoreActions();
             }).AssertAutoFinish();
 
             await scenario.AssertEvent<AgariEvent>((ev) => {
                 ev.agariInfos
-                    .AssertTsumo(0)
+                    .AssertRon(1, 0)
                     .AssertScore(yakuman: 1)
                     .AssertYaku<Suukantsu>(yakuman: 1);
                 return true;
