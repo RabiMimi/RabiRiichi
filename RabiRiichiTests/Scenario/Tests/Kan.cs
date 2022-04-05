@@ -231,17 +231,15 @@ namespace RabiRiichiTests.Scenario.Tests {
             });
         }
 
-        [TestMethod]
-        public async Task SuccessKaKanAndSuuKanSanRa() {
+        private static async Task<Scenario> BuildSuuKanSanRaFromKaKan() {
             var scenario = new ScenarioBuilder()
                 .WithPlayer(0, playerBuilder => {
-                    playerBuilder.SetFreeTiles("111122334s1239m");
+                    playerBuilder.SetFreeTiles("111122339s1239m");
                 })
                 .WithPlayer(1, playerBuilder => {
                     playerBuilder.SetFreeTiles("111222334p1234z");
                 })
-                .WithWall(wall => wall.Reserve("234563s"))
-                .WithWall(wall => wall.AddRinshan("2s1p"))
+                .WithWall(wall => wall.Reserve("234563s").AddRinshan("2s1p1z"))
                 .Start(1);
 
             // Pon 2s
@@ -260,7 +258,7 @@ namespace RabiRiichiTests.Scenario.Tests {
             }).AssertAutoFinish();
 
             (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
-                playerInquiry.ChooseTile<PlayTileAction>("3m");
+                playerInquiry.ChooseTile<PlayTileAction>("9m");
             }).AssertAutoFinish();
 
             // Pon 3s
@@ -279,7 +277,7 @@ namespace RabiRiichiTests.Scenario.Tests {
             }).AssertAutoFinish();
 
             (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
-                playerInquiry.ChooseTile<PlayTileAction>("2m");
+                playerInquiry.ChooseTile<PlayTileAction>("9s");
             }).AssertAutoFinish();
 
             // KaKan 3s
@@ -366,9 +364,59 @@ namespace RabiRiichiTests.Scenario.Tests {
                 return true;
             }).AssertNoEvent<RevealDoraEvent>();
 
-            (await scenario.WaitInquiry()).Finish();
+            // Play 1z
+            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
+                playerInquiry
+                    .ChooseTile<PlayTileAction>("1z")
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+
+            scenario.AssertEvent<RevealDoraEvent>(ev => {
+                Assert.AreEqual(1, ev.playerId);
+                return true;
+            });
+
+            return scenario;
+        }
+
+        [TestMethod]
+        public async Task SuccessKaKan_SuccessSuuKanSanRa() {
+            var scenario = await BuildSuuKanSanRaFromKaKan();
+
+            // Player 0 does not ron
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry
+                    .AssertAction<RonAction>()
+                    .ApplyAction<SkipAction>()
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
 
             await scenario.AssertRyuukyoku<SuukanSanra>().Resolve();
+        }
+
+        [TestMethod]
+        public async Task SuccessKaKan_FailSuuKanSanRa() {
+            var scenario = await BuildSuuKanSanRaFromKaKan();
+
+            // Player 0 does not ron
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry
+                    .AssertSkip()
+                    .ApplyAction<RonAction>()
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+
+            await scenario
+                .AssertNoRyuukyoku<SuukanSanra>()
+                .AssertEvent<AgariEvent>(ev => {
+                    ev.agariInfos
+                        .AssertRon(1, 0)
+                        .AssertScore(han: 2, fu: 80)
+                        .AssertYaku<Sankantsu>(han: 2);
+                    return true;
+                })
+                .AssertEvent<NextGameEvent>()
+                .Resolve();
         }
 
         [TestMethod]
