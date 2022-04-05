@@ -13,10 +13,21 @@ namespace RabiRiichiTests.Pattern {
                 .AddFree("345p")
                 .AddFree("456m")
                 .AddFree("22m")
-                .AddAgari("23s", "1s", false, RabiRiichi.Core.TileSource.KaKan)
+                .AddAgari("111s", "1s", true, RabiRiichi.Core.TileSource.KaKan)
                 .Resolve(true)
                 .ExpectScoring(ScoringType.Han, 1)
                 .NoMore();
+        }
+
+        [TestMethod]
+        public void TestFailed() {
+            new StdTestBuilder(V)
+                .AddFree("234s")
+                .AddFree("345p")
+                .AddFree("456m")
+                .AddFree("22m")
+                .AddAgari("11s", "1s", true)
+                .Resolve(false);
         }
     }
 }

@@ -40,5 +40,23 @@ namespace RabiRiichiTests.Pattern {
                 .NoMore();
         }
 
+        [TestMethod]
+        public void TestFailed() {
+            new StdTestBuilder(V)
+                .AddFree("123s")
+                .AddFree("111p")
+                .AddFree("111m")
+                .AddFree("11z")
+                .AddAgari("99p", "9p")
+                .Resolve(false);
+            new StdTestBuilder(V)
+                .AddFree("111s")
+                .AddFree("111p")
+                .AddFree("222m")
+                .AddFree("99s")
+                .AddAgari("99p", "9p")
+                .Resolve(false);
+        }
+
     }
 }
