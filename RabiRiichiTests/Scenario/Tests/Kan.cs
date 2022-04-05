@@ -201,5 +201,61 @@ namespace RabiRiichiTests.Scenario.Tests {
                 player.hand.called.AssertContains("3333s");
             });
         }
+
+        [TestMethod]
+        public async Task FailAnKanAfterChii() {
+            var scenario = new ScenarioBuilder()
+                .WithPlayer(0, playerBuilder => {
+                    playerBuilder.SetFreeTiles("1111223333s129m");
+                })
+                .WithWall(wall => wall.Reserve("3m"))
+                .Start(3);
+
+            (await scenario.WaitInquiry()).ForPlayer(3, playerInquiry => {
+                playerInquiry.ChooseTile<PlayTileAction>("3m");
+            }).AssertAutoFinish();
+
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry
+                    .AssertSkip()
+                    .ChooseTiles<ChiiAction>("123m", action => {
+                        Assert.AreEqual(1, action.options.Count);
+                        return true;
+                    })
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry.AssertNoAction<KanAction>();
+            });
+        }
+
+        [TestMethod]
+        public async Task FailAnKanAfterPon() {
+            var scenario = new ScenarioBuilder()
+                .WithPlayer(0, playerBuilder => {
+                    playerBuilder.SetFreeTiles("1111223333s129m");
+                })
+                .WithWall(wall => wall.Reserve("2s"))
+                .Start(1);
+
+            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
+                playerInquiry.ChooseTile<PlayTileAction>("2s");
+            }).AssertAutoFinish();
+
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry
+                    .AssertSkip()
+                    .ChooseTiles<PonAction>("222s", action => {
+                        Assert.AreEqual(1, action.options.Count);
+                        return true;
+                    })
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry.AssertNoAction<KanAction>();
+            });
+        }
     }
 }

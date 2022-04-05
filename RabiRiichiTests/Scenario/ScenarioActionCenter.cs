@@ -92,13 +92,18 @@ namespace RabiRiichiTests.Scenario {
             return this;
         }
 
-        private T FindAction<T>(int playerId, Predicate<T> matcher = null, bool includeSubtypes = false) where T : IPlayerAction
-            => (T)inquiry.GetByPlayerId(playerId).actions.Find(a => {
+        private T FindAction<T>(int playerId, Predicate<T> matcher = null, bool includeSubtypes = false) where T : IPlayerAction {
+            var playerInquiry = inquiry.GetByPlayerId(playerId);
+            if (playerInquiry == null) {
+                Assert.Fail($"No inquiry for player {playerId}.");
+            }
+            return (T)playerInquiry.actions.Find(a => {
                 if (includeSubtypes ? a is not T : a.GetType() != typeof(T)) {
                     return false;
                 }
                 return matcher == null || matcher((T)a);
             });
+        }
 
         public ScenarioInquiryMatcher AssertAction<T>(int playerId, Predicate<T> matcher = null) where T : IPlayerAction {
             var action = FindAction(playerId, matcher);
