@@ -152,10 +152,32 @@ namespace RabiRiichiTests.Scenario {
     }
 
     public class ScenarioActionCenter : IActionCenter {
+        private int playerCount = -1;
         private TaskCompletionSource<ScenarioInquiryMatcher> nextInquirySource = new();
+        private string lastMsg;
+        private readonly List<int> lastMsgSentTo = new();
         public Task<ScenarioInquiryMatcher> NextInquiry => nextInquirySource.Task;
         private TaskCompletionSource currentInquirySource = null;
         public Task CurrentInquiry => currentInquirySource.Task;
+
+        ~ScenarioActionCenter() {
+            SendImmediately();
+        }
+
+        private void SendImmediately() {
+            if (string.IsNullOrWhiteSpace(lastMsg)) {
+                return;
+            }
+            if (lastMsgSentTo.Count == playerCount) {
+                Console.WriteLine($"ALL < {lastMsg}");
+            } else {
+                foreach (var playerId in lastMsgSentTo) {
+                    Console.WriteLine($"P{playerId}  < {lastMsg}");
+                }
+            }
+            lastMsg = null;
+            lastMsgSentTo.Clear();
+        }
 
         public void ForceFail(Exception e) {
             currentInquirySource?.TrySetException(e);
@@ -178,6 +200,7 @@ namespace RabiRiichiTests.Scenario {
             foreach (var playerInquiry in inquiry.playerInquiries) {
                 OnMessage(inquiry.game, playerInquiry.playerId, playerInquiry);
             }
+            SendImmediately();
             currentInquirySource = new();
             nextInquirySource.SetResult(new ScenarioInquiryMatcher(inquiry, () => {
                 nextInquirySource = new();
@@ -186,10 +209,20 @@ namespace RabiRiichiTests.Scenario {
         }
 
         public void OnMessage(Game game, int playerId, IRabiMessage msg) {
+            if (playerCount == -1) {
+                playerCount = game.config.playerCount;
+            }
             if (msg.IsRabiIgnore()) {
                 return;
             }
-            Console.WriteLine($"P{playerId} < {game.json.Stringify(msg, playerId)}");
+            var str = game.json.Stringify(msg, playerId);
+            if (str != lastMsg) {
+                SendImmediately();
+            }
+            lastMsg = str;
+            if (!lastMsgSentTo.Contains(playerId)) {
+                lastMsgSentTo.Add(playerId);
+            }
         }
     }
 }
