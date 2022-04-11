@@ -14,7 +14,7 @@ namespace RabiRiichi.Pattern {
                 return false;
 
             var grs = groups
-                .Where(tiles => tiles is Shun)
+                .OfType<Shun>()
                 .GroupBy(gr => gr.Value);
             bool isValid = grs.Count() == 2 && grs.All(gr => gr.Count() == 2)
                 || grs.Count() == 1 && grs.First().Count() == 4;

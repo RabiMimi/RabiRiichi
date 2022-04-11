@@ -51,7 +51,7 @@ namespace RabiRiichi.Action.Resolver {
             }
             if (incoming.IsTsumo) {
                 // 加杠
-                var groups = hand.called.Where(g => g is Kou);
+                var groups = hand.called.OfType<Kou>();
                 foreach (var group in groups) {
                     var groupKey = group.First.tile;
                     if (incoming.tile.IsSame(groupKey)) {

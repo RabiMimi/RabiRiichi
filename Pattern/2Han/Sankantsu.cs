@@ -9,7 +9,7 @@ namespace RabiRiichi.Pattern {
         }
 
         public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
-            if (groups.Where(gr => gr is Kan).Count() >= 3) {
+            if (groups.OfType<Kan>().Count() >= 3) {
                 scores.Add(new Scoring(ScoringType.Han, 2, this));
                 return true;
             }

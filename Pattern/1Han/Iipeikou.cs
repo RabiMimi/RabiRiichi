@@ -13,7 +13,7 @@ namespace RabiRiichi.Pattern {
                 return false;
 
             bool isValid = groups
-                .Where(tiles => tiles is Shun)
+                .OfType<Shun>()
                 .Subset(2)
                 .Any(grs => grs.First().IsSame(grs.Last()));
 

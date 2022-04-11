@@ -17,12 +17,14 @@ namespace RabiRiichi.Event.InGame.Listener {
             });
             ev.Q.Queue(ev.waitEvent);
             ev.waitEvent.OnFinish += () => {
-                if (ev.waitEvent.responseEvents.Count > 0) {
-                    // TODO: 处理抢杠后的情况：算作杠还是刻？
-                    return;
-                }
-                // 没有人抢杠，继续处理开杠事件
-                ev.Q.Queue(new AddKanEvent(ev));
+                // 若有人抢杠，杠在荣和后成立
+                var addKanEvent = new AddKanEvent(ev);
+                ev.Q.Queue(addKanEvent);
+                // 若游戏进入下一局，不要执行抢杠事件
+                ev.bus.Subscribe<NextGameEvent>((e) => {
+                    addKanEvent.Cancel();
+                    return Task.CompletedTask;
+                }, EventPriority.After, 1);
             };
             return Task.CompletedTask;
         }

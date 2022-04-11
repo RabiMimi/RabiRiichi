@@ -9,7 +9,7 @@ namespace RabiRiichi.Pattern {
         }
 
         public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
-            var isIttsuu = groups
+            var isIttsu = groups
                 .Where(gr => gr is not Jantou)
                 .OrderBy(gr => gr.First)
                 .Subset(3)
@@ -18,7 +18,7 @@ namespace RabiRiichi.Pattern {
                     && gr.Suit == grs.First().Suit
                     && gr.First.tile.Num == index * 3 + 1));
 
-            if (isIttsuu) {
+            if (isIttsu) {
                 scores.Add(new Scoring(ScoringType.Han, hand.menzen ? 2 : 1, this));
                 return true;
             }

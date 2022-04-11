@@ -132,7 +132,7 @@ namespace RabiRiichi.Core {
         }
 
         public void KaKan(Kan tiles) {
-            var original = called.Find(gr => gr is Kou && (gr.Contains(tiles[0]) || gr.Contains(tiles[1]))) as Kou;
+            var original = called.OfType<Kou>().FirstOrDefault(gr => gr.Contains(tiles[0]) || gr.Contains(tiles[1]));
             Debug.Assert(original != null, "加杠了个空气");
             called.Remove(original);
             AddGroup(tiles, TileSource.KaKan);
