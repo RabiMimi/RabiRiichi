@@ -474,5 +474,89 @@ namespace RabiRiichiTests.Scenario.Tests {
                 playerInquiry.AssertNoAction<KanAction>();
             });
         }
+
+        [TestMethod]
+        public async Task SuccessRinshanKaihou() {
+            var scenario = new ScenarioBuilder()
+                .WithPlayer(0, playerBuilder => {
+                    playerBuilder.SetFreeTiles("111s123456789m1z");
+                })
+                .WithWall(wall => wall.Reserve("1s"))
+                .WithWall(wall => wall.AddRinshan("1z"))
+                .Start(1);
+
+            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
+                playerInquiry.ChooseTile<PlayTileAction>("1s");
+            }).AssertAutoFinish();
+
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry
+                    .AssertSkip()
+                    .AssertAction<PonAction>()
+                    .ChooseTiles<KanAction>("1111s", action => {
+                        Assert.AreEqual(1, action.options.Count);
+                        return true;
+                    })
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry
+                    .AssertAction<PlayTileAction>()
+                    .ApplyAction<TsumoAction>()
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+
+            scenario.AssertEvent<AgariEvent>(ev => {
+                ev.agariInfos
+                    .AssertTsumo(0)
+                    .AssertScore(han: 1)
+                    .AssertYaku<RinshanKaihou>(han: 1);
+                return true;
+            });
+        }
+
+        [TestMethod]
+        public async Task SuccessChankan4KaKan() {
+            var scenario = new ScenarioBuilder()
+                .WithPlayer(0, playerBuilder => {
+                    playerBuilder.SetFreeTiles("111s23456789m11z");
+                })
+                .WithPlayer(1, playerBuilder => {
+                    playerBuilder.SetFreeTiles("123456789p1s").AddCalled("111m", 2, 2);
+                })
+                .WithWall(wall => wall.Reserve("1m"))
+                .Start(1);
+
+            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
+                playerInquiry
+                    .AssertAction<PlayTileAction>()
+                    .ChooseTiles<KanAction>("1111m", action => {
+                        Assert.AreEqual(1, action.options.Count);
+                        return true;
+                    });
+            }).AssertAutoFinish();
+
+            scenario.AssertEvent<AddKanEvent>((ev) => {
+                Assert.AreEqual(TileSource.KaKan, ev.kanSource);
+                return true;
+            }).AssertNoEvent<RevealDoraEvent>();
+
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry
+                    .AssertSkip()
+                    .ApplyAction<RonAction>()
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+
+            scenario.AssertEvent<AgariEvent>(ev => {
+                ev.agariInfos
+                    .AssertRon(1, 0)
+                    .AssertScore(han: 3)
+                    .AssertYaku<Chankan>(han: 1);
+                return true;
+            });
+
+        }
     }
 }
