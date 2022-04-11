@@ -7,6 +7,7 @@ using RabiRiichi.Pattern;
 namespace RabiRiichi.Core.Setup {
     public class RiichiSetup : BaseSetup {
         protected override void InjectResolvers(IServiceCollection collection) {
+            collection.TryAddSingleton<ChanAnKanResolver>();
             collection.TryAddSingleton<ChanKanResolver>();
             collection.TryAddSingleton<ChiiResolver>();
             collection.TryAddSingleton<KanResolver>();

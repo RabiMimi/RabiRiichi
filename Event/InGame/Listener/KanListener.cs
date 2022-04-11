@@ -28,9 +28,13 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         private static IEnumerable<ResolverBase> GetKanResolvers(Game game, TileSource kanSource) {
-            if (kanSource != TileSource.DaiMinKan && game.TryGet<ChanKanResolver>(out var resolver1)) {
-                // 抢杠
-                yield return resolver1;
+            var resolver = kanSource switch {
+                TileSource.AnKan => game.Get<ChanAnKanResolver>(),
+                TileSource.KaKan => game.Get<ChanKanResolver>(),
+                _ => null
+            };
+            if (resolver != null) {
+                yield return resolver;
             }
         }
 

@@ -36,6 +36,8 @@ namespace RabiRiichi.Core {
         Chii,
         /// <summary> 碰 </summary>
         Pon,
+        /// <summary> 仅用于抢杠计算，非实质弃牌，而是加杠/暗杠的牌 </summary>
+        ChanKan,
     }
 
     public class DiscardInfo : IRabiMessage {
