@@ -505,7 +505,7 @@ namespace RabiRiichiTests.Scenario {
                 if (menzen.HasValue) {
                     player.hand.menzen = menzen.Value;
                 } else {
-                    player.hand.menzen = called?.Any(x => !x.IsClosed) ?? false;
+                    player.hand.menzen = called?.All(x => x.IsClosed) ?? true;
                 }
                 if (isTempFuriten.HasValue) {
                     player.hand.isTempFuriten = isTempFuriten.Value;
