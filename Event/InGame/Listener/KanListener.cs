@@ -8,6 +8,10 @@ namespace RabiRiichi.Event.InGame.Listener {
     public static class KanListener {
         public static Task ExecuteKan(KanEvent ev) {
             ev.Q.Queue(new IncreaseJunEvent(ev, ev.playerId));
+            // Pretend that kan tile is discarded to resolve chankan, and recover state later
+            ev.player.hand.Play(ev.incoming, DiscardReason.ChanKan);
+
+            // Resolve chankan
             var resolvers = GetKanResolvers(ev.game, ev.kanSource);
             foreach (var resolver in resolvers) {
                 resolver.Resolve(ev.player, ev.incoming, ev.waitEvent.inquiry);

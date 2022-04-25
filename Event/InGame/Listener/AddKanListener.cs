@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 namespace RabiRiichi.Event.InGame.Listener {
     public static class AddKanListener {
         private static Task ExecuteAddKan(AddKanEvent ev) {
+            // Remove fake discard info
+            ev.incoming.discardInfo = null;
             if (ev.kanSource == TileSource.AnKan || ev.kanSource == TileSource.DaiMinKan) {
                 ev.player.hand.AddKan(ev.kan);
             } else if (ev.kanSource == TileSource.KaKan) {

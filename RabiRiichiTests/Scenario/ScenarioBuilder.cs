@@ -31,12 +31,6 @@ namespace RabiRiichiTests.Scenario {
                 if (action?.options.All(x => player.hand.freeTiles.Contains((x as ChooseTileActionOption).tile)) == true) {
                     expectedCount++;
                 }
-                // Chankan
-                if (inquiry.inquiry.playerInquiries
-                    .SelectMany(x => x.actions).OfType<RonAction>()
-                    .Any(x => x.incoming?.playerId == player.id && x.incoming.discardInfo == null)) {
-                    expectedCount++;
-                }
                 Assert.AreEqual(expectedCount, player.hand.Count, $"Player {player.id} hand count is not {Game.HAND_SIZE}");
                 if (player.hand.wRiichi) {
                     Assert.IsTrue(player.hand.riichi, $"Player {player.id} is wRiichi but not riichi");
