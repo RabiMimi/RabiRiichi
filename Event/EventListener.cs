@@ -40,7 +40,7 @@ namespace RabiRiichi.Event {
         }
         private readonly EventBus eventBus;
         private readonly List<ListenerData> listeners = new();
-        private const int PRIORITY_DELTA = 1000;
+        private const int PRIORITY_DELTA = EventPriority.STEP;
 
         public EventListener(EventBus eventBus) {
             this.eventBus = eventBus;

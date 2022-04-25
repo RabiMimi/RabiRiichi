@@ -1,20 +1,33 @@
 using RabiRiichi.Communication;
+using RabiRiichi.Util;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace RabiRiichi.Event.InGame {
+    public enum ScoreTransferReason {
+        Ron,
+        Tsumo,
+        Ryuukyoku,
+        NagashiMangan,
+        Accumulated,
+        Pao,
+    }
+
     public class ScoreTransfer : IRabiMessage {
         public RabiMessageType msgType => RabiMessageType.Unnecessary;
-        [RabiBroadcast] public readonly int from;
-        [RabiBroadcast] public readonly int to;
-        [RabiBroadcast] public readonly int points;
-        public ScoreTransfer(int from, int to, int points, bool roundTo100 = true) {
+        [RabiBroadcast] public int from;
+        [RabiBroadcast] public int to;
+        [RabiBroadcast] public int points;
+        [RabiBroadcast] public ScoreTransferReason reason;
+        public ScoreTransfer(int from, int to, int points, ScoreTransferReason reason, bool ceilTo100 = true) {
             this.from = from;
             this.to = to;
-            if (roundTo100) {
-                this.points = (points + 50) / 100 * 100;
+            this.reason = reason;
+            if (ceilTo100) {
+                this.points = points.CeilTo100();
+            } else {
+                this.points = points;
             }
-            this.points = points;
         }
     }
 

@@ -247,7 +247,7 @@ namespace RabiRiichiTests.Scenario {
                 return this;
             }
 
-            /// <summary> 设置本场棒总点数，默认为300 </summary>
+            /// <summary> 设置本场棒总点数，默认为100 </summary>
             public GameConfigBuilder SetHonbaPoints(int honbaPoints) {
                 config.honbaPoints = honbaPoints;
                 return this;

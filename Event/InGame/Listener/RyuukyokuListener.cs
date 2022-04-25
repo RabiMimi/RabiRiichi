@@ -35,7 +35,7 @@ namespace RabiRiichi.Event.InGame.Listener {
                         if (ev.game.info.dealer == player || ev.game.info.dealer == manganPlayer) {
                             score *= 2;
                         }
-                        ev.AddScoreTransfer(player, manganPlayer, score);
+                        ev.AddScoreTransfer(player, manganPlayer, score, ScoreTransferReason.NagashiMangan);
                     }
                 }
             } else {
@@ -43,15 +43,15 @@ namespace RabiRiichi.Event.InGame.Listener {
                 var payers = ev.remainingPlayers.Except(ev.tenpaiPlayers).ToArray();
                 if (payers.Length == 2 && ev.tenpaiPlayers.Length == 2) {
                     int pt = (int)(TENPAI_BASE_PT * 1.5);
-                    ev.AddScoreTransfer(payers[0], ev.tenpaiPlayers[0], pt);
-                    ev.AddScoreTransfer(payers[1], ev.tenpaiPlayers[1], pt);
+                    ev.AddScoreTransfer(payers[0], ev.tenpaiPlayers[0], pt, ScoreTransferReason.Ryuukyoku);
+                    ev.AddScoreTransfer(payers[1], ev.tenpaiPlayers[1], pt, ScoreTransferReason.Ryuukyoku);
                 } else if (payers.Length == 1) {
                     foreach (var payee in ev.tenpaiPlayers) {
-                        ev.AddScoreTransfer(payers[0], payee, TENPAI_BASE_PT);
+                        ev.AddScoreTransfer(payers[0], payee, TENPAI_BASE_PT, ScoreTransferReason.Ryuukyoku);
                     }
                 } else if (ev.tenpaiPlayers.Length == 1) {
                     foreach (var payer in payers) {
-                        ev.AddScoreTransfer(payer, ev.tenpaiPlayers[0], TENPAI_BASE_PT);
+                        ev.AddScoreTransfer(payer, ev.tenpaiPlayers[0], TENPAI_BASE_PT, ScoreTransferReason.Ryuukyoku);
                     }
                 }
             }

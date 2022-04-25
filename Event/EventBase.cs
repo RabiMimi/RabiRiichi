@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 namespace RabiRiichi.Event {
     public static class EventPriority {
+        public const int STEP = 1000;
         public const int Cancelled = -1;
         public const int Finished = 0;
         public const int Minimum = 1;

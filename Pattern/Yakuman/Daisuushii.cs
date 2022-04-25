@@ -1,4 +1,5 @@
 using RabiRiichi.Core;
+using RabiRiichi.Event.InGame;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -9,12 +10,27 @@ namespace RabiRiichi.Pattern {
         }
 
         public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
-            var windGroups = groups.Where(gr => gr.First.tile.IsWind);
-            bool flag = windGroups.All(gr => gr is not Jantou)
-                && windGroups.GroupBy(gr => gr.First.tile).Count() == 4;
+            bool flag = groups
+                .Where(gr => gr.First.tile.IsWind && gr is not Jantou)
+                .GroupBy(gr => gr.First.tile)
+                .Count() == 4;
             if (flag) {
                 scores.Add(new Scoring(ScoringType.Yakuman, 2, this));
                 return true;
+            }
+            return false;
+        }
+
+        public override bool ResolvePao(Player player, ScoreTransferList scoreTransfers) {
+            var windGroups = player.hand.called
+                .Where(gr => gr.First.tile.IsWind && gr is not Jantou)
+                .ToArray();
+            if (windGroups.GroupBy(gr => gr.First.tile).Count() != 4) {
+                return false;
+            }
+            var lastGroup = windGroups[^1];
+            if (PaoUtil.TryGetPaoPlayer(lastGroup, out int paoPlayer)) {
+                return ApplyPao(player, paoPlayer, scoreTransfers);
             }
             return false;
         }

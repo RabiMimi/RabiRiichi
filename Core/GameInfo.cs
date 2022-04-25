@@ -20,13 +20,16 @@ namespace RabiRiichi.Core {
         [RabiBroadcast] public int riichiPoints = 1000;
 
         /// <summary> 场棒点数 </summary>
-        [RabiBroadcast] public int honbaPoints = 300;
+        [RabiBroadcast] public int honbaPoints = 100;
 
         /// <summary> (西)入点数 </summary>
         [RabiBroadcast] public int finishPoints = 30000;
 
         /// <summary> 食断 </summary>
         [RabiBroadcast] public bool allowKuitan = true;
+
+        /// <summary> 包牌比例，0为不包牌 </summary>
+        [RabiBroadcast] public float paoRatio = 0.5f;
 
         /// <summary> 几庄战 </summary>
         [RabiBroadcast] public int totalRound = 1;

@@ -27,6 +27,15 @@ namespace RabiRiichiTests.Pattern {
                 .Resolve(true)
                 .ExpectScoring(ScoringType.Yakuman, 2)
                 .NoMore();
+            new StdTestBuilder(V)
+                .AddFree("111z")
+                .AddFree("222z")
+                .AddFree("333z")
+                .AddFree("4444z")
+                .AddAgari("4z", "4z")
+                .Resolve(true)
+                .ExpectScoring(ScoringType.Yakuman, 2)
+                .NoMore();
         }
 
         [TestMethod]
