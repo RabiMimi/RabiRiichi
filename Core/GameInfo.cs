@@ -28,8 +28,8 @@ namespace RabiRiichi.Core {
         /// <summary> 食断 </summary>
         [RabiBroadcast] public bool allowKuitan = true;
 
-        /// <summary> 包牌比例，0为不包牌 </summary>
-        [RabiBroadcast] public float paoRatio = 0.5f;
+        /// <summary> 包牌 </summary>
+        [RabiBroadcast] public bool allowPao = true;
 
         /// <summary> 几庄战 </summary>
         [RabiBroadcast] public int totalRound = 1;

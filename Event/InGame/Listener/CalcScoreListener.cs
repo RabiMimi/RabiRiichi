@@ -37,6 +37,9 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         public static Task CalcPao(CalcScoreEvent ev) {
+            if (!ev.game.config.allowPao) {
+                return Task.CompletedTask;
+            }
             foreach (var info in ev.agariInfos) {
                 foreach (var score in info.scores) {
                     score.Source.ResolvePao(ev.game.GetPlayer(info.playerId), ev.scoreChange);

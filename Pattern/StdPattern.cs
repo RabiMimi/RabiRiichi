@@ -22,10 +22,10 @@ namespace RabiRiichi.Pattern {
             paoPlayer = fuuro.discardInfo.from;
             return true;
         }
-        public static bool ApplyPao(int toPlayer, int paoPlayer, float paoRatio, ScoreTransferList scoreTransfers) {
+        public static bool ApplyPao(int toPlayer, int paoPlayer, int paoPoints, ScoreTransferList scoreTransfers) {
             var transaction = scoreTransfers.Find(st => st.to == toPlayer &&
                 (st.reason == ScoreTransferReason.Ron || st.reason == ScoreTransferReason.Tsumo));
-            if (transaction == null) {
+            if (transaction == null || paoPoints <= 0) {
                 return false;
             }
             if (transaction.reason == ScoreTransferReason.Tsumo) {
@@ -35,12 +35,8 @@ namespace RabiRiichi.Pattern {
                 if (transaction.from == paoPlayer) {
                     return false;
                 }
-                int pao = ((int)(transaction.points * paoRatio)).CeilTo100();
-                if (pao <= 0) {
-                    return false;
-                }
-                transaction.points -= pao;
-                scoreTransfers.Add(new ScoreTransfer(paoPlayer, toPlayer, pao, ScoreTransferReason.Pao));
+                transaction.points -= paoPoints;
+                scoreTransfers.Add(new ScoreTransfer(paoPlayer, toPlayer, paoPoints, ScoreTransferReason.Pao));
             }
             return true;
         }
@@ -107,7 +103,9 @@ namespace RabiRiichi.Pattern {
         /// <summary>满足该役种后，检查是否存在包牌</summary>
         /// <returns>包牌的玩家ID，若无则返回-1</returns>
         public virtual bool ResolvePao(Player player, ScoreTransferList scoreTransfers) => false;
-        protected virtual bool ApplyPao(Player toPlayer, int paoPlayer, ScoreTransferList scoreTransfers)
-            => PaoUtil.ApplyPao(toPlayer.id, paoPlayer, toPlayer.game.config.paoRatio, scoreTransfers);
+        protected virtual bool ApplyPao(Player toPlayer, int paoPlayer, int ronPaoPoints, ScoreTransferList scoreTransfers)
+            => PaoUtil.ApplyPao(toPlayer.id, paoPlayer,
+                toPlayer.IsDealer ? (ronPaoPoints * 3 / 2).CeilTo100() : ronPaoPoints,
+                scoreTransfers);
     }
 }
