@@ -35,6 +35,11 @@ namespace RabiRiichiTests.Scenario {
                 return this;
             }
 
+            public ScenarioPlayerInquiryMatcher ApplySkip() {
+                parent.ApplySkip(playerId);
+                return this;
+            }
+
             public ScenarioPlayerInquiryMatcher ApplyAction<T, R>(R response, Predicate<T> matcher = null) where T : PlayerAction<R> {
                 parent.ApplyAction(playerId, response, matcher);
                 return this;
@@ -92,6 +97,11 @@ namespace RabiRiichiTests.Scenario {
             return this;
         }
 
+        public ScenarioInquiryMatcher AssertNoActionForPlayer(int playerId) {
+            Assert.IsNull(inquiry.GetByPlayerId(playerId), $"Expect no action for player {playerId} but found");
+            return this;
+        }
+
         private T FindAction<T>(int playerId, Predicate<T> matcher = null, bool includeSubtypes = false) where T : IPlayerAction {
             var playerInquiry = inquiry.GetByPlayerId(playerId);
             if (playerInquiry == null) {
@@ -119,6 +129,9 @@ namespace RabiRiichiTests.Scenario {
 
         public ScenarioInquiryMatcher AssertSkip(int playerId, bool canSkip = true)
             => canSkip ? AssertAction<SkipAction>(playerId) : AssertNoAction<SkipAction>(playerId);
+
+        public ScenarioInquiryMatcher ApplySkip(int playerId)
+            => ApplyAction<SkipAction>(playerId);
 
         public ScenarioInquiryMatcher ApplyAction<T, R>(int playerId, R response, Predicate<T> matcher = null) where T : PlayerAction<R> {
             var action = FindAction(playerId, matcher);

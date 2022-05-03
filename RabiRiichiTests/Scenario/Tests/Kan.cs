@@ -387,7 +387,7 @@ namespace RabiRiichiTests.Scenario.Tests {
             (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
                 playerInquiry
                     .AssertAction<RonAction>()
-                    .ApplyAction<SkipAction>()
+                    .ApplySkip()
                     .AssertNoMoreActions();
             }).AssertAutoFinish();
 
@@ -556,7 +556,138 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertYaku<Chankan>(han: 1);
                 return true;
             });
+        }
 
+        [TestMethod]
+        public async Task SuccessChankan4AnKan_Kokushi() {
+            var scenario = new ScenarioBuilder()
+                .WithPlayer(0, playerBuilder => {
+                    playerBuilder.SetFreeTiles("19s99m19p1234567z");
+                })
+                .WithPlayer(1, playerBuilder => {
+                    playerBuilder.SetFreeTiles("123456789p1s111m");
+                })
+                .WithWall(wall => wall.Reserve("1m"))
+                .Start(1);
+
+            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
+                playerInquiry
+                    .AssertAction<PlayTileAction>()
+                    .ChooseTiles<KanAction>("1111m", action => {
+                        Assert.AreEqual(1, action.options.Count);
+                        return true;
+                    });
+            }).AssertAutoFinish();
+
+            scenario.AssertEvent<AddKanEvent>((ev) => {
+                Assert.AreEqual(TileSource.AnKan, ev.kanSource);
+                return true;
+            }).AssertEvent<RevealDoraEvent>();
+
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry
+                    .AssertSkip()
+                    .ApplyAction<RonAction>()
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+
+            scenario.AssertEvent<AgariEvent>(ev => {
+                ev.agariInfos
+                    .AssertRon(1, 0)
+                    .AssertScore(yakuman: 1)
+                    .AssertYaku<Chankan>(han: 1)
+                    .AssertYaku<KokushiMusou>(yakuman: 1);
+                return true;
+            });
+        }
+
+        [TestMethod]
+        public async Task FailChankan4AnKan_NoKokushi() {
+            var scenario = new ScenarioBuilder()
+                .WithPlayer(0, playerBuilder => {
+                    playerBuilder.SetFreeTiles("111s23456789m11z");
+                })
+                .WithPlayer(1, playerBuilder => {
+                    playerBuilder.SetFreeTiles("123456789p1s111m");
+                })
+                .WithWall(wall => wall.Reserve("1m"))
+                .Start(1);
+
+            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
+                playerInquiry
+                    .AssertAction<PlayTileAction>()
+                    .ChooseTiles<KanAction>("1111m", action => {
+                        Assert.AreEqual(1, action.options.Count);
+                        return true;
+                    });
+            }).AssertAutoFinish();
+
+            scenario.AssertEvent<AddKanEvent>((ev) => {
+                Assert.AreEqual(TileSource.AnKan, ev.kanSource);
+                return true;
+            }).AssertEvent<RevealDoraEvent>();
+
+            (await scenario.WaitInquiry()).AssertNoActionForPlayer(0);
+        }
+
+        [TestMethod]
+        public async Task FailChankan4DaiMinKan() {
+            var scenario = new ScenarioBuilder()
+                .WithPlayer(0, playerBuilder => {
+                    playerBuilder.SetFreeTiles("111s23456789m11z");
+                })
+                .WithPlayer(1, playerBuilder => {
+                    playerBuilder.SetFreeTiles("111m123456789p1s");
+                })
+                .WithWall(wall => wall.Reserve("1m"))
+                .Start(2);
+
+            (await scenario.WaitInquiry()).ForPlayer(2, playerInquiry => {
+                playerInquiry.ChooseTile<PlayTileAction>("1m");
+            }).AssertAutoFinish();
+
+            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
+                playerInquiry.ChooseTiles<KanAction>("1111m", action => {
+                    Assert.AreEqual(1, action.options.Count);
+                    return true;
+                });
+            }).ForPlayer(0, playerInquiry => {
+                playerInquiry.ApplySkip();
+            }).AssertAutoFinish();
+
+            scenario.AssertEvent<AddKanEvent>((ev) => {
+                Assert.AreEqual(TileSource.DaiMinKan, ev.kanSource);
+                return true;
+            }).AssertNoEvent<RevealDoraEvent>();
+
+            (await scenario.WaitInquiry()).AssertNoActionForPlayer(0);
+        }
+
+        [TestMethod]
+        public async Task NoDoraRevealAfter5() {
+            var scenario = new ScenarioBuilder()
+                .WithPlayer(1, playerBuilder => {
+                    playerBuilder.SetFreeTiles("111m123456789p1s");
+                })
+                .WithWall(wall => wall
+                    .Reserve("1m")
+                    .SetRevealedDoraCount(5))
+                .Start(1);
+
+            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
+                playerInquiry.ChooseTiles<KanAction>("1111m", action => {
+                    Assert.AreEqual(1, action.options.Count);
+                    return true;
+                });
+            }).AssertAutoFinish();
+
+            await scenario.AssertEvent<AddKanEvent>((ev) => {
+                Assert.AreEqual(TileSource.AnKan, ev.kanSource);
+                return true;
+            }).AssertEvent<RevealDoraEvent>(ev => {
+                Assert.IsNull(ev.dora);
+                return true;
+            }).Resolve();
         }
     }
 }
