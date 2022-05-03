@@ -72,6 +72,8 @@ namespace RabiRiichi.Action.Resolver {
                 }
             }
 
+            result.RemoveAll(tiles => !HasMoveAfterClaim(hand.freeTiles, player.game.config, tiles, incoming));
+
             if (result.Count == 0) {
                 return false;
             }

@@ -1,4 +1,5 @@
 ﻿using RabiRiichi.Core;
+using RabiRiichi.Event.InGame.Listener;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -60,6 +61,15 @@ namespace RabiRiichi.Action.Resolver {
             tileList.Sort();
             hand.Sort();
             return CheckComboDfs(current, output, hand, 0, tileList, 0);
+        }
+
+        /// <summary>
+        /// 检查副露后是否有操作（极端情况，禁止副露后食替导致无牌可打）
+        /// </summary>
+        public static bool HasMoveAfterClaim(IEnumerable<GameTile> freeTiles, GameConfig config, List<GameTile> tiles, GameTile incoming) {
+            var men = MenLike.From(tiles);
+            var forbidden = LateClaimTileListener.GetForbiddenTiles(config, men, incoming).ToArray();
+            return freeTiles.Any(t => !forbidden.Contains(t.tile.WithoutDora));
         }
 
         public bool Resolve(Player current, GameTile incoming, MultiPlayerInquiry output) {

@@ -1,28 +1,33 @@
 using RabiRiichi.Action.Resolver;
 using RabiRiichi.Core;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Event.InGame.Listener {
     public static class LateClaimTileListener {
+        public static IEnumerable<Tile> GetForbiddenTiles(GameConfig config, MenLike men, GameTile incoming) {
+            if (!config.allowGenbutsuKuikae) {
+                yield return incoming.tile.WithoutDora;
+            }
+            if (!config.allowSujiKuikae && men is Shun) {
+                if (incoming == men[0]) {
+                    var tile = men[^1].tile.Next;
+                    if (tile.IsValid) {
+                        yield return tile;
+                    }
+                }
+                if (incoming == men[^1]) {
+                    var tile = men[0].tile.Prev;
+                    if (tile.IsValid) {
+                        yield return tile;
+                    }
+                }
+            }
+        }
+
         public static Task PrepareLateClaimTile(LateClaimTileEvent ev) {
             var parent = (ClaimTileEvent)ev.parent;
-            if (!ev.game.config.allowGenbutsuKuikae) {
-                ev.forbidden.Add(parent.tile.tile);
-            }
-            if (!ev.game.config.allowSujiKuikae && parent.group is Shun shun) {
-                if (parent.tile == shun[0]) {
-                    var tile = shun[^1].tile.Next;
-                    if (tile.IsValid) {
-                        ev.forbidden.Add(tile);
-                    }
-                }
-                if (parent.tile == shun[^1]) {
-                    var tile = shun[0].tile.Prev;
-                    if (tile.IsValid) {
-                        ev.forbidden.Add(tile);
-                    }
-                }
-            }
+            ev.forbidden.AddRange(GetForbiddenTiles(ev.game.config, parent.group, parent.tile));
             return Task.CompletedTask;
         }
 

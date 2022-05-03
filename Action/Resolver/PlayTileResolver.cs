@@ -22,7 +22,7 @@ namespace RabiRiichi.Action.Resolver {
                 tiles.AddRange(hand.freeTiles);
             }
             if (forbidden != null) {
-                tiles.RemoveAll(t => forbidden.Contains(t.tile));
+                tiles.RemoveAll(t => forbidden.Contains(t.tile.WithoutDora));
             }
             if (tiles.Count == 0) {
                 return false;

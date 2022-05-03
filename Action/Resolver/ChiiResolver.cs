@@ -23,6 +23,9 @@ namespace RabiRiichi.Action.Resolver {
             CheckCombo(hand.freeTiles, result, current, incoming.tile.Prev.Prev, incoming.tile.Prev);
             CheckCombo(hand.freeTiles, result, current, incoming.tile.Prev, incoming.tile.Next);
             CheckCombo(hand.freeTiles, result, current, incoming.tile.Next, incoming.tile.Next.Next);
+
+            result.RemoveAll(tiles => !HasMoveAfterClaim(hand.freeTiles, player.game.config, tiles, incoming));
+
             if (result.Count == 0) {
                 return false;
             }
