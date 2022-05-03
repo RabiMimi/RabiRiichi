@@ -1,5 +1,6 @@
 ﻿using RabiRiichi.Communication;
 using RabiRiichi.Core;
+using System;
 using System.Collections.Generic;
 
 namespace RabiRiichi.Event {
@@ -76,6 +77,11 @@ namespace RabiRiichi.Event {
             foreach (var child in children) {
                 child.Cancel();
             }
+        }
+
+        /// <summary> 跳过Execute阶段 </summary>
+        public void SkipExecution() {
+            phase = Math.Min(phase, (EventPriority.Execute + EventPriority.Broadcast) >> 1);
         }
 
         /// <summary> 结束事件 </summary>

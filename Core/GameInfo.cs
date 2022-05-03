@@ -31,6 +31,12 @@ namespace RabiRiichi.Core {
         /// <summary> 包牌 </summary>
         [RabiBroadcast] public bool allowPao = true;
 
+        /// <summary> 现物食替 </summary>
+        [RabiBroadcast] public bool allowGenbutsuKuikae = false;
+
+        /// <summary> 筋食替 </summary>
+        [RabiBroadcast] public bool allowSujiKuikae = false;
+
         /// <summary> 几庄战 </summary>
         [RabiBroadcast] public int totalRound = 1;
 

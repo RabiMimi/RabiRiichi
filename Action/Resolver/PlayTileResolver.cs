@@ -10,7 +10,9 @@ namespace RabiRiichi.Action.Resolver {
             yield return player;
         }
 
-        protected override bool ResolveAction(Player player, GameTile incoming, MultiPlayerInquiry output) {
+        protected override bool ResolveAction(Player player, GameTile incoming, MultiPlayerInquiry output) => ResolveAction(player, incoming, output, null);
+
+        public static bool ResolveAction(Player player, GameTile incoming, MultiPlayerInquiry output, Tiles forbidden) {
             var tiles = new List<GameTile>();
             var hand = player.hand;
             if (incoming != null) {
@@ -18,6 +20,9 @@ namespace RabiRiichi.Action.Resolver {
             }
             if (!hand.riichi) {
                 tiles.AddRange(hand.freeTiles);
+            }
+            if (forbidden != null) {
+                tiles.RemoveAll(t => forbidden.Contains(t.tile));
             }
             if (tiles.Count == 0) {
                 return false;
