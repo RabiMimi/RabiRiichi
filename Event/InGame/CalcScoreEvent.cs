@@ -9,7 +9,8 @@ namespace RabiRiichi.Event.InGame {
         Tsumo,
         Ryuukyoku,
         NagashiMangan,
-        Accumulated,
+        Riichi,
+        Honba,
         Pao,
     }
 

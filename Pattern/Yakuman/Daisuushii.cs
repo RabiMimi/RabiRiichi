@@ -21,7 +21,7 @@ namespace RabiRiichi.Pattern {
             return false;
         }
 
-        public override bool ResolvePao(Player player, ScoreTransferList scoreTransfers) {
+        public override bool OnScoreTransfer(Player player, ScoreTransferList scoreTransfers) {
             var windGroups = player.hand.called
                 .Where(gr => gr.First.tile.IsWind && gr is not Jantou)
                 .ToArray();

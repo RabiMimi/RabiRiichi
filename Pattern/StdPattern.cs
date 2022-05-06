@@ -100,9 +100,12 @@ namespace RabiRiichi.Pattern {
         }
 
         public abstract bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores);
-        /// <summary>满足该役种后，检查是否存在包牌</summary>
-        /// <returns>包牌的玩家ID，若无则返回-1</returns>
-        public virtual bool ResolvePao(Player player, ScoreTransferList scoreTransfers) => false;
+        /// <summary>
+        /// 满足该役种并计算得分后，最后对分数转移表进行修正
+        /// 一般用于包牌计算
+        /// </summary>
+        /// <returns>是否影响分数计算</returns>
+        public virtual bool OnScoreTransfer(Player player, ScoreTransferList scoreTransfers) => false;
         protected virtual bool ApplyPao(Player toPlayer, int paoPlayer, int ronPaoPoints, ScoreTransferList scoreTransfers)
             => PaoUtil.ApplyPao(toPlayer.id, paoPlayer,
                 toPlayer.IsDealer ? (ronPaoPoints * 3 / 2).CeilTo100() : ronPaoPoints,

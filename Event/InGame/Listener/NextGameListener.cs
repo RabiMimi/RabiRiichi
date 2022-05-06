@@ -12,7 +12,7 @@ namespace RabiRiichi.Event.InGame.Listener {
                 return Task.CompletedTask;
             }
             if (ev.isRyuukyoku) {
-                ev.nextHonba++;
+                ev.nextHonba = info.honba + 1;
             } else {
                 ev.nextHonba = 0;
             }

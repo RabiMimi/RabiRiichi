@@ -19,7 +19,7 @@ namespace RabiRiichi.Pattern {
             return false;
         }
 
-        public override bool ResolvePao(Player player, ScoreTransferList scoreTransfers) {
+        public override bool OnScoreTransfer(Player player, ScoreTransferList scoreTransfers) {
             var kans = player.hand.called.OfType<Kan>().ToArray();
             if (kans.Length != 4) {
                 return false;

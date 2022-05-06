@@ -1,5 +1,4 @@
 using RabiRiichi.Core;
-using RabiRiichi.Pattern;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -16,8 +15,9 @@ namespace RabiRiichi.Event.InGame.Listener {
                 } else {
                     // 荣和
                     int scoreChange = info.scores.result.BaseScore * (toPlayer.IsDealer ? 6 : 4);
-                    scoreChange += ev.game.config.honbaPoints * (ev.game.config.playerCount - 1) * ev.game.info.honba;
+                    int honbaChange = ev.game.config.honbaPoints * (ev.game.config.playerCount - 1) * ev.game.info.honba;
                     ev.scoreChange.Add(new ScoreTransfer(fromPlayer.id, toPlayer.id, scoreChange, ScoreTransferReason.Ron));
+                    ev.scoreChange.Add(new ScoreTransfer(fromPlayer.id, toPlayer.id, honbaChange, ScoreTransferReason.Honba));
                 }
             }
             // 立直棒
@@ -28,7 +28,7 @@ namespace RabiRiichi.Event.InGame.Listener {
                 }
                 if (ev.game.info.riichiStick > 0) {
                     int scoreChange = ev.game.info.riichiStick * ev.game.config.riichiPoints;
-                    ev.scoreChange.Add(new ScoreTransfer(-1, agariPlayer, scoreChange, ScoreTransferReason.Accumulated));
+                    ev.scoreChange.Add(new ScoreTransfer(-1, agariPlayer, scoreChange, ScoreTransferReason.Riichi));
                     ev.game.info.riichiStick = 0;
                 }
             }
@@ -42,7 +42,7 @@ namespace RabiRiichi.Event.InGame.Listener {
             }
             foreach (var info in ev.agariInfos) {
                 foreach (var score in info.scores) {
-                    score.Source.ResolvePao(ev.game.GetPlayer(info.playerId), ev.scoreChange);
+                    score.Source.OnScoreTransfer(ev.game.GetPlayer(info.playerId), ev.scoreChange);
                 }
             }
             return Task.CompletedTask;
@@ -55,8 +55,9 @@ namespace RabiRiichi.Event.InGame.Listener {
             }
             foreach (var player in game.players.Where(player => !player.hand.agari)) {
                 int scoreChange = player.IsDealer ? score * 2 : score;
-                score += game.config.honbaPoints * game.info.honba;
+                int honbaChange = game.config.honbaPoints * game.info.honba;
                 yield return new ScoreTransfer(player.id, tsumoPlayer.id, scoreChange, ScoreTransferReason.Tsumo);
+                yield return new ScoreTransfer(player.id, tsumoPlayer.id, honbaChange, ScoreTransferReason.Honba);
             }
         }
 
