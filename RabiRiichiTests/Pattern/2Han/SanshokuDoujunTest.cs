@@ -19,7 +19,7 @@ namespace RabiRiichiTests.Pattern {
                 .ExpectScoring(ScoringType.Han, 2)
                 .NoMore();
             new StdTestBuilder(V)
-                .AddFuuro("123s", 0)
+                .AddCalled("123s", 0)
                 .AddFree("123p")
                 .AddFree("123m")
                 .AddFree("11z")

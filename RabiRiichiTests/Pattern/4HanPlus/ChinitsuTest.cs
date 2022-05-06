@@ -22,7 +22,7 @@ namespace RabiRiichiTests.Pattern {
                 .AddFree("123s")
                 .AddFree("456s")
                 .AddFree("789s")
-                .AddFuuro("234s", 0)
+                .AddCalled("234s", 0)
                 .AddAgari("12s", "3s")
                 .Resolve(true)
                 .ExpectScoring(ScoringType.Han, 5)

@@ -23,7 +23,7 @@ namespace RabiRiichiTests.Pattern {
         [TestMethod]
         public void TestFailed() {
             new StdTestBuilder(V)
-                .AddFuuro("222s", 0)
+                .AddCalled("222s", 0)
                 .AddFree("666s")
                 .AddFree("678s")
                 .AddFree("77s")

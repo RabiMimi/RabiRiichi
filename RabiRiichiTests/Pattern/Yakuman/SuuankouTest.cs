@@ -41,7 +41,7 @@ namespace RabiRiichiTests.Pattern {
         [TestMethod]
         public void TestFailed() {
             new StdTestBuilder(V)
-                .AddFuuro("111z", 0)
+                .AddCalled("111z", 0)
                 .AddFree("222z")
                 .AddFree("333z")
                 .AddFree("55z")

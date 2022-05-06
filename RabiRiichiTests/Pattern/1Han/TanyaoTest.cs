@@ -50,7 +50,7 @@ namespace RabiRiichiTests.Pattern {
                 .Resolve(false);
             new StdTestBuilder(V)
                 .WithConfig(config => config.allowKuitan = false)
-                .AddFuuro("234s", 0)
+                .AddCalled("234s", 0)
                 .AddFree("345p")
                 .AddFree("456m")
                 .AddFree("22m")

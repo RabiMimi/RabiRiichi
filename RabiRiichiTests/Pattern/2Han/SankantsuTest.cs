@@ -28,9 +28,9 @@ namespace RabiRiichiTests.Pattern {
                 .ExpectScoring(ScoringType.Han, 2)
                 .NoMore();
             new StdTestBuilder(V)
-                .AddFuuro("1111s", 0)
-                .AddFuuro("1111p", 1)
-                .AddFuuro("1111m", 2)
+                .AddCalled("1111s", 0)
+                .AddCalled("1111p", 1)
+                .AddCalled("1111m", 2)
                 .AddFree("11z")
                 .AddAgari("99p", "9p")
                 .Resolve(true)

@@ -44,11 +44,11 @@ namespace RabiRiichiTests.Pattern {
         }
 
         /// <summary>
-        /// 添加一组副露
+        /// 添加一组面子（副露或暗杠）
         /// </summary>
-        /// <param name="tiles">副露的面子</param>
-        /// <param name="fuuroIndex">其中哪张牌是副露的，最左是0</param>
-        public StdTestBuilder AddFuuro(string tiles, int fuuroIndex) {
+        /// <param name="tiles">副露/暗杠的面子</param>
+        /// <param name="fuuroIndex">其中哪张牌是副露的，最左是0，若无副露则是-1</param>
+        public StdTestBuilder AddCalled(string tiles, int fuuroIndex) {
             var gameTiles = Create(tiles, fuuroIndex);
             fuuro.Add(gameTiles);
             groups.Add(gameTiles);

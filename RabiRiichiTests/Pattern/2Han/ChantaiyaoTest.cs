@@ -21,7 +21,7 @@ namespace RabiRiichiTests.Pattern {
             new StdTestBuilder(V)
                 .AddFree("123s")
                 .AddFree("123p")
-                .AddFuuro("123m", 0)
+                .AddCalled("123m", 0)
                 .AddFree("11z")
                 .AddAgari("78p", "9p")
                 .Resolve(true)

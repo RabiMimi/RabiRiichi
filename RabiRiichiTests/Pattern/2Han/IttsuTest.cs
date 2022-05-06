@@ -36,7 +36,7 @@ namespace RabiRiichiTests.Pattern {
                 .ExpectScoring(ScoringType.Han, 2)
                 .NoMore();
             new StdTestBuilder(V)
-                .AddFuuro("123s", 0)
+                .AddCalled("123s", 0)
                 .AddFree("456s")
                 .AddFree("789s")
                 .AddFree("22m")
@@ -45,7 +45,7 @@ namespace RabiRiichiTests.Pattern {
                 .ExpectScoring(ScoringType.Han, 1)
                 .NoMore();
             new StdTestBuilder(V)
-                .AddFuuro("123s", 0)
+                .AddCalled("123s", 0)
                 .AddFree("456s")
                 .AddFree("789s")
                 .AddFree("22m")
