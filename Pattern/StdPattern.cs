@@ -23,22 +23,31 @@ namespace RabiRiichi.Pattern {
             return true;
         }
         public static bool ApplyPao(int toPlayer, int paoPlayer, int paoPoints, ScoreTransferList scoreTransfers) {
+            bool ret = false;
             var transaction = scoreTransfers.Find(st => st.to == toPlayer &&
                 (st.reason == ScoreTransferReason.Ron || st.reason == ScoreTransferReason.Tsumo));
-            if (transaction == null || paoPoints <= 0) {
-                return false;
-            }
-            if (transaction.reason == ScoreTransferReason.Tsumo) {
-                transaction.from = paoPlayer;
-                transaction.reason = ScoreTransferReason.Pao;
-            } else {
-                if (transaction.from == paoPlayer) {
-                    return false;
+            if (transaction != null && paoPoints > 0) {
+                if (transaction.reason == ScoreTransferReason.Tsumo) {
+                    transaction.points -= paoPoints;
+                    scoreTransfers.Add(new ScoreTransfer(paoPlayer, toPlayer, paoPoints, ScoreTransferReason.Pao));
+                    ret = true;
+                } else if (transaction.from != paoPlayer) {
+                    int halfPaoPoints = (paoPoints >> 1).CeilTo100();
+                    transaction.points -= halfPaoPoints;
+                    scoreTransfers.Add(new ScoreTransfer(paoPlayer, toPlayer, halfPaoPoints, ScoreTransferReason.Pao));
+                    ret = true;
                 }
-                transaction.points -= paoPoints;
-                scoreTransfers.Add(new ScoreTransfer(paoPlayer, toPlayer, paoPoints, ScoreTransferReason.Pao));
             }
-            return true;
+            // Pao player should pay honba points
+            foreach (var transfer in scoreTransfers
+                .Where(st => st.to == toPlayer
+                    && st.from != paoPlayer
+                    && st.reason == ScoreTransferReason.Honba)) {
+                transfer.from = paoPlayer;
+                transfer.reason = ScoreTransferReason.Pao;
+                ret = true;
+            }
+            return ret;
         }
     }
 

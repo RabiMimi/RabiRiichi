@@ -29,7 +29,7 @@ namespace RabiRiichi.Pattern {
                 return false;
             }
             if (PaoUtil.TryGetPaoPlayer(lastGroup, out int paoPlayer)) {
-                return ApplyPao(player, paoPlayer, 16000, scoreTransfers);
+                return ApplyPao(player, paoPlayer, 32000, scoreTransfers);
             }
             return false;
         }

@@ -30,7 +30,7 @@ namespace RabiRiichi.Pattern {
             }
             var lastGroup = sangenGroups[^1];
             if (PaoUtil.TryGetPaoPlayer(lastGroup, out int paoPlayer)) {
-                return ApplyPao(player, paoPlayer, 16000, scoreTransfers);
+                return ApplyPao(player, paoPlayer, 32000, scoreTransfers);
             }
             return false;
         }
