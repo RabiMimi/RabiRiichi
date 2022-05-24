@@ -98,7 +98,7 @@ namespace RabiRiichi.Core {
             tile.discardInfo = new DiscardInfo(player, reason);
             tile.source = TileSource.Discard;
             freeTiles.Remove(tile);
-            if (reason != DiscardReason.ChanKan) {
+            if (reason != DiscardReason.ChanKan && reason != DiscardReason.Pretend) {
                 // Do not consider kan tile to be discarded
                 discarded.Add(tile);
             }

@@ -8,9 +8,6 @@ namespace RabiRiichi.Event.InGame.Listener {
     public static class DiscardTileListener {
         public static Task ExecuteDiscardTile(DiscardTileEvent ev) {
             ev.player.hand.Play(ev.tile, ev.reason);
-            if (ev is RiichiEvent) {
-                ev.tile.riichi = true;
-            }
             var resolvers = GetDiscardTileResolvers(ev.game);
             foreach (var resolver in resolvers) {
                 resolver.Resolve(ev.player, ev.tile, ev.waitEvent.inquiry);

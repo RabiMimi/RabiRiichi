@@ -38,6 +38,8 @@ namespace RabiRiichi.Core {
         Pon,
         /// <summary> 仅用于抢杠计算，非实质弃牌，而是加杠/暗杠的牌 </summary>
         ChanKan,
+        /// <summary> 非实质弃牌，仅用于假设计算 </summary>
+        Pretend,
     }
 
     public class DiscardInfo : IRabiMessage {
@@ -57,6 +59,31 @@ namespace RabiRiichi.Core {
     }
 
     public class GameTile : IComparable<GameTile>, IRabiMessage {
+        internal class Refrigerator : IDisposable {
+            public readonly GameTile gameTile;
+            public readonly Tile tile;
+            public readonly Player player;
+            public readonly DiscardInfo discardInfo;
+            public readonly int formTime;
+            public readonly TileSource source;
+            public Refrigerator(GameTile tile) {
+                this.gameTile = tile;
+                this.tile = tile.tile;
+                this.player = tile.player;
+                this.discardInfo = tile.discardInfo;
+                this.formTime = tile.formTime;
+                this.source = tile.source;
+            }
+
+            public void Dispose() {
+                gameTile.tile = tile;
+                gameTile.player = player;
+                gameTile.discardInfo = discardInfo;
+                gameTile.formTime = formTime;
+                gameTile.source = source;
+            }
+        }
+
         public RabiMessageType msgType => RabiMessageType.Unnecessary;
         [RabiBroadcast] public Tile tile = Tile.Empty;
         /// <summary> 当前归属于哪个玩家，摸切或副露时会被设置 </summary>
@@ -66,10 +93,6 @@ namespace RabiRiichi.Core {
         [RabiBroadcast] public DiscardInfo discardInfo;
         /// <summary> 该牌成为副露或暗杠的时间戳 </summary>
         public int formTime = -1;
-        /// <summary> 是否是公开牌 </summary>
-        // public bool visible = false;
-        /// <summary> 是否是立直宣告牌 </summary>
-        [RabiBroadcast] public bool riichi = false;
         /// <summary> 是否是自摸 </summary>
         public bool IsTsumo => discardInfo == null;
         [RabiBroadcast] public TileSource source = TileSource.Hand;
@@ -83,6 +106,13 @@ namespace RabiRiichi.Core {
 
         public int CompareTo(GameTile other) {
             return tile.CompareTo(other.tile);
+        }
+
+        /// <summary>
+        /// 暂时保存当前牌的信息，并在之后还原
+        /// </summary>
+        internal Refrigerator Freeze(bool shouldFreeze = true) {
+            return shouldFreeze ? new Refrigerator(this) : null;
         }
 
         /// <summary> 是否是相同的牌，赤dora视为相同 </summary>
