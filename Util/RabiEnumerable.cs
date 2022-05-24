@@ -6,31 +6,31 @@ namespace System.Linq {
             InitSubsetIndices();
         }
 
-        public static TSource MaxBy<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> selector) where TKey : IComparable<TKey> {
-            var maxSource = source.First();
-            var maxKey = selector(maxSource);
-            foreach (var item in source.Skip(1)) {
-                var key = selector(item);
-                if (key.CompareTo(maxKey) > 0) {
-                    maxKey = key;
-                    maxSource = item;
-                }
-            }
-            return maxSource;
-        }
+        //public static TSource MaxBy<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> selector) where TKey : IComparable<TKey> {
+        //    var maxSource = source.First();
+        //    var maxKey = selector(maxSource);
+        //    foreach (var item in source.Skip(1)) {
+        //        var key = selector(item);
+        //        if (key.CompareTo(maxKey) > 0) {
+        //            maxKey = key;
+        //            maxSource = item;
+        //        }
+        //    }
+        //    return maxSource;
+        //}
 
-        public static TSource MinBy<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> selector) where TKey : IComparable<TKey> {
-            var minSource = source.First();
-            var minKey = selector(minSource);
-            foreach (var item in source.Skip(1)) {
-                var key = selector(item);
-                if (key.CompareTo(minKey) < 0) {
-                    minKey = key;
-                    minSource = item;
-                }
-            }
-            return minSource;
-        }
+        //public static TSource MinBy<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> selector) where TKey : IComparable<TKey> {
+        //    var minSource = source.First();
+        //    var minKey = selector(minSource);
+        //    foreach (var item in source.Skip(1)) {
+        //        var key = selector(item);
+        //        if (key.CompareTo(minKey) < 0) {
+        //            minKey = key;
+        //            minSource = item;
+        //        }
+        //    }
+        //    return minSource;
+        //}
 
         public static bool All<TSource>(this IEnumerable<TSource> source, Func<TSource, int, bool> predicate) {
             bool ret = true;
