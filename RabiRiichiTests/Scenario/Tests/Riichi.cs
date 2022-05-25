@@ -97,7 +97,6 @@ namespace RabiRiichiTests.Scenario.Tests {
             }).Resolve();
         }
 
-
         [TestMethod]
         public async Task NoIppatsuWhenRiichiTileClaimed() {
             var scenario = new ScenarioBuilder()
@@ -135,6 +134,51 @@ namespace RabiRiichiTests.Scenario.Tests {
             await scenario.AssertEvent<AgariEvent>((ev) => {
                 ev.agariInfos
                     .AssertRon(2, 1)
+                    .AssertScore(han: 1, fu: 40)
+                    .AssertYaku<Riichi>();
+                return true;
+            }).Resolve();
+        }
+
+        [TestMethod]
+        public async Task NoIppatsuWhenOtherTileClaimed() {
+            var scenario = new ScenarioBuilder()
+                .WithPlayer(1, playerBuilder => {
+                    playerBuilder.SetFreeTiles("12366s234m34566p");
+                })
+                .WithPlayer(0, playerBuilder => {
+                    playerBuilder.SetFreeTiles("88s1234566789p1z");
+                })
+                .WithWall(wall => wall.Reserve("78s"))
+                .Start(1);
+
+            await RiichiWith(scenario, 1, "7s");
+
+            (await scenario.WaitInquiry()).Finish();
+
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry
+                    .AssertSkip()
+                    .ChooseTiles<PonAction>("888s")
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry
+                    .ChooseTile<PlayTileAction>("6p")
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+
+            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
+                playerInquiry
+                    .AssertSkip()
+                    .ApplyAction<RonAction>()
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+
+            await scenario.AssertEvent<AgariEvent>((ev) => {
+                ev.agariInfos
+                    .AssertRon(0, 1)
                     .AssertScore(han: 1, fu: 40)
                     .AssertYaku<Riichi>();
                 return true;
