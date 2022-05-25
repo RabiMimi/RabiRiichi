@@ -79,11 +79,11 @@ namespace RabiRiichiTests.Pattern {
         /// </summary>
         /// <param name="tiles">和牌的面子/雀头</param>
         /// <param name="incoming">和了牌</param>
-        public StdTestBuilder AddAgari(string tiles, string incoming, bool isTsumo = false, TileSource tileSource = TileSource.Wall) {
+        public StdTestBuilder AddAgari(string tiles, string incoming, bool isTsumo = false, TileSource tileSource = TileSource.Wall, DiscardReason reason = DiscardReason.Draw) {
             this.incoming = new GameTile(new Tile(incoming)) {
                 player = currentPlayer.Object,
                 discardInfo = isTsumo ? null
-                    : new DiscardInfo(anotherPlayer.Object, DiscardReason.Draw),
+                    : new DiscardInfo(anotherPlayer.Object, reason),
                 source = tileSource,
             };
             var group = new Tiles(tiles).ToGameTileList();

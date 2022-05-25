@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using RabiRiichi.Core;
 using RabiRiichi.Pattern;
 
 namespace RabiRiichiTests.Pattern {
@@ -13,7 +14,7 @@ namespace RabiRiichiTests.Pattern {
                 .AddFree("345p")
                 .AddFree("456m")
                 .AddFree("22m")
-                .AddAgari("111s", "1s", true, RabiRiichi.Core.TileSource.KaKan)
+                .AddAgari("23s", "1s", false, reason: DiscardReason.ChanKan)
                 .Resolve(true)
                 .ExpectScoring(ScoringType.Han, 1)
                 .NoMore();

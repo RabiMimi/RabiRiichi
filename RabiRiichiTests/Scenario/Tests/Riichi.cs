@@ -267,5 +267,48 @@ namespace RabiRiichiTests.Scenario.Tests {
                 return true;
             }).Resolve();
         }
+
+        [TestMethod]
+        public async Task SuccessIppatsuOnChanKan() {
+            var scenario = new ScenarioBuilder()
+                .WithPlayer(1, playerBuilder => {
+                    playerBuilder.SetFreeTiles("12367s234m34567p");
+                })
+                .WithPlayer(2, playerBuilder => {
+                    playerBuilder
+                        .AddCalled("888p", 0, 3, DiscardReason.Draw)
+                        .SetFreeTiles("1234567z111s");
+                })
+                .WithWall(wall => wall.Reserve("6s8p").AddUradoras("1z"))
+                .Start(1);
+
+            await RiichiWith(scenario, 1, "7s");
+
+            (await scenario.WaitInquiry()).ForPlayer(2, playerInquiry => {
+                playerInquiry
+                    .AssertAction<PlayTileAction>()
+                    .ChooseTiles<KanAction>("8888p")
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+
+            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
+                playerInquiry
+                    .AssertSkip()
+                    .ApplyAction<RonAction>()
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+
+            await scenario.AssertEvent<AgariEvent>((ev) => {
+                ev.agariInfos
+                    .AssertRon(2, 1)
+                    .AssertScore(han: 4, fu: 30)
+                    .AssertYaku<Riichi>()
+                    .AssertYaku<Chankan>()
+                    .AssertYaku<Pinfu>()
+                    .AssertYaku<Ippatsu>();
+                return true;
+            }).Resolve();
+        }
+
     }
 }
