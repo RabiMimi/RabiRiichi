@@ -13,7 +13,7 @@ namespace RabiRiichi.Event.InGame.Listener {
             return Task.CompletedTask;
         }
 
-        public static Task ResetIppatsu(DiscardTileEvent ev) {
+        public static Task ResetIppatsu(PlayerEvent ev) {
             if (ev.player.hand.ippatsu) {
                 ev.Q.Queue(new SetIppatsuEvent(ev, ev.playerId, false));
             }
@@ -30,7 +30,7 @@ namespace RabiRiichi.Event.InGame.Listener {
         public static void Register(EventBus eventBus) {
             eventBus.Subscribe<SetIppatsuEvent>(ExecuteIppatsu, EventPriority.Execute);
             eventBus.Subscribe<RiichiEvent>(AfterRiichi, EventPriority.After + 10);
-            eventBus.Subscribe<DiscardTileEvent>(ResetIppatsu, EventPriority.After + 10);
+            eventBus.Subscribe<IncreaseJunEvent>(ResetIppatsu, EventPriority.After + 10);
             eventBus.Subscribe<ClaimTileEvent>(ResetAllIppatsu, EventPriority.After + 10);
             eventBus.Subscribe<AddKanEvent>(ResetAllIppatsu, EventPriority.After + 10);
         }

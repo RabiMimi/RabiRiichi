@@ -141,6 +141,54 @@ namespace RabiRiichiTests.Scenario.Tests {
         }
 
         [TestMethod]
+        public async Task NoIppatsuWhenRinshanKaihou() {
+            var scenario = new ScenarioBuilder()
+                .WithPlayer(1, playerBuilder => {
+                    playerBuilder.SetFreeTiles("123666s234m3456p");
+                })
+                .WithWall(wall => wall
+                    .Reserve("77776s")
+                    .AddRinshan("3p")
+                    .AddDoras("11z")
+                    .AddUradoras("55s"))
+                .Start(1);
+
+            await RiichiWith(scenario, 1, "7s");
+
+            (await scenario.WaitPlayerTurn(1)).ForPlayer(1, playerInquiry => {
+                playerInquiry
+                    .AssertAction<PlayTileAction>()
+                    .ChooseTiles<KanAction>("6666s")
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+
+            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
+                playerInquiry
+                    .AssertAction<PlayTileAction>(action => {
+                        action.options
+                            .OfType<ChooseTileActionOption>()
+                            .Select(o => o.tile)
+                            .ToTiles()
+                            .AssertEquals("3p");
+                        return true;
+                    })
+                    .ApplyAction<TsumoAction>()
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+
+            await scenario.AssertEvent<AgariEvent>((ev) => {
+                ev.agariInfos
+                    .AssertTsumo(1)
+                    .AssertScore(han: 11, fu: 40)
+                    .AssertYaku<Riichi>()
+                    .AssertYaku<RinshanKaihou>()
+                    .AssertYaku<MenzenchinTsumohou>()
+                    .AssertYaku<Uradora>(han: 8);
+                return true;
+            }).Resolve();
+        }
+
+        [TestMethod]
         public async Task NoIppatsuWhenOtherTileClaimed() {
             var scenario = new ScenarioBuilder()
                 .WithPlayer(1, playerBuilder => {
