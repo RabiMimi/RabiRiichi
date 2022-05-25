@@ -49,15 +49,21 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertNoMoreActions();
             }).AssertAutoFinish();
 
-            await scenario.AssertEvent<AgariEvent>((ev) => {
-                ev.agariInfos
-                    .AssertRon(3, 1)
-                    .AssertScore(han: 4, fu: 40)
-                    .AssertYaku<Riichi>()
-                    .AssertYaku<Ippatsu>()
-                    .AssertYaku<Uradora>(han: 2);
-                return true;
-            }).Resolve();
+            await scenario
+                .AssertEvent<AgariEvent>((ev) => {
+                    ev.agariInfos
+                        .AssertRon(3, 1)
+                        .AssertScore(han: 4, fu: 40)
+                        .AssertYaku<Riichi>()
+                        .AssertYaku<Ippatsu>()
+                        .AssertYaku<Uradora>(han: 2);
+                    return true;
+                })
+                .AssertEvent<ConcludeGameEvent>((ev) => {
+                    ev.uradoras[0].AssertEquals("5s");
+                    return true;
+                })
+                .Resolve();
         }
 
         [TestMethod]
