@@ -3,6 +3,8 @@ using System.Collections.Generic;
 
 namespace RabiRiichi.Pattern {
     public class HouteiRaoyui : StdPattern {
+        public override PatternMask type => PatternMask.Luck;
+
         public HouteiRaoyui(AllBasePatterns allBasePatterns) {
             BaseOn(allBasePatterns);
         }

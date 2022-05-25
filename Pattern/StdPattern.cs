@@ -54,10 +54,25 @@ namespace RabiRiichi.Pattern {
     public enum ScoringType {
         /// <summary> 番 </summary>
         Han,
+        /// <summary> 奖励番 </summary>
+        BonusHan,
         /// <summary> 符 </summary>
         Fu,
         /// <summary> 役满 </summary>
         Yakuman,
+    }
+
+    [Flags]
+    public enum PatternMask {
+        None = 0,
+        /// <summary> 一般役种 </summary>
+        Regular = 1 << 0,
+        /// <summary> 奖励役种 </summary>
+        Bonus = 1 << 1,
+        /// <summary> 运气役种 </summary>
+        Luck = 1 << 2,
+        /// <summary> 全部役种 </summary>
+        All = Regular | Bonus | Luck,
     }
 
     public class Scoring : IRabiMessage {
@@ -77,6 +92,7 @@ namespace RabiRiichi.Pattern {
     /// <summary> 标准役种 </summary>
     public abstract class StdPattern {
         public virtual string name => GetType().Name;
+        public virtual PatternMask type => PatternMask.Regular;
 
         /// <summary> 可以触发该役种的底和 </summary>
         public BasePattern[] basePatterns { get; private set; } = Array.Empty<BasePattern>();

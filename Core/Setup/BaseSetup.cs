@@ -15,9 +15,6 @@ namespace RabiRiichi.Core.Setup {
         /// <summary> 役种 </summary>
         private readonly List<Type> stdPatterns = new();
 
-        /// <summary> 无役型役种 </summary>
-        private readonly List<Type> bonusPatterns = new();
-
         #region Inject
 
         /// <summary> 注册Base Pattern </summary>
@@ -30,13 +27,8 @@ namespace RabiRiichi.Core.Setup {
             stdPatterns.Add(typeof(T));
         }
 
-        /// <summary> 注册Bonus Pattern </summary>
-        protected void AddBonusPattern<T>() where T : StdPattern {
-            bonusPatterns.Add(typeof(T));
-        }
-
         /// <summary>
-        /// 初始化<see cref="basePatterns"/>，<see cref="stdPatterns"/>，<see cref="bonusPatterns"/>
+        /// 初始化<see cref="basePatterns"/>，<see cref="stdPatterns"/>
         /// </summary>
         protected virtual void InitPatterns() {
             // Init patterns here
@@ -63,7 +55,7 @@ namespace RabiRiichi.Core.Setup {
 
         private void InjectPatterns(IServiceCollection collection) {
             var injectedPatterns = new HashSet<Type>();
-            foreach (var pattern in basePatterns.Concat(stdPatterns).Concat(bonusPatterns)) {
+            foreach (var pattern in basePatterns.Concat(stdPatterns)) {
                 InjectPatternsHelper(collection, pattern, injectedPatterns);
             }
         }
@@ -92,7 +84,6 @@ namespace RabiRiichi.Core.Setup {
             var resolver = services.GetService<PatternResolver>();
             resolver.RegisterBasePatterns(basePatterns.Select(t => (BasePattern)services.GetService(t)).ToArray());
             resolver.RegisterStdPatterns(stdPatterns.Select(t => (StdPattern)services.GetService(t)).ToArray());
-            resolver.RegisterBonusPatterns(bonusPatterns.Select(t => (StdPattern)services.GetService(t)).ToArray());
         }
 
         /// <summary> 配置事件监听 </summary>

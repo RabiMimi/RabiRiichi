@@ -542,7 +542,7 @@ namespace RabiRiichiTests.Scenario {
             private readonly Tiles uradoras = new();
             private readonly Tiles rinshan = new();
             private readonly List<PlayerHandBuilder> playerBuilders;
-            private int revealedDoraNum = 1;
+            private int revealedDoraCount = 1;
 
             public WallBuilder(IEnumerable<PlayerHandBuilder> players) {
                 playerBuilders = players.ToList();
@@ -600,8 +600,8 @@ namespace RabiRiichiTests.Scenario {
             public WallBuilder AddRinshan(Tile tile) => AddRinshan(Enumerable.Repeat(tile, 1));
 
             /// <summary> 设置有多少Dora已经翻开了，默认为1。 </summary>
-            public WallBuilder SetRevealedDoraCount(int num) {
-                revealedDoraNum = num;
+            public WallBuilder SetRevealedDoraCount(int count) {
+                revealedDoraCount = count;
                 return this;
             }
 
@@ -612,7 +612,7 @@ namespace RabiRiichiTests.Scenario {
                 wall.Reset();
                 var players = playerBuilders.Select(builder => builder.player).ToArray();
                 var allTiles = wall.doras.Concat(wall.uradoras).Concat(wall.rinshan).Concat(wall.remaining).ToList();
-                wall.revealedDoraCount = revealedDoraNum;
+                wall.revealedDoraCount = revealedDoraCount;
 
                 GameTile Draw(Tile tile) {
                     var index = allTiles.FindIndex(t => t.tile == tile);
@@ -739,7 +739,6 @@ namespace RabiRiichiTests.Scenario {
                 }
                 playerBuilder.SetMenzen(true);
             }
-            wallBuilder.SetRevealedDoraCount(1);
             return this;
         }
 

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 
 namespace RabiRiichi.Pattern {
     public class RinshanKaihou : StdPattern {
+        public override PatternMask type => PatternMask.Luck;
+
         public RinshanKaihou(AllBasePatterns allBasePatterns) {
             BaseOn(allBasePatterns);
         }

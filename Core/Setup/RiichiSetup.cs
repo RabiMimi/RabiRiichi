@@ -89,9 +89,9 @@ namespace RabiRiichi.Core.Setup {
             AddStdPattern<Tsuuiisou>();
 
             // Bonus pattern
-            AddBonusPattern<Akadora>();
-            AddBonusPattern<Dora>();
-            AddBonusPattern<Uradora>();
+            AddStdPattern<Akadora>();
+            AddStdPattern<Dora>();
+            AddStdPattern<Uradora>();
         }
     }
 }

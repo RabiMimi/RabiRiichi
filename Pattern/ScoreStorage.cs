@@ -49,6 +49,8 @@ namespace RabiRiichi.Pattern {
             }
             /// <summary> 番 </summary>
             [RabiBroadcast] public int han;
+            /// <summary> 记作役的番数 </summary>
+            [RabiBroadcast] public int yaku;
             /// <summary> 符 </summary>
             [RabiBroadcast] public int fu;
             /// <summary> 役满数 </summary>
@@ -56,7 +58,7 @@ namespace RabiRiichi.Pattern {
 
             public bool IsKazoeYakuman => han >= KAZOE_YAKUMAN;
             public bool IsYakuman => yakuman > 0 || IsKazoeYakuman;
-            public bool IsValid(int minHan) => han + yakuman * KAZOE_YAKUMAN >= minHan;
+            public bool IsValid(int minHan) => yaku + yakuman * KAZOE_YAKUMAN >= minHan;
 
             public int CompareTo(ScoreCalcResult other) {
                 if (BaseScore != other.BaseScore) {
@@ -105,6 +107,10 @@ namespace RabiRiichi.Pattern {
                         result.fu += score.Val;
                         break;
                     case ScoringType.Han:
+                        result.yaku += score.Val;
+                        result.han += score.Val;
+                        break;
+                    case ScoringType.BonusHan:
                         result.han += score.Val;
                         break;
                     case ScoringType.Yakuman:

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 
 namespace RabiRiichi.Pattern {
     public class Chankan : StdPattern {
+        public override PatternMask type => PatternMask.Luck;
+
         public Chankan(AllBasePatterns allBasePatterns) {
             BaseOn(allBasePatterns);
         }

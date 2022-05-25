@@ -3,6 +3,8 @@ using System.Collections.Generic;
 
 namespace RabiRiichi.Pattern {
     public class Ippatsu : StdPattern {
+        public override PatternMask type => PatternMask.Luck;
+
         public Ippatsu(AllBasePatterns allBasePatterns) {
             BaseOn(allBasePatterns);
         }

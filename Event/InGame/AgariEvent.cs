@@ -9,7 +9,7 @@ namespace RabiRiichi.Event.InGame {
     public class AgariInfo : IRabiPlayerMessage {
         public RabiMessageType msgType => RabiMessageType.Unnecessary;
         [RabiBroadcast] public int playerId { get; init; }
-        public readonly ScoreStorage scores;
+        [RabiBroadcast] public readonly ScoreStorage scores;
 
         public AgariInfo(int playerId, ScoreStorage scores) {
             this.playerId = playerId;

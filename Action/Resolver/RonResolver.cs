@@ -23,7 +23,7 @@ namespace RabiRiichi.Action.Resolver {
             if (hand.isFuriten) {
                 return false;
             }
-            var maxScore = patternResolver.ResolveMaxScore(hand, incoming, false);
+            var maxScore = patternResolver.ResolveMaxScore(hand, incoming, PatternMask.All);
             if (maxScore != null && maxScore.result.IsValid(player.game.config.minHan)) {
                 output.Add(new RonAction(hand.player.id, maxScore, incoming), true);
                 return true;

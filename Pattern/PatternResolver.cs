@@ -1,4 +1,5 @@
 using RabiRiichi.Core;
+using RabiRiichi.Util;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -6,7 +7,6 @@ namespace RabiRiichi.Pattern {
     public class PatternResolver {
         public readonly HashSet<BasePattern> basePatterns = new();
         public readonly HashSet<StdPattern> stdPatterns = new();
-        public readonly HashSet<StdPattern> bonusPatterns = new();
 
         public void RegisterBasePatterns(params BasePattern[] patterns) {
             foreach (var pattern in patterns) {
@@ -17,12 +17,6 @@ namespace RabiRiichi.Pattern {
         public void RegisterStdPatterns(params StdPattern[] patterns) {
             foreach (var pattern in patterns) {
                 stdPatterns.Add(pattern);
-            }
-        }
-
-        public void RegisterBonusPatterns(params StdPattern[] patterns) {
-            foreach (var pattern in patterns) {
-                bonusPatterns.Add(pattern);
             }
         }
 
@@ -66,7 +60,7 @@ namespace RabiRiichi.Pattern {
             }
 
             // 计算当前役种
-            using var fridge = scores.Freeze(!stdPatterns.Contains(pattern) && !bonusPatterns.Contains(pattern));
+            using var fridge = scores.Freeze(!stdPatterns.Contains(pattern));
             if (pattern.Resolve(context.group, context.hand, context.incoming, scores)) {
                 context.stdSuccess.Add(pattern);
                 return true;
@@ -79,7 +73,7 @@ namespace RabiRiichi.Pattern {
         /// <summary>
         /// 检查是否和牌并计算得分最高的牌型
         /// </summary>
-        public ScoreStorage ResolveMaxScore(Hand hand, GameTile incoming, bool applyBonus) {
+        public ScoreStorage ResolveMaxScore(Hand hand, GameTile incoming, PatternMask patternMask) {
             var context = new ResolutionContext {
                 hand = hand,
                 incoming = incoming
@@ -95,13 +89,8 @@ namespace RabiRiichi.Pattern {
                     context.stdSuccess.Clear();
                     context.stdFailure.Clear();
                     var scores = new ScoreStorage();
-                    foreach (var stdPattern in stdPatterns) {
+                    foreach (var stdPattern in stdPatterns.Where(p => p.type.HasAnyFlag(patternMask))) {
                         ResolveStdPattern(context, stdPattern, scores);
-                        if (applyBonus) {
-                            foreach (var bonusPattern in bonusPatterns) {
-                                ResolveStdPattern(context, bonusPattern, scores);
-                            }
-                        }
                     }
                     scores.Calc();
                     yield return scores;

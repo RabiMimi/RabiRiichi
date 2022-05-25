@@ -4,6 +4,12 @@ using System.Linq;
 
 namespace RabiRiichi.Pattern {
     public class Uradora : StdPattern {
+        public override PatternMask type => PatternMask.Bonus;
+
+        public Uradora(AllBasePatterns allBasePatterns) {
+            BaseOn(allBasePatterns);
+        }
+
         public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
             if (!hand.riichi)
                 return false;
@@ -13,7 +19,7 @@ namespace RabiRiichi.Pattern {
             foreach (var tile in tiles) {
                 han += hand.game.wall.CountUradora(tile);
             }
-            scores.Add(new Scoring(ScoringType.Han, han, this));
+            scores.Add(new Scoring(ScoringType.BonusHan, han, this));
             return true;
         }
     }

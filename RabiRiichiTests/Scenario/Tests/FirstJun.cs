@@ -14,6 +14,7 @@ namespace RabiRiichiTests.Scenario.Tests {
                 .WithPlayer(0, playerBuilder => {
                     playerBuilder.SetFreeTiles("11123455678999s");
                 })
+                .WithWall(wall => wall.SetRevealedDoraCount(0))
                 .SetFirstJun()
                 .Start(0);
 
@@ -28,7 +29,7 @@ namespace RabiRiichiTests.Scenario.Tests {
             await scenario.AssertEvent<AgariEvent>((ev) => {
                 ev.agariInfos
                     .AssertTsumo(0)
-                    .AssertScore(1, 40, 3)
+                    .AssertScore(han: 1, fu: 40, yakuman: 3)
                     .AssertYaku<Tenhou>(yakuman: 1)
                     .AssertYaku<JunseiChuurenPoutou>(yakuman: 2);
                 return true;

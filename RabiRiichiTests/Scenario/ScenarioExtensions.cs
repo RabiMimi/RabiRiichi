@@ -47,7 +47,7 @@ namespace RabiRiichiTests.Scenario {
             var yaku = info.scores.Find((score) => score.Source is T);
             Assert.IsNotNull(yaku, $"yaku {typeof(T).Name} not found");
             if (han != null) {
-                Assert.AreEqual(ScoringType.Han, yaku.Type);
+                Assert.IsTrue(yaku.Type == ScoringType.Han || yaku.Type == ScoringType.BonusHan);
                 Assert.AreEqual(han.Value, yaku.Val);
             }
             if (fu != null) {
