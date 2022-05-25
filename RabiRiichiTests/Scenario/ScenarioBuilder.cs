@@ -424,7 +424,7 @@ namespace RabiRiichiTests.Scenario {
                 => SetRiichiTile(new Tile(riichiTile), wRiichi);
 
             /// <summary>
-            /// 设置舍牌，默认为6张
+            /// 设置舍牌，默认为5张
             /// 若指定的舍牌数量不够则用别的牌填充
             /// </summary>
             /// <param name="count">舍牌数量</param>

@@ -104,6 +104,29 @@ namespace RabiRiichiTests.Scenario.Tests {
         }
 
         [TestMethod]
+        public async Task NoAnKanIfTenpaiChanges() {
+            var scenario = new ScenarioBuilder()
+                .WithPlayer(1, playerBuilder => {
+                    playerBuilder.SetFreeTiles("45667s234m34566p");
+                })
+                .WithWall(wall => wall
+                    .Reserve("67776s")
+                    .AddDoras("1z")
+                    .AddUradoras("1z"))
+                .Start(1);
+
+            await RiichiWith(scenario, 1, "7s");
+
+            (await scenario.WaitPlayerTurn(1)).ForPlayer(1, playerInquiry => {
+                playerInquiry
+                    .AssertAction<PlayTileAction>()
+                    .ApplyAction<TsumoAction>()
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+        }
+
+        #region Ippatsu
+        [TestMethod]
         public async Task NoIppatsuWhenRiichiTileClaimed() {
             var scenario = new ScenarioBuilder()
                 .WithPlayer(1, playerBuilder => {
@@ -315,27 +338,65 @@ namespace RabiRiichiTests.Scenario.Tests {
                 return true;
             }).Resolve();
         }
+        #endregion
+
+        #region Riichi Furiten
 
         [TestMethod]
-        public async Task NoAnKanIfTenpaiChanges() {
+        public async Task SuccessTsumoOnRiichiFuriten() {
             var scenario = new ScenarioBuilder()
                 .WithPlayer(1, playerBuilder => {
-                    playerBuilder.SetFreeTiles("45667s234m34566p");
+                    playerBuilder
+                        .SetFreeTiles("12366s234m34566p")
+                        .SetDiscarded(5, null, "6s6p");
                 })
-                .WithWall(wall => wall
-                    .Reserve("67776s")
-                    .AddDoras("1z")
-                    .AddUradoras("1z"))
+                .WithWall(wall => wall.Reserve("76s6p56s"))
                 .Start(1);
 
             await RiichiWith(scenario, 1, "7s");
 
-            (await scenario.WaitPlayerTurn(1)).ForPlayer(1, playerInquiry => {
+            scenario.WithPlayer(1, player => {
+                Assert.IsFalse(player.hand.isFuriten);
+                Assert.IsFalse(player.hand.isRiichiFuriten);
+            });
+
+            (await scenario.WaitInquiry()).Finish();
+
+            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
+                playerInquiry.ApplySkip();
+            }).AssertAutoFinish();
+
+            var inquiry = await scenario.WaitInquiry();
+
+            scenario.WithPlayer(1, player => {
+                Assert.IsTrue(player.hand.isFuriten);
+                Assert.IsTrue(player.hand.isRiichiFuriten);
+            });
+
+            inquiry.Finish();
+
+            (await scenario.WaitInquiry()).AssertNoActionForPlayer(1).Finish();
+
+            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
                 playerInquiry
                     .AssertAction<PlayTileAction>()
                     .ApplyAction<TsumoAction>()
                     .AssertNoMoreActions();
             }).AssertAutoFinish();
+
+            await scenario
+                .AssertEvent<AgariEvent>((ev) => {
+                    ev.agariInfos
+                        .AssertTsumo(1)
+                        .AssertScore(han: 3, fu: 30)
+                        .AssertYaku<Riichi>()
+                        .AssertYaku<Ippatsu>()
+                        .AssertYaku<MenzenchinTsumohou>();
+                    return true;
+                })
+                .Resolve();
         }
+
+        #endregion
     }
 }
