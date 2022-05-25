@@ -310,5 +310,26 @@ namespace RabiRiichiTests.Scenario.Tests {
             }).Resolve();
         }
 
+        [TestMethod]
+        public async Task NoAnKanIfTenpaiChanges() {
+            var scenario = new ScenarioBuilder()
+                .WithPlayer(1, playerBuilder => {
+                    playerBuilder.SetFreeTiles("45667s234m34566p");
+                })
+                .WithWall(wall => wall
+                    .Reserve("67776s")
+                    .AddDoras("1z")
+                    .AddUradoras("1z"))
+                .Start(1);
+
+            await RiichiWith(scenario, 1, "7s");
+
+            (await scenario.WaitPlayerTurn(1)).ForPlayer(1, playerInquiry => {
+                playerInquiry
+                    .AssertAction<PlayTileAction>()
+                    .ApplyAction<TsumoAction>()
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+        }
     }
 }
