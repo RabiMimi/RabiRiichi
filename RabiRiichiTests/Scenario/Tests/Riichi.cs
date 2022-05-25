@@ -11,6 +11,22 @@ using System.Threading.Tasks;
 namespace RabiRiichiTests.Scenario.Tests {
     [TestClass]
     public class ScenarioRiichi {
+        private static async Task RiichiWith(Scenario scenario, int playerId, string tile) {
+            (await scenario.WaitInquiry()).ForPlayer(playerId, playerInquiry => {
+                playerInquiry
+                    .AssertAction<PlayTileAction>()
+                    .ChooseTile<RiichiAction>(tile)
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+
+            scenario.AssertEvent<RiichiEvent>((ev) => {
+                Assert.AreEqual(TileSource.Discard, ev.tile.source);
+                Assert.AreEqual(DiscardReason.Draw, ev.reason);
+                ev.tile.tile.AssertEquals(tile);
+                return true;
+            });
+        }
+
         [TestMethod]
         public async Task SuccessRiichi() {
             var scenario = new ScenarioBuilder()
@@ -20,19 +36,7 @@ namespace RabiRiichiTests.Scenario.Tests {
                 .WithWall(wall => wall.Reserve("7r5s6p").AddUradoras("5s"))
                 .Start(1);
 
-            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
-                playerInquiry
-                    .AssertAction<PlayTileAction>()
-                    .ChooseTile<RiichiAction>("7s")
-                    .AssertNoMoreActions();
-            }).AssertAutoFinish();
-
-            scenario.AssertEvent<RiichiEvent>((ev) => {
-                Assert.AreEqual(TileSource.Discard, ev.tile.source);
-                Assert.AreEqual(DiscardReason.Draw, ev.reason);
-                ev.tile.tile.AssertEquals("7s");
-                return true;
-            });
+            await RiichiWith(scenario, 1, "7s");
 
             (await scenario.WaitInquiry()).Finish();
 
@@ -66,19 +70,7 @@ namespace RabiRiichiTests.Scenario.Tests {
                 .SetFirstJun()
                 .Start(1);
 
-            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
-                playerInquiry
-                    .AssertAction<PlayTileAction>()
-                    .ChooseTile<RiichiAction>("7s")
-                    .AssertNoMoreActions();
-            }).AssertAutoFinish();
-
-            scenario.AssertEvent<RiichiEvent>((ev) => {
-                Assert.AreEqual(TileSource.Discard, ev.tile.source);
-                Assert.AreEqual(DiscardReason.Draw, ev.reason);
-                ev.tile.tile.AssertEquals("7s");
-                return true;
-            });
+            await RiichiWith(scenario, 1, "7s");
 
             (await scenario.WaitPlayerTurn(1)).ForPlayer(1, playerInquiry => {
                 playerInquiry
@@ -101,6 +93,50 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertYaku<DoubleRiichi>()
                     .AssertYaku<Ippatsu>()
                     .AssertYaku<MenzenchinTsumohou>();
+                return true;
+            }).Resolve();
+        }
+
+
+        [TestMethod]
+        public async Task NoIppatsuWhenRiichiTileClaimed() {
+            var scenario = new ScenarioBuilder()
+                .WithPlayer(1, playerBuilder => {
+                    playerBuilder.SetFreeTiles("12366s234m34566p");
+                })
+                .WithPlayer(2, playerBuilder => {
+                    playerBuilder.SetFreeTiles("77s1234566789p1z");
+                })
+                .WithWall(wall => wall.Reserve("7s"))
+                .Start(1);
+
+            await RiichiWith(scenario, 1, "7s");
+
+            (await scenario.WaitInquiry()).ForPlayer(2, playerInquiry => {
+                playerInquiry
+                    .AssertSkip()
+                    .ChooseTiles<PonAction>("777s")
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+
+            (await scenario.WaitInquiry()).ForPlayer(2, playerInquiry => {
+                playerInquiry
+                    .ChooseTile<PlayTileAction>("6p")
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+
+            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
+                playerInquiry
+                    .AssertSkip()
+                    .ApplyAction<RonAction>()
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+
+            await scenario.AssertEvent<AgariEvent>((ev) => {
+                ev.agariInfos
+                    .AssertRon(2, 1)
+                    .AssertScore(han: 1, fu: 40)
+                    .AssertYaku<Riichi>();
                 return true;
             }).Resolve();
         }
