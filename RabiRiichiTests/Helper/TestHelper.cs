@@ -17,6 +17,10 @@ namespace RabiRiichiTests.Helper {
             actionCenter = new JsonStringActionCenter(null)
         });
 
+        public static void AssertEquals(this Tile tile, string str) {
+            Assert.AreEqual(tile.ToString(), str);
+        }
+
         public static void AssertEquals(this Tiles tiles, string str) {
             var newTiles = new Tiles(str);
             tiles.Sort();

@@ -32,7 +32,7 @@ namespace RabiRiichi.Action.Resolver {
             if (shanten == -1) {
                 riichiTiles.AddRange(BasePattern.GetHand(hand.freeTiles, incoming).Distinct());
             }
-            var handRiichiTiles = hand.freeTiles.Where(t => riichiTiles.Contains(t.tile.WithoutDora)).ToList();
+            var handRiichiTiles = hand.freeTiles.Append(incoming).Where(t => riichiTiles.Contains(t.tile.WithoutDora)).ToList();
             if (handRiichiTiles.Count > 0) {
                 output.Add(new RiichiAction(player.id, handRiichiTiles, incoming));
                 return true;
