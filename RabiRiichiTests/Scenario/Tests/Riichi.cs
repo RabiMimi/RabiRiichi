@@ -189,6 +189,41 @@ namespace RabiRiichiTests.Scenario.Tests {
         }
 
         [TestMethod]
+        public async Task NoIppatsuAfter1Jun() {
+            var scenario = new ScenarioBuilder()
+                .WithPlayer(1, playerBuilder => {
+                    playerBuilder.SetFreeTiles("12366s234m34566p");
+                })
+                .WithWall(wall => wall.Reserve("777786s"))
+                .Start(1);
+
+            await RiichiWith(scenario, 1, "7s");
+
+            (await scenario.WaitPlayerTurn(1)).Finish();
+
+            (await scenario.WaitInquiry()).ForPlayer(2, playerInquiry => {
+                playerInquiry
+                    .ChooseTile<PlayTileAction>("6s")
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+
+            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
+                playerInquiry
+                    .AssertSkip()
+                    .ApplyAction<RonAction>()
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+
+            await scenario.AssertEvent<AgariEvent>((ev) => {
+                ev.agariInfos
+                    .AssertRon(2, 1)
+                    .AssertScore(han: 1, fu: 40)
+                    .AssertYaku<Riichi>();
+                return true;
+            }).Resolve();
+        }
+
+        [TestMethod]
         public async Task NoIppatsuWhenOtherTileClaimed() {
             var scenario = new ScenarioBuilder()
                 .WithPlayer(1, playerBuilder => {
