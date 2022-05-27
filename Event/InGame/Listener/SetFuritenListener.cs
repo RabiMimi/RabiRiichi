@@ -54,7 +54,7 @@ namespace RabiRiichi.Event.InGame.Listener {
                 .ScopeTo(EventScope.Game);
         }
 
-        public static Task OnKan(AddKanEvent ev) {
+        public static Task OnKan(KanEvent ev) {
             OnDiscardOrKan(ev, ev.incoming.tile);
             return Task.CompletedTask;
         }
@@ -68,7 +68,6 @@ namespace RabiRiichi.Event.InGame.Listener {
             eventBus.Subscribe<SetFuritenEvent>(SetFuriten, EventPriority.Execute);
             eventBus.Subscribe<IncreaseJunEvent>(OnIncreaseJun, EventPriority.After);
             eventBus.Subscribe<DiscardTileEvent>(OnDiscardTile, EventPriority.After);
-            eventBus.Subscribe<AddKanEvent>(OnKan, EventPriority.After);
         }
     }
 }
