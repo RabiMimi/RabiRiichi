@@ -1,15 +1,18 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Action;
 using RabiRiichi.Core;
+using RabiRiichi.Core.Config;
 using RabiRiichi.Event.InGame;
 using RabiRiichi.Pattern;
 using RabiRiichiTests.Helper;
+using System;
 using System.Threading.Tasks;
 
 
 namespace RabiRiichiTests.Scenario.Tests {
     [TestClass]
     public class ScenarioKan {
+        #region Kan
         [TestMethod]
         public async Task SuccessDaiMinKan() {
             var scenario = new ScenarioBuilder()
@@ -230,17 +233,20 @@ namespace RabiRiichiTests.Scenario.Tests {
                 player.hand.called.AssertContains("3333s");
             });
         }
+        #endregion
 
-        private static async Task<Scenario> BuildSuuKanSanRaFromKaKan() {
-            var scenario = new ScenarioBuilder()
+        #region SuukanSanra
+        private static async Task<Scenario> BuildSuuKanSanRaFromKaKan(Action<ScenarioBuilder> setup = null) {
+            var scenarioBuilder = new ScenarioBuilder()
                 .WithPlayer(0, playerBuilder => {
                     playerBuilder.SetFreeTiles("111122339s1239m");
                 })
                 .WithPlayer(1, playerBuilder => {
                     playerBuilder.SetFreeTiles("111222334p1234z");
                 })
-                .WithWall(wall => wall.Reserve("234563s").AddRinshan("2s1p1z"))
-                .Start(1);
+                .WithWall(wall => wall.Reserve("234563s").AddRinshan("2s1p1z"));
+            setup?.Invoke(scenarioBuilder);
+            var scenario = scenarioBuilder.Start(1);
 
             // Pon 2s
             (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
@@ -420,6 +426,30 @@ namespace RabiRiichiTests.Scenario.Tests {
         }
 
         [TestMethod]
+        public async Task DisabledInConfig_FailSuukanSanra() {
+            var scenario = await BuildSuuKanSanRaFromKaKan(scenarioBuilder => {
+                scenarioBuilder.WithConfig(config => {
+                    config.SetRyuukyokuTrigger(RyuukyokuTrigger.All & ~RyuukyokuTrigger.SuukanSanra);
+                });
+            });
+
+
+            // Player 0 does not ron
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry
+                    .AssertAction<RonAction>()
+                    .ApplySkip()
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+
+            // No SuukanSanra
+            await scenario.AssertNoRyuukyoku<SuukanSanra>().Resolve();
+        }
+
+        #endregion
+
+        #region Failed Kan
+        [TestMethod]
         public async Task FailAnKanAfterChii() {
             var scenario = new ScenarioBuilder()
                 .WithPlayer(0, playerBuilder => {
@@ -474,47 +504,9 @@ namespace RabiRiichiTests.Scenario.Tests {
                 playerInquiry.AssertNoAction<KanAction>();
             });
         }
+        #endregion
 
-        [TestMethod]
-        public async Task SuccessRinshanKaihou() {
-            var scenario = new ScenarioBuilder()
-                .WithPlayer(0, playerBuilder => {
-                    playerBuilder.SetFreeTiles("111s123456789m1z");
-                })
-                .WithWall(wall => wall.Reserve("1s"))
-                .WithWall(wall => wall.AddRinshan("1z"))
-                .Start(1);
-
-            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
-                playerInquiry.ChooseTile<PlayTileAction>("1s");
-            }).AssertAutoFinish();
-
-            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
-                playerInquiry
-                    .AssertSkip()
-                    .AssertAction<PonAction>()
-                    .ChooseTiles<KanAction>("1111s", action => {
-                        Assert.AreEqual(1, action.options.Count);
-                        return true;
-                    })
-                    .AssertNoMoreActions();
-            }).AssertAutoFinish();
-
-            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
-                playerInquiry
-                    .AssertAction<PlayTileAction>()
-                    .ApplyAction<TsumoAction>()
-                    .AssertNoMoreActions();
-            }).AssertAutoFinish();
-
-            scenario.AssertEvent<AgariEvent>(ev => {
-                ev.agariInfos
-                    .AssertTsumo(0)
-                    .AssertScore(han: 1)
-                    .AssertYaku<RinshanKaihou>(han: 1);
-                return true;
-            });
-        }
+        #region Chankan
 
         [TestMethod]
         public async Task SuccessChankan4KaKan() {
@@ -662,6 +654,50 @@ namespace RabiRiichiTests.Scenario.Tests {
 
             (await scenario.WaitInquiry()).AssertNoActionForPlayer(0);
         }
+        #endregion
+
+        #region Other
+
+        [TestMethod]
+        public async Task SuccessRinshanKaihou() {
+            var scenario = new ScenarioBuilder()
+                .WithPlayer(0, playerBuilder => {
+                    playerBuilder.SetFreeTiles("111s123456789m1z");
+                })
+                .WithWall(wall => wall.Reserve("1s"))
+                .WithWall(wall => wall.AddRinshan("1z"))
+                .Start(1);
+
+            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
+                playerInquiry.ChooseTile<PlayTileAction>("1s");
+            }).AssertAutoFinish();
+
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry
+                    .AssertSkip()
+                    .AssertAction<PonAction>()
+                    .ChooseTiles<KanAction>("1111s", action => {
+                        Assert.AreEqual(1, action.options.Count);
+                        return true;
+                    })
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry
+                    .AssertAction<PlayTileAction>()
+                    .ApplyAction<TsumoAction>()
+                    .AssertNoMoreActions();
+            }).AssertAutoFinish();
+
+            scenario.AssertEvent<AgariEvent>(ev => {
+                ev.agariInfos
+                    .AssertTsumo(0)
+                    .AssertScore(han: 1)
+                    .AssertYaku<RinshanKaihou>(han: 1);
+                return true;
+            });
+        }
 
         [TestMethod]
         public async Task NoDoraRevealAfter5() {
@@ -689,5 +725,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                 return true;
             }).Resolve();
         }
+        #endregion
     }
 }

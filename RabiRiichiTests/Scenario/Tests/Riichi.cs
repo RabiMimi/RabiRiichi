@@ -5,9 +5,10 @@ using RabiRiichi.Core.Config;
 using RabiRiichi.Event.InGame;
 using RabiRiichi.Pattern;
 using RabiRiichiTests.Helper;
+using RabiRiichiTests.Scenario;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
-
 
 namespace RabiRiichiTests.Scenario.Tests {
     [TestClass]
@@ -491,6 +492,47 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertAction<PlayTileAction>()
                     .AssertNoMoreActions();
             });
+        }
+        #endregion
+
+        #region SuuchaRiichi
+        private static async Task<Scenario> BuildSuuchaRiichi(Action<ScenarioBuilder> setup = null) {
+            static void playerHandSetup(ScenarioBuilder.PlayerHandBuilder playerBuilder) {
+                playerBuilder.SetFreeTiles("19s19m129p123456z");
+            };
+            var scenarioBuilder = new ScenarioBuilder()
+                .WithPlayer(0, playerHandSetup)
+                .WithPlayer(1, playerHandSetup)
+                .WithPlayer(2, playerHandSetup)
+                .WithPlayer(3, playerHandSetup)
+                .WithWall(wall => wall.Reserve("7777z"));
+            setup?.Invoke(scenarioBuilder);
+            var scenario = scenarioBuilder.Start(0);
+
+            for (int i = 0; i < 4; i++) {
+                (await scenario.WaitInquiry()).ForPlayer(i, playerInquiry => {
+                    playerInquiry
+                        .AssertAction<PlayTileAction>()
+                        .ChooseTile<RiichiAction>("2p")
+                        .AssertNoMoreActions();
+                }).AssertAutoFinish();
+            }
+
+            return scenario;
+        }
+
+        [TestMethod]
+        public async Task SuuchaRiichiRyuukyoku() {
+            var scenario = await BuildSuuchaRiichi();
+
+            await scenario.AssertRyuukyoku<SuuchaRiichi>().Resolve();
+        }
+
+        [TestMethod]
+        public async Task DisabledInConfig_NoSuuchaRiichi() {
+            var scenario = await BuildSuuchaRiichi(builder => builder.WithConfig(configBuilder => configBuilder.SetRyuukyokuTrigger(RyuukyokuTrigger.All & ~RyuukyokuTrigger.SuuchaRiichi)));
+
+            await scenario.AssertNoRyuukyoku<SuuchaRiichi>().Resolve();
         }
         #endregion
     }

@@ -1,5 +1,7 @@
 using RabiRiichi.Core;
+using RabiRiichi.Core.Config;
 using RabiRiichi.Event.InGame;
+using RabiRiichi.Util;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -7,7 +9,7 @@ using System.Linq;
 namespace RabiRiichi.Action.Resolver {
     public class RyuukyokuResolver : ResolverBase {
         protected override bool ResolveAction(Player player, GameTile incoming, MultiPlayerInquiry output) {
-            if (!player.game.IsFirstJun) {
+            if (!player.game.config.ryuukyokuTrigger.HasAnyFlag(RyuukyokuTrigger.KyuushuKyuuhai) || !player.game.IsFirstJun) {
                 return false;
             }
             bool flag = player.hand.freeTiles

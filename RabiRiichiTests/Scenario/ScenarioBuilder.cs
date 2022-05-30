@@ -296,6 +296,12 @@ namespace RabiRiichiTests.Scenario {
                 return this;
             }
 
+            /// <summary> 设置启用的流局 </summary>
+            public GameConfigBuilder SetRyuukyokuTrigger(RyuukyokuTrigger trigger) {
+                config.ryuukyokuTrigger = trigger;
+                return this;
+            }
+
             public GameConfig Build() {
                 return config;
             }

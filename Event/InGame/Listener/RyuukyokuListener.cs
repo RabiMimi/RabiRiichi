@@ -1,4 +1,6 @@
 using RabiRiichi.Core;
+using RabiRiichi.Core.Config;
+using RabiRiichi.Util;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -67,7 +69,7 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         public static Task SuufonRendaListener(NextPlayerEvent ev) {
-            if (!ev.game.IsFirstJun) {
+            if (!ev.game.config.ryuukyokuTrigger.HasAnyFlag(RyuukyokuTrigger.SuufonRenda) || !ev.game.IsFirstJun) {
                 return Task.CompletedTask;
             }
             Tile wind = Tile.Empty;
@@ -92,7 +94,7 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         public static Task SuuchaRiichiListener(SetRiichiEvent ev) {
-            if (ev.game.players.Any(p => !p.hand.riichi || p.hand.agari)) {
+            if (!ev.game.config.ryuukyokuTrigger.HasAnyFlag(RyuukyokuTrigger.SuuchaRiichi) || ev.game.players.Any(p => !p.hand.riichi || p.hand.agari)) {
                 return Task.CompletedTask;
             }
             ev.Q.ClearEvents();
@@ -101,7 +103,7 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         public static Task TripleRonListener(AgariEvent ev) {
-            if (ev.agariInfos.GroupBy(info => info.playerId).Count() != 3) {
+            if (!ev.game.config.ryuukyokuTrigger.HasAnyFlag(RyuukyokuTrigger.TripleRon) || ev.agariInfos.GroupBy(info => info.playerId).Count() != 3) {
                 return Task.CompletedTask;
             }
             ev.Q.ClearEvents();
@@ -111,7 +113,7 @@ namespace RabiRiichi.Event.InGame.Listener {
 
         public static Task SuukanSanraListener(IncreaseJunEvent ev) {
             var wall = ev.game.wall;
-            if (wall.rinshan.Count != 0) {
+            if (!ev.game.config.ryuukyokuTrigger.HasAnyFlag(RyuukyokuTrigger.SuukanSanra) || wall.rinshan.Count != 0) {
                 return Task.CompletedTask;
             }
             foreach (var player in ev.game.players) {

@@ -1,5 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Action;
+using RabiRiichi.Core.Config;
 using RabiRiichi.Event.InGame;
 using RabiRiichi.Pattern;
 using System.Threading.Tasks;
@@ -106,6 +107,7 @@ namespace RabiRiichiTests.Scenario.Tests {
             }).Resolve();
         }
 
+        #region SuufonRenda
         [TestMethod]
         public async Task SuufonRendaRyuukyoku() {
             var scenario = new ScenarioBuilder()
@@ -177,6 +179,32 @@ namespace RabiRiichiTests.Scenario.Tests {
         }
 
         [TestMethod]
+        public async Task DisabledInConfig_NoSuufonRenda() {
+            var scenario = new ScenarioBuilder()
+                .WithPlayer(0, playerBuilder => {
+                    playerBuilder.SetFreeTiles("11122233345556z");
+                })
+                .WithWall(wallBuilder => {
+                    wallBuilder.Reserve("444z");
+                })
+                .WithConfig(configBuilder => {
+                    configBuilder.SetRyuukyokuTrigger(RyuukyokuTrigger.All & ~RyuukyokuTrigger.SuufonRenda);
+                })
+                .SetFirstJun()
+                .Start(0);
+
+            for (int i = 0; i < 4; i++) {
+                (await scenario.WaitInquiry()).ForPlayer(i, (playerInquiry) => {
+                    playerInquiry.ChooseTile<PlayTileAction>("4z");
+                }).AssertAutoFinish();
+            }
+
+            await scenario.AssertNoEvent<SuufonRenda>().Resolve();
+        }
+        #endregion
+
+        #region KyuushuKyuuhai
+        [TestMethod]
         public async Task KyuushuKyuuhaiRyuukyoku() {
             var scenario = new ScenarioBuilder()
                 .WithPlayer(1, playerBuilder => {
@@ -235,5 +263,27 @@ namespace RabiRiichiTests.Scenario.Tests {
                 playerInquiry.AssertNoAction<RyuukyokuAction>();
             }).AssertAutoFinish(false);
         }
+
+        [TestMethod]
+        public async Task DisabledInConfig_NoKyuushuKyuuhai() {
+            var scenario = new ScenarioBuilder()
+                .WithPlayer(1, playerBuilder => {
+                    playerBuilder.SetFreeTiles("19s19m1234569p17z");
+                })
+                .WithWall(wallBuilder => {
+                    wallBuilder.Reserve("234z");
+                })
+                .WithConfig(configBuilder => {
+                    configBuilder.SetRyuukyokuTrigger(RyuukyokuTrigger.All & ~RyuukyokuTrigger.KyuushuKyuuhai);
+                })
+                .SetFirstJun()
+                .Start(0);
+
+            (await scenario.WaitPlayerTurn(1)).ForPlayer(1, playerInquiry => {
+                playerInquiry.AssertNoAction<RyuukyokuAction>();
+            });
+        }
+
+        #endregion
     }
 }

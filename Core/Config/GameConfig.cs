@@ -34,6 +34,9 @@ namespace RabiRiichi.Core.Config {
         /// <summary> 立直 </summary>
         [RabiBroadcast] public RiichiPolicy riichiPolicy = RiichiPolicy.Default;
 
+        /// <summary> 中途流局 </summary>
+        [RabiBroadcast] public RyuukyokuTrigger ryuukyokuTrigger = RyuukyokuTrigger.Default;
+
         /// <summary> 几庄战 </summary>
         [RabiBroadcast] public int totalRound = 1;
 

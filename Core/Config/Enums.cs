@@ -27,9 +27,29 @@ namespace RabiRiichi.Core.Config {
         NonNegativePoints = 1 << 1,
         /// <summary> 禁止牌山剩余牌数小于玩家数时立直 </summary>
         SufficientTiles = 1 << 2,
-        /// <summary> 默认值 </summary>
-        Default = SufficientPoints | SufficientTiles,
         /// <summary> 所有 </summary>
         All = SufficientPoints | SufficientTiles | NonNegativePoints,
+        /// <summary> 默认值 </summary>
+        Default = SufficientPoints | SufficientTiles,
+    }
+
+    /// <summary> 流局方式 </summary>
+    [Flags]
+    public enum RyuukyokuTrigger {
+        None = 0,
+        /// <summary> 四风连打 </summary>
+        SuufonRenda = 1 << 0,
+        /// <summary> 九种九牌 </summary>
+        KyuushuKyuuhai = 1 << 1,
+        /// <summary> 四家立直 </summary>
+        SuuchaRiichi = 1 << 2,
+        /// <summary> 三家荣和 </summary>
+        TripleRon = 1 << 3,
+        /// <summary> 四杠散了 </summary>
+        SuukanSanra = 1 << 4,
+        /// <summary> 所有 </summary>
+        All = SuufonRenda | KyuushuKyuuhai | SuuchaRiichi | TripleRon | SuukanSanra,
+        /// <summary> 默认值 </summary>
+        Default = All,
     }
 }
