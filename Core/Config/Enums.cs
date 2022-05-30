@@ -1,7 +1,7 @@
 using System;
 
 namespace RabiRiichi.Core.Config {
-    /// <summary> 食替方式 </summary>
+    /// <summary> 食替检测 </summary>
     [Flags]
     public enum KuikaePolicy {
         /// <summary> 无 </summary>
@@ -10,8 +10,10 @@ namespace RabiRiichi.Core.Config {
         Genbutsu = 1 << 0,
         /// <summary> 禁止筋食替 </summary>
         Suji = 1 << 1,
+        /// <summary> 所有 </summary>
+        All = Genbutsu | Suji,
         /// <summary> 默认值 </summary>
-        Default = Genbutsu | Suji
+        Default = All,
     }
 
     /// <summary> 立直要求 </summary>
@@ -26,6 +28,8 @@ namespace RabiRiichi.Core.Config {
         /// <summary> 禁止牌山剩余牌数小于玩家数时立直 </summary>
         SufficientTiles = 1 << 2,
         /// <summary> 默认值 </summary>
-        Default = SufficientPoints | SufficientTiles
+        Default = SufficientPoints | SufficientTiles,
+        /// <summary> 所有 </summary>
+        All = SufficientPoints | SufficientTiles | NonNegativePoints,
     }
 }

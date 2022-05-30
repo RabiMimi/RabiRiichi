@@ -1,6 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Action;
 using RabiRiichi.Core;
+using RabiRiichi.Core.Config;
 using RabiRiichi.Event.InGame;
 using RabiRiichi.Pattern;
 using RabiRiichiTests.Helper;
@@ -397,6 +398,100 @@ namespace RabiRiichiTests.Scenario.Tests {
                 .Resolve();
         }
 
+        #endregion
+
+        #region Riichi Policy
+        private static ScenarioBuilder WithPolicy(RiichiPolicy policy, int points, int riichiPoints = 1000) {
+            return new ScenarioBuilder()
+                .WithPlayer(1, playerBuilder => {
+                    playerBuilder
+                        .SetPoints(points)
+                        .SetFreeTiles("12367s234m34567p");
+                })
+                .WithWall(wall => wall.Reserve("7s"))
+                .WithConfig(configBuilder => {
+                    configBuilder
+                        .SetRiichiPolicy(policy)
+                        .SetRiichiPoints(riichiPoints);
+                });
+        }
+
+        [TestMethod]
+        public async Task SuccessSufficientPoints() {
+            var scenario = WithPolicy(RiichiPolicy.SufficientPoints, 1000).Start(1);
+
+            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
+                playerInquiry
+                    .AssertAction<RiichiAction>()
+                    .AssertAction<PlayTileAction>()
+                    .AssertNoMoreActions();
+            });
+        }
+
+        [TestMethod]
+        public async Task FailInsufficientPoints() {
+            var scenario = WithPolicy(RiichiPolicy.SufficientPoints, 500).Start(1);
+
+            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
+                playerInquiry
+                    .AssertAction<PlayTileAction>()
+                    .AssertNoMoreActions();
+            });
+        }
+
+        [TestMethod]
+        public async Task SuccessNonNegativePoints() {
+            var scenario = WithPolicy(RiichiPolicy.NonNegativePoints, 0).Start(1);
+
+            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
+                playerInquiry
+                    .AssertAction<RiichiAction>()
+                    .AssertAction<PlayTileAction>()
+                    .AssertNoMoreActions();
+            });
+        }
+
+        [TestMethod]
+        public async Task FailNegativePoints() {
+            var scenario = WithPolicy(RiichiPolicy.NonNegativePoints, -1).Start(1);
+
+            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
+                playerInquiry
+                    .AssertAction<PlayTileAction>()
+                    .AssertNoMoreActions();
+            });
+        }
+
+        [TestMethod]
+        public async Task SuccessSufficientTiles() {
+            var scenario = WithPolicy(RiichiPolicy.SufficientTiles, -1000)
+                .Start(1)
+                .WithWall(wall => {
+                    wall.remaining.RemoveRange(0, wall.remaining.Count - 5); // P1 will draw 1 tile
+                });
+
+            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
+                playerInquiry
+                    .AssertAction<RiichiAction>()
+                    .AssertAction<PlayTileAction>()
+                    .AssertNoMoreActions();
+            });
+        }
+
+        [TestMethod]
+        public async Task FailInsufficientTiles() {
+            var scenario = WithPolicy(RiichiPolicy.SufficientTiles, -1000)
+                .Start(1)
+                .WithWall(wall => {
+                    wall.remaining.RemoveRange(0, wall.remaining.Count - 4); // P1 will draw 1 tile
+                });
+
+            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
+                playerInquiry
+                    .AssertAction<PlayTileAction>()
+                    .AssertNoMoreActions();
+            });
+        }
         #endregion
     }
 }

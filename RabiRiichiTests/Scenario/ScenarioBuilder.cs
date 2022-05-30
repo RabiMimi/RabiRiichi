@@ -61,6 +61,12 @@ namespace RabiRiichiTests.Scenario {
             return this;
         }
 
+        /// <summary> 获取牌山实例 </summary>
+        public Scenario WithWall(Action<Wall> action) {
+            action(game.wall);
+            return this;
+        }
+
         /// <summary> 获取玩家实例 </summary>
         public Scenario WithPlayer(int playerId, Action<Player> action) {
             action(game.GetPlayer(playerId));
@@ -275,6 +281,18 @@ namespace RabiRiichiTests.Scenario {
             /// <summary> 设置随机种子，默认为114514 </summary>
             public GameConfigBuilder SetSeed(ulong seed) {
                 config.seed = seed;
+                return this;
+            }
+
+            /// <summary> 设置食替检测 </summary>
+            public GameConfigBuilder SetKuikaePolicy(KuikaePolicy policy) {
+                config.kuikaePolicy = policy;
+                return this;
+            }
+
+            /// <summary> 设置立直要求 </summary>
+            public GameConfigBuilder SetRiichiPolicy(RiichiPolicy riichiPolicy) {
+                config.riichiPolicy = riichiPolicy;
                 return this;
             }
 
