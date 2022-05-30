@@ -10,6 +10,8 @@ namespace RabiRiichi.Core.Config {
         Genbutsu = 1 << 0,
         /// <summary> 禁止筋食替 </summary>
         Suji = 1 << 1,
+        /// <summary> 默认值 </summary>
+        Default = Genbutsu | Suji
     }
 
     /// <summary> 立直要求 </summary>

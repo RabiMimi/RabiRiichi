@@ -1,16 +1,17 @@
 using RabiRiichi.Action.Resolver;
 using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
+using RabiRiichi.Util;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Event.InGame.Listener {
     public static class LateClaimTileListener {
         public static IEnumerable<Tile> GetForbiddenTiles(GameConfig config, MenLike men, GameTile incoming) {
-            if (!config.allowGenbutsuKuikae) {
+            if (config.kuikaePolicy.HasAnyFlag(KuikaePolicy.Genbutsu)) {
                 yield return incoming.tile.WithoutDora;
             }
-            if (!config.allowSujiKuikae && men is Shun) {
+            if (config.kuikaePolicy.HasAnyFlag(KuikaePolicy.Suji) && men is Shun) {
                 if (incoming == men[0]) {
                     var tile = men[^1].tile.Next;
                     if (tile.IsValid) {
