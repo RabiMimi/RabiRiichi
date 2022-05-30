@@ -1,6 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using RabiRiichi.Core;
+using RabiRiichi.Core.Config;
 using RabiRiichi.Pattern;
 using RabiRiichiTests.Helper;
 using System;

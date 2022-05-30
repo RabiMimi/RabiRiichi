@@ -1,4 +1,5 @@
 ﻿using RabiRiichi.Core;
+using RabiRiichi.Core.Config;
 using RabiRiichi.Event.InGame.Listener;
 using System.Collections.Generic;
 using System.Linq;

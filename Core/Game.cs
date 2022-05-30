@@ -2,6 +2,7 @@
 using RabiRiichi.Action;
 using RabiRiichi.Communication;
 using RabiRiichi.Communication.Json;
+using RabiRiichi.Core.Config;
 using RabiRiichi.Event;
 using RabiRiichi.Event.InGame;
 using RabiRiichi.Pattern;

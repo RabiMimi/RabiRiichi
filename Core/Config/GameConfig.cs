@@ -1,8 +1,20 @@
 
 using RabiRiichi.Communication;
 using RabiRiichi.Core.Setup;
+using System;
 
-namespace RabiRiichi.Core {
+namespace RabiRiichi.Core.Config {
+    /// <summary> 立直要求 </summary>
+    [Flags]
+    public enum RiichiPolicy {
+        /// <summary> 立直无特殊要求 </summary>
+        None = 0,
+        /// <summary> 禁止立直后分数为负 </summary>
+        SufficientPoints = 1 << 0,
+        /// <summary> 禁止立直时分数为负 </summary>
+        NonNegativePoints = 1 << 1,
+    }
+
     public class GameConfig : IRabiMessage {
         public RabiMessageType msgType => RabiMessageType.Unnecessary;
         /// <summary> 玩家数 </summary>

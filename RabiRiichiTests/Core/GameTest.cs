@@ -1,7 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Communication;
-using RabiRiichi.Communication.Json;
 using RabiRiichi.Core;
+using RabiRiichi.Core.Config;
 
 
 namespace RabiRiichiTests.Core {

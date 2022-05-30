@@ -1,5 +1,6 @@
 ﻿using RabiRiichi.Communication;
 using RabiRiichi.Core;
+using RabiRiichi.Core.Config;
 using System;
 using System.Text.Json;
 using System.Threading;

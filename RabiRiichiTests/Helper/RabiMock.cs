@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Moq;
 using RabiRiichi.Communication;
 using RabiRiichi.Core;
+using RabiRiichi.Core.Config;
 using RabiRiichi.Core.Setup;
 using RabiRiichi.Util;
 using System;
