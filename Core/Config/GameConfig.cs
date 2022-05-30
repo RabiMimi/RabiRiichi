@@ -4,6 +4,7 @@ using RabiRiichi.Core.Setup;
 namespace RabiRiichi.Core.Config {
     public class GameConfig : IRabiMessage {
         public RabiMessageType msgType => RabiMessageType.Unnecessary;
+        #region Config
         /// <summary> 玩家数 </summary>
         [RabiBroadcast] public int playerCount = 2;
 
@@ -39,7 +40,9 @@ namespace RabiRiichi.Core.Config {
 
         /// <summary> 几庄战 </summary>
         [RabiBroadcast] public int totalRound = 1;
+        #endregion
 
+        #region For Developer Use
         /// <summary> 注册类 </summary>
         public BaseSetup setup = new RiichiSetup();
 
@@ -48,5 +51,6 @@ namespace RabiRiichi.Core.Config {
 
         /// <summary> 随机种子 </summary>
         public ulong? seed;
+        #endregion
     }
 }
