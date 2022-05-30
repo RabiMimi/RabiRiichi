@@ -31,6 +31,9 @@ namespace RabiRiichi.Core.Config {
         /// <summary> 食替 </summary>
         [RabiBroadcast] public KuikaePolicy kuikaePolicy = KuikaePolicy.Default;
 
+        /// <summary> 立直 </summary>
+        [RabiBroadcast] public RiichiPolicy riichiPolicy = RiichiPolicy.Default;
+
         /// <summary> 几庄战 </summary>
         [RabiBroadcast] public int totalRound = 1;
 

@@ -23,5 +23,9 @@ namespace RabiRiichi.Core.Config {
         SufficientPoints = 1 << 0,
         /// <summary> 禁止立直时分数为负 </summary>
         NonNegativePoints = 1 << 1,
+        /// <summary> 禁止牌山剩余牌数小于玩家数时立直 </summary>
+        SufficientTiles = 1 << 2,
+        /// <summary> 默认值 </summary>
+        Default = SufficientPoints | SufficientTiles
     }
 }

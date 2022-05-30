@@ -1,5 +1,8 @@
 ﻿using RabiRiichi.Core;
+using RabiRiichi.Core.Config;
 using RabiRiichi.Pattern;
+using RabiRiichi.Util;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -19,7 +22,18 @@ namespace RabiRiichi.Action.Resolver {
 
         protected override bool ResolveAction(Player player, GameTile incoming, MultiPlayerInquiry output) {
             var hand = player.hand;
-            if (hand.game.wall.NumRemaining < hand.game.config.playerCount || player.points < player.game.config.riichiPoints) {
+            var riichiPolicy = player.game.config.riichiPolicy;
+            if (riichiPolicy.HasAnyFlag(RiichiPolicy.SufficientTiles) && hand.game.wall.NumRemaining < hand.game.config.playerCount) {
+                return false;
+            }
+            int minPoints = int.MinValue;
+            if (riichiPolicy.HasAnyFlag(RiichiPolicy.SufficientPoints)) {
+                minPoints = Math.Max(minPoints, hand.game.config.riichiPoints);
+            }
+            if (riichiPolicy.HasAnyFlag(RiichiPolicy.NonNegativePoints)) {
+                minPoints = Math.Max(minPoints, 0);
+            }
+            if (player.points < minPoints) {
                 return false;
             }
             if (hand.riichi || !hand.menzen || incoming == null || !incoming.IsTsumo) {
