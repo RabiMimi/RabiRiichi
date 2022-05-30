@@ -44,11 +44,11 @@ namespace RabiRiichi.Core.Config {
         /// <summary> 四家立直 </summary>
         SuuchaRiichi = 1 << 2,
         /// <summary> 三家荣和 </summary>
-        TripleRon = 1 << 3,
+        Sanchahou = 1 << 3,
         /// <summary> 四杠散了 </summary>
         SuukanSanra = 1 << 4,
         /// <summary> 所有 </summary>
-        All = SuufonRenda | KyuushuKyuuhai | SuuchaRiichi | TripleRon | SuukanSanra,
+        All = SuufonRenda | KyuushuKyuuhai | SuuchaRiichi | Sanchahou | SuukanSanra,
         /// <summary> 默认值 </summary>
         Default = All,
     }

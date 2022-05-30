@@ -54,10 +54,10 @@ namespace RabiRiichi.Event.InGame {
         public SuuchaRiichi(EventBase parent) : base(parent) { }
     }
 
-    public class TripleRon : MidGameRyuukyokuEvent {
+    public class Sanchahou : MidGameRyuukyokuEvent {
         public override string name => "triple_ron";
 
-        public TripleRon(EventBase parent) : base(parent) { }
+        public Sanchahou(EventBase parent) : base(parent) { }
     }
 
     public class SuukanSanra : MidGameRyuukyokuEvent {

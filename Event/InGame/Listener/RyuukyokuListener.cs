@@ -102,12 +102,12 @@ namespace RabiRiichi.Event.InGame.Listener {
             return Task.CompletedTask;
         }
 
-        public static Task TripleRonListener(AgariEvent ev) {
-            if (!ev.game.config.ryuukyokuTrigger.HasAnyFlag(RyuukyokuTrigger.TripleRon) || ev.agariInfos.GroupBy(info => info.playerId).Count() != 3) {
+        public static Task SanchahouListener(AgariEvent ev) {
+            if (!ev.game.config.ryuukyokuTrigger.HasAnyFlag(RyuukyokuTrigger.Sanchahou) || ev.agariInfos.GroupBy(info => info.playerId).Count() != 3) {
                 return Task.CompletedTask;
             }
             ev.Q.ClearEvents();
-            ev.Q.Queue(new TripleRon(ev));
+            ev.Q.Queue(new Sanchahou(ev));
             return Task.CompletedTask;
         }
 
@@ -134,7 +134,7 @@ namespace RabiRiichi.Event.InGame.Listener {
             eventBus.Subscribe<MidGameRyuukyokuEvent>(ExecuteMidGameRyuukyoku, EventPriority.Execute);
             eventBus.Subscribe<NextPlayerEvent>(SuufonRendaListener, EventPriority.Prepare);
             eventBus.Subscribe<SetRiichiEvent>(SuuchaRiichiListener, EventPriority.After);
-            eventBus.Subscribe<AgariEvent>(TripleRonListener, EventPriority.After);
+            eventBus.Subscribe<AgariEvent>(SanchahouListener, EventPriority.After);
             eventBus.Subscribe<IncreaseJunEvent>(SuukanSanraListener, EventPriority.Prepare);
         }
     }
