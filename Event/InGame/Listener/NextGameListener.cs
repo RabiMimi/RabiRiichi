@@ -30,7 +30,7 @@ namespace RabiRiichi.Event.InGame.Listener {
                 player.points -= player.hand.riichiStick * ev.game.config.riichiPoints;
                 player.hand.riichiStick = 0;
             }
-            if (players.Any(p => p.points < 0)) {
+            if (info.config.suddenDeath && players.Any(p => p.points < 0)) {
                 // 击飞
                 ev.Q.Queue(new StopGameEvent(ev));
                 return Task.CompletedTask;

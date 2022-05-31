@@ -29,6 +29,9 @@ namespace RabiRiichi.Core.Config {
         /// <summary> 包牌 </summary>
         [RabiBroadcast] public bool allowPao = true;
 
+        /// <summary> 击飞 </summary>
+        [RabiBroadcast] public bool suddenDeath = true;
+
         /// <summary> 食替 </summary>
         [RabiBroadcast] public KuikaePolicy kuikaePolicy = KuikaePolicy.Default;
 
