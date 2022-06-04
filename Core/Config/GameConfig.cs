@@ -1,5 +1,6 @@
 using RabiRiichi.Communication;
 using RabiRiichi.Core.Setup;
+using System;
 
 namespace RabiRiichi.Core.Config {
     public class GameConfig : IRabiMessage {
@@ -30,7 +31,11 @@ namespace RabiRiichi.Core.Config {
         [RabiBroadcast] public bool allowPao = true;
 
         /// <summary> 击飞 </summary>
+        [Obsolete("Use ContinuationOption")]
         [RabiBroadcast] public bool suddenDeath = true;
+
+        // TODO: Implement
+        [RabiBroadcast] public ContinuationOption continuationOption = ContinuationOption.Default;
 
         /// <summary> 食替 </summary>
         [RabiBroadcast] public KuikaePolicy kuikaePolicy = KuikaePolicy.Default;

@@ -36,6 +36,7 @@ namespace RabiRiichi.Core.Config {
     /// <summary> 流局方式 </summary>
     [Flags]
     public enum RyuukyokuTrigger {
+        /// <summary> 无 </summary>
         None = 0,
         /// <summary> 四风连打 </summary>
         SuufonRenda = 1 << 0,
@@ -51,5 +52,26 @@ namespace RabiRiichi.Core.Config {
         All = SuufonRenda | KyuushuKyuuhai | SuuchaRiichi | Sanchahou | SuukanSanra,
         /// <summary> 默认值 </summary>
         Default = All,
+    }
+
+    /// <summary> 对局继续选项 </summary>
+    [Flags]
+    public enum ContinuationOption {
+        /// <summary> 无 </summary>
+        None = 0,
+        /// <summary> 庄家和了时连庄 </summary>
+        RenchanOnDealerWin = 1 << 0,
+        /// <summary> 庄家流局听牌时连庄 </summary>
+        RenchanOnDealerTenpai = 1 << 1,
+        /// <summary> 和牌/流局结算时，可以击飞 </summary>
+        /// TODO: Implement
+        TerminateOnNegativeScore = 1 << 2,
+        /// <summary> 分数为负时立即击飞 </summary>
+        /// TODO: Implement
+        InstantTerminateOnNegativeScore = 1 << 3,
+        /// <summary> 所有 </summary>
+        All = RenchanOnDealerWin | RenchanOnDealerTenpai | TerminateOnNegativeScore | InstantTerminateOnNegativeScore,
+        /// <summary> 默认值 </summary>
+        Default = RenchanOnDealerWin | RenchanOnDealerTenpai | TerminateOnNegativeScore,
     }
 }
