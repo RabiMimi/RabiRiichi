@@ -79,6 +79,14 @@ namespace RabiRiichi.Event {
             }
         }
 
+        /// <summary> 按事件类型获取父事件（包含本事件） </summary>
+        public T GetInParent<T>() where T : EventBase {
+            if (this is T target) {
+                return target;
+            }
+            return parent?.GetInParent<T>();
+        }
+
         /// <summary> 跳过Execute阶段 </summary>
         public void SkipExecution() {
             phase = Math.Min(phase, (EventPriority.Execute + EventPriority.Broadcast) >> 1);

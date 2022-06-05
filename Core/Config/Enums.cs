@@ -63,14 +63,14 @@ namespace RabiRiichi.Core.Config {
         RenchanOnDealerWin = 1 << 0,
         /// <summary> 庄家流局听牌时连庄 </summary>
         RenchanOnDealerTenpai = 1 << 1,
+        /// <summary> 流局时连庄 </summary>
+        RenchanOnRyuukyoku = 1 << 2,
         /// <summary> 和牌/流局结算时，可以击飞 </summary>
-        /// TODO: Implement
-        TerminateOnNegativeScore = 1 << 2,
+        TerminateOnNegativeScore = 1 << 3,
         /// <summary> 分数为负时立即击飞 </summary>
-        /// TODO: Implement
-        InstantTerminateOnNegativeScore = 1 << 3,
+        InstantTerminateOnNegativeScore = 1 << 4,
         /// <summary> 所有 </summary>
-        All = RenchanOnDealerWin | RenchanOnDealerTenpai | TerminateOnNegativeScore | InstantTerminateOnNegativeScore,
+        All = RenchanOnDealerWin | RenchanOnDealerTenpai | RenchanOnRyuukyoku | TerminateOnNegativeScore | InstantTerminateOnNegativeScore,
         /// <summary> 默认值 </summary>
         Default = RenchanOnDealerWin | RenchanOnDealerTenpai | TerminateOnNegativeScore,
     }

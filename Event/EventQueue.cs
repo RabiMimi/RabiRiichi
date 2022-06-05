@@ -1,9 +1,11 @@
 using RabiRiichi.Event.InGame;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Event {
-    public class EventQueue {
+    public class EventQueue : IEnumerable<EventBase> {
         private readonly Queue<EventBase> queue = new();
         public readonly EventBus bus;
         public readonly bool shouldLock;
@@ -18,6 +20,15 @@ namespace RabiRiichi.Event {
                 queue.Enqueue(ev);
             }
             ev.Q = this;
+        }
+
+        public void QueueIfNotExist<T>(T ev) where T : EventBase {
+            lock (queue) {
+                if (!queue.Any(e => e is T)) {
+                    queue.Enqueue(ev);
+                    ev.Q = this;
+                }
+            }
         }
 
         public void ClearEvents() {
@@ -42,6 +53,14 @@ namespace RabiRiichi.Event {
                     }
                 }
             }
+        }
+
+        public IEnumerator<EventBase> GetEnumerator() {
+            return queue.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() {
+            return queue.GetEnumerator();
         }
     }
 }

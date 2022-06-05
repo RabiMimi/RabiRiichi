@@ -1,3 +1,5 @@
+using RabiRiichi.Core.Config;
+using RabiRiichi.Util;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -30,15 +32,15 @@ namespace RabiRiichi.Event.InGame.Listener {
                 player.points -= player.hand.riichiStick * ev.game.config.riichiPoints;
                 player.hand.riichiStick = 0;
             }
-            if (info.config.suddenDeath && players.Any(p => p.points < 0)) {
+            if (info.config.continuationOption.HasAnyFlag(ContinuationOption.TerminateOnNegativeScore) && players.Any(p => p.points < 0)) {
                 // 击飞
-                ev.Q.Queue(new StopGameEvent(ev));
+                ev.Q.QueueIfNotExist(new StopGameEvent(ev));
                 return Task.CompletedTask;
             }
             if (ev.nextRound >= info.config.totalRound) {
                 if (ev.nextRound > info.config.totalRound || players.Any(p => p.points >= info.config.finishPoints)) {
                     // 游戏结束
-                    ev.Q.Queue(new StopGameEvent(ev));
+                    ev.Q.QueueIfNotExist(new StopGameEvent(ev));
                     return Task.CompletedTask;
                 }
             }
@@ -46,9 +48,23 @@ namespace RabiRiichi.Event.InGame.Listener {
             return Task.CompletedTask;
         }
 
+        public static Task InstantTerminate(EventBase ev) {
+            if (ev is StopGameEvent) {
+                ev.bus.Unsubscribe<EventBase>(InstantTerminate);
+                return Task.CompletedTask;
+            }
+            if (ev.game.config.continuationOption.HasAnyFlag(ContinuationOption.InstantTerminateOnNegativeScore)
+                && ev.game.players.Any(p => p.points < 0)) {
+                ev.Q.QueueIfNotExist(new StopGameEvent(ev));
+                return Task.CompletedTask;
+            }
+            return Task.CompletedTask;
+        }
+
         public static void Register(EventBus eventBus) {
             eventBus.Subscribe<NextGameEvent>(PrepareNextGame, EventPriority.Prepare);
             eventBus.Subscribe<NextGameEvent>(ExecuteNextGame, EventPriority.Execute);
+            eventBus.Subscribe<EventBase>(InstantTerminate, EventPriority.After - 100);
         }
     }
 }

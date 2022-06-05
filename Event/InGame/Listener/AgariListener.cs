@@ -1,3 +1,5 @@
+using RabiRiichi.Core.Config;
+using RabiRiichi.Util;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -11,8 +13,11 @@ namespace RabiRiichi.Event.InGame.Listener {
             ev.Q.Queue(calcScoreEv);
             var applyScoreEv = new ApplyScoreEvent(calcScoreEv, calcScoreEv.scoreChange);
             ev.Q.Queue(applyScoreEv);
-            bool dealerRon = ev.agariInfos.Any(info => info.playerId == ev.game.info.dealer);
-            ev.Q.Queue(new ConcludeGameEvent(applyScoreEv, !dealerRon, false));
+            bool switchDealer = true;
+            if (ev.game.config.continuationOption.HasAnyFlag(ContinuationOption.RenchanOnDealerWin)) {
+                switchDealer = ev.agariInfos.Any(info => info.playerId == ev.game.info.dealer);
+            }
+            ev.Q.Queue(new ConcludeGameEvent(applyScoreEv, switchDealer, false));
             return Task.CompletedTask;
         }
 

@@ -30,11 +30,6 @@ namespace RabiRiichi.Core.Config {
         /// <summary> 包牌 </summary>
         [RabiBroadcast] public bool allowPao = true;
 
-        /// <summary> 击飞 </summary>
-        [Obsolete("Use ContinuationOption")]
-        [RabiBroadcast] public bool suddenDeath = true;
-
-        // TODO: Implement
         [RabiBroadcast] public ContinuationOption continuationOption = ContinuationOption.Default;
 
         /// <summary> 食替 </summary>
