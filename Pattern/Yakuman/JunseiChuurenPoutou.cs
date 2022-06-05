@@ -13,7 +13,7 @@ namespace RabiRiichi.Pattern {
             var grs = hand.freeTiles.OrderBy(tile => tile).GroupBy(tile => tile.tile.Num);
             bool flag = grs.Count() == 9 && grs.First().Count() == 3 && grs.Last().Count() == 3;
             if (flag) {
-                scores.Remove(dependOnPatterns);
+                scores.Remove(afterPatterns);
                 scores.Add(new Scoring(ScoringType.Yakuman, 2, this));
                 return true;
             }

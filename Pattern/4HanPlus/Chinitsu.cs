@@ -12,7 +12,7 @@ namespace RabiRiichi.Pattern {
         public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
             bool Chinitsu = !groups.SelectMany(gr => gr).Any(tile => tile.tile.IsZ);
             if (Chinitsu) {
-                scores.Remove(dependOnPatterns);
+                scores.Remove(afterPatterns);
                 scores.Add(new Scoring(ScoringType.Han, hand.menzen ? 6 : 5, this));
                 return true;
             }

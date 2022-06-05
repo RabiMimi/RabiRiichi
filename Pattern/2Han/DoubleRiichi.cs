@@ -10,7 +10,7 @@ namespace RabiRiichi.Pattern {
 
         public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
             if (hand.wRiichi) {
-                scores.Remove(dependOnPatterns);
+                scores.Remove(afterPatterns);
                 scores.Add(new Scoring(ScoringType.Han, 2, this));
                 return true;
             }

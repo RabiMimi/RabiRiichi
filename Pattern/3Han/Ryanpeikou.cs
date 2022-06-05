@@ -20,7 +20,7 @@ namespace RabiRiichi.Pattern {
                 || grs.Count() == 1 && grs.First().Count() == 4;
 
             if (isValid) {
-                scores.Remove(dependOnPatterns);
+                scores.Remove(afterPatterns);
                 scores.Add(new Scoring(ScoringType.Han, 3, this));
                 return true;
             }

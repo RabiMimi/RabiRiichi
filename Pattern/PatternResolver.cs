@@ -45,18 +45,16 @@ namespace RabiRiichi.Pattern {
                 return false;
             }
 
-            // 检查依赖
-            foreach (var dependency in pattern.dependOnPatterns) {
-                if (!ResolveStdPattern(context, dependency, scores)) {
-                    // 依赖失败
-                    context.stdFailure.Add(pattern);
-                    return false;
-                }
-            }
-
-            // 计算非必须的依赖
+            // 计算依赖
             foreach (var ancestor in pattern.afterPatterns) {
                 ResolveStdPattern(context, ancestor, scores);
+            }
+
+            // 计算条件
+            if (!pattern.predicate(context.stdSuccess)) {
+                // 不满足条件
+                context.stdFailure.Add(pattern);
+                return false;
             }
 
             // 计算当前役种

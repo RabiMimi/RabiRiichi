@@ -11,7 +11,7 @@ namespace RabiRiichi.Pattern {
 
         public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
             if (!groups.SelectMany(gr => gr).Any(tile => tile.tile.IsZ)) {
-                scores.Remove(dependOnPatterns);
+                scores.Remove(afterPatterns);
                 scores.Add(new Scoring(ScoringType.Han, hand.menzen ? 3 : 2, this));
                 return true;
             }

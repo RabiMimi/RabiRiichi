@@ -11,7 +11,7 @@ namespace RabiRiichi.Pattern {
 
         public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
             if (groups.Find(gr => gr.Contains(incoming)) is Jantou) {
-                scores.Remove(dependOnPatterns);
+                scores.Remove(afterPatterns);
                 scores.Add(new Scoring(ScoringType.Yakuman, 2, this));
                 return true;
             }

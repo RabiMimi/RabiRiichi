@@ -17,7 +17,7 @@ namespace RabiRiichi.Pattern {
             var grs = groups.SelectMany(gr => gr).OrderBy(tile => tile).GroupBy(tile => tile.tile.Num);
             bool flag = grs.Count() == 9 && grs.First().Count() >= 3 && grs.Last().Count() >= 3;
             if (flag) {
-                scores.Remove(dependOnPatterns);
+                scores.Remove(afterPatterns);
                 scores.Add(new Scoring(ScoringType.Yakuman, 1, this));
             }
             return flag;

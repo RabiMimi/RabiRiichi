@@ -105,11 +105,11 @@ namespace RabiRiichi.Pattern {
         /// <summary> 可以触发该役种的底和 </summary>
         public BasePattern[] basePatterns { get; private set; } = Array.Empty<BasePattern>();
 
-        /// <summary> 满足这些pattern后，才会计算该pattern </summary>
-        public StdPattern[] dependOnPatterns { get; private set; } = Array.Empty<StdPattern>();
+        /// <summary> 检查该pattern的依赖 </summary>
+        public Predicate<ICollection<StdPattern>> predicate { get; private set; } = _ => true;
 
         /// <summary> 计算这些pattern后，才会计算该pattern。不保证这些pattern一定被满足 </summary>
-        public StdPattern[] afterPatterns { get; private set; } = Array.Empty<StdPattern>();
+        public readonly List<StdPattern> afterPatterns = new();
 
         protected StdPattern BaseOn(IEnumerable<BasePattern> basePatterns) {
             if (basePatterns != null) {
@@ -122,13 +122,25 @@ namespace RabiRiichi.Pattern {
             return this;
         }
 
+        /// <summary>
+        /// 设置依赖条件。
+        /// 注意：使用本方法时，必须保证所有依赖的pattern都已经被添加到afterPatterns中。
+        /// </summary>
+        protected StdPattern DependOn(Predicate<ICollection<StdPattern>> predicate) {
+            this.predicate = predicate;
+            return this;
+        }
+
         protected StdPattern DependOn(params StdPattern[] dependOnPatterns) {
-            this.dependOnPatterns = dependOnPatterns;
+            After(dependOnPatterns);
+            DependOn(dependOnPatterns.Aggregate(
+                predicate,
+                (p, pattern) => p.And(pattern)));
             return this;
         }
 
         protected StdPattern After(params StdPattern[] afterPatterns) {
-            this.afterPatterns = afterPatterns;
+            this.afterPatterns.AddRange(afterPatterns);
             return this;
         }
 

@@ -15,7 +15,7 @@ namespace RabiRiichi.Pattern {
             var tiles = groups.SelectMany(gr => gr);
             bool flag = tiles.All(tile => MATCH_TILE.Contains(tile.tile));
             if (flag) {
-                scores.Remove(dependOnPatterns);
+                scores.Remove(afterPatterns);
                 scores.Add(new Scoring(ScoringType.Yakuman, 1, this));
             }
             return flag;
