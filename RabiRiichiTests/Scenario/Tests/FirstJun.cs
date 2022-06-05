@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 namespace RabiRiichiTests.Scenario.Tests {
     [TestClass]
     public class ScenarioFirstJun {
+        #region Tenhou / Chiihou / wRiichi
         [TestMethod]
         public async Task DealerTenhou() {
             var scenario = new ScenarioBuilder()
@@ -106,6 +107,7 @@ namespace RabiRiichiTests.Scenario.Tests {
                 return true;
             }).Resolve();
         }
+        #endregion
 
         #region SuufonRenda
         [TestMethod]

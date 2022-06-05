@@ -112,7 +112,6 @@ namespace RabiRiichiTests.Scenario {
             return this;
         }
 
-
         /// <summary> 测试没有对应的事件发生 </summary>
         public Scenario AssertNoEvent<T>(Predicate<T> predicate = null) where T : EventBase {
             noEventMatchers.Add((ev) => {
