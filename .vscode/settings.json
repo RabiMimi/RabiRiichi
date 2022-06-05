@@ -37,6 +37,7 @@
         "Houtei",
         "Iipeikou",
         "Ippatsu",
+        "Ishiue",
         "Ittsu",
         "Jantou",
         "Jikaze",
@@ -74,6 +75,7 @@
         "Sanchahou",
         "Sangen",
         "Sankantsu",
+        "Sannen",
         "Sanra",
         "Sanshoku",
         "Shanten",
@@ -99,7 +101,8 @@
         "Wanpai",
         "Yaku",
         "Yakuhai",
-        "Yakuman"
+        "Yakuman",
+        "Yakus"
     ],
     "cSpell.enabled": true,
     "cSpell.ignoreWords": [
