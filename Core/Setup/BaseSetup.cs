@@ -10,10 +10,10 @@ using System.Linq;
 namespace RabiRiichi.Core.Setup {
     public class BaseSetup {
         /// <summary> 底和 </summary>
-        private readonly List<Type> basePatterns = new();
+        protected readonly List<Type> basePatterns = new();
 
         /// <summary> 役种 </summary>
-        private readonly List<Type> stdPatterns = new();
+        protected readonly List<Type> stdPatterns = new();
 
         #region Inject
 

@@ -1,5 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Action;
+using RabiRiichi.Core.Setup;
 using RabiRiichi.Event.InGame;
 using RabiRiichi.Pattern;
 using System.Threading.Tasks;
@@ -118,6 +119,47 @@ namespace RabiRiichiTests.Scenario.Tests {
                 ev.agariInfos.AssertTsumo(1)
                     .AssertScore(han: 1)
                     .AssertYaku<RinshanKaihou>();
+                return true;
+            }).Resolve();
+        }
+
+
+        private class IshiueSannenSetup : RiichiSetup {
+            protected override void InitPatterns() {
+                base.InitPatterns();
+                AddStdPattern<IshiueSannen>();
+            }
+        }
+
+        [TestMethod]
+        public async Task IshiueSannenWithAnKan() {
+            var scenario = new ScenarioBuilder()
+                .WithConfig(config => config.Setup(
+                    setup => setup.AddExtraStdPattern<IshiueSannen>()))
+                .WithPlayer(1, playerBuilder => playerBuilder
+                    .SetFreeTiles("9m111455667999s"))
+                .WithWall(wall => wall.Reserve("9s").AddRinshan("9m"))
+                .Start(1)
+                .WithPlayer(1,
+                    player => player.hand.Riichi(player.hand.freeTiles[0], true)
+                );
+
+            var inquiry = await scenario.WaitInquiry();
+
+            scenario.ForceHaitei();
+
+            inquiry.ForPlayer(1, playerInquiry => playerInquiry
+                .ChooseTiles<KanAction>("9999s")
+            ).AssertAutoFinish();
+
+            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => playerInquiry
+                .ApplyAction<TsumoAction>()
+            ).AssertAutoFinish();
+
+            await scenario.AssertEvent<AgariEvent>(ev => {
+                ev.agariInfos.AssertTsumo(1)
+                    .AssertScore(yakuman: 1)
+                    .AssertYaku<IshiueSannen>();
                 return true;
             }).Resolve();
         }

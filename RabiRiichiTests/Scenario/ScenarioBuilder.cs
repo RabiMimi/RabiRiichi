@@ -237,6 +237,12 @@ namespace RabiRiichiTests.Scenario {
                 return this;
             }
 
+            /// <summary> 获取Setup实例 </summary>
+            public GameConfigBuilder Setup(Action<ScenarioSetup> setup) {
+                setup(config.setup as ScenarioSetup);
+                return this;
+            }
+
             /// <summary> 设置番缚，默认为1 </summary>
             public GameConfigBuilder SetMinHan(int minHan) {
                 config.minHan = minHan;
