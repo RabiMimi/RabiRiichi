@@ -15,7 +15,7 @@ namespace RabiRiichi.Event.InGame.Listener {
                 } else {
                     // 荣和
                     int scoreChange = info.scores.result.BaseScore * (toPlayer.IsDealer ? 6 : 4);
-                    int honbaChange = ev.game.config.honbaPoints * (ev.game.config.playerCount - 1) * ev.game.info.honba;
+                    int honbaChange = ev.game.config.honbaPoints * ev.game.info.honba;
                     ev.scoreChange.Add(new ScoreTransfer(fromPlayer.id, toPlayer.id, scoreChange, ScoreTransferReason.Ron));
                     ev.scoreChange.Add(new ScoreTransfer(fromPlayer.id, toPlayer.id, honbaChange, ScoreTransferReason.Honba));
                 }
@@ -52,9 +52,9 @@ namespace RabiRiichi.Event.InGame.Listener {
             if (tsumoPlayer.IsDealer) {
                 score *= 2;
             }
+            int honbaChange = game.config.HonbaPointsForOnePlayer(game.info.honba);
             foreach (var player in game.players.Where(player => !player.hand.agari)) {
                 int scoreChange = player.IsDealer ? score * 2 : score;
-                int honbaChange = game.config.honbaPoints * game.info.honba;
                 yield return new ScoreTransfer(player.id, tsumoPlayer.id, scoreChange, ScoreTransferReason.Tsumo);
                 yield return new ScoreTransfer(player.id, tsumoPlayer.id, honbaChange, ScoreTransferReason.Honba);
             }

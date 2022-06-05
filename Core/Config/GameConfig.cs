@@ -1,6 +1,6 @@
 using RabiRiichi.Communication;
 using RabiRiichi.Core.Setup;
-using System;
+using RabiRiichi.Util;
 
 namespace RabiRiichi.Core.Config {
     public class GameConfig : IRabiMessage {
@@ -19,7 +19,14 @@ namespace RabiRiichi.Core.Config {
         [RabiBroadcast] public int riichiPoints = 1000;
 
         /// <summary> 场棒点数 </summary>
-        [RabiBroadcast] public int honbaPoints = 100;
+        [RabiBroadcast] public int honbaPoints = 300;
+        public int HonbaPointsForOnePlayer(int honba) {
+            return (honbaPoints / (playerCount - 1) * honba).CeilTo100();
+        }
+
+        /// <summary> 流局点数 </summary>
+        [RabiBroadcast] public int ryuukyokuPoints = 3000;
+        public int RyuukyokuPointsForOnePlayer => (ryuukyokuPoints / (playerCount - 1)).CeilTo100();
 
         /// <summary> (西)入点数 </summary>
         [RabiBroadcast] public int finishPoints = 30000;

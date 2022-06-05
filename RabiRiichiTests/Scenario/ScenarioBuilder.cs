@@ -254,9 +254,15 @@ namespace RabiRiichiTests.Scenario {
                 return this;
             }
 
-            /// <summary> 设置本场棒总点数，默认为100 </summary>
+            /// <summary> 设置本场棒总点数，默认为300 </summary>
             public GameConfigBuilder SetHonbaPoints(int honbaPoints) {
                 config.honbaPoints = honbaPoints;
+                return this;
+            }
+
+            /// <summary> 设置流局总点数，默认为3000 </summary>
+            public GameConfigBuilder SetRyuukyokuPoints(int ryuukyokuPoints) {
+                config.ryuukyokuPoints = ryuukyokuPoints;
                 return this;
             }
 
@@ -301,6 +307,13 @@ namespace RabiRiichiTests.Scenario {
                 config.ryuukyokuTrigger = trigger;
                 return this;
             }
+
+            /// <summary> 设置对局选项 </summary>
+            public GameConfigBuilder SetContinuationOption(ContinuationOption option) {
+                config.continuationOption = option;
+                return this;
+            }
+
 
             public GameConfig Build() {
                 return config;

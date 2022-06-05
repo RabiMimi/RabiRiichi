@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 namespace RabiRiichi.Event.InGame.Listener {
     public static class RyuukyokuListener {
         private const int NAGASHI_MANGAN_BASE_PT = 2000;
-        private const int TENPAI_BASE_PT = 1000;
 
         private static bool IsNagashiMangan(Hand hand) {
             // 全是幺九牌 且没有被他人鸣牌
@@ -44,16 +43,18 @@ namespace RabiRiichi.Event.InGame.Listener {
                 // 流局
                 var payers = ev.remainingPlayers.Except(ev.tenpaiPlayers).ToArray();
                 if (payers.Length == 2 && ev.tenpaiPlayers.Length == 2) {
-                    int pt = (int)(TENPAI_BASE_PT * 1.5);
+                    int pt = (ev.game.config.ryuukyokuPoints / 2).CeilTo100();
                     ev.AddScoreTransfer(payers[0], ev.tenpaiPlayers[0], pt, ScoreTransferReason.Ryuukyoku);
                     ev.AddScoreTransfer(payers[1], ev.tenpaiPlayers[1], pt, ScoreTransferReason.Ryuukyoku);
                 } else if (payers.Length == 1) {
+                    int pt = ev.game.config.RyuukyokuPointsForOnePlayer;
                     foreach (var payee in ev.tenpaiPlayers) {
-                        ev.AddScoreTransfer(payers[0], payee, TENPAI_BASE_PT, ScoreTransferReason.Ryuukyoku);
+                        ev.AddScoreTransfer(payers[0], payee, pt, ScoreTransferReason.Ryuukyoku);
                     }
                 } else if (ev.tenpaiPlayers.Length == 1) {
+                    int pt = ev.game.config.RyuukyokuPointsForOnePlayer;
                     foreach (var payer in payers) {
-                        ev.AddScoreTransfer(payer, ev.tenpaiPlayers[0], TENPAI_BASE_PT, ScoreTransferReason.Ryuukyoku);
+                        ev.AddScoreTransfer(payer, ev.tenpaiPlayers[0], pt, ScoreTransferReason.Ryuukyoku);
                     }
                 }
             }
