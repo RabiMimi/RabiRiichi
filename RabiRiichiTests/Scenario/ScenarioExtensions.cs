@@ -6,6 +6,10 @@ using System.Linq;
 
 namespace RabiRiichiTests.Scenario {
     public static class Extensions {
+        public static Scenario ForceHaitei(this Scenario scenario) {
+            return scenario.WithWall(wall => wall.remaining.RemoveRange(0, wall.NumRemaining - 1));
+        }
+
         public static AgariInfo AssertTsumo(this AgariInfoList infos, int playerId) {
             Assert.AreEqual(playerId, infos.fromPlayer, $"expected tsumo from player {playerId}, got {infos.fromPlayer}");
             Assert.AreEqual(1, infos.Count, "More than one tsumo");

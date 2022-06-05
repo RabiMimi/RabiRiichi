@@ -466,10 +466,11 @@ namespace RabiRiichiTests.Scenario.Tests {
         [TestMethod]
         public async Task SuccessSufficientTiles() {
             var scenario = WithPolicy(RiichiPolicy.SufficientTiles, -1000)
-                .Start(1)
+                .Build(1)
                 .WithWall(wall => {
                     wall.remaining.RemoveRange(0, wall.remaining.Count - 5); // P1 will draw 1 tile
-                });
+                })
+                .Start();
 
             (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
                 playerInquiry
@@ -482,10 +483,11 @@ namespace RabiRiichiTests.Scenario.Tests {
         [TestMethod]
         public async Task FailInsufficientTiles() {
             var scenario = WithPolicy(RiichiPolicy.SufficientTiles, -1000)
-                .Start(1)
+                .Build(1)
                 .WithWall(wall => {
                     wall.remaining.RemoveRange(0, wall.remaining.Count - 4); // P1 will draw 1 tile
-                });
+                })
+                .Start();
 
             (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
                 playerInquiry

@@ -3,7 +3,6 @@ using RabiRiichi.Action;
 using RabiRiichi.Event.InGame;
 using RabiRiichi.Pattern;
 using RabiRiichiTests.Helper;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace RabiRiichiTests.Scenario.Tests {

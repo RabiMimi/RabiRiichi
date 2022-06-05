@@ -14,6 +14,7 @@ namespace RabiRiichiTests.Scenario {
     public class Scenario {
         private Task runToEnd;
         private readonly Game game;
+        private readonly int startPlayerId;
         private readonly ScenarioActionCenter actionCenter;
         private readonly List<Predicate<EventBase>> eventMatchers = new();
         private readonly List<Predicate<EventBase>> noEventMatchers = new();
@@ -44,8 +45,9 @@ namespace RabiRiichiTests.Scenario {
             Assert.IsTrue(game.wall.rinshan.Count <= Wall.NUM_RINSHAN, $"Wall rinshan count is {game.wall.rinshan.Count} > {Wall.NUM_RINSHAN}");
         }
 
-        public Scenario(Game game) {
+        public Scenario(Game game, int startPlayerId) {
             this.game = game;
+            this.startPlayerId = startPlayerId;
             actionCenter = (ScenarioActionCenter)game.config.actionCenter;
         }
 
@@ -74,20 +76,20 @@ namespace RabiRiichiTests.Scenario {
         }
 
         /// <summary> 以玩家playerId的回合开始游戏 </summary>
-        public Scenario Start(int playerId) {
+        public Scenario Start() {
             // Clear events, so that the initial event will not be processed
             game.mainQueue.ClearEvents();
             game.eventBus.Subscribe<EventBase>((ev) => {
                 events.Add(ev);
                 return Task.CompletedTask;
             }, EventPriority.Broadcast);
-            if (game.IsFirstJun && game.Dealer.id == playerId) {
+            if (game.IsFirstJun && game.Dealer.id == startPlayerId) {
                 // First jun of dealer
-                game.mainQueue.Queue(new IncreaseJunEvent(game.initialEvent, playerId));
-                game.mainQueue.Queue(new DealerFirstTurnEvent(game.initialEvent, playerId, game.Dealer.hand.freeTiles[^1]));
+                game.mainQueue.Queue(new IncreaseJunEvent(game.initialEvent, startPlayerId));
+                game.mainQueue.Queue(new DealerFirstTurnEvent(game.initialEvent, startPlayerId, game.Dealer.hand.freeTiles[^1]));
             } else {
                 // Otherwise
-                game.mainQueue.Queue(new NextPlayerEvent(game.initialEvent, game.PrevPlayerId(playerId)));
+                game.mainQueue.Queue(new NextPlayerEvent(game.initialEvent, game.PrevPlayerId(startPlayerId)));
             }
             runToEnd = game.Start().ContinueWith((e) => {
                 if (e.IsFaulted) {
@@ -789,12 +791,12 @@ namespace RabiRiichiTests.Scenario {
                     isFirstJun && player.IsDealer && player.id == startPlayerId ? Game.HAND_SIZE + 1 : Game.HAND_SIZE);
             }
             wallBuilder.Setup(game.wall);
-            return new Scenario(game);
+            return new Scenario(game, startPlayerId);
         }
 
         /// <summary> 根据设置的状态创建游戏实例，并以playerId的回合开始游戏 </summary>
         public Scenario Start(int startPlayerId) {
-            return Build(startPlayerId).Start(startPlayerId);
+            return Build(startPlayerId).Start();
         }
     }
 }
