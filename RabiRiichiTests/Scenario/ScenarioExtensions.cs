@@ -48,15 +48,15 @@ namespace RabiRiichiTests.Scenario {
             Assert.IsNotNull(yaku, $"yaku {typeof(T).Name} not found");
             if (han != null) {
                 Assert.IsTrue(yaku.Type == ScoringType.Han || yaku.Type == ScoringType.BonusHan);
-                Assert.AreEqual(han.Value, yaku.Val);
+                Assert.AreEqual(han.Value, yaku.Val, $"Yaku: {typeof(T).Name}");
             }
             if (fu != null) {
                 Assert.AreEqual(ScoringType.Fu, yaku.Type);
-                Assert.AreEqual(fu.Value, yaku.Val);
+                Assert.AreEqual(fu.Value, yaku.Val, $"Yaku: {typeof(T).Name}");
             }
             if (yakuman != null) {
                 Assert.AreEqual(ScoringType.Yakuman, yaku.Type);
-                Assert.AreEqual(yakuman.Value, yaku.Val);
+                Assert.AreEqual(yakuman.Value, yaku.Val, $"Yaku: {typeof(T).Name}");
             }
             return info;
         }
