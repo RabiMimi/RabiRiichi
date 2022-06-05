@@ -22,25 +22,33 @@ namespace RabiRiichi.Pattern {
             paoPlayer = fuuro.discardInfo.from;
             return true;
         }
-        public static bool ApplyPao(int toPlayer, int paoPlayer, int paoPoints, ScoreTransferList scoreTransfers) {
+        public static bool ApplyPao(Player toPlayer, int paoPlayer, int paoPoints, ScoreTransferList scoreTransfers) {
             bool ret = false;
-            var transaction = scoreTransfers.Find(st => st.to == toPlayer &&
-                (st.reason == ScoreTransferReason.Ron || st.reason == ScoreTransferReason.Tsumo));
-            if (transaction != null && paoPoints > 0) {
-                if (transaction.reason == ScoreTransferReason.Tsumo) {
-                    transaction.points -= paoPoints;
-                    scoreTransfers.Add(new ScoreTransfer(paoPlayer, toPlayer, paoPoints, ScoreTransferReason.Pao));
-                    ret = true;
-                } else if (transaction.from != paoPlayer) {
+            // Find all transactions related to toPlayer
+            var transaction = scoreTransfers.Find(
+                st => st.to == toPlayer.id && st.reason == ScoreTransferReason.Ron);
+            if (transaction != null) {
+                if (transaction.from != paoPlayer) {
                     int halfPaoPoints = (paoPoints >> 1).CeilTo100();
                     transaction.points -= halfPaoPoints;
-                    scoreTransfers.Add(new ScoreTransfer(paoPlayer, toPlayer, halfPaoPoints, ScoreTransferReason.Pao));
+                    scoreTransfers.Add(new ScoreTransfer(paoPlayer, toPlayer.id, halfPaoPoints, ScoreTransferReason.Pao));
                     ret = true;
                 }
+            } else {
+                int paidPoints = 0;
+                foreach (var t in scoreTransfers
+                    .Where(st => st.to == toPlayer.id
+                        && st.from != paoPlayer
+                        && st.reason == ScoreTransferReason.Tsumo)) {
+                    int delta = toPlayer.game.Dealer.id == t.from ? paoPoints / 2 : paoPoints / 4;
+                    t.points -= delta;
+                    paidPoints += delta;
+                }
+                scoreTransfers.Add(new ScoreTransfer(paoPlayer, toPlayer.id, paidPoints, ScoreTransferReason.Pao));
             }
             // Pao player should pay honba points
             foreach (var transfer in scoreTransfers
-                .Where(st => st.to == toPlayer
+                .Where(st => st.to == toPlayer.id
                     && st.from != paoPlayer
                     && st.reason == ScoreTransferReason.Honba)) {
                 transfer.from = paoPlayer;
@@ -132,7 +140,7 @@ namespace RabiRiichi.Pattern {
         /// <returns>是否影响分数计算</returns>
         public virtual bool OnScoreTransfer(Player player, ScoreTransferList scoreTransfers) => false;
         protected virtual bool ApplyPao(Player toPlayer, int paoPlayer, int ronPaoPoints, ScoreTransferList scoreTransfers)
-            => PaoUtil.ApplyPao(toPlayer.id, paoPlayer,
+            => PaoUtil.ApplyPao(toPlayer, paoPlayer,
                 toPlayer.IsDealer ? (ronPaoPoints * 3 / 2).CeilTo100() : ronPaoPoints,
                 scoreTransfers);
     }
