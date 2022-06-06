@@ -23,6 +23,24 @@ namespace RabiRiichiTests.Helper {
             return options.Select(option => ((ChooseTileActionOption)option).tile.tile);
         }
 
+        public static IEnumerable<IEnumerable<Tile>> ToTileLists(this IEnumerable<ActionOption> options) {
+            return options.Select(
+                option => ((ChooseTilesActionOption)option).tiles
+                    .Select(tile => tile.tile));
+        }
+
+        public static IEnumerable<string> ToStrings(this IEnumerable<ActionOption> options) {
+            return options.ToTileLists().ToStrings();
+        }
+
+        public static IEnumerable<string> ToStrings(this IEnumerable<IEnumerable<Tile>> tileLists) {
+            return tileLists.Select(tiles => new Tiles(tiles).ToString());
+        }
+
+        public static IEnumerable<string> ToStrings(this IEnumerable<IEnumerable<GameTile>> tileLists) {
+            return tileLists.Select(tiles => tiles.Select(tile => tile.tile)).ToStrings();
+        }
+
         public static void AssertEquals(this Tile tile, string str) {
             Assert.AreEqual(tile.ToString(), str);
         }

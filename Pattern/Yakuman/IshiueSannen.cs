@@ -6,6 +6,8 @@ namespace RabiRiichi.Pattern {
         public IshiueSannen(AllBasePatterns allBasePatterns, DoubleRiichi doubleRiichi, HaiteiRaoyue haiteiRaoyue, HouteiRaoyui houteiRaoyui) {
             BaseOn(allBasePatterns);
             DependOn(doubleRiichi);
+            /// Cannot depend on these patterns because RinshanKaihou can be
+            /// combined with IshiueSannen but not HaiteiRaoyue.
             After(haiteiRaoyue, houteiRaoyui);
         }
 

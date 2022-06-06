@@ -44,8 +44,12 @@ namespace System.Linq {
             return ret;
         }
 
+        public static bool SequenceEqualAfterSort<TSource, TKey>(this IEnumerable<TSource> source, IEnumerable<TSource> other, Func<TSource, TKey> orderBy) {
+            return source.OrderBy(orderBy).SequenceEqual(other.OrderBy(orderBy));
+        }
+
         public static bool SequenceEqualAfterSort<TSource>(this IEnumerable<TSource> source, IEnumerable<TSource> other) {
-            return source.OrderBy(x => x).SequenceEqual(other.OrderBy(x => x));
+            return source.SequenceEqualAfterSort(other, x => x);
         }
 
         #region Subset
