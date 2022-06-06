@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using RabiRiichi.Action;
 using RabiRiichi.Communication;
 using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
@@ -18,8 +19,16 @@ namespace RabiRiichiTests.Helper {
             actionCenter = new JsonStringActionCenter(null)
         });
 
+        public static IEnumerable<Tile> ToTiles(this IEnumerable<ActionOption> options) {
+            return options.Select(option => ((ChooseTileActionOption)option).tile.tile);
+        }
+
         public static void AssertEquals(this Tile tile, string str) {
             Assert.AreEqual(tile.ToString(), str);
+        }
+
+        public static void AssertEquals(this IEnumerable<Tile> tiles, string str) {
+            new Tiles(tiles).AssertEquals(str);
         }
 
         public static void AssertEquals(this Tiles tiles, string str) {
