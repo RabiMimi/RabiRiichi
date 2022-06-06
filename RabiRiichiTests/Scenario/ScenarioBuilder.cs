@@ -114,6 +114,13 @@ namespace RabiRiichiTests.Scenario {
             return this;
         }
 
+        /// <summary> 测试事件发生（若存在多个，仅判定首个） </summary>
+        public Scenario AssertEvent<T>(Action<T> action) where T : EventBase
+            => AssertEvent<T>(ev => {
+                action(ev);
+                return true;
+            });
+
         /// <summary> 测试没有对应的事件发生 </summary>
         public Scenario AssertNoEvent<T>(Predicate<T> predicate = null) where T : EventBase {
             noEventMatchers.Add((ev) => {
@@ -128,6 +135,13 @@ namespace RabiRiichiTests.Scenario {
         /// <summary> 测试流局事件发生 </summary>
         public Scenario AssertRyuukyoku<T>(Predicate<T> predicate = null) where T : RyuukyokuEvent
             => AssertEvent(predicate);
+
+        /// <summary> 测试流局事件发生（若存在多个，仅判定首个） </summary>
+        public Scenario AssertRyuukyoku<T>(Action<T> action) where T : RyuukyokuEvent
+            => AssertRyuukyoku<T>(ev => {
+                action(ev);
+                return true;
+            });
 
         /// <summary> 测试没有流局事件发生 </summary>
         public Scenario AssertNoRyuukyoku<T>(Predicate<T> predicate = null) where T : RyuukyokuEvent
@@ -410,7 +424,6 @@ namespace RabiRiichiTests.Scenario {
             private bool? wRiichi;
             public Tiles freeTiles = new();
             public Tiles discarded = new();
-            public Tiles blockedDiscarded = new();
             public int discardedNum = 5;
             public List<MenInfo> called = new();
             public Player player;
@@ -470,17 +483,14 @@ namespace RabiRiichiTests.Scenario {
 
             /// <summary>
             /// 设置舍牌，默认为5张
-            /// 若指定的舍牌数量不够则用别的牌填充
+            /// 指定的舍牌可以少于舍牌数量
             /// </summary>
             /// <param name="count">舍牌数量</param>
             /// <param name="discarded">舍牌</param>
             /// <param name="reservedDiscarded">自动填充时，禁止出现在舍牌里的牌</param>
-            public PlayerHandBuilder SetDiscarded(int count, Tiles discarded, Tiles blocked) {
+            public PlayerHandBuilder SetDiscarded(int count, Tiles discarded) {
                 if (discarded != null) {
                     this.discarded = discarded;
-                }
-                if (blocked != null) {
-                    this.blockedDiscarded = blocked;
                 }
                 this.discardedNum = count;
                 return this;
@@ -491,12 +501,11 @@ namespace RabiRiichiTests.Scenario {
             /// 若指定的舍牌数量不够则用别的牌填充
             /// </summary>
             /// <param name="count">舍牌数量</param>
-            /// <param name="discarded">舍牌</param>
+            /// <param name="discarded">舍牌，若不设置，则为空</param>
             /// <param name="reservedDiscarded">自动填充时，禁止出现在舍牌里的牌</param>
             public PlayerHandBuilder SetDiscarded(int count, string discarded = null, string blocked = null)
                 => SetDiscarded(count,
-                    discarded == null ? null : new Tiles(discarded),
-                    blocked == null ? null : new Tiles(blocked));
+                    discarded == null ? null : new Tiles(discarded));
 
             /// <summary> 设置手牌 </summary>
             public PlayerHandBuilder SetFreeTiles(Tiles freeTiles) {
@@ -535,9 +544,6 @@ namespace RabiRiichiTests.Scenario {
                 }
                 if (discarded.Count + (riichiTile.HasValue ? 1 : 0) > discardedNum) {
                     throw new Exception($"P{player.id}: Too many discarded tiles");
-                }
-                if (discarded.Any(x => blockedDiscarded.Contains(x))) {
-                    throw new Exception($"P{player.id}: Cannot discard reserved tile");
                 }
 
                 // Set data
@@ -736,7 +742,7 @@ namespace RabiRiichiTests.Scenario {
                     var hand = playerBuilder.player.hand;
                     int countLeft = playerBuilder.handSize - playerBuilder.TotalTilesInHand;
                     for (int i = 0; i < countLeft; i++) {
-                        hand.Add(DrawNext(playerBuilder.blockedDiscarded.Concat(reserved)));
+                        hand.Add(DrawNext(reserved));
                     }
                 }
 
