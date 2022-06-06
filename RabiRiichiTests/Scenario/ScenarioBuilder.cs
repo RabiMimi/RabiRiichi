@@ -354,9 +354,10 @@ namespace RabiRiichiTests.Scenario {
             /// <summary> 立直棒数量 </summary>
             public int riichiStick = 0;
 
-            public GameStateBuilder SetRound(Wind bakaze, Wind dealer, int honba = 0) {
+            /// <summary> 设置场风，局数，和本场数。默认为东1局0本场。 </summary>
+            public GameStateBuilder SetRound(Wind bakaze, int dealer, int honba = 0) {
                 this.round = (int)bakaze;
-                this.dealer = (int)dealer;
+                this.dealer = dealer;
                 this.honba = honba;
                 return this;
             }
@@ -380,13 +381,6 @@ namespace RabiRiichiTests.Scenario {
             action(gameStateBuilder);
             return this;
         }
-
-        /// <summary> 设置场风，局数，和本场数。默认为东1局0本场。 </summary>
-        public ScenarioBuilder SetRound(Wind bakaze, Wind dealer, int honba = 0) {
-            gameStateBuilder.SetRound(bakaze, dealer, honba);
-            return this;
-        }
-
         #endregion
 
         #region Player

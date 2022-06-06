@@ -52,6 +52,10 @@ namespace System.Linq {
             return source.SequenceEqualAfterSort(other, x => x);
         }
 
+        public static bool SequenceEqualAfterSort<TSource>(this IEnumerable<TSource> source, params TSource[] other) {
+            return source.SequenceEqualAfterSort(other, x => x);
+        }
+
         #region Subset
 
         private static List<int[]>[] subsetIndices;
