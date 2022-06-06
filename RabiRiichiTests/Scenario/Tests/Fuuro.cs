@@ -29,7 +29,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                 .AssertSkip()
                 .ChooseTiles<ChiiAction>("789m", action => {
                     Assert.AreEqual(1, action.options.Count);
-                    return true;
                 })
                 .AssertNoMoreActions()
             ).AssertAutoFinish();
@@ -40,7 +39,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                 playerInquiry
                     .ChooseTile<PlayTileAction>("3p", action => {
                         action.options.ToTiles().AssertEquals("11122357999p");
-                        return true;
                     })
                     .AssertNoMoreActions();
             }).AssertAutoFinish();
@@ -73,7 +71,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                     action.options.ToStrings().SequenceEqualAfterSort(
                         new string[] { "456m", "4r56m", "567m", "r567m", "678m" }
                     );
-                    return true;
                 })
                 .AssertNoMoreActions()
             ).AssertAutoFinish();
@@ -84,7 +81,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                 playerInquiry
                     .AssertAction<PlayTileAction>(action => {
                         action.options.ToTiles().AssertEquals(expectedDiscardTiles);
-                        return true;
                     })
                     .AssertNoMoreActions();
             });
@@ -161,7 +157,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                 .AssertSkip()
                 .ChooseTiles<PonAction>("999m", action => {
                     Assert.AreEqual(1, action.options.Count);
-                    return true;
                 })
                 .AssertNoMoreActions()
             ).AssertAutoFinish();
@@ -172,7 +167,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                 playerInquiry
                     .ChooseTile<PlayTileAction>("3p", action => {
                         action.options.ToTiles().AssertEquals("11122357999p");
-                        return true;
                     })
                     .AssertNoMoreActions();
             }).AssertAutoFinish();
@@ -208,7 +202,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                     action.options.ToStrings().SequenceEqualAfterSort(
                         new string[] { "555m", "55r5m" }
                     );
-                    return true;
                 })
                 .AssertNoMoreActions()
             ).AssertAutoFinish();
@@ -219,7 +212,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                 playerInquiry
                     .AssertAction<PlayTileAction>(action => {
                         action.options.ToTiles().AssertEquals(expectedDiscardTiles);
-                        return true;
                     })
                     .AssertNoMoreActions();
             });

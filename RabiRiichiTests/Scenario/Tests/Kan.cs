@@ -35,7 +35,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertAction<PonAction>()
                     .ChooseTiles<KanAction>("2222s", action => {
                         Assert.AreEqual(1, action.options.Count);
-                        return true;
                     })
                     .AssertNoMoreActions();
             }).AssertAutoFinish();
@@ -50,7 +49,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertAction<PlayTileAction>()
                     .ChooseTiles<KanAction>("1111s", action => {
                         Assert.AreEqual(2, action.options.Count);
-                        return true;
                     })
                     .AssertNoMoreActions();
             }).AssertAutoFinish();
@@ -69,7 +67,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertAction<PlayTileAction>()
                     .ChooseTiles<KanAction>("3333s", action => {
                         Assert.AreEqual(1, action.options.Count);
-                        return true;
                     })
                     .AssertNoMoreActions();
             }).AssertAutoFinish();
@@ -86,7 +83,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertAction<PlayTileAction>()
                     .ChooseTiles<KanAction>("1111m", action => {
                         Assert.AreEqual(1, action.options.Count);
-                        return true;
                     })
                     .AssertNoMoreActions();
             }).AssertAutoFinish();
@@ -156,7 +152,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertAction<PonAction>()
                     .ChooseTiles<KanAction>("3333s", action => {
                         Assert.AreEqual(1, action.options.Count);
-                        return true;
                     })
                     .AssertNoMoreActions();
             }).AssertAutoFinish();
@@ -174,7 +169,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                     // If multiple kans in hand, have the option to choose which one
                     .ChooseTiles<KanAction>("1111s", action => {
                         Assert.AreEqual(2, action.options.Count);
-                        return true;
                     })
                     .AssertNoMoreActions();
             }).AssertAutoFinish();
@@ -198,7 +192,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertAction<PlayTileAction>()
                     .ChooseTiles<KanAction>("2222s", action => {
                         Assert.AreEqual(1, action.options.Count);
-                        return true;
                     })
                     .AssertNoMoreActions();
             }).AssertAutoFinish();
@@ -243,7 +236,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertSkip()
                     .ChooseTiles<PonAction>("222s", action => {
                         Assert.AreEqual(1, action.options.Count);
-                        return true;
                     })
                     .AssertNoMoreActions();
             }).AssertAutoFinish();
@@ -262,7 +254,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertSkip()
                     .ChooseTiles<PonAction>("333s", action => {
                         Assert.AreEqual(1, action.options.Count);
-                        return true;
                     })
                     .AssertNoMoreActions();
             }).AssertAutoFinish();
@@ -277,7 +268,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertAction<PlayTileAction>()
                     .ChooseTiles<KanAction>("3333s", action => {
                         Assert.AreEqual(2, action.options.Count);
-                        return true;
                     })
                     .AssertNoMoreActions();
             }).AssertAutoFinish();
@@ -292,7 +282,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertAction<PlayTileAction>()
                     .ChooseTiles<KanAction>("1111s", action => {
                         Assert.AreEqual(2, action.options.Count);
-                        return true;
                     })
                     .AssertNoMoreActions();
             }).AssertAutoFinish();
@@ -311,7 +300,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertAction<PlayTileAction>()
                     .ChooseTiles<KanAction>("2222s", action => {
                         Assert.AreEqual(1, action.options.Count);
-                        return true;
                     })
                     .AssertNoMoreActions();
             }).AssertAutoFinish();
@@ -339,7 +327,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertAction<PonAction>()
                     .ChooseTiles<KanAction>("1111p", action => {
                         Assert.AreEqual(1, action.options.Count);
-                        return true;
                     })
                     .AssertNoMoreActions();
             }).AssertAutoFinish();
@@ -441,7 +428,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertSkip()
                     .ChooseTiles<ChiiAction>("123m", action => {
                         Assert.AreEqual(1, action.options.Count);
-                        return true;
                     })
                     .AssertNoMoreActions();
             }).AssertAutoFinish();
@@ -469,7 +455,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertSkip()
                     .ChooseTiles<PonAction>("222s", action => {
                         Assert.AreEqual(1, action.options.Count);
-                        return true;
                     })
                     .AssertNoMoreActions();
             }).AssertAutoFinish();
@@ -499,7 +484,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertAction<PlayTileAction>()
                     .ChooseTiles<KanAction>("1111m", action => {
                         Assert.AreEqual(1, action.options.Count);
-                        return true;
                     });
             }).AssertAutoFinish();
 
@@ -538,7 +522,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertAction<PlayTileAction>()
                     .ChooseTiles<KanAction>("1111m", action => {
                         Assert.AreEqual(1, action.options.Count);
-                        return true;
                     });
             }).AssertAutoFinish();
 
@@ -578,7 +561,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertAction<PlayTileAction>()
                     .ChooseTiles<KanAction>("1111m", action => {
                         Assert.AreEqual(1, action.options.Count);
-                        return true;
                     });
             }).AssertAutoFinish();
 
@@ -608,7 +590,6 @@ namespace RabiRiichiTests.Scenario.Tests {
             (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
                 playerInquiry.ChooseTiles<KanAction>("1111m", action => {
                     Assert.AreEqual(1, action.options.Count);
-                    return true;
                 });
             }).ForPlayer(0, playerInquiry => {
                 playerInquiry.ApplySkip();
@@ -644,7 +625,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertAction<PonAction>()
                     .ChooseTiles<KanAction>("1111s", action => {
                         Assert.AreEqual(1, action.options.Count);
-                        return true;
                     })
                     .AssertNoMoreActions();
             }).AssertAutoFinish();
@@ -677,7 +657,6 @@ namespace RabiRiichiTests.Scenario.Tests {
             (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
                 playerInquiry.ChooseTiles<KanAction>("1111m", action => {
                     Assert.AreEqual(1, action.options.Count);
-                    return true;
                 });
             }).AssertAutoFinish();
 

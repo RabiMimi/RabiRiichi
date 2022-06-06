@@ -20,10 +20,16 @@ namespace RabiRiichiTests.Scenario {
                 this.playerId = playerId;
             }
 
-            public ScenarioPlayerInquiryMatcher AssertAction<T>(Predicate<T> matcher = null) where T : IPlayerAction {
+            public ScenarioPlayerInquiryMatcher AssertAction<T>(Predicate<T> matcher) where T : IPlayerAction {
                 parent.AssertAction(playerId, matcher);
                 return this;
             }
+
+            public ScenarioPlayerInquiryMatcher AssertAction<T>(Action<T> action = null) where T : IPlayerAction
+                => AssertAction<T>(x => {
+                    action?.Invoke(x);
+                    return true;
+                });
 
             public ScenarioPlayerInquiryMatcher AssertNoAction<T>(Predicate<T> matcher = null) where T : IPlayerAction {
                 parent.AssertNoAction(playerId, matcher);
@@ -40,18 +46,30 @@ namespace RabiRiichiTests.Scenario {
                 return this;
             }
 
-            public ScenarioPlayerInquiryMatcher ApplyAction<T, R>(R response, Predicate<T> matcher = null) where T : PlayerAction<R> {
+            public ScenarioPlayerInquiryMatcher ApplyAction<T, R>(R response, Predicate<T> matcher) where T : PlayerAction<R> {
                 parent.ApplyAction(playerId, response, matcher);
                 return this;
             }
 
-            public ScenarioPlayerInquiryMatcher ApplyAction<T>(Predicate<T> matcher = null) where T : PlayerAction<bool>
+            public ScenarioPlayerInquiryMatcher ApplyAction<T, R>(R response, Action<T> action = null) where T : PlayerAction<R>
+                => ApplyAction<T, R>(response, x => {
+                    action?.Invoke(x);
+                    return true;
+                });
+
+            public ScenarioPlayerInquiryMatcher ApplyAction<T>(Predicate<T> matcher) where T : PlayerAction<bool>
                 => ApplyAction(true, matcher);
 
-            public ScenarioPlayerInquiryMatcher ApplyAction<T>(int response, Predicate<T> matcher = null) where T : PlayerAction<int>
+            public ScenarioPlayerInquiryMatcher ApplyAction<T>(Action<T> action = null) where T : PlayerAction<bool>
+                => ApplyAction(true, action);
+
+            public ScenarioPlayerInquiryMatcher ApplyAction<T>(int response, Predicate<T> matcher) where T : PlayerAction<int>
                 => ApplyAction<T, int>(response, matcher);
 
-            public ScenarioPlayerInquiryMatcher ChooseTile<T>(string response, Predicate<T> matcher = null) where T : ChooseTileAction {
+            public ScenarioPlayerInquiryMatcher ApplyAction<T>(int response, Action<T> action = null) where T : PlayerAction<int>
+                => ApplyAction<T, int>(response, action);
+
+            public ScenarioPlayerInquiryMatcher ChooseTile<T>(string response, Predicate<T> matcher) where T : ChooseTileAction {
                 var tile = new Tile(response);
                 var action = parent.FindAction(playerId, matcher);
                 Assert.IsNotNull(action, $"action {typeof(T).Name} not found");
@@ -60,7 +78,13 @@ namespace RabiRiichiTests.Scenario {
                 return ApplyAction(index, matcher);
             }
 
-            public ScenarioPlayerInquiryMatcher ChooseTiles<T>(string response, Predicate<T> matcher = null) where T : ChooseTilesAction {
+            public ScenarioPlayerInquiryMatcher ChooseTile<T>(string response, Action<T> action = null) where T : ChooseTileAction
+                => ChooseTile<T>(response, x => {
+                    action?.Invoke(x);
+                    return true;
+                });
+
+            public ScenarioPlayerInquiryMatcher ChooseTiles<T>(string response, Predicate<T> matcher) where T : ChooseTilesAction {
                 var tiles = new Tiles(response);
                 var action = parent.FindAction(playerId, matcher);
                 Assert.IsNotNull(action, $"action {typeof(T).Name} not found");
@@ -71,6 +95,12 @@ namespace RabiRiichiTests.Scenario {
                 Assert.IsTrue(index >= 0, $"{tiles} not found in {action.options.Select(x => (x as ChooseTilesActionOption).tiles)}");
                 return ApplyAction(index, matcher);
             }
+
+            public ScenarioPlayerInquiryMatcher ChooseTiles<T>(string response, Action<T> action = null) where T : ChooseTilesAction
+                => ChooseTiles<T>(response, x => {
+                    action?.Invoke(x);
+                    return true;
+                });
 
             public ScenarioPlayerInquiryMatcher AssertNoMoreActions() {
                 parent.AssertNoMoreActions(playerId);

@@ -83,7 +83,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                             .Select(o => o.tile)
                             .ToTiles()
                             .AssertEquals("6p");
-                        return true;
                     })
                     .ApplyAction<TsumoAction>()
                     .AssertNoMoreActions();
@@ -192,7 +191,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                             .Select(o => o.tile)
                             .ToTiles()
                             .AssertEquals("3p");
-                        return true;
                     })
                     .ApplyAction<TsumoAction>()
                     .AssertNoMoreActions();
