@@ -286,5 +286,39 @@ namespace RabiRiichiTests.Scenario.Tests {
             }).Resolve();
         }
         #endregion
+
+        #region ShiiaruRaotai
+        [TestMethod]
+        public async Task SuccessShiiaruRaotai() {
+            var scenario = new ScenarioBuilder()
+                .WithPlayer(2, playerBuilder => playerBuilder
+                    .SetFreeTiles("9m")
+                    .AddCalled("123m", 0, 1)
+                    .AddCalled("555s", 1, 3)
+                    .AddCalled("456p", 1, 1)
+                    .AddCalled("2222p"))
+                .WithWall(wall => wall.Reserve("9m"))
+                .WithConfig(config => config.Setup(setup => {
+                    setup.AddExtraStdPattern<ShiiaruRaotai>();
+                }))
+                .Start(3);
+
+            (await scenario.WaitInquiry()).Finish();
+
+            (await scenario.WaitInquiry()).ForPlayer(2, playerInquiry => playerInquiry
+                .AssertSkip()
+                .ApplyAction<RonAction>()
+                .AssertNoMoreActions()
+            ).AssertAutoFinish();
+
+            await scenario.AssertEvent<AgariEvent>(ev => {
+                ev.agariInfos
+                    .AssertRon(3, 2)
+                    .AssertScore(han: 1)
+                    .AssertYaku<ShiiaruRaotai>();
+                return true;
+            }).Resolve();
+        }
+        #endregion
     }
 }
