@@ -332,11 +332,9 @@ namespace RabiRiichiTests.Scenario.Tests {
         [TestMethod]
         public async Task SuccessTsumoOnRiichiFuriten() {
             var scenario = new ScenarioBuilder()
-                .WithPlayer(1, playerBuilder => {
-                    playerBuilder
-                        .SetFreeTiles("12366s234m34566p")
-                        .SetDiscarded(5, null, "6s6p");
-                })
+                .WithPlayer(1, playerBuilder => playerBuilder
+                    .SetFreeTiles("12366s234m34566p")
+                )
                 .WithWall(wall => wall.Reserve("76s6p56s"))
                 .Start(1);
 

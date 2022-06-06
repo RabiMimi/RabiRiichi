@@ -7,6 +7,7 @@ using RabiRiichi.Event.InGame;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Threading.Tasks;
 
 
@@ -491,7 +492,7 @@ namespace RabiRiichiTests.Scenario {
             /// <param name="count">舍牌数量</param>
             /// <param name="discarded">舍牌，若不设置，则为空</param>
             /// <param name="reservedDiscarded">自动填充时，禁止出现在舍牌里的牌</param>
-            public PlayerHandBuilder SetDiscarded(int count, string discarded = null, string blocked = null)
+            public PlayerHandBuilder SetDiscarded(int count, string discarded = null)
                 => SetDiscarded(count,
                     discarded == null ? null : new Tiles(discarded));
 
@@ -696,6 +697,12 @@ namespace RabiRiichiTests.Scenario {
                     // Draw called tiles
                     foreach (var tiles in playerBuilder.called) {
                         var gameTiles = tiles.tiles.Select(Draw).ToList();
+                        var fuuro = tiles.fuuroIndex >= 0 ? gameTiles[tiles.fuuroIndex] : null;
+                        if (tiles.fromPlayer >= 0 && fuuro != null) {
+                            var otherHand = playerBuilders[tiles.fromPlayer].player.hand;
+                            otherHand.Add(fuuro);
+                            otherHand.Play(fuuro, DiscardReason.Draw);
+                        }
                         var menLike = tiles.Create(gameTiles, players);
                         if (menLike is Shun shun) {
                             hand.AddChii(shun);
@@ -709,7 +716,9 @@ namespace RabiRiichiTests.Scenario {
                     }
                     // Draw discarded tiles
                     foreach (var tile in playerBuilder.discarded) {
-                        hand.Play(Draw(tile), DiscardReason.Draw);
+                        var gameTile = Draw(tile);
+                        hand.Add(gameTile);
+                        hand.Play(gameTile, DiscardReason.Draw);
                     }
                     // Draw riichi tile
                     if (playerBuilder.riichiTile.HasValue) {
