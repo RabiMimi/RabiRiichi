@@ -86,12 +86,10 @@ namespace RabiRiichiTests.Scenario.Tests {
                 .AssertNoMoreActions()
             ).AssertAutoFinish();
 
-            await scenario.AssertEvent<AgariEvent>(ev => {
-                ev.agariInfos.AssertTsumo(1)
-                    .AssertScore(han: 1)
-                    .AssertYaku<HaiteiRaoyue>();
-                return true;
-            }).Resolve();
+            await scenario.AssertEvent<AgariEvent>(ev => ev.agariInfos.AssertTsumo(1)
+                .AssertScore(han: 1)
+                .AssertYaku<HaiteiRaoyue>()
+            ).Resolve();
         }
 
         [TestMethod]
@@ -115,12 +113,11 @@ namespace RabiRiichiTests.Scenario.Tests {
                 .ApplyAction<TsumoAction>()
             ).AssertAutoFinish();
 
-            await scenario.AssertEvent<AgariEvent>(ev => {
-                ev.agariInfos.AssertTsumo(1)
-                    .AssertScore(han: 1)
-                    .AssertYaku<RinshanKaihou>();
-                return true;
-            }).Resolve();
+            await scenario.AssertEvent<AgariEvent>(ev => ev.agariInfos
+                .AssertTsumo(1)
+                .AssertScore(han: 1)
+                .AssertYaku<RinshanKaihou>()
+            ).Resolve();
         }
 
 
@@ -156,12 +153,11 @@ namespace RabiRiichiTests.Scenario.Tests {
                 .ApplyAction<TsumoAction>()
             ).AssertAutoFinish();
 
-            await scenario.AssertEvent<AgariEvent>(ev => {
-                ev.agariInfos.AssertTsumo(1)
-                    .AssertScore(yakuman: 1)
-                    .AssertYaku<IshiueSannen>();
-                return true;
-            }).Resolve();
+            await scenario.AssertEvent<AgariEvent>(ev => ev.agariInfos
+                .AssertTsumo(1)
+                .AssertScore(yakuman: 1)
+                .AssertYaku<IshiueSannen>()
+            ).Resolve();
         }
         #endregion
 
@@ -187,12 +183,11 @@ namespace RabiRiichiTests.Scenario.Tests {
                 .AssertNoMoreActions()
             ).AssertAutoFinish();
 
-            await scenario.AssertEvent<AgariEvent>(ev => {
-                ev.agariInfos.AssertRon(2, 1)
-                    .AssertScore(han: 1)
-                    .AssertYaku<HouteiRaoyui>();
-                return true;
-            }).Resolve();
+            await scenario.AssertEvent<AgariEvent>(ev => ev.agariInfos
+                .AssertRon(2, 1)
+                .AssertScore(han: 1)
+                .AssertYaku<HouteiRaoyui>()
+            ).Resolve();
         }
 
         [TestMethod]
@@ -222,12 +217,11 @@ namespace RabiRiichiTests.Scenario.Tests {
             (await scenario.WaitInquiry()).ForPlayer(2, playerInquiry => playerInquiry.ApplyAction<RonAction>()
             ).AssertAutoFinish();
 
-            await scenario.AssertEvent<AgariEvent>(ev => {
-                ev.agariInfos.AssertRon(1, 2)
-                    .AssertScore(han: 1)
-                    .AssertYaku<HouteiRaoyui>();
-                return true;
-            }).Resolve();
+            await scenario.AssertEvent<AgariEvent>(ev => ev.agariInfos
+                .AssertRon(1, 2)
+                .AssertScore(han: 1)
+                .AssertYaku<HouteiRaoyui>()
+            ).Resolve();
         }
         #endregion
     }

@@ -42,7 +42,6 @@ namespace RabiRiichiTests.Scenario.Tests {
 
             scenario.AssertEvent<AddKanEvent>((ev) => {
                 Assert.AreEqual(TileSource.DaiMinKan, ev.kanSource);
-                return true;
             }).AssertNoEvent<RevealDoraEvent>();
 
             // AnKan after DaiMinKan
@@ -58,13 +57,10 @@ namespace RabiRiichiTests.Scenario.Tests {
 
             scenario.AssertEvent<AddKanEvent>((ev) => {
                 Assert.AreEqual(TileSource.AnKan, ev.kanSource);
-                return true;
             }).AssertEvent<RevealDoraEvent>((ev) => {
                 Assert.AreEqual(0, ev.playerId);
-                return true;
             }).AssertEvent<RevealDoraEvent>((ev) => {
                 Assert.AreEqual(0, ev.playerId);
-                return true;
             });
 
             // AnKan after AnKan
@@ -80,10 +76,8 @@ namespace RabiRiichiTests.Scenario.Tests {
 
             scenario.AssertEvent<AddKanEvent>((ev) => {
                 Assert.AreEqual(TileSource.AnKan, ev.kanSource);
-                return true;
             }).AssertEvent<RevealDoraEvent>((ev) => {
                 Assert.AreEqual(0, ev.playerId);
-                return true;
             });
 
             // 4th AnKan
@@ -99,10 +93,8 @@ namespace RabiRiichiTests.Scenario.Tests {
 
             scenario.AssertEvent<AddKanEvent>((ev) => {
                 Assert.AreEqual(TileSource.AnKan, ev.kanSource);
-                return true;
             }).AssertEvent<RevealDoraEvent>((ev) => {
                 Assert.AreEqual(0, ev.playerId);
-                return true;
             });
 
             // Play a tile after 4 kans
@@ -140,7 +132,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertRon(1, 0)
                     .AssertScore(yakuman: 1)
                     .AssertYaku<Suukantsu>(yakuman: 1);
-                return true;
             }).Resolve();
         }
 
@@ -173,7 +164,6 @@ namespace RabiRiichiTests.Scenario.Tests {
             scenario
                 .AssertEvent<AddKanEvent>((ev) => {
                     Assert.AreEqual(TileSource.DaiMinKan, ev.kanSource);
-                    return true;
                 })
                 .AssertNoEvent<RevealDoraEvent>();
 
@@ -192,17 +182,14 @@ namespace RabiRiichiTests.Scenario.Tests {
             // Dora is revealed immediately after AnKan
             // Dora is revealed after playing a tile when DaiMinKan
             scenario
-                .AssertEvent<AddKanEvent>((ev) => {
+                .AssertEvent<AddKanEvent>(ev => {
                     Assert.AreEqual(TileSource.AnKan, ev.kanSource);
-                    return true;
                 })
                 .AssertEvent<RevealDoraEvent>(ev => {
                     Assert.AreEqual(0, ev.playerId);
-                    return true;
                 })
                 .AssertEvent<RevealDoraEvent>(ev => {
                     Assert.AreEqual(0, ev.playerId);
-                    return true;
                 });
 
             // Can AnKan after AnKan
@@ -219,11 +206,9 @@ namespace RabiRiichiTests.Scenario.Tests {
             await scenario
                 .AssertEvent<AddKanEvent>((ev) => {
                     Assert.AreEqual(TileSource.AnKan, ev.kanSource);
-                    return true;
                 })
                 .AssertEvent<RevealDoraEvent>(ev => {
                     Assert.AreEqual(0, ev.playerId);
-                    return true;
                 }).Resolve();
 
             // Check Kans exist
@@ -299,7 +284,6 @@ namespace RabiRiichiTests.Scenario.Tests {
 
             scenario.AssertEvent<AddKanEvent>((ev) => {
                 Assert.AreEqual(TileSource.KaKan, ev.kanSource);
-                return true;
             }).AssertNoEvent<RevealDoraEvent>();
 
             // AnKan 1s
@@ -315,13 +299,10 @@ namespace RabiRiichiTests.Scenario.Tests {
 
             scenario.AssertEvent<AddKanEvent>((ev) => {
                 Assert.AreEqual(TileSource.AnKan, ev.kanSource);
-                return true;
             }).AssertEvent<RevealDoraEvent>(ev => {
                 Assert.AreEqual(0, ev.playerId);
-                return true;
             }).AssertEvent<RevealDoraEvent>(ev => {
                 Assert.AreEqual(0, ev.playerId);
-                return true;
             });
 
             // KaKan 2s
@@ -337,7 +318,6 @@ namespace RabiRiichiTests.Scenario.Tests {
 
             scenario.AssertEvent<AddKanEvent>((ev) => {
                 Assert.AreEqual(TileSource.KaKan, ev.kanSource);
-                return true;
             }).AssertNoEvent<RevealDoraEvent>();
 
             // Play 1p
@@ -349,7 +329,6 @@ namespace RabiRiichiTests.Scenario.Tests {
 
             scenario.AssertEvent<RevealDoraEvent>(ev => {
                 Assert.AreEqual(0, ev.playerId);
-                return true;
             });
 
             // DaiMinKan 1p
@@ -367,7 +346,6 @@ namespace RabiRiichiTests.Scenario.Tests {
 
             scenario.AssertEvent<AddKanEvent>((ev) => {
                 Assert.AreEqual(TileSource.DaiMinKan, ev.kanSource);
-                return true;
             }).AssertNoEvent<RevealDoraEvent>();
 
             // Play 1z
@@ -379,7 +357,6 @@ namespace RabiRiichiTests.Scenario.Tests {
 
             scenario.AssertEvent<RevealDoraEvent>(ev => {
                 Assert.AreEqual(1, ev.playerId);
-                return true;
             });
 
             return scenario;
@@ -414,13 +391,10 @@ namespace RabiRiichiTests.Scenario.Tests {
 
             await scenario
                 .AssertNoRyuukyoku<SuukanSanra>()
-                .AssertEvent<AgariEvent>(ev => {
-                    ev.agariInfos
-                        .AssertRon(1, 0)
-                        .AssertScore(han: 2, fu: 80)
-                        .AssertYaku<Sankantsu>(han: 2);
-                    return true;
-                })
+                .AssertEvent<AgariEvent>(ev => ev.agariInfos
+                    .AssertRon(1, 0)
+                    .AssertScore(han: 2, fu: 80)
+                    .AssertYaku<Sankantsu>(han: 2))
                 .AssertEvent<NextGameEvent>()
                 .Resolve();
         }
@@ -531,7 +505,6 @@ namespace RabiRiichiTests.Scenario.Tests {
 
             scenario.AssertEvent<AddKanEvent>((ev) => {
                 Assert.AreEqual(TileSource.KaKan, ev.kanSource);
-                return true;
             }).AssertNoEvent<RevealDoraEvent>();
 
             (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
@@ -541,13 +514,11 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertNoMoreActions();
             }).AssertAutoFinish();
 
-            scenario.AssertEvent<AgariEvent>(ev => {
-                ev.agariInfos
-                    .AssertRon(1, 0)
-                    .AssertScore(han: 3)
-                    .AssertYaku<Chankan>(han: 1);
-                return true;
-            });
+            scenario.AssertEvent<AgariEvent>(ev => ev.agariInfos
+                .AssertRon(1, 0)
+                .AssertScore(han: 3)
+                .AssertYaku<Chankan>()
+            );
         }
 
         [TestMethod]
@@ -573,7 +544,6 @@ namespace RabiRiichiTests.Scenario.Tests {
 
             scenario.AssertEvent<AddKanEvent>((ev) => {
                 Assert.AreEqual(TileSource.AnKan, ev.kanSource);
-                return true;
             }).AssertEvent<RevealDoraEvent>();
 
             (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
@@ -583,14 +553,12 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertNoMoreActions();
             }).AssertAutoFinish();
 
-            scenario.AssertEvent<AgariEvent>(ev => {
-                ev.agariInfos
-                    .AssertRon(1, 0)
-                    .AssertScore(yakuman: 1)
-                    .AssertYaku<Chankan>(han: 1)
-                    .AssertYaku<KokushiMusou>(yakuman: 1);
-                return true;
-            });
+            scenario.AssertEvent<AgariEvent>(ev => ev.agariInfos
+                .AssertRon(1, 0)
+                .AssertScore(yakuman: 1)
+                .AssertYaku<Chankan>(han: 1)
+                .AssertYaku<KokushiMusou>(yakuman: 1)
+            );
         }
 
         [TestMethod]
@@ -616,7 +584,6 @@ namespace RabiRiichiTests.Scenario.Tests {
 
             scenario.AssertEvent<AddKanEvent>((ev) => {
                 Assert.AreEqual(TileSource.AnKan, ev.kanSource);
-                return true;
             }).AssertEvent<RevealDoraEvent>();
 
             (await scenario.WaitInquiry()).AssertNoActionForPlayer(0);
@@ -649,7 +616,6 @@ namespace RabiRiichiTests.Scenario.Tests {
 
             scenario.AssertEvent<AddKanEvent>((ev) => {
                 Assert.AreEqual(TileSource.DaiMinKan, ev.kanSource);
-                return true;
             }).AssertNoEvent<RevealDoraEvent>();
 
             (await scenario.WaitInquiry()).AssertNoActionForPlayer(0);
@@ -690,13 +656,11 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertNoMoreActions();
             }).AssertAutoFinish();
 
-            scenario.AssertEvent<AgariEvent>(ev => {
-                ev.agariInfos
-                    .AssertTsumo(0)
-                    .AssertScore(han: 1)
-                    .AssertYaku<RinshanKaihou>(han: 1);
-                return true;
-            });
+            scenario.AssertEvent<AgariEvent>(ev => ev.agariInfos
+                .AssertTsumo(0)
+                .AssertScore(han: 1)
+                .AssertYaku<RinshanKaihou>(han: 1)
+            );
         }
 
         [TestMethod]
@@ -719,10 +683,8 @@ namespace RabiRiichiTests.Scenario.Tests {
 
             await scenario.AssertEvent<AddKanEvent>((ev) => {
                 Assert.AreEqual(TileSource.AnKan, ev.kanSource);
-                return true;
             }).AssertEvent<RevealDoraEvent>(ev => {
                 Assert.IsNull(ev.dora);
-                return true;
             }).Resolve();
         }
         #endregion

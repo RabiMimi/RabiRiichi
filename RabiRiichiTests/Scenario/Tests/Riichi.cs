@@ -25,7 +25,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                 Assert.AreEqual(TileSource.Discard, ev.tile.source);
                 Assert.AreEqual(DiscardReason.Draw, ev.reason);
                 ev.tile.tile.AssertEquals(tile);
-                return true;
             });
         }
 
@@ -52,19 +51,15 @@ namespace RabiRiichiTests.Scenario.Tests {
             }).AssertAutoFinish();
 
             await scenario
-                .AssertEvent<AgariEvent>((ev) => {
-                    ev.agariInfos
-                        .AssertRon(3, 1)
-                        .AssertScore(han: 4, fu: 40)
-                        .AssertYaku<Riichi>()
-                        .AssertYaku<Ippatsu>()
-                        .AssertYaku<Uradora>(han: 2);
-                    return true;
-                })
-                .AssertEvent<ConcludeGameEvent>((ev) => {
-                    ev.uradoras[0].AssertEquals("5s");
-                    return true;
-                })
+                .AssertEvent<AgariEvent>(ev => ev.agariInfos
+                    .AssertRon(3, 1)
+                    .AssertScore(han: 4, fu: 40)
+                    .AssertYaku<Riichi>()
+                    .AssertYaku<Ippatsu>()
+                    .AssertYaku<Uradora>(han: 2)
+                )
+                .AssertEvent<ConcludeGameEvent>(
+                    ev => ev.uradoras[0].AssertEquals("5s"))
                 .Resolve();
         }
 
@@ -94,15 +89,13 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertNoMoreActions();
             }).AssertAutoFinish();
 
-            await scenario.AssertEvent<AgariEvent>((ev) => {
-                ev.agariInfos
-                    .AssertTsumo(1)
-                    .AssertScore(han: 4, fu: 30)
-                    .AssertYaku<DoubleRiichi>()
-                    .AssertYaku<Ippatsu>()
-                    .AssertYaku<MenzenchinTsumohou>();
-                return true;
-            }).Resolve();
+            await scenario.AssertEvent<AgariEvent>(ev => ev.agariInfos
+                .AssertTsumo(1)
+                .AssertScore(han: 4, fu: 30)
+                .AssertYaku<DoubleRiichi>()
+                .AssertYaku<Ippatsu>()
+                .AssertYaku<MenzenchinTsumohou>()
+            ).Resolve();
         }
 
         [TestMethod]
@@ -162,13 +155,11 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertNoMoreActions();
             }).AssertAutoFinish();
 
-            await scenario.AssertEvent<AgariEvent>((ev) => {
-                ev.agariInfos
-                    .AssertRon(2, 1)
-                    .AssertScore(han: 1, fu: 40)
-                    .AssertYaku<Riichi>();
-                return true;
-            }).Resolve();
+            await scenario.AssertEvent<AgariEvent>(ev => ev.agariInfos
+                .AssertRon(2, 1)
+                .AssertScore(han: 1, fu: 40)
+                .AssertYaku<Riichi>()
+            ).Resolve();
         }
 
         [TestMethod]
@@ -215,7 +206,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertYaku<RinshanKaihou>()
                     .AssertYaku<MenzenchinTsumohou>()
                     .AssertYaku<Uradora>(han: 8);
-                return true;
             }).Resolve();
         }
 
@@ -250,7 +240,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertRon(2, 1)
                     .AssertScore(han: 1, fu: 40)
                     .AssertYaku<Riichi>();
-                return true;
             }).Resolve();
         }
 
@@ -295,7 +284,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertRon(0, 1)
                     .AssertScore(han: 1, fu: 40)
                     .AssertYaku<Riichi>();
-                return true;
             }).Resolve();
         }
 
@@ -337,7 +325,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertYaku<Chankan>()
                     .AssertYaku<Pinfu>()
                     .AssertYaku<Ippatsu>();
-                return true;
             }).Resolve();
         }
         #endregion
@@ -387,15 +374,13 @@ namespace RabiRiichiTests.Scenario.Tests {
             }).AssertAutoFinish();
 
             await scenario
-                .AssertEvent<AgariEvent>((ev) => {
-                    ev.agariInfos
-                        .AssertTsumo(1)
-                        .AssertScore(han: 3, fu: 30)
-                        .AssertYaku<Riichi>()
-                        .AssertYaku<Ippatsu>()
-                        .AssertYaku<MenzenchinTsumohou>();
-                    return true;
-                })
+                .AssertEvent<AgariEvent>(ev => ev.agariInfos
+                    .AssertTsumo(1)
+                    .AssertScore(han: 3, fu: 30)
+                    .AssertYaku<Riichi>()
+                    .AssertYaku<Ippatsu>()
+                    .AssertYaku<MenzenchinTsumohou>()
+                )
                 .Resolve();
         }
 

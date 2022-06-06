@@ -104,20 +104,17 @@ namespace RabiRiichiTests.Scenario {
         }
 
         /// <summary> 测试有对应的事件按顺序发生 </summary>
-        public Scenario AssertEvent<T>(Predicate<T> predicate = null) where T : EventBase {
-            eventMatchers.Add((ev) => {
-                if (ev is T tEv) {
-                    return predicate?.Invoke(tEv) ?? true;
-                }
-                return false;
-            });
+        public Scenario AssertEvent<T>(Predicate<T> predicate) where T : EventBase {
+            eventMatchers.Add(
+                ev => ev is T tEv && predicate(tEv)
+            );
             return this;
         }
 
         /// <summary> 测试事件发生（若存在多个，仅判定首个） </summary>
-        public Scenario AssertEvent<T>(Action<T> action) where T : EventBase
+        public Scenario AssertEvent<T>(Action<T> action = null) where T : EventBase
             => AssertEvent<T>(ev => {
-                action(ev);
+                action?.Invoke(ev);
                 return true;
             });
 
@@ -133,15 +130,12 @@ namespace RabiRiichiTests.Scenario {
         }
 
         /// <summary> 测试流局事件发生 </summary>
-        public Scenario AssertRyuukyoku<T>(Predicate<T> predicate = null) where T : RyuukyokuEvent
+        public Scenario AssertRyuukyoku<T>(Predicate<T> predicate) where T : RyuukyokuEvent
             => AssertEvent(predicate);
 
         /// <summary> 测试流局事件发生（若存在多个，仅判定首个） </summary>
-        public Scenario AssertRyuukyoku<T>(Action<T> action) where T : RyuukyokuEvent
-            => AssertRyuukyoku<T>(ev => {
-                action(ev);
-                return true;
-            });
+        public Scenario AssertRyuukyoku<T>(Action<T> action = null) where T : RyuukyokuEvent
+            => AssertEvent(action);
 
         /// <summary> 测试没有流局事件发生 </summary>
         public Scenario AssertNoRyuukyoku<T>(Predicate<T> predicate = null) where T : RyuukyokuEvent
@@ -692,18 +686,10 @@ namespace RabiRiichiTests.Scenario {
                 wall.uradoras.Clear();
                 wall.rinshan.Clear();
                 wall.remaining.Clear();
-                for (int i = 0; i < doras.Count; i++) {
-                    wall.doras.Add(Draw(doras[i]));
-                }
-                for (int i = 0; i < uradoras.Count; i++) {
-                    wall.uradoras.Add(Draw(uradoras[i]));
-                }
-                for (int i = 0; i < rinshan.Count; i++) {
-                    wall.rinshan.Add(Draw(rinshan[i]));
-                }
-                for (int i = 0; i < reserved.Count; i++) {
-                    wall.remaining.Add(Draw(reserved[i]));
-                }
+                wall.doras.AddRange(doras.Select(Draw));
+                wall.uradoras.AddRange(uradoras.Select(Draw));
+                wall.rinshan.AddRange(rinshan.Select(Draw));
+                wall.remaining.AddRange(reserved.Select(Draw));
 
                 // Try draw tiles for each player
                 foreach (var playerBuilder in playerBuilders) {

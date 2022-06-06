@@ -30,19 +30,16 @@ namespace RabiRiichiTests.Scenario.Tests {
                 .ApplyAction<RonAction>()
             ).AssertAutoFinish();
 
-            await scenario.AssertEvent<AgariEvent>(ev => {
-                ev.agariInfos
-                    .AssertRon(2, 1)
-                    .AssertScore(han: 5)
-                    .AssertYaku<Tanyao>()
-                    .AssertYaku<SanshokuDoujun>()
-                    .AssertYaku<Dora>(han: 2)
-                    .AssertYaku<Akadora>(han: 1);
-                return true;
-            }).AssertEvent<ConcludeGameEvent>(ev => {
+            await scenario.AssertEvent<AgariEvent>(ev => ev.agariInfos
+                .AssertRon(2, 1)
+                .AssertScore(han: 5)
+                .AssertYaku<Tanyao>()
+                .AssertYaku<SanshokuDoujun>()
+                .AssertYaku<Dora>(han: 2)
+                .AssertYaku<Akadora>(han: 1)
+            ).AssertEvent<ConcludeGameEvent>(ev => {
                 ev.doras.AssertEquals("12345s");
                 ev.uradoras.AssertEquals("12345m");
-                return true;
             }).Resolve();
         }
         #endregion
@@ -69,26 +66,23 @@ namespace RabiRiichiTests.Scenario.Tests {
                 .AssertNoMoreActions()
             ).AssertAutoFinish();
 
-            await scenario.AssertEvent<AgariEvent>(ev => {
-                ev.agariInfos
-                    .AssertTsumo(1)
-                    .AssertKazoeYakuman()
-                    .AssertScore(han: 13)
-                    .AssertYaku<Riichi>()
-                    .AssertYaku<Ippatsu>()
-                    .AssertYaku<MenzenchinTsumohou>()
-                    .AssertYaku<Iipeikou>()
-                    .AssertYaku<Pinfu>()
-                    .AssertYaku<Tanyao>()
-                    .AssertYaku<SanshokuDoujun>(han: 2)
-                    .AssertYaku<Dora>(han: 2)
-                    .AssertYaku<Uradora>(han: 2)
-                    .AssertYaku<Akadora>(han: 1);
-                return true;
-            }).AssertEvent<ConcludeGameEvent>(ev => {
+            await scenario.AssertEvent<AgariEvent>(ev => ev.agariInfos
+                .AssertTsumo(1)
+                .AssertKazoeYakuman()
+                .AssertScore(han: 13)
+                .AssertYaku<Riichi>()
+                .AssertYaku<Ippatsu>()
+                .AssertYaku<MenzenchinTsumohou>()
+                .AssertYaku<Iipeikou>()
+                .AssertYaku<Pinfu>()
+                .AssertYaku<Tanyao>()
+                .AssertYaku<SanshokuDoujun>(han: 2)
+                .AssertYaku<Dora>(han: 2)
+                .AssertYaku<Uradora>(han: 2)
+                .AssertYaku<Akadora>(han: 1)
+            ).AssertEvent<ConcludeGameEvent>(ev => {
                 ev.doras.AssertEquals("12456s");
                 ev.uradoras.AssertEquals("3s2345m");
-                return true;
             }).Resolve();
         }
 
@@ -114,22 +108,19 @@ namespace RabiRiichiTests.Scenario.Tests {
                 .AssertNoMoreActions()
             ).AssertAutoFinish();
 
-            await scenario.AssertEvent<AgariEvent>(ev => {
-                ev.agariInfos
-                    .AssertTsumo(1)
-                    .AssertScore(han: 9)
-                    .AssertYaku<MenzenchinTsumohou>()
-                    .AssertYaku<Iipeikou>()
-                    .AssertYaku<Pinfu>()
-                    .AssertYaku<Tanyao>()
-                    .AssertYaku<SanshokuDoujun>(han: 2)
-                    .AssertYaku<Dora>(han: 2)
-                    .AssertYaku<Akadora>(han: 1);
-                return true;
-            }).AssertEvent<ConcludeGameEvent>(ev => {
+            await scenario.AssertEvent<AgariEvent>(ev => ev.agariInfos
+                .AssertTsumo(1)
+                .AssertScore(han: 9)
+                .AssertYaku<MenzenchinTsumohou>()
+                .AssertYaku<Iipeikou>()
+                .AssertYaku<Pinfu>()
+                .AssertYaku<Tanyao>()
+                .AssertYaku<SanshokuDoujun>(han: 2)
+                .AssertYaku<Dora>(han: 2)
+                .AssertYaku<Akadora>(han: 1)
+            ).AssertEvent<ConcludeGameEvent>(ev => {
                 ev.doras.AssertEquals("12456s");
                 ev.uradoras.AssertEquals("3s2345m");
-                return true;
             }).Resolve();
         }
         #endregion

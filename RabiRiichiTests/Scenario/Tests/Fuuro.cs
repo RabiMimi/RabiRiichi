@@ -182,7 +182,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                 Assert.IsTrue(player.hand.called.ToStrings().SequenceEqual(new string[] { "999m" }));
             }).AssertEvent<DrawTileEvent>(ev => {
                 Assert.AreEqual(3, ev.playerId);
-                return true;
             }).Resolve();
 
             (await scenario.WaitPlayerTurn(2)).ForPlayer(2, playerInquiry => {
@@ -276,14 +275,12 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertNoMoreActions();
             });
 
-            await scenario.AssertEvent<AgariEvent>(ev => {
-                ev.agariInfos
-                    .AssertRon(0, 2)
-                    .AssertScore(han: 3)
-                    .AssertYaku<Toitoi>()
-                    .AssertYaku<Akadora>(han: 1);
-                return true;
-            }).Resolve();
+            await scenario.AssertEvent<AgariEvent>(ev => ev.agariInfos
+                .AssertRon(0, 2)
+                .AssertScore(han: 3)
+                .AssertYaku<Toitoi>()
+                .AssertYaku<Akadora>(han: 1)
+            ).Resolve();
         }
         #endregion
 
@@ -311,13 +308,11 @@ namespace RabiRiichiTests.Scenario.Tests {
                 .AssertNoMoreActions()
             ).AssertAutoFinish();
 
-            await scenario.AssertEvent<AgariEvent>(ev => {
-                ev.agariInfos
-                    .AssertRon(3, 2)
-                    .AssertScore(han: 1)
-                    .AssertYaku<ShiiaruRaotai>();
-                return true;
-            }).Resolve();
+            await scenario.AssertEvent<AgariEvent>(ev => ev.agariInfos
+                .AssertRon(3, 2)
+                .AssertScore(han: 1)
+                .AssertYaku<ShiiaruRaotai>()
+            ).Resolve();
         }
         #endregion
     }

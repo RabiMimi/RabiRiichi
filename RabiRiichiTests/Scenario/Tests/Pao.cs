@@ -37,13 +37,11 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertRon(2, 1)
                     .AssertScore(yakuman: 1)
                     .AssertYaku<Suukantsu>();
-                return true;
             }).AssertEvent<ApplyScoreEvent>(ev => {
                 Assert.AreEqual(32000, ev.scoreChange.DeltaScore(1));
                 Assert.AreEqual(-16000, ev.scoreChange.DeltaScore(2));
                 Assert.AreEqual(-16000, ev.scoreChange.DeltaScore(0));
                 Assert.IsTrue(ev.scoreChange.Any(sc => sc.reason == ScoreTransferReason.Pao), "No Pao transaction found.");
-                return true;
             })
             .Resolve();
         }
@@ -77,14 +75,12 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertYaku<Daisangen>()
                     .AssertYaku<Tsuuiisou>()
                     .AssertYaku<Suukantsu>();
-                return true;
             }).AssertEvent<ApplyScoreEvent>(ev => {
                 Assert.AreEqual(96000, ev.scoreChange.DeltaScore(1));
                 Assert.AreEqual(-16000, ev.scoreChange.DeltaScore(0));
                 Assert.AreEqual(-64000, ev.scoreChange.DeltaScore(2));
                 Assert.AreEqual(-16000, ev.scoreChange.DeltaScore(3));
                 Assert.IsTrue(ev.scoreChange.Any(sc => sc.reason == ScoreTransferReason.Pao), "No Pao transaction found.");
-                return true;
             })
             .Resolve();
         }
@@ -118,13 +114,11 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertYaku<Daisangen>()
                     .AssertYaku<Tsuuiisou>()
                     .AssertYaku<Suukantsu>();
-                return true;
             }).AssertEvent<ApplyScoreEvent>(ev => {
                 Assert.AreEqual(96000, ev.scoreChange.DeltaScore(1));
                 Assert.AreEqual(-32000, ev.scoreChange.DeltaScore(0));
                 Assert.AreEqual(-64000, ev.scoreChange.DeltaScore(2));
                 Assert.IsTrue(ev.scoreChange.Any(sc => sc.reason == ScoreTransferReason.Pao), "No Pao transaction found.");
-                return true;
             })
             .Resolve();
         }
@@ -155,11 +149,9 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertTsumo(1)
                     .AssertScore(yakuman: 2)
                     .AssertYaku<Daisuushii>();
-                return true;
             }).AssertEvent<ApplyScoreEvent>(ev => {
                 Assert.AreEqual(64000, ev.scoreChange.DeltaScore(1));
                 Assert.AreEqual(-64000, ev.scoreChange.DeltaScore(0));
-                return true;
             })
             .Resolve();
         }
@@ -190,14 +182,12 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertYaku<Daisangen>()
                     .AssertYaku<Tsuuiisou>()
                     .AssertYaku<Suukantsu>();
-                return true;
             }).AssertEvent<ApplyScoreEvent>(ev => {
                 Assert.AreEqual(96000, ev.scoreChange.DeltaScore(1));
                 Assert.AreEqual(-16000, ev.scoreChange.DeltaScore(0));
                 Assert.AreEqual(-40000, ev.scoreChange.DeltaScore(2));
                 Assert.AreEqual(-40000, ev.scoreChange.DeltaScore(3));
                 Assert.IsTrue(ev.scoreChange.Any(sc => sc.reason == ScoreTransferReason.Pao), "No Pao transaction found.");
-                return true;
             })
             .Resolve();
         }
@@ -228,14 +218,12 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertYaku<Daisangen>()
                     .AssertYaku<Tsuuiisou>()
                     .AssertYaku<Suukantsu>();
-                return true;
             }).AssertEvent<ApplyScoreEvent>(ev => {
                 Assert.AreEqual(96000, ev.scoreChange.DeltaScore(1));
                 Assert.AreEqual(-16000, ev.scoreChange.DeltaScore(0));
                 Assert.AreEqual(-72000, ev.scoreChange.DeltaScore(2));
                 Assert.AreEqual(-8000, ev.scoreChange.DeltaScore(3));
                 Assert.IsTrue(ev.scoreChange.Any(sc => sc.reason == ScoreTransferReason.Pao), "No Pao transaction found.");
-                return true;
             })
             .Resolve();
         }
@@ -269,12 +257,10 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertRon(2, 1)
                     .AssertScore(yakuman: 1)
                     .AssertYaku<Suukantsu>();
-                return true;
             }).AssertEvent<ApplyScoreEvent>(ev => {
                 Assert.AreEqual(32000, ev.scoreChange.DeltaScore(1));
                 Assert.AreEqual(-32000, ev.scoreChange.DeltaScore(2));
                 Assert.IsFalse(ev.scoreChange.Any(sc => sc.reason == ScoreTransferReason.Pao), "Unexpected Pao transaction found.");
-                return true;
             })
             .Resolve();
         }
@@ -302,14 +288,12 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertTsumo(1)
                     .AssertScore(yakuman: 2)
                     .AssertYaku<Daisuushii>();
-                return true;
             }).AssertEvent<ApplyScoreEvent>(ev => {
                 Assert.AreEqual(64000, ev.scoreChange.DeltaScore(1));
                 Assert.AreEqual(-32000, ev.scoreChange.DeltaScore(0));
                 Assert.AreEqual(-16000, ev.scoreChange.DeltaScore(2));
                 Assert.AreEqual(-16000, ev.scoreChange.DeltaScore(3));
                 Assert.IsFalse(ev.scoreChange.Any(sc => sc.reason == ScoreTransferReason.Pao), "Unexpected Pao transaction found.");
-                return true;
             })
             .Resolve();
         }
