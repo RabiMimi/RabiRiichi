@@ -2,9 +2,17 @@ name: build-test
 
 on: 
   push:
-    branches: [ master, develop ]
+    branches: 
+      - master
+      - develop
+    paths:
+      - '**.cs'
   pull_request:
-    branches: [ master, develop ]
+    branches:
+      - master
+      - develop
+    paths:
+      - '**.cs'
   workflow_dispatch:
 
 jobs:
