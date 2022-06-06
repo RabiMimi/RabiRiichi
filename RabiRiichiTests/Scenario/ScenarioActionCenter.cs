@@ -98,7 +98,11 @@ namespace RabiRiichiTests.Scenario {
         }
 
         public ScenarioInquiryMatcher AssertNoActionForPlayer(int playerId) {
-            Assert.IsNull(inquiry.GetByPlayerId(playerId), $"Expect no action for player {playerId} but found");
+            var playerInquiry = inquiry.GetByPlayerId(playerId);
+            if (playerInquiry != null) {
+                var errorStr = string.Join(", ", playerInquiry.actions.Select(action => action.ToString()));
+                Assert.Fail($"Expect no inquiry for player {playerId} but found {errorStr}");
+            }
             return this;
         }
 

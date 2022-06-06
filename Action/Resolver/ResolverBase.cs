@@ -70,7 +70,7 @@ namespace RabiRiichi.Action.Resolver {
         public static bool HasMoveAfterClaim(IEnumerable<GameTile> freeTiles, GameConfig config, List<GameTile> tiles, GameTile incoming) {
             var men = MenLike.From(tiles);
             var forbidden = LateClaimTileListener.GetForbiddenTiles(config, men, incoming).ToArray();
-            return freeTiles.Any(t => !forbidden.Contains(t.tile.WithoutDora));
+            return freeTiles.Any(t => !tiles.Contains(t) && !forbidden.Contains(t.tile.WithoutDora));
         }
 
         public bool Resolve(Player current, GameTile incoming, MultiPlayerInquiry output) {

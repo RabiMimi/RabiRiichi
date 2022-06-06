@@ -110,6 +110,36 @@ namespace RabiRiichiTests.Scenario.Tests {
                     config.SetKuikaePolicy(KuikaePolicy.Suji));
             });
         }
+
+        [TestMethod]
+        public async Task FailChii_NotDiscardedByPrev() {
+            var scenario = new ScenarioBuilder()
+                .WithPlayer(2, playerBuilder => playerBuilder
+                    .SetFreeTiles("78m11122357999p"))
+                .WithWall(wall => wall.Reserve("9m"))
+                .Start(3);
+
+            (await scenario.WaitInquiry()).Finish();
+
+            (await scenario.WaitInquiry()).AssertNoActionForPlayer(2);
+        }
+
+        [TestMethod]
+        public async Task FailChii_NoTileToPlay() {
+            var scenario = new ScenarioBuilder()
+                .WithPlayer(2, playerBuilder => playerBuilder
+                    .SetFreeTiles("4567m")
+                    .AddCalled("111m", 0, 3)
+                    .AddCalled("999m", 0, 3)
+                    .AddCalled("111p", 0, 3))
+                .WithWall(wall => wall.Reserve("4m"))
+                .Start(1);
+
+            (await scenario.WaitInquiry()).Finish();
+
+            // No action for player 2
+            await scenario.AssertEvent<NextPlayerEvent>().Resolve();
+        }
         #endregion
     }
 }
