@@ -1,7 +1,9 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Action;
+using RabiRiichi.Core.Config;
 using RabiRiichi.Event.InGame;
 using RabiRiichiTests.Helper;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -51,13 +53,13 @@ namespace RabiRiichiTests.Scenario.Tests {
             });
         }
 
-        [TestMethod]
-        public async Task Chii_MultiChoice() {
-            var scenario = new ScenarioBuilder()
+        private async Task<Scenario> MultiChoiceChiiScenario(string expectedDiscardTiles, Action<ScenarioBuilder> setup = null) {
+            var scenarioBuilder = new ScenarioBuilder()
                 .WithPlayer(2, playerBuilder => playerBuilder
                     .SetFreeTiles("34r55678m227999p"))
-                .WithWall(wall => wall.Reserve("6m"))
-                .Start(1);
+                .WithWall(wall => wall.Reserve("6m"));
+            setup?.Invoke(scenarioBuilder);
+            var scenario = scenarioBuilder.Start(1);
 
             (await scenario.WaitInquiry()).Finish();
 
@@ -79,10 +81,33 @@ namespace RabiRiichiTests.Scenario.Tests {
             (await scenario.WaitInquiry()).ForPlayer(2, playerInquiry => {
                 playerInquiry
                     .AssertAction<PlayTileAction>(action => {
-                        action.options.ToTiles().AssertEquals("578m227999p");
+                        action.options.ToTiles().AssertEquals(expectedDiscardTiles);
                         return true;
                     })
                     .AssertNoMoreActions();
+            });
+
+            return scenario;
+        }
+
+        [TestMethod]
+        public Task Chii_MultiChoice() {
+            return MultiChoiceChiiScenario("578m227999p");
+        }
+
+        [TestMethod]
+        public Task Chii_NoSujiKuikae() {
+            return MultiChoiceChiiScenario("3578m227999p", scenarioBuilder => {
+                scenarioBuilder.WithConfig(config =>
+                    config.SetKuikaePolicy(KuikaePolicy.Genbutsu));
+            });
+        }
+
+        [TestMethod]
+        public Task Chii_NoGenbutsuKuikae() {
+            return MultiChoiceChiiScenario("5678m227999p", scenarioBuilder => {
+                scenarioBuilder.WithConfig(config =>
+                    config.SetKuikaePolicy(KuikaePolicy.Suji));
             });
         }
         #endregion
