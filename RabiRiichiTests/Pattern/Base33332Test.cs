@@ -7,11 +7,17 @@ namespace RabiRiichiTests.Pattern {
     public class Base33332Test : BaseTest {
         protected override BasePattern V { get; set; } = new Base33332();
 
+        #region Resolve
         [TestMethod]
         public void TestInvalid() {
             Assert.IsFalse(Resolve("122334s5r566777p", null));
             Assert.IsFalse(Resolve("122334s5r5667777p", "7p"));
             Assert.IsFalse(Resolve("1s", "7p"));
+        }
+
+        [TestMethod]
+        public void TestNoShunForZ() {
+            Assert.IsFalse(Resolve("234s5r566777p123z", "7p"));
         }
 
         [TestMethod]
@@ -59,7 +65,9 @@ namespace RabiRiichiTests.Pattern {
         public void TestKan() {
             Assert.IsTrue(Resolve("2z", "2z", "1111s", "1111p", "1111m", "1111z"));
         }
+        #endregion
 
+        #region Shanten
         [TestMethod]
         public void TestShanten() {
 
@@ -140,6 +148,15 @@ namespace RabiRiichiTests.Pattern {
         }
 
         [TestMethod]
+        public void TestShantenNoShunForZ() {
+            Assert.AreEqual(0, Shanten("234s5r566777p122z", "7p"));
+            tiles.AssertEquals("1z");
+
+            Assert.AreEqual(1, Shanten("234s5r566777p122z", null));
+            tiles.AssertEquals("456789p12z");
+        }
+
+        [TestMethod]
         public void TestShantenFrenqy() {
             Assert.AreEqual(-1, Shanten("1113335557779s", "9s"));
             tiles.AssertEquals("");
@@ -156,5 +173,6 @@ namespace RabiRiichiTests.Pattern {
             Assert.AreEqual(6, Shanten("348m247p159s1234z", "5z"));
             tiles.AssertEquals("12345z159s8m7p");
         }
+        #endregion
     }
 }
