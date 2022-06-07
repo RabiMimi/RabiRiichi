@@ -1,6 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Action;
 using RabiRiichi.Core;
+using RabiRiichi.Core.Config;
 using RabiRiichi.Event.InGame;
 using RabiRiichi.Pattern;
 using System.Linq;
@@ -233,6 +234,26 @@ namespace RabiRiichiTests.Scenario.Tests {
         }
 
         [TestMethod]
+        public async Task CannotRon_DiscardedBySelf() {
+            var scenario = new ScenarioBuilder()
+                .WithState(state => state.SetRound(Wind.E, 0, 2).SetRiichiStick(2))
+                .WithPlayer(0, playerBuilder => playerBuilder
+                    .SetFreeTiles("123m123p1123s")
+                    .AddCalled("111m", 0, 2))
+                .WithWall(wall => wall.Reserve("1s"))
+                .Start(0);
+
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry.ChooseTile<PlayTileAction>("1s");
+            }).AssertAutoFinish();
+
+            (await scenario.WaitInquiry()).AssertNoActionForPlayer(0);
+        }
+
+        #endregion
+
+        #region Sanchahou
+        [TestMethod]
         public async Task Sanchahou_Ryuukyoku() {
             var scenario = new ScenarioBuilder()
                 .WithState(state => state.SetRound(Wind.E, 0, 1).SetRiichiStick(2))
@@ -277,22 +298,37 @@ namespace RabiRiichiTests.Scenario.Tests {
         }
 
         [TestMethod]
-        public async Task CannotRon_DiscardedBySelf() {
+        public async Task NoSanchahou_DisabledInConfig() {
             var scenario = new ScenarioBuilder()
-                .WithState(state => state.SetRound(Wind.E, 0, 2).SetRiichiStick(2))
+                .WithConfig(config => config
+                    .SetRyuukyokuTrigger(RyuukyokuTrigger.Default & ~RyuukyokuTrigger.Sanchahou))
+                .WithState(state => state.SetRound(Wind.E, 0, 1).SetRiichiStick(2))
                 .WithPlayer(0, playerBuilder => playerBuilder
+                    .SetFreeTiles("23466m789p22334s")
+                    .SetRiichiTile("5s"))
+                .WithPlayer(2, playerBuilder => playerBuilder
                     .SetFreeTiles("123m123p1123s")
                     .AddCalled("111m", 0, 2))
+                .WithPlayer(3, playerBuilder => playerBuilder
+                    .SetFreeTiles("2344s")
+                    .AddCalled("666s", 1, 1)
+                    .AddCalled("777s", 0, 2)
+                    .AddCalled("789s", 0, 2))
                 .WithWall(wall => wall.Reserve("1s"))
-                .Start(0);
+                .Start(1);
 
-            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
-                playerInquiry.ChooseTile<PlayTileAction>("1s");
-            }).AssertAutoFinish();
+            (await scenario.WaitInquiry()).Finish();
 
-            (await scenario.WaitInquiry()).AssertNoActionForPlayer(0);
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry =>
+                playerInquiry.ApplyAction<RonAction>())
+            .ForPlayer(2, playerInquiry =>
+                playerInquiry.ApplyAction<RonAction>())
+            .ForPlayer(3, playerInquiry =>
+                playerInquiry.ApplyAction<RonAction>())
+            .AssertAutoFinish();
+
+            await scenario.AssertNoRyuukyoku<Sanchahou>().Resolve();
         }
-
         #endregion
     }
 }
