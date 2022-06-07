@@ -62,7 +62,11 @@ namespace RabiRiichiTests.Scenario.Tests {
                 .AssertEvent<NextGameEvent>(ev => {
                     Assert.IsTrue(0 > ev.game.GetPlayer(0).points);
                 })
-                .AssertEvent<StopGameEvent>()
+                .AssertEvent<StopGameEvent>(ev => {
+                    for (int i = 0; i < ev.game.players.Length; i++) {
+                        Assert.AreEqual(ev.game.players[i].points, ev.endGamePoints[i]);
+                    }
+                })
                 .Resolve();
         }
 
