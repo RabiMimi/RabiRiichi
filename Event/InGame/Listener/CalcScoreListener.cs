@@ -15,7 +15,7 @@ namespace RabiRiichi.Event.InGame.Listener {
                 } else {
                     // 荣和
                     int scoreChange = info.scores.result.BaseScore * (toPlayer.IsDealer ? 6 : 4);
-                    int honbaChange = ev.game.config.honbaPoints * ev.game.info.honba;
+                    int honbaChange = ev.game.config.pointThreshold.honbaPoints * ev.game.info.honba;
                     ev.scoreChange.Add(new ScoreTransfer(fromPlayer.id, toPlayer.id, scoreChange, ScoreTransferReason.Ron));
                     ev.scoreChange.Add(new ScoreTransfer(fromPlayer.id, toPlayer.id, honbaChange, ScoreTransferReason.Honba));
                 }
@@ -27,7 +27,7 @@ namespace RabiRiichi.Event.InGame.Listener {
                     player.hand.riichiStick = 0;
                 }
                 if (ev.game.info.riichiStick > 0) {
-                    int scoreChange = ev.game.info.riichiStick * ev.game.config.riichiPoints;
+                    int scoreChange = ev.game.info.riichiStick * ev.game.config.pointThreshold.riichiPoints;
                     ev.scoreChange.Add(new ScoreTransfer(-1, agariPlayer, scoreChange, ScoreTransferReason.Riichi));
                     ev.game.info.riichiStick = 0;
                 }

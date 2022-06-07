@@ -89,7 +89,7 @@ namespace RabiRiichi.Core {
         public void Riichi(GameTile tile, bool wRiichi) {
             riichiTile = tile;
             this.wRiichi = wRiichi;
-            player.points -= game.config.riichiPoints;
+            player.points -= game.config.pointThreshold.riichiPoints;
             game.info.riichiStick++;
             riichiStick++;
         }

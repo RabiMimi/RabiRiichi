@@ -29,7 +29,7 @@ namespace RabiRiichi.Event.InGame.Listener {
             // 累计立直棒
             foreach (var player in players) {
                 info.riichiStick += player.hand.riichiStick;
-                player.points -= player.hand.riichiStick * ev.game.config.riichiPoints;
+                player.points -= player.hand.riichiStick * ev.game.config.pointThreshold.riichiPoints;
                 player.hand.riichiStick = 0;
             }
             if (info.config.endGamePolicy.HasAnyFlag(EndGamePolicy.TerminateOnApply)

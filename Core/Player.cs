@@ -15,7 +15,7 @@
         public Player(int id, Game game) {
             this.id = id;
             this.game = game;
-            points = game.config.initialPoints;
+            points = game.config.pointThreshold.initialPoints;
         }
 
         public int NextPlayerId => game.NextPlayerId(id);

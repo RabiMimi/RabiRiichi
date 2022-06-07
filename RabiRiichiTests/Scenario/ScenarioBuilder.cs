@@ -260,25 +260,25 @@ namespace RabiRiichiTests.Scenario {
 
             /// <summary> 设置初始点，默认为25000 </summary>
             public GameConfigBuilder SetInitialPoints(int initialPoints) {
-                config.initialPoints = initialPoints;
+                config.pointThreshold.initialPoints = initialPoints;
                 return this;
             }
 
             /// <summary> 设置立直棒点数，默认为1000 </summary>
             public GameConfigBuilder SetRiichiPoints(int riichiPoints) {
-                config.riichiPoints = riichiPoints;
+                config.pointThreshold.riichiPoints = riichiPoints;
                 return this;
             }
 
             /// <summary> 设置本场棒总点数，默认为300 </summary>
             public GameConfigBuilder SetHonbaPoints(int honbaPoints) {
-                config.honbaPoints = honbaPoints;
+                config.pointThreshold.honbaPoints = honbaPoints;
                 return this;
             }
 
             /// <summary> 设置流局总点数，默认为3000 </summary>
-            public GameConfigBuilder SetRyuukyokuPoints(int ryuukyokuPoints) {
-                config.ryuukyokuPoints = ryuukyokuPoints;
+            public GameConfigBuilder SetRyuukyokuPoints(params int[] ryuukyokuPoints) {
+                config.pointThreshold.ryuukyokuPoints = ryuukyokuPoints;
                 return this;
             }
 

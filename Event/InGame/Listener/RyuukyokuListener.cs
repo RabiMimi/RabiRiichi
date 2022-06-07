@@ -43,18 +43,19 @@ namespace RabiRiichi.Event.InGame.Listener {
                 // 流局
                 var payers = ev.remainingPlayers.Except(ev.tenpaiPlayers).ToArray();
                 if (payers.Length == 2 && ev.tenpaiPlayers.Length == 2) {
-                    int pt = (ev.game.config.ryuukyokuPoints / 2).CeilTo100();
+                    int pt = ev.game.config.pointThreshold.ryuukyokuPoints[1];
                     ev.AddScoreTransfer(payers[0], ev.tenpaiPlayers[0], pt, ScoreTransferReason.Ryuukyoku);
                     ev.AddScoreTransfer(payers[1], ev.tenpaiPlayers[1], pt, ScoreTransferReason.Ryuukyoku);
-                } else if (payers.Length == 1) {
-                    int pt = ev.game.config.RyuukyokuPointsForOnePlayer;
-                    foreach (var payee in ev.tenpaiPlayers) {
-                        ev.AddScoreTransfer(payers[0], payee, pt, ScoreTransferReason.Ryuukyoku);
-                    }
-                } else if (ev.tenpaiPlayers.Length == 1) {
-                    int pt = ev.game.config.RyuukyokuPointsForOnePlayer;
-                    foreach (var payer in payers) {
-                        ev.AddScoreTransfer(payer, ev.tenpaiPlayers[0], pt, ScoreTransferReason.Ryuukyoku);
+                } else {
+                    int pt = ev.game.config.pointThreshold.ryuukyokuPoints[0];
+                    if (payers.Length == 1) {
+                        foreach (var payee in ev.tenpaiPlayers) {
+                            ev.AddScoreTransfer(payers[0], payee, pt, ScoreTransferReason.Ryuukyoku);
+                        }
+                    } else if (ev.tenpaiPlayers.Length == 1) {
+                        foreach (var payer in payers) {
+                            ev.AddScoreTransfer(payer, ev.tenpaiPlayers[0], pt, ScoreTransferReason.Ryuukyoku);
+                        }
                     }
                 }
             }

@@ -15,6 +15,9 @@ namespace RabiRiichi.Core.Config {
         /// <summary> 终局点数 </summary>
         [RabiBroadcast] public int finishPoints = 30000;
 
+        /// <summary> 不听罚符（单人/多人） </summary>
+        [RabiBroadcast] public int[] ryuukyokuPoints = new int[] { 1000, 1500 };
+
         /// <summary> 天边 </summary>
         [RabiBroadcast] public int suddenDeathPoints = 0;
     }

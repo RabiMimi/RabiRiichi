@@ -5,7 +5,7 @@ namespace RabiRiichi.Event.InGame.Listener {
     public static class StopGameListener {
         public static Task ExecuteStopGame(StopGameEvent ev) {
             var player = ev.game.players.MaxBy(player => player.points);
-            player.points += ev.game.info.riichiStick * ev.game.config.riichiPoints;
+            player.points += ev.game.info.riichiStick * ev.game.config.pointThreshold.riichiPoints;
             ev.game.info.riichiStick = 0;
             foreach (var p in ev.game.players) {
                 p.hand.riichiStick = 0;
