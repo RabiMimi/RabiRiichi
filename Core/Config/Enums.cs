@@ -54,24 +54,35 @@ namespace RabiRiichi.Core.Config {
         Default = All,
     }
 
-    /// <summary> 对局继续选项 </summary>
+    /// <summary> 连庄策略 </summary>
     [Flags]
     public enum RenchanPolicy {
         /// <summary> 无 </summary>
         None = 0,
         /// <summary> 庄家和了时连庄 </summary>
-        RenchanOnDealerWin = 1 << 0,
+        DealerWin = 1 << 0,
         /// <summary> 庄家流局听牌时连庄 </summary>
-        RenchanOnDealerTenpai = 1 << 1,
+        DealerTenpai = 1 << 1,
         /// <summary> 流局时连庄 </summary>
-        RenchanOnRyuukyoku = 1 << 2,
-        /// <summary> 和牌/流局结算时，可以击飞 </summary>
-        TerminateOnNegativeScore = 1 << 3,
-        /// <summary> 分数为负时立即击飞 </summary>
-        InstantTerminateOnNegativeScore = 1 << 4,
+        Ryuukyoku = 1 << 2,
         /// <summary> 所有 </summary>
-        All = RenchanOnDealerWin | RenchanOnDealerTenpai | RenchanOnRyuukyoku | TerminateOnNegativeScore | InstantTerminateOnNegativeScore,
+        All = DealerWin | DealerTenpai | Ryuukyoku,
         /// <summary> 默认值 </summary>
-        Default = RenchanOnDealerWin | RenchanOnDealerTenpai | TerminateOnNegativeScore,
+        Default = DealerWin | DealerTenpai,
+    }
+
+    /// <summary> 终局策略 </summary>
+    [Flags]
+    public enum EndGamePolicy {
+        /// <summary> 无 </summary>
+        None = 0,
+        /// <summary> 和牌/流局结算时，可以击飞 </summary>
+        TerminateOnApply = 1 << 0,
+        /// <summary> 分数小于天边时立即击飞 </summary>
+        InstantTerminate = 1 << 1,
+        /// <summary> 所有 </summary>
+        All = TerminateOnApply | InstantTerminate,
+        /// <summary> 默认值 </summary>
+        Default = TerminateOnApply,
     }
 }

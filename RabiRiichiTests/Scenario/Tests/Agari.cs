@@ -63,7 +63,7 @@ namespace RabiRiichiTests.Scenario.Tests {
         public async Task DealerTsumo_NoRenchan() {
             var scenario = await BuildTsumo(0, scenarioBuilder => {
                 scenarioBuilder.WithConfig(config =>
-                    config.SetRenchanPolicy(RenchanPolicy.Default & ~RenchanPolicy.RenchanOnDealerWin));
+                    config.SetRenchanPolicy(RenchanPolicy.Default & ~RenchanPolicy.DealerWin));
             });
 
             await scenario.AssertEvent<ApplyScoreEvent>(ev => {

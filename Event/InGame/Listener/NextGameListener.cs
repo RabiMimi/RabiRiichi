@@ -32,7 +32,8 @@ namespace RabiRiichi.Event.InGame.Listener {
                 player.points -= player.hand.riichiStick * ev.game.config.riichiPoints;
                 player.hand.riichiStick = 0;
             }
-            if (info.config.renchanPolicy.HasAnyFlag(RenchanPolicy.TerminateOnNegativeScore) && players.Any(p => p.points < 0)) {
+            if (info.config.endGamePolicy.HasAnyFlag(EndGamePolicy.TerminateOnApply)
+                && players.Any(p => p.points < info.config.pointThreshold.suddenDeathPoints)) {
                 // 击飞
                 ev.Q.QueueIfNotExist(new StopGameEvent(ev));
                 return Task.CompletedTask;
@@ -42,7 +43,7 @@ namespace RabiRiichi.Event.InGame.Listener {
                 ev.Q.QueueIfNotExist(new StopGameEvent(ev));
                 return Task.CompletedTask;
             }
-            if (ev.game.info.IsAllLast && players.Any(p => p.points >= info.config.finishPoints)) {
+            if (ev.game.info.IsAllLast && players.Any(p => p.points >= info.config.pointThreshold.finishPoints)) {
                 // 游戏结束
                 if (ev.game.PlayersByRank[0].SamePlayer(ev.game.Dealer)) {
                     // 庄家胜利
@@ -59,8 +60,9 @@ namespace RabiRiichi.Event.InGame.Listener {
                 ev.bus.Unsubscribe<EventBase>(InstantTerminate);
                 return Task.CompletedTask;
             }
-            if (ev.game.config.renchanPolicy.HasAnyFlag(RenchanPolicy.InstantTerminateOnNegativeScore)
-                && ev.game.players.Any(p => p.points < 0)) {
+            var config = ev.game.config;
+            if (config.endGamePolicy.HasAnyFlag(EndGamePolicy.InstantTerminate)
+                && ev.game.players.Any(p => p.points < config.pointThreshold.suddenDeathPoints)) {
                 ev.Q.QueueIfNotExist(new StopGameEvent(ev));
                 return Task.CompletedTask;
             }

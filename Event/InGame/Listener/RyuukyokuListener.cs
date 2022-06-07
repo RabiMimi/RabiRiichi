@@ -61,9 +61,9 @@ namespace RabiRiichi.Event.InGame.Listener {
             ev.Q.Queue(new ApplyScoreEvent(ev, ev.scoreChange));
             var option = ev.game.config.renchanPolicy;
             bool switchDealer = true;
-            if (option.HasAnyFlag(RenchanPolicy.RenchanOnRyuukyoku)) {
+            if (option.HasAnyFlag(RenchanPolicy.Ryuukyoku)) {
                 switchDealer = false;
-            } else if (option.HasAnyFlag(RenchanPolicy.RenchanOnDealerTenpai)
+            } else if (option.HasAnyFlag(RenchanPolicy.DealerTenpai)
                 && ev.tenpaiPlayers.Contains(ev.game.info.dealer)) {
                 switchDealer = false;
             }

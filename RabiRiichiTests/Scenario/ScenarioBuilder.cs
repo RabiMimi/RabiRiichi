@@ -284,9 +284,16 @@ namespace RabiRiichiTests.Scenario {
 
             /// <summary> 设置终局点数，默认为30000 </summary>
             public GameConfigBuilder SetFinishPoints(int finishPoints) {
-                config.finishPoints = finishPoints;
+                config.pointThreshold.finishPoints = finishPoints;
                 return this;
             }
+
+            /// <summary> 设置天边，默认为0 </summary>
+            public GameConfigBuilder SetSuddenDeathPoints(int suddenDeathPoints) {
+                config.pointThreshold.suddenDeathPoints = suddenDeathPoints;
+                return this;
+            }
+
 
             /// <summary> 是否允许食断，默认允许 </summary>
             public GameConfigBuilder SetAllowKuitan(bool allowKuitan) {
@@ -324,12 +331,17 @@ namespace RabiRiichiTests.Scenario {
                 return this;
             }
 
-            /// <summary> 设置对局选项 </summary>
+            /// <summary> 设置连庄策略 </summary>
             public GameConfigBuilder SetRenchanPolicy(RenchanPolicy policy) {
                 config.renchanPolicy = policy;
                 return this;
             }
 
+            /// <summary> 设置终局策略 </summary>
+            public GameConfigBuilder SetEndGamePolicy(EndGamePolicy policy) {
+                config.endGamePolicy = policy;
+                return this;
+            }
 
             public GameConfig Build() {
                 return config;

@@ -37,8 +37,14 @@ namespace RabiRiichi.Core.Config {
         /// <summary> 包牌 </summary>
         [RabiBroadcast] public bool allowPao = true;
 
-        /// <summary> 对局继续选项 </summary>
+        /// <summary> 分数线 </summary>
+        [RabiBroadcast] public PointThreshold pointThreshold = new();
+
+        /// <summary> 连庄策略 </summary>
         [RabiBroadcast] public RenchanPolicy renchanPolicy = RenchanPolicy.Default;
+
+        /// <summary> 终局策略 </summary>
+        [RabiBroadcast] public EndGamePolicy endGamePolicy = EndGamePolicy.Default;
 
         /// <summary> 食替 </summary>
         [RabiBroadcast] public KuikaePolicy kuikaePolicy = KuikaePolicy.Default;

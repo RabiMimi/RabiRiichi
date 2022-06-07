@@ -9,10 +9,14 @@ using System.Threading.Tasks;
 namespace RabiRiichiTests.Scenario.Tests {
     [TestClass]
     public class ScenarioGameTerminate {
-        #region Negative Score
-        private static async Task<Scenario> BuildNegativeScore(RenchanPolicy option, int initialPoints) {
+        #region Low Score
+        private const int SUDDEN_DEATH_PT = 10000;
+        private static async Task<Scenario> BuildLowScore(EndGamePolicy policy, int initialPoints) {
+            initialPoints += SUDDEN_DEATH_PT;
             var scenario = new ScenarioBuilder()
-                .WithConfig(config => config.SetRenchanPolicy(option))
+                .WithConfig(config => config
+                    .SetEndGamePolicy(policy)
+                    .SetSuddenDeathPoints(SUDDEN_DEATH_PT))
                 .WithPlayer(0, playerBuilder => playerBuilder
                     .SetPoints(initialPoints))
                 .WithPlayer(1, playerBuilder => playerBuilder
@@ -35,8 +39,8 @@ namespace RabiRiichiTests.Scenario.Tests {
 
         [TestMethod]
         public async Task NoTerminate_ZeroScore() {
-            var scenario = await BuildNegativeScore(
-                RenchanPolicy.Default, 1300);
+            var scenario = await BuildLowScore(
+                EndGamePolicy.Default, 1300);
 
             (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => playerInquiry
                 .ApplyAction<RonAction>()
@@ -44,7 +48,7 @@ namespace RabiRiichiTests.Scenario.Tests {
 
             await scenario
                 .AssertEvent<BeginGameEvent>(ev => {
-                    Assert.AreEqual(0, ev.game.GetPlayer(0).points);
+                    Assert.AreEqual(SUDDEN_DEATH_PT, ev.game.GetPlayer(0).points);
                 })
                 .AssertNoEvent<StopGameEvent>()
                 .Resolve();
@@ -52,8 +56,8 @@ namespace RabiRiichiTests.Scenario.Tests {
 
         [TestMethod]
         public async Task Terminate_NegativeScore() {
-            var scenario = await BuildNegativeScore(
-                RenchanPolicy.Default, 1200);
+            var scenario = await BuildLowScore(
+                EndGamePolicy.Default, 1200);
 
             (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => playerInquiry
                 .ApplyAction<RonAction>()
@@ -61,7 +65,7 @@ namespace RabiRiichiTests.Scenario.Tests {
 
             await scenario
                 .AssertEvent<NextGameEvent>(ev => {
-                    Assert.IsTrue(0 > ev.game.GetPlayer(0).points);
+                    Assert.IsTrue(SUDDEN_DEATH_PT > ev.game.GetPlayer(0).points);
                 })
                 .AssertEvent<StopGameEvent>(ev => {
                     for (int i = 0; i < ev.game.players.Length; i++) {
@@ -73,8 +77,8 @@ namespace RabiRiichiTests.Scenario.Tests {
 
         [TestMethod]
         public async Task InstantTerminate_NegativeScore() {
-            var scenario = await BuildNegativeScore(
-                RenchanPolicy.InstantTerminateOnNegativeScore, 2000);
+            var scenario = await BuildLowScore(
+                EndGamePolicy.InstantTerminate, 2000);
 
             var inquiry = await scenario.WaitInquiry();
 
@@ -89,8 +93,8 @@ namespace RabiRiichiTests.Scenario.Tests {
 
         [TestMethod]
         public async Task NoTerminate_AllowNegativeScore() {
-            var scenario = await BuildNegativeScore(
-                RenchanPolicy.Default & ~RenchanPolicy.TerminateOnNegativeScore, 1200);
+            var scenario = await BuildLowScore(
+                EndGamePolicy.Default & ~EndGamePolicy.TerminateOnApply, 1200);
 
             (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => playerInquiry
                 .ApplyAction<RonAction>()
@@ -98,7 +102,7 @@ namespace RabiRiichiTests.Scenario.Tests {
 
             await scenario
                 .AssertEvent<BeginGameEvent>(ev => {
-                    Assert.IsTrue(0 > ev.game.GetPlayer(0).points);
+                    Assert.IsTrue(ev.game.GetPlayer(0).points < SUDDEN_DEATH_PT);
                 })
                 .AssertNoEvent<StopGameEvent>()
                 .Resolve();

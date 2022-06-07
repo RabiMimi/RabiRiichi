@@ -1,0 +1,21 @@
+using RabiRiichi.Communication;
+
+namespace RabiRiichi.Core.Config {
+    public class PointThreshold : IRabiMessage {
+        public RabiMessageType msgType => RabiMessageType.Unnecessary;
+        /// <summary> 初始点数 </summary>
+        [RabiBroadcast] public int initialPoints = 25000;
+
+        /// <summary> 立直棒点数 </summary>
+        [RabiBroadcast] public int riichiPoints = 1000;
+
+        /// <summary> 场棒点数 </summary>
+        [RabiBroadcast] public int honbaPoints = 300;
+
+        /// <summary> 终局点数 </summary>
+        [RabiBroadcast] public int finishPoints = 30000;
+
+        /// <summary> 天边 </summary>
+        [RabiBroadcast] public int suddenDeathPoints = 0;
+    }
+}
