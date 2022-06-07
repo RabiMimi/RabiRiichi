@@ -88,6 +88,8 @@ namespace RabiRiichi.Core {
         }
         public Player GetPlayer(int index) => players[index];
         public Player Dealer => GetPlayer(info.dealer);
+        public Player[] PlayersByRank =>
+            players.OrderBy(p => -p.points * players.Length + p.id).ToArray();
         public int Time => info.timeStamp;
         #endregion
 

@@ -20,6 +20,15 @@ namespace RabiRiichi.Core {
         [RabiBroadcast] public int dealer = 0;
         /// <summary> 本场 </summary>
         [RabiBroadcast] public int honba = 0;
+        /// <summary> 是否是All Last </summary>
+        public bool IsAllLast {
+            get {
+                if (round == config.totalRound - 1) {
+                    return dealer == config.playerCount - 1;
+                }
+                return round >= config.totalRound;
+            }
+        }
         /// <summary> 立直棒数量 </summary>
         [RabiBroadcast] public int riichiStick = 0;
 

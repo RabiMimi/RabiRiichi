@@ -4,7 +4,6 @@ using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
 using RabiRiichi.Event.InGame;
 using RabiRiichi.Pattern;
-using System;
 using System.Threading.Tasks;
 
 namespace RabiRiichiTests.Scenario.Tests {
@@ -151,7 +150,8 @@ namespace RabiRiichiTests.Scenario.Tests {
         [TestMethod]
         public async Task Terminate_SufficientPoints() {
             var scenario = new ScenarioBuilder()
-                .WithConfig(config => config.SetFinishPoints(25000))
+                .WithConfig(config => config.SetFinishPoints(30000))
+                .WithPlayer(3, player => player.SetPoints(30000))
                 .WithState(state => state.SetRound(Wind.E, 3, 2))
                 .WithWall(wall => wall.Reserve("1s"))
                 .Build(1)
@@ -164,6 +164,63 @@ namespace RabiRiichiTests.Scenario.Tests {
                 .AssertEvent<NextGameEvent>()
                 .AssertEvent<StopGameEvent>()
                 .AssertNoEvent<BeginGameEvent>()
+                .Resolve();
+        }
+
+        [TestMethod]
+        public async Task Terminate_DealerWinsWithSufficientPoints() {
+            var scenario = new ScenarioBuilder()
+                .WithConfig(config => config.SetFinishPoints(30000))
+                .WithState(state => state.SetRound(Wind.E, 3, 2))
+                .WithPlayer(3, playerBuilder => playerBuilder
+                    .SetFreeTiles("1123456789s444z"))
+                .WithWall(wall => wall.Reserve("1s"))
+                .Build(3)
+                .ForceHaitei()
+                .Start();
+
+            (await scenario.WaitInquiry()).ForPlayer(3, playerInquiry => {
+                playerInquiry.ApplyAction<TsumoAction>();
+            }).AssertAutoFinish();
+
+            await scenario
+                .AssertEvent<NextGameEvent>(ev => {
+                    Assert.IsTrue(ev.game.GetPlayer(3).points >= 30000);
+                })
+                .AssertEvent<StopGameEvent>()
+                .AssertNoEvent<BeginGameEvent>()
+                .Resolve();
+        }
+
+
+        [TestMethod]
+        public async Task Renchan_DealerDoesNotWinWithSufficientPoints() {
+            var scenario = new ScenarioBuilder()
+                .WithConfig(config => config.SetFinishPoints(30000))
+                .WithState(state => state.SetRound(Wind.E, 3, 2))
+                .WithPlayer(3, playerBuilder => playerBuilder
+                    .SetFreeTiles("1123456789s444z"))
+                .WithPlayer(2, playerBuilder => playerBuilder
+                    .SetPoints(90000))
+                .WithWall(wall => wall.Reserve("1s"))
+                .Build(3)
+                .ForceHaitei()
+                .Start();
+
+            (await scenario.WaitInquiry()).ForPlayer(3, playerInquiry => {
+                playerInquiry.ApplyAction<TsumoAction>();
+            }).AssertAutoFinish();
+
+            await scenario
+                .AssertEvent<NextGameEvent>(ev => {
+                    Assert.IsTrue(ev.game.GetPlayer(3).points >= 30000);
+                })
+                .AssertEvent<BeginGameEvent>(ev => {
+                    Assert.AreEqual(0, ev.round);
+                    Assert.AreEqual(3, ev.dealer);
+                    Assert.AreEqual(3, ev.honba);
+                })
+                .AssertNoEvent<StopGameEvent>()
                 .Resolve();
         }
         #endregion

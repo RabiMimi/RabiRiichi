@@ -37,9 +37,15 @@ namespace RabiRiichi.Event.InGame.Listener {
                 ev.Q.QueueIfNotExist(new StopGameEvent(ev));
                 return Task.CompletedTask;
             }
-            if (ev.nextRound >= info.config.totalRound) {
-                if (ev.nextRound > info.config.totalRound || players.Any(p => p.points >= info.config.finishPoints)) {
-                    // 游戏结束
+            if (ev.nextRound > info.config.totalRound) {
+                // 已额外进行一轮庄
+                ev.Q.QueueIfNotExist(new StopGameEvent(ev));
+                return Task.CompletedTask;
+            }
+            if (ev.game.info.IsAllLast && players.Any(p => p.points >= info.config.finishPoints)) {
+                // 游戏结束
+                if (ev.game.PlayersByRank[0].SamePlayer(ev.game.Dealer)) {
+                    // 庄家胜利
                     ev.Q.QueueIfNotExist(new StopGameEvent(ev));
                     return Task.CompletedTask;
                 }
