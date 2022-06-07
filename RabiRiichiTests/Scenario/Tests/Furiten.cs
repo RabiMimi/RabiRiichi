@@ -43,6 +43,9 @@ namespace RabiRiichiTests.Scenario.Tests {
 
             // Exits Temporary Furiten after drawing a regular tile
             (await scenario.WaitInquiry()).Finish(); // 玩家1摸切
+
+            await scenario.WaitInquiry();
+
             scenario.WithPlayer(1, player => {
                 Assert.IsFalse(player.hand.isFuriten);
                 Assert.IsFalse(player.hand.isTempFuriten);

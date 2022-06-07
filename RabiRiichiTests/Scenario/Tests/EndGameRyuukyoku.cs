@@ -69,7 +69,7 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .SetFreeTiles("1112223334457z")
                     .SetDiscarded(10, "6s"))
                 .WithWall(wall => wall.Reserve("6z"));
-            action(scenarioBuilder);
+            action?.Invoke(scenarioBuilder);
             var scenario = scenarioBuilder
                 .Build(0)
                 .ForceHaitei()
