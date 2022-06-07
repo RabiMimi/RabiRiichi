@@ -487,7 +487,7 @@ namespace RabiRiichiTests.Scenario.Tests {
                     });
             }).AssertAutoFinish();
 
-            scenario.AssertEvent<AddKanEvent>((ev) => {
+            scenario.AssertEvent<KanEvent>((ev) => {
                 Assert.AreEqual(TileSource.KaKan, ev.kanSource);
             }).AssertNoEvent<RevealDoraEvent>();
 
@@ -498,11 +498,11 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertNoMoreActions();
             }).AssertAutoFinish();
 
-            scenario.AssertEvent<AgariEvent>(ev => ev.agariInfos
+            await scenario.AssertEvent<AgariEvent>(ev => ev.agariInfos
                 .AssertRon(1, 0)
                 .AssertScore(han: 3)
                 .AssertYaku<Chankan>()
-            );
+            ).Resolve();
         }
 
         [TestMethod]
@@ -525,9 +525,9 @@ namespace RabiRiichiTests.Scenario.Tests {
                     });
             }).AssertAutoFinish();
 
-            scenario.AssertEvent<AddKanEvent>((ev) => {
+            scenario.AssertEvent<KanEvent>((ev) => {
                 Assert.AreEqual(TileSource.AnKan, ev.kanSource);
-            }).AssertEvent<RevealDoraEvent>();
+            }).AssertNoEvent<RevealDoraEvent>();
 
             (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
                 playerInquiry
@@ -536,12 +536,12 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertNoMoreActions();
             }).AssertAutoFinish();
 
-            scenario.AssertEvent<AgariEvent>(ev => ev.agariInfos
+            await scenario.AssertEvent<AgariEvent>(ev => ev.agariInfos
                 .AssertRon(1, 0)
                 .AssertScore(yakuman: 1)
                 .AssertYaku<Chankan>(han: 1)
                 .AssertYaku<KokushiMusou>(yakuman: 1)
-            );
+            ).Resolve();
         }
 
         [TestMethod]
@@ -611,8 +611,7 @@ namespace RabiRiichiTests.Scenario.Tests {
                 .WithPlayer(0, playerBuilder => {
                     playerBuilder.SetFreeTiles("111s123456789m1z");
                 })
-                .WithWall(wall => wall.Reserve("1s"))
-                .WithWall(wall => wall.AddRinshan("1z"))
+                .WithWall(wall => wall.Reserve("1s").AddRinshan("1z").AddDoras("2z"))
                 .Start(1);
 
             (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
@@ -636,11 +635,12 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertNoMoreActions();
             }).AssertAutoFinish();
 
-            scenario.AssertEvent<AgariEvent>(ev => ev.agariInfos
+            await scenario.AssertEvent<AgariEvent>(ev => ev.agariInfos
                 .AssertTsumo(0)
-                .AssertScore(han: 1)
+                .AssertScore(han: 2)
                 .AssertYaku<RinshanKaihou>(han: 1)
-            );
+                .AssertYaku<Ittsu>()
+            ).Resolve();
         }
 
         [TestMethod]

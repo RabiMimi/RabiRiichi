@@ -30,7 +30,7 @@ namespace RabiRiichi.Action.Resolver {
             if (riichiPolicy.HasAnyFlag(RiichiPolicy.SufficientPoints)) {
                 minPoints = Math.Max(minPoints, hand.game.config.pointThreshold.riichiPoints);
             }
-            if (riichiPolicy.HasAnyFlag(RiichiPolicy.NonNegativePoints)) {
+            if (riichiPolicy.HasAnyFlag(RiichiPolicy.ValidPoints)) {
                 minPoints = Math.Max(minPoints, 0);
             }
             if (player.points < minPoints) {

@@ -21,14 +21,14 @@ namespace RabiRiichi.Core.Config {
     public enum RiichiPolicy {
         /// <summary> 立直无特殊要求 </summary>
         None = 0,
-        /// <summary> 禁止立直后分数为负 </summary>
+        /// <summary> 禁止立直后被飞 </summary>
         SufficientPoints = 1 << 0,
-        /// <summary> 禁止立直时分数为负 </summary>
-        NonNegativePoints = 1 << 1,
+        /// <summary> 禁止被飞状态下立直 </summary>
+        ValidPoints = 1 << 1,
         /// <summary> 禁止牌山剩余牌数小于玩家数时立直 </summary>
         SufficientTiles = 1 << 2,
         /// <summary> 所有 </summary>
-        All = SufficientPoints | SufficientTiles | NonNegativePoints,
+        All = SufficientPoints | SufficientTiles | ValidPoints,
         /// <summary> 默认值 </summary>
         Default = SufficientPoints | SufficientTiles,
     }

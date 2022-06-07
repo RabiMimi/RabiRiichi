@@ -253,6 +253,7 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AddCalled("111m", 0, 3)
                     .AddCalled("999m", 0, 3)
                     .AddCalled("111p", 0, 3))
+                .WithWall(wall => wall.AddDoras("1z"))
                 .Build(0)
                 .WithWall(wall => wall.remaining[^1].tile = new Tile("5m"))
                 .Start();
@@ -265,7 +266,7 @@ namespace RabiRiichiTests.Scenario.Tests {
                     .AssertSkip()
                     .ApplyAction<RonAction>()
                     .AssertNoMoreActions();
-            });
+            }).AssertAutoFinish();
 
             await scenario.AssertEvent<AgariEvent>(ev => ev.agariInfos
                 .AssertRon(0, 2)

@@ -149,7 +149,7 @@ namespace RabiRiichiTests.Scenario {
                 while (eventI < events.Count && !matcher(events[eventI])) {
                     eventI++;
                 }
-                if (eventI > events.Count) {
+                if (eventI >= events.Count) {
                     Assert.Fail($"No event matched: {string.Join(", ", events.Select(ev => ev.GetType().Name))}");
                 }
             }
@@ -288,9 +288,9 @@ namespace RabiRiichiTests.Scenario {
                 return this;
             }
 
-            /// <summary> 设置天边，默认为0 </summary>
-            public GameConfigBuilder SetSuddenDeathPoints(int suddenDeathPoints) {
-                config.pointThreshold.suddenDeathPoints = suddenDeathPoints;
+            /// <summary> 设置天边，默认为[0, 1000000] </summary>
+            public GameConfigBuilder SetPointsRange(params int[] pointsRange) {
+                config.pointThreshold.validPointsRange = pointsRange;
                 return this;
             }
 

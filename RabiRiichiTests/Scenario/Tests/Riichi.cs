@@ -423,7 +423,7 @@ namespace RabiRiichiTests.Scenario.Tests {
 
         [TestMethod]
         public async Task SuccessNonNegativePoints() {
-            var scenario = WithPolicy(RiichiPolicy.NonNegativePoints, 0).Start(1);
+            var scenario = WithPolicy(RiichiPolicy.ValidPoints, 0).Start(1);
 
             (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
                 playerInquiry
@@ -435,7 +435,7 @@ namespace RabiRiichiTests.Scenario.Tests {
 
         [TestMethod]
         public async Task FailNegativePoints() {
-            var scenario = WithPolicy(RiichiPolicy.NonNegativePoints, -1).Start(1);
+            var scenario = WithPolicy(RiichiPolicy.ValidPoints, -1).Start(1);
 
             (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
                 playerInquiry

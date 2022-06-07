@@ -19,6 +19,9 @@ namespace RabiRiichi.Core.Config {
         [RabiBroadcast] public int[] ryuukyokuPoints = new int[] { 1000, 1500 };
 
         /// <summary> 天边 </summary>
-        [RabiBroadcast] public int suddenDeathPoints = 0;
+        [RabiBroadcast] public int[] validPointsRange = new int[] { 0, 1000000 };
+        public bool ArePointsValid(int points) {
+            return points >= validPointsRange[0] && points <= validPointsRange[1];
+        }
     }
 }

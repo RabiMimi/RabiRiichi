@@ -3,20 +3,18 @@ using RabiRiichi.Action;
 using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
 using RabiRiichi.Event.InGame;
-using RabiRiichi.Pattern;
 using System.Threading.Tasks;
 
 namespace RabiRiichiTests.Scenario.Tests {
     [TestClass]
     public class ScenarioGameTerminate {
         #region Low Score
-        private const int SUDDEN_DEATH_PT = 10000;
-        private static async Task<Scenario> BuildLowScore(EndGamePolicy policy, int initialPoints) {
-            initialPoints += SUDDEN_DEATH_PT;
+        private static readonly int[] POINTS_RANGE = new int[] { 10000, 50000 };
+        private static async Task<Scenario> BuildLowScoreTest(EndGamePolicy policy, int initialPoints) {
             var scenario = new ScenarioBuilder()
                 .WithConfig(config => config
                     .SetEndGamePolicy(policy)
-                    .SetSuddenDeathPoints(SUDDEN_DEATH_PT))
+                    .SetPointsRange(POINTS_RANGE))
                 .WithPlayer(0, playerBuilder => playerBuilder
                     .SetPoints(initialPoints))
                 .WithPlayer(1, playerBuilder => playerBuilder
@@ -30,17 +28,13 @@ namespace RabiRiichiTests.Scenario.Tests {
 
             (await scenario.WaitInquiry()).Finish();
 
-            return scenario.AssertEvent<AgariEvent>(ev => ev.agariInfos
-                .AssertRon(0, 1)
-                .AssertScore(han: 1, fu: 40)
-                .AssertYaku<Riichi>()
-            );
+            return scenario;
         }
 
         [TestMethod]
-        public async Task NoTerminate_ZeroScore() {
-            var scenario = await BuildLowScore(
-                EndGamePolicy.Default, 1300);
+        public async Task NoTerminate_ExactLowScore() {
+            var scenario = await BuildLowScoreTest(
+                EndGamePolicy.Default, POINTS_RANGE[0] + 1300);
 
             (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => playerInquiry
                 .ApplyAction<RonAction>()
@@ -48,16 +42,16 @@ namespace RabiRiichiTests.Scenario.Tests {
 
             await scenario
                 .AssertEvent<BeginGameEvent>(ev => {
-                    Assert.AreEqual(SUDDEN_DEATH_PT, ev.game.GetPlayer(0).points);
+                    Assert.AreEqual(POINTS_RANGE[0], ev.game.GetPlayer(0).points);
                 })
                 .AssertNoEvent<StopGameEvent>()
                 .Resolve();
         }
 
         [TestMethod]
-        public async Task Terminate_NegativeScore() {
-            var scenario = await BuildLowScore(
-                EndGamePolicy.Default, 1200);
+        public async Task Terminate_LowScore() {
+            var scenario = await BuildLowScoreTest(
+                EndGamePolicy.Default, POINTS_RANGE[0] + 1200);
 
             (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => playerInquiry
                 .ApplyAction<RonAction>()
@@ -65,7 +59,7 @@ namespace RabiRiichiTests.Scenario.Tests {
 
             await scenario
                 .AssertEvent<NextGameEvent>(ev => {
-                    Assert.IsTrue(SUDDEN_DEATH_PT > ev.game.GetPlayer(0).points);
+                    Assert.IsTrue(POINTS_RANGE[0] > ev.game.GetPlayer(0).points);
                 })
                 .AssertEvent<StopGameEvent>(ev => {
                     for (int i = 0; i < ev.game.players.Length; i++) {
@@ -76,13 +70,13 @@ namespace RabiRiichiTests.Scenario.Tests {
         }
 
         [TestMethod]
-        public async Task InstantTerminate_NegativeScore() {
-            var scenario = await BuildLowScore(
-                EndGamePolicy.InstantTerminate, 2000);
+        public async Task InstantTerminate_LowScore() {
+            var scenario = await BuildLowScoreTest(
+                EndGamePolicy.InstantTerminate, POINTS_RANGE[0] + 2000);
 
             var inquiry = await scenario.WaitInquiry();
 
-            scenario.WithPlayer(0, player => player.points = -100);
+            scenario.WithPlayer(0, player => player.points = POINTS_RANGE[0] - 100);
 
             inquiry.ForPlayer(1,
                 playerInquiry => playerInquiry.ApplySkip()
@@ -92,9 +86,10 @@ namespace RabiRiichiTests.Scenario.Tests {
         }
 
         [TestMethod]
-        public async Task NoTerminate_AllowNegativeScore() {
-            var scenario = await BuildLowScore(
-                EndGamePolicy.Default & ~EndGamePolicy.TerminateOnApply, 1200);
+        public async Task NoTerminate_AllowLowScore() {
+            var scenario = await BuildLowScoreTest(
+                EndGamePolicy.Default & ~EndGamePolicy.TerminateOnApply,
+                POINTS_RANGE[0] + 1200);
 
             (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => playerInquiry
                 .ApplyAction<RonAction>()
@@ -102,7 +97,102 @@ namespace RabiRiichiTests.Scenario.Tests {
 
             await scenario
                 .AssertEvent<BeginGameEvent>(ev => {
-                    Assert.IsTrue(ev.game.GetPlayer(0).points < SUDDEN_DEATH_PT);
+                    Assert.IsTrue(ev.game.GetPlayer(0).points < POINTS_RANGE[0]);
+                })
+                .AssertNoEvent<StopGameEvent>()
+                .Resolve();
+        }
+
+        #endregion
+
+        #region High Score
+        private static async Task<Scenario> BuildHighScoreTest(EndGamePolicy policy, int initialPoints) {
+            var scenario = new ScenarioBuilder()
+                .WithConfig(config => config
+                    .SetEndGamePolicy(policy)
+                    .SetPointsRange(POINTS_RANGE))
+                .WithPlayer(1, playerBuilder => playerBuilder
+                    .SetFreeTiles("345666789s2234m")
+                    .SetRiichiTile("2s")
+                    .SetPoints(initialPoints))
+                .WithWall(wall => wall
+                    .Reserve("2m")
+                    .AddDoras("1z")
+                    .AddUradoras("1z"))
+                .Start(0);
+
+            (await scenario.WaitInquiry()).Finish();
+
+            return scenario;
+        }
+
+        [TestMethod]
+        public async Task NoTerminate_ExactHighScore() {
+            var scenario = await BuildHighScoreTest(
+                EndGamePolicy.Default, POINTS_RANGE[1] - 1300);
+
+            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => playerInquiry
+                .ApplyAction<RonAction>()
+            ).AssertAutoFinish();
+
+            await scenario
+                .AssertEvent<BeginGameEvent>(ev => {
+                    Assert.AreEqual(POINTS_RANGE[1], ev.game.GetPlayer(1).points);
+                })
+                .AssertNoEvent<StopGameEvent>()
+                .Resolve();
+        }
+
+        [TestMethod]
+        public async Task Terminate_HighScore() {
+            var scenario = await BuildHighScoreTest(
+                EndGamePolicy.Default, POINTS_RANGE[1] - 1200);
+
+            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => playerInquiry
+                .ApplyAction<RonAction>()
+            ).AssertAutoFinish();
+
+            await scenario
+                .AssertEvent<NextGameEvent>(ev => {
+                    Assert.IsTrue(POINTS_RANGE[1] < ev.game.GetPlayer(1).points);
+                })
+                .AssertEvent<StopGameEvent>(ev => {
+                    for (int i = 0; i < ev.game.players.Length; i++) {
+                        Assert.AreEqual(ev.game.players[i].points, ev.endGamePoints[i]);
+                    }
+                })
+                .Resolve();
+        }
+
+        [TestMethod]
+        public async Task InstantTerminate_HighScore() {
+            var scenario = await BuildHighScoreTest(
+                EndGamePolicy.InstantTerminate, POINTS_RANGE[1] - 2000);
+
+            var inquiry = await scenario.WaitInquiry();
+
+            scenario.WithPlayer(1, player => player.points = POINTS_RANGE[1] + 100);
+
+            inquiry.ForPlayer(1,
+                playerInquiry => playerInquiry.ApplySkip()
+            ).AssertAutoFinish();
+
+            await scenario.AssertEvent<StopGameEvent>().Resolve();
+        }
+
+        [TestMethod]
+        public async Task NoTerminate_AllowHighScore() {
+            var scenario = await BuildHighScoreTest(
+                EndGamePolicy.Default & ~EndGamePolicy.TerminateOnApply,
+                POINTS_RANGE[1] - 1200);
+
+            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => playerInquiry
+                .ApplyAction<RonAction>()
+            ).AssertAutoFinish();
+
+            await scenario
+                .AssertEvent<BeginGameEvent>(ev => {
+                    Assert.IsTrue(ev.game.GetPlayer(1).points > POINTS_RANGE[1]);
                 })
                 .AssertNoEvent<StopGameEvent>()
                 .Resolve();

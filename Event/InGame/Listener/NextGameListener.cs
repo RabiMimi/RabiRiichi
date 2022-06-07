@@ -33,8 +33,8 @@ namespace RabiRiichi.Event.InGame.Listener {
                 player.hand.riichiStick = 0;
             }
             if (info.config.endGamePolicy.HasAnyFlag(EndGamePolicy.TerminateOnApply)
-                && players.Any(p => p.points < info.config.pointThreshold.suddenDeathPoints)) {
-                // 击飞
+                && players.Any(p => !info.config.pointThreshold.ArePointsValid(p.points))) {
+                // 天边
                 ev.Q.QueueIfNotExist(new StopGameEvent(ev));
                 return Task.CompletedTask;
             }
@@ -62,7 +62,7 @@ namespace RabiRiichi.Event.InGame.Listener {
             }
             var config = ev.game.config;
             if (config.endGamePolicy.HasAnyFlag(EndGamePolicy.InstantTerminate)
-                && ev.game.players.Any(p => p.points < config.pointThreshold.suddenDeathPoints)) {
+                && ev.game.players.Any(p => !config.pointThreshold.ArePointsValid(p.points))) {
                 ev.Q.QueueIfNotExist(new StopGameEvent(ev));
                 return Task.CompletedTask;
             }
