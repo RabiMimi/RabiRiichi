@@ -1,8 +1,10 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Action;
+using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
 using RabiRiichi.Event.InGame;
 using RabiRiichi.Pattern;
+using System;
 using System.Threading.Tasks;
 
 namespace RabiRiichiTests.Scenario.Tests {
@@ -103,6 +105,67 @@ namespace RabiRiichiTests.Scenario.Tests {
                 .Resolve();
         }
 
+        #endregion
+
+        #region Extra round
+        [TestMethod]
+        public async Task ExtraRound_InsufficientPoints() {
+            var scenario = new ScenarioBuilder()
+                .WithState(state => state.SetRound(Wind.E, 3, 2))
+                .WithWall(wall => wall.Reserve("1s"))
+                .Build(1)
+                .ForceHaitei()
+                .Start();
+
+            (await scenario.WaitInquiry()).Finish();
+
+            await scenario
+                .AssertEvent<NextGameEvent>()
+                .AssertEvent<BeginGameEvent>(ev => {
+                    Assert.AreEqual(1, ev.round);
+                    Assert.AreEqual(0, ev.dealer);
+                    Assert.AreEqual(3, ev.honba);
+                })
+                .AssertNoEvent<StopGameEvent>()
+                .Resolve();
+        }
+
+        [TestMethod]
+        public async Task Terminate_InsufficientPointsAfterFullRound() {
+            var scenario = new ScenarioBuilder()
+                .WithState(state => state.SetRound(Wind.S, 3, 2))
+                .WithWall(wall => wall.Reserve("1s"))
+                .Build(1)
+                .ForceHaitei()
+                .Start();
+
+            (await scenario.WaitInquiry()).Finish();
+
+            await scenario
+                .AssertEvent<NextGameEvent>()
+                .AssertEvent<StopGameEvent>()
+                .AssertNoEvent<BeginGameEvent>()
+                .Resolve();
+        }
+
+        [TestMethod]
+        public async Task Terminate_SufficientPoints() {
+            var scenario = new ScenarioBuilder()
+                .WithConfig(config => config.SetFinishPoints(25000))
+                .WithState(state => state.SetRound(Wind.E, 3, 2))
+                .WithWall(wall => wall.Reserve("1s"))
+                .Build(1)
+                .ForceHaitei()
+                .Start();
+
+            (await scenario.WaitInquiry()).Finish();
+
+            await scenario
+                .AssertEvent<NextGameEvent>()
+                .AssertEvent<StopGameEvent>()
+                .AssertNoEvent<BeginGameEvent>()
+                .Resolve();
+        }
         #endregion
     }
 }
