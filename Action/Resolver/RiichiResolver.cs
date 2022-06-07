@@ -22,18 +22,12 @@ namespace RabiRiichi.Action.Resolver {
 
         protected override bool ResolveAction(Player player, GameTile incoming, MultiPlayerInquiry output) {
             var hand = player.hand;
-            var riichiPolicy = player.game.config.riichiPolicy;
-            if (riichiPolicy.HasAnyFlag(RiichiPolicy.SufficientTiles) && hand.game.wall.NumRemaining < hand.game.config.playerCount) {
+            var config = player.game.config;
+            if (config.riichiPolicy.HasAnyFlag(RiichiPolicy.SufficientTiles)
+                && hand.game.wall.NumRemaining < config.playerCount) {
                 return false;
             }
-            int minPoints = int.MinValue;
-            if (riichiPolicy.HasAnyFlag(RiichiPolicy.SufficientPoints)) {
-                minPoints = Math.Max(minPoints, hand.game.config.pointThreshold.riichiPoints);
-            }
-            if (riichiPolicy.HasAnyFlag(RiichiPolicy.ValidPoints)) {
-                minPoints = Math.Max(minPoints, 0);
-            }
-            if (player.points < minPoints) {
+            if (player.points < config.MinRiichiPoints) {
                 return false;
             }
             if (hand.riichi || !hand.menzen || incoming == null || !incoming.IsTsumo) {

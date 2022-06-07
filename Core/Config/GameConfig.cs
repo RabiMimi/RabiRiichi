@@ -15,10 +15,6 @@ namespace RabiRiichi.Core.Config {
         /// <summary> 番缚 </summary>
         [RabiBroadcast] public int minHan = 1;
 
-        public int HonbaPointsForOnePlayer(int honba) {
-            return (pointThreshold.honbaPoints / (playerCount - 1) * honba).CeilTo100();
-        }
-
         /// <summary> 食断 </summary>
         [RabiBroadcast] public bool allowKuitan = true;
 
@@ -42,6 +38,24 @@ namespace RabiRiichi.Core.Config {
 
         /// <summary> 中途流局 </summary>
         [RabiBroadcast] public RyuukyokuTrigger ryuukyokuTrigger = RyuukyokuTrigger.Default;
+        #endregion
+
+        #region Helper methods
+        public int HonbaPointsForOnePlayer(int honba) {
+            return (pointThreshold.honbaPoints / (playerCount - 1) * honba).CeilTo100();
+        }
+
+        public int MinRiichiPoints {
+            get {
+                if (riichiPolicy.HasFlag(RiichiPolicy.SufficientPoints)) {
+                    return pointThreshold.validPointsRange[0] + pointThreshold.riichiPoints;
+                }
+                if (riichiPolicy.HasFlag(RiichiPolicy.ValidPoints)) {
+                    return pointThreshold.validPointsRange[0];
+                }
+                return int.MinValue;
+            }
+        }
         #endregion
 
         #region For Developer Use

@@ -20,8 +20,10 @@ namespace RabiRiichi.Core.Config {
 
         /// <summary> 天边 </summary>
         [RabiBroadcast] public int[] validPointsRange = new int[] { 0, 1000000 };
-        public bool ArePointsValid(int points) {
-            return points >= validPointsRange[0] && points <= validPointsRange[1];
-        }
+
+        #region Helper methods
+        public bool ArePointsValid(int points)
+            => points >= validPointsRange[0] && points <= validPointsRange[1];
+        #endregion
     }
 }

@@ -383,6 +383,7 @@ namespace RabiRiichiTests.Scenario.Tests {
         #endregion
 
         #region Riichi Policy
+        private static readonly int[] POINTS_RANGE = new int[] { 10000, 50000 };
         private static ScenarioBuilder WithPolicy(RiichiPolicy policy, int points, int riichiPoints = 1000) {
             return new ScenarioBuilder()
                 .WithPlayer(1, playerBuilder => {
@@ -393,6 +394,7 @@ namespace RabiRiichiTests.Scenario.Tests {
                 .WithWall(wall => wall.Reserve("7s"))
                 .WithConfig(configBuilder => {
                     configBuilder
+                        .SetPointsRange(POINTS_RANGE)
                         .SetRiichiPolicy(policy)
                         .SetRiichiPoints(riichiPoints);
                 });
@@ -400,7 +402,7 @@ namespace RabiRiichiTests.Scenario.Tests {
 
         [TestMethod]
         public async Task SuccessSufficientPoints() {
-            var scenario = WithPolicy(RiichiPolicy.SufficientPoints, 1000).Start(1);
+            var scenario = WithPolicy(RiichiPolicy.SufficientPoints, POINTS_RANGE[0] + 1000).Start(1);
 
             (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
                 playerInquiry
@@ -412,7 +414,7 @@ namespace RabiRiichiTests.Scenario.Tests {
 
         [TestMethod]
         public async Task FailInsufficientPoints() {
-            var scenario = WithPolicy(RiichiPolicy.SufficientPoints, 500).Start(1);
+            var scenario = WithPolicy(RiichiPolicy.SufficientPoints, POINTS_RANGE[0] + 500).Start(1);
 
             (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
                 playerInquiry
@@ -423,7 +425,7 @@ namespace RabiRiichiTests.Scenario.Tests {
 
         [TestMethod]
         public async Task SuccessNonNegativePoints() {
-            var scenario = WithPolicy(RiichiPolicy.ValidPoints, 0).Start(1);
+            var scenario = WithPolicy(RiichiPolicy.ValidPoints, POINTS_RANGE[0]).Start(1);
 
             (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
                 playerInquiry
@@ -435,7 +437,7 @@ namespace RabiRiichiTests.Scenario.Tests {
 
         [TestMethod]
         public async Task FailNegativePoints() {
-            var scenario = WithPolicy(RiichiPolicy.ValidPoints, -1).Start(1);
+            var scenario = WithPolicy(RiichiPolicy.ValidPoints, POINTS_RANGE[0] - 1).Start(1);
 
             (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
                 playerInquiry
@@ -446,7 +448,7 @@ namespace RabiRiichiTests.Scenario.Tests {
 
         [TestMethod]
         public async Task SuccessSufficientTiles() {
-            var scenario = WithPolicy(RiichiPolicy.SufficientTiles, -1000)
+            var scenario = WithPolicy(RiichiPolicy.SufficientTiles, POINTS_RANGE[0] - 1000)
                 .Build(1)
                 .WithWall(wall => {
                     wall.remaining.RemoveRange(0, wall.remaining.Count - 5); // P1 will draw 1 tile
@@ -463,7 +465,7 @@ namespace RabiRiichiTests.Scenario.Tests {
 
         [TestMethod]
         public async Task FailInsufficientTiles() {
-            var scenario = WithPolicy(RiichiPolicy.SufficientTiles, -1000)
+            var scenario = WithPolicy(RiichiPolicy.SufficientTiles, POINTS_RANGE[0] - 1000)
                 .Build(1)
                 .WithWall(wall => {
                     wall.remaining.RemoveRange(0, wall.remaining.Count - 4); // P1 will draw 1 tile
