@@ -4,6 +4,7 @@ using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
 using RabiRiichi.Event.InGame;
 using RabiRiichi.Pattern;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -11,27 +12,34 @@ namespace RabiRiichiTests.Scenario.Tests {
     [TestClass]
     public class ScenarioAgari {
         #region Tsumo
-        [TestMethod]
-        public async Task DealerTsumo() {
-            var scenario = new ScenarioBuilder()
-                .WithState(state => state.SetRound(Wind.E, 0, 2).SetRiichiStick(2))
+
+        private static async Task<Scenario> BuildTsumo(int dealer = 0, Action<ScenarioBuilder> action = null) {
+            var scenarioBuilder = new ScenarioBuilder()
+                .WithState(state => state.SetRound(Wind.E, dealer, 2).SetRiichiStick(2))
                 .WithPlayer(0, playerBuilder => playerBuilder
                     .SetFreeTiles("123m123p1123s")
                     .AddCalled("111m", 0, 2))
-                .WithWall(wall => wall.Reserve("1s").AddDoras("2m"))
-                .Start(0);
+                .WithWall(wall => wall.Reserve("1s").AddDoras("2m"));
+            action?.Invoke(scenarioBuilder);
+            var scenario = scenarioBuilder.Start(0);
 
             (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => playerInquiry
                 .ApplyAction<TsumoAction>()
             ).AssertAutoFinish();
 
-            await scenario.AssertEvent<AgariEvent>(ev => ev.agariInfos
+            return scenario.AssertEvent<AgariEvent>(ev => ev.agariInfos
                 .AssertTsumo(0)
                 .AssertScore(4, 30)
                 .AssertYaku<SanshokuDoujun>(han: 1)
                 .AssertYaku<JunchanTaiyao>(han: 2)
                 .AssertYaku<Dora>(han: 1)
-            ).AssertEvent<ApplyScoreEvent>(ev => {
+            );
+        }
+
+        [TestMethod]
+        public async Task DealerTsumo() {
+            var scenario = await BuildTsumo();
+            await scenario.AssertEvent<ApplyScoreEvent>(ev => {
                 Assert.AreEqual(14300, ev.scoreChange.DeltaScore(0));
                 Assert.AreEqual(-4100, ev.scoreChange.DeltaScore(1));
                 Assert.AreEqual(-4100, ev.scoreChange.DeltaScore(2));
@@ -51,28 +59,38 @@ namespace RabiRiichiTests.Scenario.Tests {
             });
         }
 
+        [TestMethod]
+        public async Task DealerTsumo_NoRenchan() {
+            var scenario = await BuildTsumo(0, scenarioBuilder => {
+                scenarioBuilder.WithConfig(config =>
+                    config.SetContinuationOption(ContinuationOption.Default & ~ContinuationOption.RenchanOnDealerWin));
+            });
+
+            await scenario.AssertEvent<ApplyScoreEvent>(ev => {
+                Assert.AreEqual(14300, ev.scoreChange.DeltaScore(0));
+                Assert.AreEqual(-4100, ev.scoreChange.DeltaScore(1));
+                Assert.AreEqual(-4100, ev.scoreChange.DeltaScore(2));
+                Assert.AreEqual(-4100, ev.scoreChange.DeltaScore(3));
+            }).AssertEvent<BeginGameEvent>(ev => {
+                Assert.AreEqual(0, ev.round);
+                Assert.AreEqual(1, ev.dealer);
+                Assert.AreEqual(0, ev.honba);
+            })
+            .Resolve();
+
+            scenario.WithGame(game => {
+                Assert.AreEqual(0, game.info.round);
+                Assert.AreEqual(1, game.info.dealer);
+                Assert.AreEqual(0, game.info.honba);
+                Assert.AreEqual(0, game.info.riichiStick);
+            });
+        }
 
         [TestMethod]
         public async Task NonDealerTsumo() {
-            var scenario = new ScenarioBuilder()
-                .WithState(state => state.SetRound(Wind.E, 1, 2).SetRiichiStick(2))
-                .WithPlayer(0, playerBuilder => playerBuilder
-                    .SetFreeTiles("123m123p1123s")
-                    .AddCalled("111m", 0, 2))
-                .WithWall(wall => wall.Reserve("1s").AddDoras("2m"))
-                .Start(0);
+            var scenario = await BuildTsumo(1);
 
-            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => playerInquiry
-                .ApplyAction<TsumoAction>()
-            ).AssertAutoFinish();
-
-            await scenario.AssertEvent<AgariEvent>(ev => ev.agariInfos
-                .AssertTsumo(0)
-                .AssertScore(4, 30)
-                .AssertYaku<SanshokuDoujun>(han: 1)
-                .AssertYaku<JunchanTaiyao>(han: 2)
-                .AssertYaku<Dora>(han: 1)
-            ).AssertEvent<ApplyScoreEvent>(ev => {
+            await scenario.AssertEvent<ApplyScoreEvent>(ev => {
                 Assert.AreEqual(10500, ev.scoreChange.DeltaScore(0));
                 Assert.AreEqual(-4100, ev.scoreChange.DeltaScore(1));
                 Assert.AreEqual(-2200, ev.scoreChange.DeltaScore(2));
@@ -135,7 +153,6 @@ namespace RabiRiichiTests.Scenario.Tests {
                 Assert.AreEqual(0, game.info.riichiStick);
             });
         }
-
 
         [TestMethod]
         public async Task NonDealerRon() {

@@ -24,7 +24,7 @@ namespace RabiRiichi.Core.Config {
             return (honbaPoints / (playerCount - 1) * honba).CeilTo100();
         }
 
-        /// <summary> 流局点数 </summary>
+        /// <summary> 不听罚符 </summary>
         [RabiBroadcast] public int ryuukyokuPoints = 3000;
         public int RyuukyokuPointsForOnePlayer => (ryuukyokuPoints / (playerCount - 1)).CeilTo100();
 
@@ -37,6 +37,7 @@ namespace RabiRiichi.Core.Config {
         /// <summary> 包牌 </summary>
         [RabiBroadcast] public bool allowPao = true;
 
+        /// <summary> 对局继续选项 </summary>
         [RabiBroadcast] public ContinuationOption continuationOption = ContinuationOption.Default;
 
         /// <summary> 食替 </summary>

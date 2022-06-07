@@ -1,6 +1,8 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Core;
+using RabiRiichi.Core.Config;
 using RabiRiichi.Event.InGame;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -49,11 +51,10 @@ namespace RabiRiichiTests.Scenario.Tests {
             .Resolve();
         }
 
-        [TestMethod]
-        public async Task Ryuukyoku_1Ten() {
-            var scenario = new ScenarioBuilder()
+        public static async Task<Scenario> Build1Ten(int dealer, Action<ScenarioBuilder> action = null) {
+            var scenarioBuilder = new ScenarioBuilder()
                 .WithState(state => state
-                    .SetRound(Wind.S, 0, 3)
+                    .SetRound(Wind.S, dealer, 3)
                     .SetRiichiStick(3))
                 .WithPlayer(0, playerBuilder => playerBuilder
                     .SetFreeTiles("1112345678999m")
@@ -67,14 +68,16 @@ namespace RabiRiichiTests.Scenario.Tests {
                 .WithPlayer(3, playerBuilder => playerBuilder
                     .SetFreeTiles("1112223334457z")
                     .SetDiscarded(10, "6s"))
-                .WithWall(wall => wall.Reserve("6z"))
+                .WithWall(wall => wall.Reserve("6z"));
+            action(scenarioBuilder);
+            var scenario = scenarioBuilder
                 .Build(0)
                 .ForceHaitei()
                 .Start();
 
             (await scenario.WaitInquiry()).Finish();
 
-            await scenario.AssertEvent<EndGameRyuukyokuEvent>(ev => {
+            scenario.AssertEvent<EndGameRyuukyokuEvent>(ev => {
                 Assert.IsTrue(ev.nagashiManganPlayers.Length == 0);
                 Assert.IsTrue(ev.tenpaiPlayers.SequenceEqualAfterSort(0));
                 Assert.IsTrue(ev.remainingPlayers
@@ -84,15 +87,50 @@ namespace RabiRiichiTests.Scenario.Tests {
                 Assert.AreEqual(-1000, ev.scoreChange.DeltaScore(1));
                 Assert.AreEqual(-1000, ev.scoreChange.DeltaScore(2));
                 Assert.AreEqual(-1000, ev.scoreChange.DeltaScore(3));
-            }).AssertEvent<BeginGameEvent>(ev => {
-                Assert.AreEqual(1, ev.round);
-                Assert.AreEqual(0, ev.dealer);
-                Assert.AreEqual(4, ev.honba);
-                Assert.AreEqual(3, ev.game.info.riichiStick);
-            })
-            .Resolve();
+            });
+
+            return scenario;
         }
 
+        [TestMethod]
+        public async Task Ryuukyoku_1Ten() {
+            await (await Build1Ten(0))
+                .AssertEvent<BeginGameEvent>(ev => {
+                    Assert.AreEqual(1, ev.round);
+                    Assert.AreEqual(0, ev.dealer);
+                    Assert.AreEqual(4, ev.honba);
+                    Assert.AreEqual(3, ev.game.info.riichiStick);
+                })
+                .Resolve();
+        }
+
+        [TestMethod]
+        public async Task Ryuukyoku_NoRenchan() {
+            await (await Build1Ten(0, scenarioBuilder => {
+                scenarioBuilder.WithConfig(config => config.SetContinuationOption(
+                    ContinuationOption.Default & ~ContinuationOption.RenchanOnDealerTenpai
+                ));
+            })).AssertEvent<BeginGameEvent>(ev => {
+                Assert.AreEqual(1, ev.round);
+                Assert.AreEqual(1, ev.dealer);
+                Assert.AreEqual(4, ev.honba);
+                Assert.AreEqual(3, ev.game.info.riichiStick);
+            }).Resolve();
+        }
+
+        [TestMethod]
+        public async Task Ryuukyoku_AlwaysRenchan() {
+            await (await Build1Ten(1, scenarioBuilder => {
+                scenarioBuilder.WithConfig(config => config.SetContinuationOption(
+                    ContinuationOption.Default | ContinuationOption.RenchanOnRyuukyoku
+                ));
+            })).AssertEvent<BeginGameEvent>(ev => {
+                Assert.AreEqual(1, ev.round);
+                Assert.AreEqual(1, ev.dealer);
+                Assert.AreEqual(4, ev.honba);
+                Assert.AreEqual(3, ev.game.info.riichiStick);
+            }).Resolve();
+        }
 
         [TestMethod]
         public async Task Ryuukyoku_2Ten() {
