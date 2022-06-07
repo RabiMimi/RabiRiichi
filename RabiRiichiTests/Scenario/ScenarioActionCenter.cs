@@ -171,6 +171,7 @@ namespace RabiRiichiTests.Scenario {
             var action = FindAction(playerId, matcher);
             var index = inquiry.GetByPlayerId(playerId).actions.IndexOf(action);
             Assert.IsNotNull(action, $"action {typeof(T).Name} not found");
+            Assert.IsFalse(inquiry.hasExecuted, $"inquiry has already been executed");
             foundActions.Add(action);
             inquiry.OnResponse(new InquiryResponse(playerId, index, JsonSerializer.Serialize(response)));
             return this;
