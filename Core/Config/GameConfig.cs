@@ -38,7 +38,7 @@ namespace RabiRiichi.Core.Config {
         [RabiBroadcast] public bool allowPao = true;
 
         /// <summary> 对局继续选项 </summary>
-        [RabiBroadcast] public ContinuationOption continuationOption = ContinuationOption.Default;
+        [RabiBroadcast] public RenchanPolicy renchanPolicy = RenchanPolicy.Default;
 
         /// <summary> 食替 </summary>
         [RabiBroadcast] public KuikaePolicy kuikaePolicy = KuikaePolicy.Default;

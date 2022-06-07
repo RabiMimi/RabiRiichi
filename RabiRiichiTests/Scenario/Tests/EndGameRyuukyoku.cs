@@ -107,8 +107,8 @@ namespace RabiRiichiTests.Scenario.Tests {
         [TestMethod]
         public async Task Ryuukyoku_NoRenchan() {
             await (await Build1Ten(0, scenarioBuilder => {
-                scenarioBuilder.WithConfig(config => config.SetContinuationOption(
-                    ContinuationOption.Default & ~ContinuationOption.RenchanOnDealerTenpai
+                scenarioBuilder.WithConfig(config => config.SetRenchanPolicy(
+                    RenchanPolicy.Default & ~RenchanPolicy.RenchanOnDealerTenpai
                 ));
             })).AssertEvent<BeginGameEvent>(ev => {
                 Assert.AreEqual(1, ev.round);
@@ -121,8 +121,8 @@ namespace RabiRiichiTests.Scenario.Tests {
         [TestMethod]
         public async Task Ryuukyoku_AlwaysRenchan() {
             await (await Build1Ten(1, scenarioBuilder => {
-                scenarioBuilder.WithConfig(config => config.SetContinuationOption(
-                    ContinuationOption.Default | ContinuationOption.RenchanOnRyuukyoku
+                scenarioBuilder.WithConfig(config => config.SetRenchanPolicy(
+                    RenchanPolicy.Default | RenchanPolicy.RenchanOnRyuukyoku
                 ));
             })).AssertEvent<BeginGameEvent>(ev => {
                 Assert.AreEqual(1, ev.round);

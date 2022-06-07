@@ -325,8 +325,8 @@ namespace RabiRiichiTests.Scenario {
             }
 
             /// <summary> 设置对局选项 </summary>
-            public GameConfigBuilder SetContinuationOption(ContinuationOption option) {
-                config.continuationOption = option;
+            public GameConfigBuilder SetRenchanPolicy(RenchanPolicy policy) {
+                config.renchanPolicy = policy;
                 return this;
             }
 

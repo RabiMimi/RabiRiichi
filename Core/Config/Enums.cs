@@ -56,7 +56,7 @@ namespace RabiRiichi.Core.Config {
 
     /// <summary> 对局继续选项 </summary>
     [Flags]
-    public enum ContinuationOption {
+    public enum RenchanPolicy {
         /// <summary> 无 </summary>
         None = 0,
         /// <summary> 庄家和了时连庄 </summary>

@@ -59,11 +59,11 @@ namespace RabiRiichi.Event.InGame.Listener {
                 }
             }
             ev.Q.Queue(new ApplyScoreEvent(ev, ev.scoreChange));
-            var option = ev.game.config.continuationOption;
+            var option = ev.game.config.renchanPolicy;
             bool switchDealer = true;
-            if (option.HasAnyFlag(ContinuationOption.RenchanOnRyuukyoku)) {
+            if (option.HasAnyFlag(RenchanPolicy.RenchanOnRyuukyoku)) {
                 switchDealer = false;
-            } else if (option.HasAnyFlag(ContinuationOption.RenchanOnDealerTenpai)
+            } else if (option.HasAnyFlag(RenchanPolicy.RenchanOnDealerTenpai)
                 && ev.tenpaiPlayers.Contains(ev.game.info.dealer)) {
                 switchDealer = false;
             }

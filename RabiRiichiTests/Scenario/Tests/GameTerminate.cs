@@ -10,9 +10,9 @@ namespace RabiRiichiTests.Scenario.Tests {
     [TestClass]
     public class ScenarioGameTerminate {
         #region Negative Score
-        private static async Task<Scenario> BuildNegativeScore(ContinuationOption option, int initialPoints) {
+        private static async Task<Scenario> BuildNegativeScore(RenchanPolicy option, int initialPoints) {
             var scenario = new ScenarioBuilder()
-                .WithConfig(config => config.SetContinuationOption(option))
+                .WithConfig(config => config.SetRenchanPolicy(option))
                 .WithPlayer(0, playerBuilder => playerBuilder
                     .SetPoints(initialPoints))
                 .WithPlayer(1, playerBuilder => playerBuilder
@@ -36,7 +36,7 @@ namespace RabiRiichiTests.Scenario.Tests {
         [TestMethod]
         public async Task NoTerminate_ZeroScore() {
             var scenario = await BuildNegativeScore(
-                ContinuationOption.Default, 1300);
+                RenchanPolicy.Default, 1300);
 
             (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => playerInquiry
                 .ApplyAction<RonAction>()
@@ -53,7 +53,7 @@ namespace RabiRiichiTests.Scenario.Tests {
         [TestMethod]
         public async Task Terminate_NegativeScore() {
             var scenario = await BuildNegativeScore(
-                ContinuationOption.Default, 1200);
+                RenchanPolicy.Default, 1200);
 
             (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => playerInquiry
                 .ApplyAction<RonAction>()
@@ -74,7 +74,7 @@ namespace RabiRiichiTests.Scenario.Tests {
         [TestMethod]
         public async Task InstantTerminate_NegativeScore() {
             var scenario = await BuildNegativeScore(
-                ContinuationOption.InstantTerminateOnNegativeScore, 2000);
+                RenchanPolicy.InstantTerminateOnNegativeScore, 2000);
 
             var inquiry = await scenario.WaitInquiry();
 
@@ -90,7 +90,7 @@ namespace RabiRiichiTests.Scenario.Tests {
         [TestMethod]
         public async Task NoTerminate_AllowNegativeScore() {
             var scenario = await BuildNegativeScore(
-                ContinuationOption.Default & ~ContinuationOption.TerminateOnNegativeScore, 1200);
+                RenchanPolicy.Default & ~RenchanPolicy.TerminateOnNegativeScore, 1200);
 
             (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => playerInquiry
                 .ApplyAction<RonAction>()
