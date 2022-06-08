@@ -91,4 +91,33 @@ namespace RabiRiichi.Core.Config {
         /// <summary> 默认值 </summary>
         Default = PointsOutOfRange | DealerTenpai | DealerAgari | ExtendedRound,
     }
+
+    /// <summary> 宝牌选项 </summary>
+    [Flags]
+    public enum DoraOption {
+        /// <summary> 无 </summary>
+        None = 0,
+        /// <summary> 初始表宝牌 </summary>
+        InitialDora = 1 << 0,
+        /// <summary> 初始里宝牌 </summary>
+        InitialUradora = 1 << 1,
+        /// <summary> 杠表宝牌 </summary>
+        KanDora = 1 << 2,
+        /// <summary> 杠里宝牌 </summary>
+        KanUradora = 1 << 3,
+        /// <summary> 里宝牌 </summary>
+        Uradora = InitialUradora | KanUradora,
+        /// <summary> 表宝牌 </summary>
+        Dora = InitialDora | KanDora,
+        /// <summary> 大明杠宝牌即开 </summary>
+        InstantRevealAfterDaiMinKan = 1 << 4,
+        /// <summary> 加杠宝牌即开 </summary>
+        InstantRevealAfterKaKan = 1 << 5,
+        /// <summary> 暗杠宝牌即开 </summary>
+        InstantRevealAfterAnKan = 1 << 6,
+        /// <summary> 所有 </summary>
+        All = Dora | Uradora | InstantRevealAfterDaiMinKan | InstantRevealAfterKaKan | InstantRevealAfterAnKan,
+        /// <summary> 默认值 </summary>
+        Default = Dora | Uradora | InstantRevealAfterAnKan,
+    }
 }

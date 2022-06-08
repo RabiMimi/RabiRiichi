@@ -1,5 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Core;
+using RabiRiichi.Core.Config;
 using RabiRiichi.Util;
 using System;
 using System.Linq;
@@ -12,14 +13,14 @@ namespace RabiRiichiTests.Core {
 
         [TestInitialize]
         public void Init() {
-            wall = new Wall(new RabiRand(114514));
+            wall = new Wall(new RabiRand(114514), new GameConfig());
             wall.Reset();
         }
 
         [TestMethod]
         public void TestTileNum() {
             int total = Tiles.All.Count;
-            wall.RevealDora();
+            wall.RevealDora(false);
             Assert.AreEqual(total, wall.NumRemaining + Wall.NUM_DORA * 2 + Wall.NUM_RINSHAN);
             Assert.AreEqual(Wall.NUM_RINSHAN, wall.rinshan.Count);
             Assert.AreEqual(Wall.NUM_DORA, wall.doras.Count);
@@ -62,15 +63,17 @@ namespace RabiRiichiTests.Core {
         [TestMethod]
         public void TestRevealDora() {
             Assert.AreEqual(0, wall.revealedDoraCount);
+            Assert.AreEqual(0, wall.revealedUradoraCount);
             int hiddenNum = wall.hiddenTiles.Count();
             for (int i = 0; i < Wall.NUM_DORA; i++) {
-                var tile = wall.RevealDora();
+                var tile = wall.RevealDora(false);
                 Assert.IsNotNull(tile);
                 Assert.AreEqual(TileSource.Wanpai, tile.source);
             }
             Assert.AreEqual(Wall.NUM_DORA, wall.revealedDoraCount);
+            Assert.AreEqual(Wall.NUM_DORA, wall.revealedUradoraCount);
             Assert.AreEqual(hiddenNum - Wall.NUM_DORA, wall.hiddenTiles.Count());
-            Assert.IsNull(wall.RevealDora());
+            Assert.IsNull(wall.RevealDora(false));
         }
 
         [TestMethod]
@@ -78,7 +81,7 @@ namespace RabiRiichiTests.Core {
             // First Dora
             wall.ReplaceDora(0, wall.FindInHidden(new Tile("4s")));
             wall.ReplaceUradora(0, wall.FindInHidden(new Tile("4z")));
-            wall.RevealDora();
+            wall.RevealDora(false);
             Assert.AreEqual(0, wall.CountDora(new Tile("6s")));
             Assert.AreEqual(1, wall.CountDora(new Tile("5s")));
             Assert.AreEqual(1, wall.CountDora(new Tile("r5s")));
@@ -89,7 +92,7 @@ namespace RabiRiichiTests.Core {
             // Second Dora
             wall.ReplaceDora(1, wall.FindInHidden(new Tile("4s")));
             wall.ReplaceUradora(1, wall.FindInHidden(new Tile("r7z")));
-            wall.RevealDora();
+            wall.RevealDora(false);
             Assert.AreEqual(0, wall.CountDora(new Tile("6s")));
             Assert.AreEqual(2, wall.CountDora(new Tile("5s")));
             Assert.AreEqual(2, wall.CountDora(new Tile("r5s")));
@@ -100,7 +103,7 @@ namespace RabiRiichiTests.Core {
             // Third Dora
             wall.ReplaceDora(2, wall.FindInHidden(new Tile("5s")));
             wall.ReplaceUradora(2, wall.FindInHidden(new Tile("7z")));
-            wall.RevealDora();
+            wall.RevealDora(false);
             Assert.AreEqual(1, wall.CountDora(new Tile("6s")));
             Assert.AreEqual(2, wall.CountDora(new Tile("5s")));
             Assert.AreEqual(2, wall.CountDora(new Tile("r5s")));
@@ -148,7 +151,7 @@ namespace RabiRiichiTests.Core {
             Assert.IsFalse(wall.Remove(tile));
 
             // Remove unrevealed dora
-            wall.RevealDora();
+            wall.RevealDora(false);
             int doraCount = wall.doras.Count;
             remainingCount = wall.remaining.Count;
             tile = wall.doras[1];
@@ -381,5 +384,72 @@ namespace RabiRiichiTests.Core {
             Assert.AreEqual(tile, wall.rinshan[0]);
             Assert.AreEqual(rinshanCount, wall.rinshan.Count);
         }
+
+        #region Dora Options Test
+        [TestMethod]
+        public void TestDoraOption_EverythingOn() {
+            wall.config.doraOption = DoraOption.All;
+            Assert.AreEqual(0, wall.revealedDoraCount);
+            Assert.AreEqual(0, wall.revealedUradoraCount);
+            Assert.IsNotNull(wall.RevealDora(false));
+            Assert.AreEqual(1, wall.revealedDoraCount);
+            Assert.AreEqual(1, wall.revealedUradoraCount);
+            Assert.IsNotNull(wall.RevealDora(true));
+            Assert.AreEqual(2, wall.revealedDoraCount);
+            Assert.AreEqual(2, wall.revealedUradoraCount);
+        }
+
+        [TestMethod]
+        public void TestDoraOption_InitialDoraOff() {
+            wall.config.doraOption = DoraOption.All & ~DoraOption.InitialDora;
+            Assert.AreEqual(0, wall.revealedDoraCount);
+            Assert.AreEqual(0, wall.revealedUradoraCount);
+            Assert.IsNull(wall.RevealDora(false));
+            Assert.AreEqual(0, wall.revealedDoraCount);
+            Assert.AreEqual(1, wall.revealedUradoraCount);
+            Assert.IsNotNull(wall.RevealDora(true));
+            Assert.AreEqual(1, wall.revealedDoraCount);
+            Assert.AreEqual(2, wall.revealedUradoraCount);
+        }
+
+        [TestMethod]
+        public void TestDoraOption_InitialUradoraOff() {
+            wall.config.doraOption = DoraOption.All & ~DoraOption.InitialUradora;
+            Assert.AreEqual(0, wall.revealedDoraCount);
+            Assert.AreEqual(0, wall.revealedUradoraCount);
+            Assert.IsNotNull(wall.RevealDora(false));
+            Assert.AreEqual(1, wall.revealedDoraCount);
+            Assert.AreEqual(0, wall.revealedUradoraCount);
+            Assert.IsNotNull(wall.RevealDora(true));
+            Assert.AreEqual(2, wall.revealedDoraCount);
+            Assert.AreEqual(1, wall.revealedUradoraCount);
+        }
+
+        [TestMethod]
+        public void TestDoraOption_KanDoraOff() {
+            wall.config.doraOption = DoraOption.All & ~DoraOption.KanDora;
+            Assert.AreEqual(0, wall.revealedDoraCount);
+            Assert.AreEqual(0, wall.revealedUradoraCount);
+            Assert.IsNotNull(wall.RevealDora(false));
+            Assert.AreEqual(1, wall.revealedDoraCount);
+            Assert.AreEqual(1, wall.revealedUradoraCount);
+            Assert.IsNull(wall.RevealDora(true));
+            Assert.AreEqual(1, wall.revealedDoraCount);
+            Assert.AreEqual(2, wall.revealedUradoraCount);
+        }
+
+        [TestMethod]
+        public void TestDoraOption_KanUradoraOff() {
+            wall.config.doraOption = DoraOption.All & ~DoraOption.KanUradora;
+            Assert.AreEqual(0, wall.revealedDoraCount);
+            Assert.AreEqual(0, wall.revealedUradoraCount);
+            Assert.IsNotNull(wall.RevealDora(false));
+            Assert.AreEqual(1, wall.revealedDoraCount);
+            Assert.AreEqual(1, wall.revealedUradoraCount);
+            Assert.IsNotNull(wall.RevealDora(true));
+            Assert.AreEqual(2, wall.revealedDoraCount);
+            Assert.AreEqual(1, wall.revealedUradoraCount);
+        }
+        #endregion
     }
 }

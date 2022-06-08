@@ -1,12 +1,13 @@
-﻿using RabiRiichi.Util;
+﻿using RabiRiichi.Core.Config;
+using RabiRiichi.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace RabiRiichi.Core {
     public class Wall {
-        public Game game;
-        public RabiRand rand;
+        public readonly GameConfig config;
+        public readonly RabiRand rand;
 
         /// <summary> 宝牌数量 </summary>
         public const int NUM_DORA = 5;
@@ -22,6 +23,8 @@ namespace RabiRiichi.Core {
         public readonly ListStack<GameTile> uradoras = new();
         /// <summary> 已翻的Dora数量 </summary>
         public int revealedDoraCount = 0;
+        /// <summary> 已翻的里Dora数量 </summary>
+        public int revealedUradoraCount = 0;
         /// <summary> 玩家还尚不知道的牌，用于搞事 </summary>
         public IEnumerable<GameTile> hiddenTiles =>
             remaining
@@ -33,8 +36,9 @@ namespace RabiRiichi.Core {
         /// <summary> 是否到了海底 </summary>
         public bool IsHaitei => NumRemaining <= 0;
 
-        public Wall(RabiRand rand) {
+        public Wall(RabiRand rand, GameConfig config) {
             this.rand = rand;
+            this.config = config;
         }
 
         /// <summary> 重置牌山 </summary>
@@ -73,15 +77,21 @@ namespace RabiRiichi.Core {
         }
 
         /// <summary> 翻一张宝牌 </summary>
-        public GameTile RevealDora() {
-            if (revealedDoraCount >= doras.Count) {
-                return null;
+        public GameTile RevealDora(bool isKan) {
+            bool revealUradora = config.doraOption.HasAnyFlag(
+                isKan ? DoraOption.KanUradora : DoraOption.InitialUradora);
+            bool revealDora = config.doraOption.HasAnyFlag(
+                isKan ? DoraOption.KanDora : DoraOption.InitialDora);
+            if (revealUradora && revealedUradoraCount < uradoras.Count) {
+                revealedUradoraCount++;
             }
-            var ret = doras[revealedDoraCount++];
-            ret.source = TileSource.Wanpai;
-            return ret;
+            if (revealDora && revealedDoraCount < doras.Count) {
+                var ret = doras[revealedDoraCount++];
+                ret.source = TileSource.Wanpai;
+                return ret;
+            }
+            return null;
         }
-
 
         /// <summary> 计算tile算几番宝牌（不考虑里宝牌/红宝牌）。非宝牌返回0 </summary>
         public int CountDora(Tile tile)
@@ -89,7 +99,7 @@ namespace RabiRiichi.Core {
 
         /// <summary> 计算tile中几番里宝牌。非里宝牌返回0 </summary>
         public int CountUradora(Tile tile)
-            => uradoras.Take(revealedDoraCount).Count(uradora => uradora.tile.NextDora.IsSame(tile));
+            => uradoras.Take(revealedUradoraCount).Count(uradora => uradora.tile.NextDora.IsSame(tile));
 
         /// <summary> 抽一张岭上牌 </summary>
         public GameTile DrawRinshan() {

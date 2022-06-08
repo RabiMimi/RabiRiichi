@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 namespace RabiRiichi.Event.InGame.Listener {
     public static class RevealDoraListener {
         public static Task RevealDora(RevealDoraEvent e) {
-            e.dora = e.game.wall.RevealDora();
+            e.dora = e.game.wall.RevealDora(e.playerId >= 0);
             return Task.CompletedTask;
         }
 

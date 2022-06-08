@@ -30,11 +30,14 @@ namespace RabiRiichi.Core.Config {
         /// <summary> 终局策略 </summary>
         [RabiBroadcast] public EndGamePolicy endGamePolicy = EndGamePolicy.Default;
 
-        /// <summary> 食替 </summary>
+        /// <summary> 食替策略 </summary>
         [RabiBroadcast] public KuikaePolicy kuikaePolicy = KuikaePolicy.Default;
 
-        /// <summary> 立直 </summary>
+        /// <summary> 立直策略 </summary>
         [RabiBroadcast] public RiichiPolicy riichiPolicy = RiichiPolicy.Default;
+
+        /// <summary> 宝牌选项 </summary>
+        [RabiBroadcast] public DoraOption doraOption = DoraOption.Default;
 
         /// <summary> 中途流局 </summary>
         [RabiBroadcast] public RyuukyokuTrigger ryuukyokuTrigger = RyuukyokuTrigger.Default;

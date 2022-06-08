@@ -595,6 +595,7 @@ namespace RabiRiichiTests.Scenario {
             private readonly Tiles rinshan = new();
             private readonly List<PlayerHandBuilder> playerBuilders;
             private int revealedDoraCount = 1;
+            private int revealedUradoraCount = 1;
 
             public WallBuilder(IEnumerable<PlayerHandBuilder> players) {
                 playerBuilders = players.ToList();
@@ -657,6 +658,12 @@ namespace RabiRiichiTests.Scenario {
                 return this;
             }
 
+            /// <summary> 设置有多少里Dora已经翻开了，默认为1。 </summary>
+            public WallBuilder SetRevealedUradoraCount(int count) {
+                revealedUradoraCount = count;
+                return this;
+            }
+
             public Wall Setup(Wall wall) {
                 if (playerBuilders.Any(builder => builder.player == null)) {
                     throw new InvalidOperationException("Must set up PlayerHandBuilder before setting up wall.");
@@ -665,6 +672,7 @@ namespace RabiRiichiTests.Scenario {
                 var players = playerBuilders.Select(builder => builder.player).ToArray();
                 var allTiles = wall.doras.Concat(wall.uradoras).Concat(wall.rinshan).Concat(wall.remaining).ToList();
                 wall.revealedDoraCount = revealedDoraCount;
+                wall.revealedUradoraCount = revealedUradoraCount;
 
                 GameTile Draw(Tile tile) {
                     var index = allTiles.FindIndex(t => t.tile == tile);
