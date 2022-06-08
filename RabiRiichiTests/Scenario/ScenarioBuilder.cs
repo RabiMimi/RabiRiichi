@@ -343,6 +343,12 @@ namespace RabiRiichiTests.Scenario {
                 return this;
             }
 
+            /// <summary> 设置宝牌选项 </summary>
+            public GameConfigBuilder SetDoraOption(DoraOption option) {
+                config.doraOption = option;
+                return this;
+            }
+
             public GameConfig Build() {
                 return config;
             }

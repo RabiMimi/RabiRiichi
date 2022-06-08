@@ -1,4 +1,7 @@
 using RabiRiichi.Core;
+using RabiRiichi.Core.Config;
+using RabiRiichi.Util;
+using System;
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Event.InGame.Listener {
@@ -14,7 +17,15 @@ namespace RabiRiichi.Event.InGame.Listener {
                 return Task.CompletedTask;
             }
 
-            if (ev.kanSource == TileSource.AnKan) {
+            // Check if should reveal dora immediately
+            bool instantReveal = ev.game.config.doraOption.HasAnyFlag(ev.kanSource switch {
+                TileSource.AnKan => DoraOption.InstantRevealAfterAnKan,
+                TileSource.KaKan => DoraOption.InstantRevealAfterKaKan,
+                TileSource.DaiMinKan => DoraOption.InstantRevealAfterDaiMinKan,
+                _ => throw new ArgumentException($"Invalid kan source: {ev.kanSource}")
+            });
+
+            if (instantReveal) {
                 ev.Q.Queue(new RevealDoraEvent(ev, ev.playerId));
             } else {
                 var revealDoraEv = new RevealDoraEvent(ev, ev.playerId);

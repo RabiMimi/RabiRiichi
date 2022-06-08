@@ -603,6 +603,131 @@ namespace RabiRiichiTests.Scenario.Tests {
         }
         #endregion
 
+        #region Reveal Dora Option
+        private static Scenario BuildRevealDoraOption(DoraOption option) {
+            var scenario = new ScenarioBuilder()
+                .WithConfig(config => config.SetDoraOption(option))
+                .WithPlayer(0, playerBuilder => playerBuilder
+                    .SetFreeTiles("1111579s169m")
+                    .AddCalled("222s", 2, 2))
+                .WithPlayer(1, playerBuilder => playerBuilder
+                    .SetFreeTiles("4689s1135p16669m"))
+                .WithWall(wall => wall.Reserve("2s"))
+                .Start(0);
+            return scenario;
+        }
+
+        [TestMethod]
+        public async Task InstantReveal_DaiMinKan() {
+            var scenario = BuildRevealDoraOption(DoraOption.InstantRevealAfterDaiMinKan);
+
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry.ChooseTile<PlayTileAction>("6m");
+            }).AssertAutoFinish();
+
+            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
+                playerInquiry.ChooseTiles<KanAction>("6666m");
+            }).AssertAutoFinish();
+
+            scenario.AssertEvent<RevealDoraEvent>();
+
+            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
+                playerInquiry.ChooseTile<PlayTileAction>("1m");
+            }).AssertAutoFinish();
+
+            await scenario.AssertNoEvent<RevealDoraEvent>().Resolve();
+        }
+
+        [TestMethod]
+        public async Task DelayedReveal_DaiMinKan() {
+            var scenario = BuildRevealDoraOption(DoraOption.All & ~DoraOption.InstantRevealAfterDaiMinKan);
+
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry.ChooseTile<PlayTileAction>("6m");
+            }).AssertAutoFinish();
+
+            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
+                playerInquiry.ChooseTiles<KanAction>("6666m");
+            }).AssertAutoFinish();
+
+            scenario.AssertNoEvent<RevealDoraEvent>();
+
+            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
+                playerInquiry.ChooseTile<PlayTileAction>("1m");
+            }).AssertAutoFinish();
+
+            await scenario.AssertEvent<RevealDoraEvent>().Resolve();
+        }
+
+        [TestMethod]
+        public async Task InstantReveal_KaKan() {
+            var scenario = BuildRevealDoraOption(DoraOption.InstantRevealAfterKaKan);
+
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry.ChooseTiles<KanAction>("2222s");
+            }).AssertAutoFinish();
+
+            scenario.AssertEvent<RevealDoraEvent>();
+
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry.ChooseTile<PlayTileAction>("1m");
+            }).AssertAutoFinish();
+
+            await scenario.AssertNoEvent<RevealDoraEvent>().Resolve();
+        }
+
+        [TestMethod]
+        public async Task DelayedReveal_KaKan() {
+            var scenario = BuildRevealDoraOption(DoraOption.All & ~DoraOption.InstantRevealAfterKaKan);
+
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry.ChooseTiles<KanAction>("2222s");
+            }).AssertAutoFinish();
+
+            scenario.AssertNoEvent<RevealDoraEvent>();
+
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry.ChooseTile<PlayTileAction>("1m");
+            }).AssertAutoFinish();
+
+            await scenario.AssertEvent<RevealDoraEvent>().Resolve();
+        }
+
+        [TestMethod]
+        public async Task InstantReveal_AnKan() {
+            var scenario = BuildRevealDoraOption(DoraOption.InstantRevealAfterAnKan);
+
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry.ChooseTiles<KanAction>("1111s");
+            }).AssertAutoFinish();
+
+            scenario.AssertEvent<RevealDoraEvent>();
+
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry.ChooseTile<PlayTileAction>("1m");
+            }).AssertAutoFinish();
+
+            await scenario.AssertNoEvent<RevealDoraEvent>().Resolve();
+        }
+
+        [TestMethod]
+        public async Task DelayedReveal_AnKan() {
+            var scenario = BuildRevealDoraOption(DoraOption.All & ~DoraOption.InstantRevealAfterAnKan);
+
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry.ChooseTiles<KanAction>("1111s");
+            }).AssertAutoFinish();
+
+            scenario.AssertNoEvent<RevealDoraEvent>();
+
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+                playerInquiry.ChooseTile<PlayTileAction>("1m");
+            }).AssertAutoFinish();
+
+            await scenario.AssertEvent<RevealDoraEvent>().Resolve();
+        }
+        #endregion
+
         #region Other
 
         [TestMethod]
