@@ -7,13 +7,29 @@ namespace RabiRiichi.Event.InGame.Listener {
     public static class NextGameListener {
         public static Task PrepareNextGame(NextGameEvent ev) {
             var info = ev.game.info;
-            if (!ev.switchDealer) {
+            var renchanPolicy = info.config.renchanPolicy;
+            var cEv = (ConcludeGameEvent)ev.parent;
+            bool keepDealer = false;
+            if (cEv.IsRyuukyoku) {
+                if (renchanPolicy.HasAnyFlag(RenchanPolicy.MidGameRyuukyoku)) {
+                    keepDealer |= cEv.reason.HasAnyFlag(ConcludeGameReason.MidGameRyuukyoku);
+                }
+                if (renchanPolicy.HasAnyFlag(RenchanPolicy.EndGameRyuukyoku)) {
+                    keepDealer |= cEv.reason.HasAnyFlag(ConcludeGameReason.EndGameRyuukyoku);
+                }
+                if (renchanPolicy.HasAnyFlag(RenchanPolicy.DealerTenpai)) {
+                    keepDealer |= cEv.tenpaiPlayers?.Contains(info.dealer) == true;
+                }
+            } else if (renchanPolicy.HasAnyFlag(RenchanPolicy.DealerWin)) {
+                keepDealer = ev.game.Dealer.hand.agari;
+            }
+            if (keepDealer) {
                 ev.nextRound = info.round;
                 ev.nextDealer = info.dealer;
                 ev.nextHonba = info.honba + 1;
                 return Task.CompletedTask;
             }
-            if (ev.isRyuukyoku) {
+            if (cEv.IsRyuukyoku) {
                 ev.nextHonba = info.honba + 1;
             } else {
                 ev.nextHonba = 0;
@@ -57,7 +73,7 @@ namespace RabiRiichi.Event.InGame.Listener {
                 && ev.game.Dealer.points >= info.config.pointThreshold.finishPoints) {
                 if ((
                     info.config.endGamePolicy.HasAnyFlag(EndGamePolicy.DealerTenpai)
-                    && ev.dealerTenpai
+                    && ((ConcludeGameEvent)ev.parent).tenpaiPlayers?.Contains(info.dealer) == true
                 ) || (
                     info.config.endGamePolicy.HasAnyFlag(EndGamePolicy.DealerAgari)
                     && ev.game.Dealer.hand.agari

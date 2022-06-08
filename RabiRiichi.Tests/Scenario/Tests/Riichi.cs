@@ -510,7 +510,12 @@ namespace RabiRiichi.Tests.Scenario.Tests {
         public async Task SuuchaRiichiRyuukyoku() {
             var scenario = await BuildSuuchaRiichi();
 
-            await scenario.AssertRyuukyoku<SuuchaRiichi>().Resolve();
+            await scenario.AssertRyuukyoku<SuuchaRiichi>()
+                .AssertEvent<BeginGameEvent>(ev => {
+                    Assert.AreEqual(0, ev.round);
+                    Assert.AreEqual(0, ev.dealer);
+                    Assert.AreEqual(1, ev.honba);
+                }).Resolve();
         }
 
         [TestMethod]

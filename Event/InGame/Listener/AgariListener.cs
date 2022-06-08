@@ -13,11 +13,7 @@ namespace RabiRiichi.Event.InGame.Listener {
             ev.Q.Queue(calcScoreEv);
             var applyScoreEv = new ApplyScoreEvent(calcScoreEv, calcScoreEv.scoreChange);
             ev.Q.Queue(applyScoreEv);
-            bool switchDealer = true;
-            if (ev.game.config.renchanPolicy.HasAnyFlag(RenchanPolicy.DealerWin)) {
-                switchDealer = ev.agariInfos.All(info => info.playerId != ev.game.info.dealer);
-            }
-            ev.Q.Queue(new ConcludeGameEvent(applyScoreEv, switchDealer, false));
+            ev.Q.Queue(new ConcludeGameEvent(applyScoreEv, ConcludeGameReason.Agari));
             return Task.CompletedTask;
         }
 

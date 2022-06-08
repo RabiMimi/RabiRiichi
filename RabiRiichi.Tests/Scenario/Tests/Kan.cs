@@ -361,7 +361,13 @@ namespace RabiRiichi.Tests.Scenario.Tests {
                     .AssertNoMoreActions();
             }).AssertAutoFinish();
 
-            await scenario.AssertRyuukyoku<SuukanSanra>().Resolve();
+            await scenario.AssertRyuukyoku<SuukanSanra>()
+                .AssertEvent<BeginGameEvent>(ev => {
+                    Assert.AreEqual(0, ev.round);
+                    Assert.AreEqual(0, ev.dealer);
+                    Assert.AreEqual(1, ev.honba);
+                })
+                .Resolve();
         }
 
         [TestMethod]

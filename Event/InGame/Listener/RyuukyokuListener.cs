@@ -1,6 +1,7 @@
 using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
 using RabiRiichi.Util;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -62,21 +63,13 @@ namespace RabiRiichi.Event.InGame.Listener {
                 }
             }
             ev.Q.Queue(new ApplyScoreEvent(ev, ev.scoreChange));
-            var option = ev.game.config.renchanPolicy;
-            bool switchDealer = true;
-            bool dealerTenpai = ev.tenpaiPlayers.Contains(ev.game.info.dealer);
-            if (option.HasAnyFlag(RenchanPolicy.Ryuukyoku)) {
-                switchDealer = false;
-            } else if (option.HasAnyFlag(RenchanPolicy.DealerTenpai) && dealerTenpai) {
-                switchDealer = false;
-            }
-            ev.Q.Queue(new NextGameEvent(ev, switchDealer, true, dealerTenpai));
+            ev.Q.Queue(new ConcludeGameEvent(ev, ConcludeGameReason.EndGameRyuukyoku, ev.tenpaiPlayers));
             return Task.CompletedTask;
         }
 
         public static Task ExecuteMidGameRyuukyoku(MidGameRyuukyokuEvent ev) {
             ev.Q.Queue(new ApplyScoreEvent(ev, ev.scoreChange));
-            ev.Q.Queue(new NextGameEvent(ev, false, true, false));
+            ev.Q.Queue(new ConcludeGameEvent(ev, ConcludeGameReason.MidGameRyuukyoku));
             return Task.CompletedTask;
         }
 

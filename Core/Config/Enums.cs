@@ -63,12 +63,14 @@ namespace RabiRiichi.Core.Config {
         DealerWin = 1 << 0,
         /// <summary> 庄家流局听牌时连庄 </summary>
         DealerTenpai = 1 << 1,
-        /// <summary> 流局时连庄 </summary>
-        Ryuukyoku = 1 << 2,
+        /// <summary> 终局流局时必定连庄 </summary>
+        EndGameRyuukyoku = 1 << 2,
+        /// <summary> 中途流局时连庄 </summary>
+        MidGameRyuukyoku = 1 << 3,
         /// <summary> 所有 </summary>
-        All = DealerWin | DealerTenpai | Ryuukyoku,
+        All = DealerWin | DealerTenpai | EndGameRyuukyoku | MidGameRyuukyoku,
         /// <summary> 默认值 </summary>
-        Default = DealerWin | DealerTenpai,
+        Default = DealerWin | DealerTenpai | MidGameRyuukyoku,
     }
 
     /// <summary> 终局策略 </summary>

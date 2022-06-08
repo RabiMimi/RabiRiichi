@@ -122,7 +122,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
         public async Task Ryuukyoku_AlwaysRenchan() {
             await (await Build1Ten(1, scenarioBuilder => {
                 scenarioBuilder.WithConfig(config => config.SetRenchanPolicy(
-                    RenchanPolicy.Default | RenchanPolicy.Ryuukyoku
+                    RenchanPolicy.Default | RenchanPolicy.EndGameRyuukyoku
                 ));
             })).AssertEvent<BeginGameEvent>(ev => {
                 Assert.AreEqual(1, ev.round);
