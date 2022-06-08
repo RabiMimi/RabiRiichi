@@ -36,16 +36,19 @@ namespace RabiRiichi.Core.Config {
         /// <summary> 和牌选项 </summary>
         [RabiBroadcast] public AgariOption agariOption = AgariOption.Default;
 
+        /// <summary> 计分选项 </summary>
+        [RabiBroadcast] public ScoringOption scoringOption = ScoringOption.Default;
+
         /// <summary> 中途流局 </summary>
         [RabiBroadcast] public RyuukyokuTrigger ryuukyokuTrigger = RyuukyokuTrigger.Default;
         #endregion
 
         #region Helper methods
-        public int HonbaPointsForOnePlayer(int honba) {
+        public long HonbaPointsForOnePlayer(int honba) {
             return (pointThreshold.honbaPoints / (playerCount - 1) * honba).CeilTo100();
         }
 
-        public int MinRiichiPoints {
+        public long MinRiichiPoints {
             get {
                 if (riichiPolicy.HasFlag(RiichiPolicy.SufficientPoints)) {
                     return pointThreshold.validPointsRange[0] + pointThreshold.riichiPoints;
@@ -53,7 +56,7 @@ namespace RabiRiichi.Core.Config {
                 if (riichiPolicy.HasFlag(RiichiPolicy.ValidPoints)) {
                     return pointThreshold.validPointsRange[0];
                 }
-                return int.MinValue;
+                return long.MinValue;
             }
         }
         #endregion

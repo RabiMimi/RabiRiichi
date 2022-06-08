@@ -27,7 +27,7 @@ namespace RabiRiichiTests.Scenario {
         }
 
         public static AgariInfo AssertKazoeYakuman(this AgariInfo info) {
-            Assert.IsTrue(info.scores.result.IsKazoeYakuman, "not kazoe yakuman");
+            Assert.IsTrue(info.scores.result.KazoeYakuman > 0, "not kazoe yakuman");
             return info;
         }
 

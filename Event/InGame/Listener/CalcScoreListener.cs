@@ -16,8 +16,8 @@ namespace RabiRiichi.Event.InGame.Listener {
                     ev.scoreChange.AddRange(HandleTsumo(fromPlayer, ev.game, info));
                 } else {
                     // 荣和
-                    int scoreChange = info.scores.result.BaseScore * (toPlayer.IsDealer ? 6 : 4);
-                    int honbaChange = ev.game.config.pointThreshold.honbaPoints * ev.game.info.honba;
+                    long scoreChange = info.scores.result.BaseScore * (toPlayer.IsDealer ? 6 : 4);
+                    long honbaChange = ev.game.config.pointThreshold.honbaPoints * ev.game.info.honba;
                     ev.scoreChange.Add(new ScoreTransfer(fromPlayer.id, toPlayer.id, scoreChange, ScoreTransferReason.Ron));
                     ev.scoreChange.Add(new ScoreTransfer(fromPlayer.id, toPlayer.id, honbaChange, ScoreTransferReason.Honba));
                 }
@@ -29,7 +29,7 @@ namespace RabiRiichi.Event.InGame.Listener {
                     player.hand.riichiStick = 0;
                 }
                 if (ev.game.info.riichiStick > 0) {
-                    int scoreChange = ev.game.info.riichiStick * ev.game.config.pointThreshold.riichiPoints;
+                    long scoreChange = ev.game.info.riichiStick * ev.game.config.pointThreshold.riichiPoints;
                     ev.scoreChange.Add(new ScoreTransfer(-1, agariPlayer, scoreChange, ScoreTransferReason.Riichi));
                     ev.game.info.riichiStick = 0;
                 }
@@ -50,13 +50,13 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         private static IEnumerable<ScoreTransfer> HandleTsumo(Player tsumoPlayer, Game game, AgariInfo info) {
-            int score = info.scores.result.BaseScore;
+            long score = info.scores.result.BaseScore;
             if (tsumoPlayer.IsDealer) {
                 score *= 2;
             }
-            int honbaChange = game.config.HonbaPointsForOnePlayer(game.info.honba);
+            long honbaChange = game.config.HonbaPointsForOnePlayer(game.info.honba);
             foreach (var player in game.players.Where(player => !player.hand.agari)) {
-                int scoreChange = player.IsDealer ? score * 2 : score;
+                long scoreChange = player.IsDealer ? score * 2 : score;
                 yield return new ScoreTransfer(player.id, tsumoPlayer.id, scoreChange, ScoreTransferReason.Tsumo);
                 yield return new ScoreTransfer(player.id, tsumoPlayer.id, honbaChange, ScoreTransferReason.Honba);
             }

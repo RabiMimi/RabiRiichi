@@ -9,8 +9,8 @@ namespace RabiRiichiTests.Scenario.Tests {
     [TestClass]
     public class ScenarioGameTerminate {
         #region Low Score
-        private static readonly int[] POINTS_RANGE = new int[] { 10000, 50000 };
-        private static async Task<Scenario> BuildLowScoreTest(EndGamePolicy policy, int initialPoints) {
+        private static readonly long[] POINTS_RANGE = new long[] { 10000, 50000 };
+        private static async Task<Scenario> BuildLowScoreTest(EndGamePolicy policy, long initialPoints) {
             var scenario = new ScenarioBuilder()
                 .WithConfig(config => config
                     .SetEndGamePolicy(policy)
@@ -106,7 +106,7 @@ namespace RabiRiichiTests.Scenario.Tests {
         #endregion
 
         #region High Score
-        private static async Task<Scenario> BuildHighScoreTest(EndGamePolicy policy, int initialPoints) {
+        private static async Task<Scenario> BuildHighScoreTest(EndGamePolicy policy, long initialPoints) {
             var scenario = new ScenarioBuilder()
                 .WithConfig(config => config
                     .SetEndGamePolicy(policy)

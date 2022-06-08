@@ -10,7 +10,7 @@
         /// <summary> 手牌 </summary>
         public Hand hand;
         /// <summary> 点数 </summary>
-        public int points;
+        public long points;
 
         public Player(int id, Game game) {
             this.id = id;

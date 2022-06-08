@@ -383,8 +383,8 @@ namespace RabiRiichiTests.Scenario.Tests {
         #endregion
 
         #region Riichi Policy
-        private static readonly int[] POINTS_RANGE = new int[] { 10000, 50000 };
-        private static ScenarioBuilder WithPolicy(RiichiPolicy policy, int points, int riichiPoints = 1000) {
+        private static readonly long[] POINTS_RANGE = new long[] { 10000, 50000 };
+        private static ScenarioBuilder WithPolicy(RiichiPolicy policy, long points, long riichiPoints = 1000) {
             return new ScenarioBuilder()
                 .WithPlayer(1, playerBuilder => {
                     playerBuilder

@@ -18,9 +18,9 @@ namespace RabiRiichi.Event.InGame {
         public RabiMessageType msgType => RabiMessageType.Unnecessary;
         [RabiBroadcast] public int from;
         [RabiBroadcast] public int to;
-        [RabiBroadcast] public int points;
+        [RabiBroadcast] public long points;
         [RabiBroadcast] public ScoreTransferReason reason;
-        public ScoreTransfer(int from, int to, int points, ScoreTransferReason reason, bool ceilTo100 = true) {
+        public ScoreTransfer(int from, int to, long points, ScoreTransferReason reason, bool ceilTo100 = true) {
             this.from = from;
             this.to = to;
             this.reason = reason;
@@ -39,11 +39,11 @@ namespace RabiRiichi.Event.InGame {
             this.playerCount = playerCount;
         }
 
-        public int DeltaScore(int playerId)
+        public long DeltaScore(int playerId)
             => this.Where(x => x.to == playerId).Sum(x => x.points)
                 - this.Where(x => x.from == playerId).Sum(x => x.points);
 
-        public int ExtraScoreChange(int playerId)
+        public long ExtraScoreChange(int playerId)
             => this.Where(x => x.from < 0 && x.to == playerId).Sum(x => x.points)
                 - this.Where(x => x.from == playerId && x.to < 0).Sum(x => x.points);
     }

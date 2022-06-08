@@ -34,7 +34,7 @@ namespace RabiRiichi.Event.InGame.Listener {
                 // 流局满贯
                 foreach (var player in ev.remainingPlayers.Except(ev.nagashiManganPlayers)) {
                     foreach (var manganPlayer in ev.nagashiManganPlayers) {
-                        int score = NAGASHI_MANGAN_BASE_PT;
+                        long score = NAGASHI_MANGAN_BASE_PT;
                         if (ev.game.info.dealer == player || ev.game.info.dealer == manganPlayer) {
                             score *= 2;
                         }
@@ -45,11 +45,11 @@ namespace RabiRiichi.Event.InGame.Listener {
                 // 流局
                 var payers = ev.remainingPlayers.Except(ev.tenpaiPlayers).ToArray();
                 if (payers.Length == 2 && ev.tenpaiPlayers.Length == 2) {
-                    int pt = ev.game.config.pointThreshold.ryuukyokuPoints[1];
+                    long pt = ev.game.config.pointThreshold.ryuukyokuPoints[1];
                     ev.AddScoreTransfer(payers[0], ev.tenpaiPlayers[0], pt, ScoreTransferReason.Ryuukyoku);
                     ev.AddScoreTransfer(payers[1], ev.tenpaiPlayers[1], pt, ScoreTransferReason.Ryuukyoku);
                 } else {
-                    int pt = ev.game.config.pointThreshold.ryuukyokuPoints[0];
+                    long pt = ev.game.config.pointThreshold.ryuukyokuPoints[0];
                     if (payers.Length == 1) {
                         foreach (var payee in ev.tenpaiPlayers) {
                             ev.AddScoreTransfer(payers[0], payee, pt, ScoreTransferReason.Ryuukyoku);

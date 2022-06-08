@@ -90,7 +90,7 @@ namespace RabiRiichi.Pattern {
                     foreach (var stdPattern in stdPatterns.Where(p => p.type.HasAnyFlag(patternMask))) {
                         ResolveStdPattern(context, stdPattern, scores);
                     }
-                    scores.Calc();
+                    scores.Calc(hand.game.config.scoringOption);
                     yield return scores;
                 }
             }

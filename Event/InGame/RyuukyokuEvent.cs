@@ -16,7 +16,7 @@ namespace RabiRiichi.Event.InGame {
             scoreChange = new ScoreTransferList(game.config.playerCount);
         }
 
-        public void AddScoreTransfer(int from, int to, int points, ScoreTransferReason reason)
+        public void AddScoreTransfer(int from, int to, long points, ScoreTransferReason reason)
             => scoreChange.Add(new ScoreTransfer(from, to, points, reason));
     }
 

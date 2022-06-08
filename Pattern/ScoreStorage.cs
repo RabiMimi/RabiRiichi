@@ -1,4 +1,5 @@
 ﻿using RabiRiichi.Communication;
+using RabiRiichi.Core.Config;
 using RabiRiichi.Util;
 using System;
 using System.Collections;
@@ -20,64 +21,6 @@ namespace RabiRiichi.Pattern {
             }
         }
 
-        public class ScoreCalcResult : IComparable<ScoreCalcResult>, IRabiMessage {
-            public RabiMessageType msgType => RabiMessageType.Unnecessary;
-            /// <summary> 基本点 </summary>
-            public int BaseScore {
-                get {
-                    if (yakuman > 0) {
-                        return yakuman * 8000;
-                    }
-                    if (IsKazoeYakuman) {
-                        return 8000;
-                    }
-                    if (han >= 11) {
-                        return 6000;
-                    }
-                    if (han >= 8) {
-                        return 4000;
-                    }
-                    if (han >= 6) {
-                        return 3000;
-                    }
-                    if (han >= 5) {
-                        return 2000;
-                    }
-                    int score = fu * (1 << (han + 2));
-                    return Math.Min(2000, score);
-                }
-            }
-            /// <summary> 番 </summary>
-            [RabiBroadcast] public int han;
-            /// <summary> 记作役的番数 </summary>
-            [RabiBroadcast] public int yaku;
-            /// <summary> 符 </summary>
-            [RabiBroadcast] public int fu;
-            /// <summary> 役满数 </summary>
-            [RabiBroadcast] public int yakuman;
-
-            public bool IsKazoeYakuman => han >= KAZOE_YAKUMAN;
-            public bool IsYakuman => yakuman > 0 || IsKazoeYakuman;
-            public bool IsValid(int minHan) => yaku + yakuman * KAZOE_YAKUMAN >= minHan;
-
-            public int CompareTo(ScoreCalcResult other) {
-                if (BaseScore != other.BaseScore) {
-                    return BaseScore.CompareTo(other.BaseScore);
-                }
-                if (han != other.han) {
-                    return han.CompareTo(other.han);
-                }
-                return fu.CompareTo(other.fu);
-            }
-            public static bool operator <(ScoreCalcResult lhs, ScoreCalcResult rhs) {
-                return lhs.CompareTo(rhs) < 0;
-            }
-
-            public static bool operator >(ScoreCalcResult lhs, ScoreCalcResult rhs) {
-                return lhs.CompareTo(rhs) > 0;
-            }
-        }
-
         public RabiMessageType msgType => RabiMessageType.Unnecessary;
         [RabiBroadcast] private readonly List<Scoring> items = new();
 
@@ -96,8 +39,8 @@ namespace RabiRiichi.Pattern {
         public ScoreStorage(IEnumerable<Scoring> scores) {
             items.AddRange(scores);
         }
-        public ScoreCalcResult Calc() {
-            result = new ScoreCalcResult();
+        public ScoreCalcResult Calc(ScoringOption option) {
+            result = new ScoreCalcResult(option);
             foreach (var score in items) {
                 switch (score.Type) {
                     case ScoringType.Fu:

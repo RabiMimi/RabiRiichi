@@ -259,37 +259,37 @@ namespace RabiRiichiTests.Scenario {
             }
 
             /// <summary> 设置初始点，默认为25000 </summary>
-            public GameConfigBuilder SetInitialPoints(int initialPoints) {
+            public GameConfigBuilder SetInitialPoints(long initialPoints) {
                 config.pointThreshold.initialPoints = initialPoints;
                 return this;
             }
 
             /// <summary> 设置立直棒点数，默认为1000 </summary>
-            public GameConfigBuilder SetRiichiPoints(int riichiPoints) {
+            public GameConfigBuilder SetRiichiPoints(long riichiPoints) {
                 config.pointThreshold.riichiPoints = riichiPoints;
                 return this;
             }
 
             /// <summary> 设置本场棒总点数，默认为300 </summary>
-            public GameConfigBuilder SetHonbaPoints(int honbaPoints) {
+            public GameConfigBuilder SetHonbaPoints(long honbaPoints) {
                 config.pointThreshold.honbaPoints = honbaPoints;
                 return this;
             }
 
             /// <summary> 设置流局总点数，默认为3000 </summary>
-            public GameConfigBuilder SetRyuukyokuPoints(params int[] ryuukyokuPoints) {
+            public GameConfigBuilder SetRyuukyokuPoints(params long[] ryuukyokuPoints) {
                 config.pointThreshold.ryuukyokuPoints = ryuukyokuPoints;
                 return this;
             }
 
             /// <summary> 设置终局点数，默认为30000 </summary>
-            public GameConfigBuilder SetFinishPoints(int finishPoints) {
+            public GameConfigBuilder SetFinishPoints(long finishPoints) {
                 config.pointThreshold.finishPoints = finishPoints;
                 return this;
             }
 
             /// <summary> 设置天边，默认为[0, 1000000] </summary>
-            public GameConfigBuilder SetPointsRange(params int[] pointsRange) {
+            public GameConfigBuilder SetPointsRange(params long[] pointsRange) {
                 config.pointThreshold.validPointsRange = pointsRange;
                 return this;
             }
@@ -424,7 +424,7 @@ namespace RabiRiichiTests.Scenario {
                     return MenLike.From(tiles);
                 }
             }
-            private int? points;
+            private long? points;
             private bool? menzen;
             public Tile? riichiTile;
             private bool? wRiichi;
@@ -441,7 +441,7 @@ namespace RabiRiichiTests.Scenario {
             public int handSize;
 
             /// <summary> 设置点数 </summary>
-            public PlayerHandBuilder SetPoints(int points) {
+            public PlayerHandBuilder SetPoints(long points) {
                 this.points = points;
                 return this;
             }

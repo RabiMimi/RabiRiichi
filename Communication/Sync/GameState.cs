@@ -50,7 +50,7 @@ namespace RabiRiichi.Communication.Sync {
         public int playerId { get; init; }
         [RabiBroadcast] public readonly int id;
         [RabiBroadcast] public readonly Wind wind;
-        [RabiBroadcast] public readonly int points;
+        [RabiBroadcast] public readonly long points;
         [RabiBroadcast] public readonly PlayerHandState hand;
 
         public PlayerState(Player player, int receiverId) {

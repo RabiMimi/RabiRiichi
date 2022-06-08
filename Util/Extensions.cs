@@ -10,6 +10,10 @@ namespace RabiRiichi.Util {
             return (val + 99) / 100 * 100;
         }
 
+        public static long CeilTo100(this long val) {
+            return (val + 99) / 100 * 100;
+        }
+
         public static bool HasAnyFlag<T>(this T val, T flags) where T : struct, Enum {
             return ((int)(object)val & (int)(object)flags) != 0;
         }

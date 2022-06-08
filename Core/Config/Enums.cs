@@ -132,17 +132,34 @@ namespace RabiRiichi.Core.Config {
         Pao = 1 << 1,
         /// <summary> 启用流局满贯 </summary>
         NagashiMangan = 1 << 2,
-        /// <summary> 启用切上满贯 </summary>
-        KiriageMangan = 1 << 3,
-        /// <summary> 启用多倍役满 </summary>
-        MultipleYakuman = 1 << 4,
-        /// <summary> 启用累计役满 </summary>
-        KazoeYakuman = 1 << 5,
         /// <summary> 启用头跳 </summary>
-        FirstWinner = 1 << 6,
+        FirstWinner = 1 << 3,
         /// <summary> 所有 </summary>
-        All = Kuitan | Pao | NagashiMangan | KiriageMangan | MultipleYakuman | KazoeYakuman | FirstWinner,
+        All = Kuitan | Pao | NagashiMangan | FirstWinner,
         /// <summary> 默认值 </summary>
-        Default = Kuitan | Pao | NagashiMangan | MultipleYakuman | KazoeYakuman,
+        Default = Kuitan | Pao | NagashiMangan,
+    }
+
+    /// <summary> 计分选项 </summary>
+    [Flags]
+    public enum ScoringOption {
+        /// <summary> 无 </summary>
+        None = 0,
+        /// <summary> 启用切上满贯 </summary>
+        KiriageMangan = 1 << 0,
+        /// <summary>
+        /// 启用役满。若不启用役满，则以下役满相关选项全部无效，且计分时采用青天井规则
+        /// </summary>
+        Yakuman = 1 << 1,
+        /// <summary> 启用多倍役满 </summary>
+        MultipleYakuman = 1 << 2,
+        /// <summary> 启用累计役满 </summary>
+        KazoeYakuman = 1 << 3,
+        /// <summary> 青天井 </summary>
+        Aotenjou = None,
+        /// <summary> 所有 </summary>
+        All = KiriageMangan | Yakuman | MultipleYakuman | KazoeYakuman,
+        /// <summary> 默认值 </summary>
+        Default = Yakuman | MultipleYakuman | KazoeYakuman,
     }
 }
