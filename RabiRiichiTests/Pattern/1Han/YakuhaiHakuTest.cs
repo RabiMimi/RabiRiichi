@@ -26,6 +26,15 @@ namespace RabiRiichiTests.Pattern {
                 .Resolve(true)
                 .ExpectScoring(ScoringType.Han, 1)
                 .NoMore();
+            new StdTestBuilder(V)
+                .AddFree("123s")
+                .AddFree("456s")
+                .AddCalled("5555z", 0)
+                .AddFree("11m")
+                .AddAgari("55z", "5z")
+                .Resolve(true)
+                .ExpectScoring(ScoringType.Han, 2)
+                .NoMore();
         }
 
         [TestMethod]

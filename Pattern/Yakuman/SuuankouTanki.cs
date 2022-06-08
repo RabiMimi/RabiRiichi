@@ -1,6 +1,5 @@
 using RabiRiichi.Core;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace RabiRiichi.Pattern {
     public class SuuankouTanki : StdPattern {

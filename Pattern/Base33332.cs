@@ -164,13 +164,16 @@ namespace RabiRiichi.Pattern {
             output = new List<List<MenLike>>();
             var extraOutput = new List<List<MenLike>>();
             tileBucket = GetTileGroups(hand, incoming, false);
-            current = hand.called;
+            current = new List<MenLike>();
             this.output = output;
             DFSPattern(new Tile(TileSuit.M, 1), janCnt);
             foreach (var gr in output) {
                 GenerateOtherPatterns(gr, incoming, extraOutput);
             }
             output.AddRange(extraOutput);
+            foreach (var gr in output) {
+                gr.InsertRange(0, hand.called);
+            }
             return output.Count > 0;
         }
         #endregion Resolve

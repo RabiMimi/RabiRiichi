@@ -348,6 +348,12 @@ namespace RabiRiichiTests.Scenario {
                 return this;
             }
 
+            /// <summary> 设置计分选项 </summary>
+            public GameConfigBuilder SetScoringOption(ScoringOption option) {
+                config.scoringOption = option;
+                return this;
+            }
+
             public GameConfig Build() {
                 return config;
             }
