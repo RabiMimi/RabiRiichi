@@ -6,11 +6,8 @@
     <Version>0.1.0</Version>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="RabiRiichiDev\**" />
     <Compile Remove="RabiRiichi.Tests\**" />
-    <EmbeddedResource Remove="RabiRiichiDev\**" />
     <EmbeddedResource Remove="RabiRiichi.Tests\**" />
-    <None Remove="RabiRiichiDev\**" />
     <None Remove="RabiRiichi.Tests\**" />
   </ItemGroup>
   <ItemGroup>
