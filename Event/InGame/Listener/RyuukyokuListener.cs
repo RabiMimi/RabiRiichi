@@ -18,9 +18,11 @@ namespace RabiRiichi.Event.InGame.Listener {
                 .Where(player => !player.hand.agari)
                 .Select(player => player.id)
                 .ToArray();
-            ev.nagashiManganPlayers = ev.remainingPlayers
-                .Where(player => IsNagashiMangan(ev.game.GetPlayer(player).hand))
-                .ToArray();
+            if (ev.game.config.agariOption.HasAnyFlag(AgariOption.NagashiMangan)) {
+                ev.nagashiManganPlayers = ev.remainingPlayers
+                    .Where(player => IsNagashiMangan(ev.game.GetPlayer(player).hand))
+                    .ToArray();
+            }
             ev.tenpaiPlayers = ev.remainingPlayers
                 .Where(player => ev.game.GetPlayer(player).hand.Tenpai.Count > 0)
                 .ToArray();

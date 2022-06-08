@@ -130,9 +130,19 @@ namespace RabiRiichi.Core.Config {
         Kuitan = 1 << 0,
         /// <summary> 允许包牌 </summary>
         Pao = 1 << 1,
+        /// <summary> 启用流局满贯 </summary>
+        NagashiMangan = 1 << 2,
+        /// <summary> 启用切上满贯 </summary>
+        KiriageMangan = 1 << 3,
+        /// <summary> 启用多倍役满 </summary>
+        MultipleYakuman = 1 << 4,
+        /// <summary> 启用累计役满 </summary>
+        KazoeYakuman = 1 << 5,
+        /// <summary> 启用头跳 </summary>
+        FirstWinner = 1 << 6,
         /// <summary> 所有 </summary>
-        All = Kuitan | Pao,
+        All = Kuitan | Pao | NagashiMangan | KiriageMangan | MultipleYakuman | KazoeYakuman | FirstWinner,
         /// <summary> 默认值 </summary>
-        Default = All,
+        Default = Kuitan | Pao | NagashiMangan | MultipleYakuman | KazoeYakuman,
     }
 }

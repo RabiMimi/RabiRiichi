@@ -407,6 +407,39 @@ namespace RabiRiichiTests.Scenario.Tests {
             }).Resolve();
         }
 
+        [TestMethod]
+        public async Task NoNagashiMangan_ConfigOff() {
+            var scenario = new ScenarioBuilder()
+                .WithConfig(config => config
+                    .SetAgariOption(AgariOption.Default & ~AgariOption.NagashiMangan))
+                .WithState(state => state
+                    .SetRound(Wind.E, 0, 0))
+                .WithPlayer(0, playerBuilder => playerBuilder
+                    .SetDiscarded(16, "19s19p19m1234567777z"))
+                .WithPlayer(1, playerBuilder => playerBuilder
+                    .SetDiscarded(1, "5s"))
+                .WithPlayer(2, playerBuilder => playerBuilder
+                    .SetDiscarded(1, "6s"))
+                .WithWall(wall => wall.Reserve("6z"))
+                .Build(0)
+                .ForceHaitei()
+                .Start();
+
+            (await scenario.WaitInquiry()).Finish();
+
+            await scenario.AssertRyuukyoku<EndGameRyuukyokuEvent>(ev => {
+                Assert.AreEqual(0, ev.nagashiManganPlayers.Length);
+            }).AssertEvent<ApplyScoreEvent>(ev => {
+                Assert.AreEqual(0, ev.scoreChange.DeltaScore(0));
+                Assert.AreEqual(0, ev.scoreChange.DeltaScore(1));
+                Assert.AreEqual(0, ev.scoreChange.DeltaScore(2));
+                Assert.AreEqual(0, ev.scoreChange.DeltaScore(3));
+            }).AssertEvent<BeginGameEvent>(ev => {
+                Assert.AreEqual(0, ev.round);
+                Assert.AreEqual(1, ev.dealer);
+                Assert.AreEqual(1, ev.honba);
+            }).Resolve();
+        }
         #endregion
     }
 }
