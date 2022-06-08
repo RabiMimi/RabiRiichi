@@ -18,12 +18,6 @@ namespace RabiRiichi.Event.InGame.Listener {
             ev.waitEvent.inquiry.AddHandler<RonAction>((action) => {
                 ev.waitEvent.eventBuilder.AddAgari(ev.waitEvent, ev.playerId, ev.incoming, action.agariInfo);
             });
-            ev.waitEvent.inquiry.AddHandler<SkipAction>((action) => {
-                var inq = ev.waitEvent.inquiry.GetByPlayerId(action.playerId);
-                if (inq.actions.Exists(a => a is RonAction)) {
-                    SetFuritenListener.OnKan(ev);
-                }
-            });
             ev.Q.Queue(ev.waitEvent);
             ev.waitEvent.OnFinish += () => {
                 // 若有人抢杠，杠在荣和后成立

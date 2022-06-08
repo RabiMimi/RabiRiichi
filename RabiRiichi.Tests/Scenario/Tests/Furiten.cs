@@ -60,18 +60,18 @@ namespace RabiRiichi.Tests.Scenario.Tests {
         public async Task TemporaryFuriten_Chankan() {
             var scenario = new ScenarioBuilder()
                 .WithPlayer(1, player => player
-                    .SetFreeTiles("333567m4456p")
+                    .SetFreeTiles("333567m2344p")
                     .AddCalled("222m", 0, 0))
                 .WithPlayer(2, player => player
                     .SetFreeTiles("123789m1234z")
-                    .AddCalled("777p", 0, 0))
+                    .AddCalled("111p", 0, 0))
                 .WithWall(wall => {
-                    wall.Reserve("7p1z1z4p").AddDoras("12z");
+                    wall.Reserve("1p1z1z4p").AddDoras("12z");
                 })
                 .Start(2);
 
             (await scenario.WaitInquiry()).ForPlayer(2, playerInquiry => {
-                playerInquiry.ChooseTiles<KanAction>("7777p");
+                playerInquiry.ChooseTiles<KanAction>("1111p");
             }).AssertAutoFinish(); // Kan
 
             scenario.WithPlayer(1, player => {

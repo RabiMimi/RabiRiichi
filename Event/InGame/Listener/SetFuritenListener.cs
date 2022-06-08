@@ -1,4 +1,6 @@
 using RabiRiichi.Core;
+using RabiRiichi.Pattern;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -21,11 +23,11 @@ namespace RabiRiichi.Event.InGame.Listener {
             return Task.CompletedTask;
         }
 
-        public static void OnDiscardOrKan(PlayerEvent ev, Tile incoming) {
+        public static void OnDiscardOrKan(PlayerEvent ev, Tile incoming, Func<Hand, Tiles> resolveTenpai) {
             List<SetFuritenEvent> furitenEvs = new();
             foreach (var player in ev.game.players) {
                 var hand = player.hand;
-                var tenpai = hand.Tenpai;
+                var tenpai = resolveTenpai(hand);
                 if (player.id == ev.playerId) {
                     // 弃牌的玩家听牌牌型可能改变，需要全部重新计算
                     // 理论上立直后听牌牌型不能改变，因此可以简化为只计算当前弃牌
@@ -56,12 +58,25 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         public static Task OnKan(KanEvent ev) {
-            OnDiscardOrKan(ev, ev.incoming.tile);
+            // Check kan type
+            var base13_1 = ev.game.Get<Base13_1>();
+            OnDiscardOrKan(ev, ev.incoming.tile, hand => {
+                if (ev.kanSource == TileSource.KaKan) {
+                    return hand.Tenpai;
+                }
+                if (ev.kanSource != TileSource.AnKan || base13_1 == null) {
+                    return Tiles.Empty;
+                }
+                if (base13_1.Shanten(hand, ev.incoming, out var tiles, -1) == -1) {
+                    return tiles;
+                }
+                return Tiles.Empty;
+            });
             return Task.CompletedTask;
         }
 
         public static Task OnDiscardTile(DiscardTileEvent ev) {
-            OnDiscardOrKan(ev, ev.tile.tile);
+            OnDiscardOrKan(ev, ev.tile.tile, hand => hand.Tenpai);
             return Task.CompletedTask;
         }
 
@@ -69,6 +84,7 @@ namespace RabiRiichi.Event.InGame.Listener {
             eventBus.Subscribe<SetFuritenEvent>(SetFuriten, EventPriority.Execute);
             eventBus.Subscribe<IncreaseJunEvent>(OnIncreaseJun, EventPriority.After);
             eventBus.Subscribe<DiscardTileEvent>(OnDiscardTile, EventPriority.After);
+            eventBus.Subscribe<KanEvent>(OnKan, EventPriority.After);
         }
     }
 }
