@@ -34,7 +34,7 @@ namespace RabiRiichi.Tests.Scenario {
         public static AgariInfo AssertScore(this AgariInfo info, int? han = null, int? fu = null, int yakuman = 0) {
             if (han != null) {
                 Assert.AreEqual(han, info.scores.result.han
-                    + info.scores.result.yakuman * ScoreCalcResult.KAZOE_YAKUMAN_HAN);
+                    + info.scores.result.yakuman * ScoreCalcResult.KAZOE_YAKUMAN_HAN, $"Got {string.Join(", ", info.scores.Select(score => score.Source.name))}");
             }
             if (fu != null) {
                 Assert.AreEqual(fu, info.scores.result.fu);

@@ -43,10 +43,11 @@ namespace RabiRiichi.Event.InGame.Listener {
                     }
                 }
             }
-            // 在下一个巡数增加事件发生时，更新振听（玩家不选择和牌时，才会进入振听）
+            // 在下一个巡数增加事件发生时，更新振听
             new EventListener<IncreaseJunEvent>(ev.bus)
                 .EarlyAfter((incJunEv) => {
-                    foreach (var furitenEv in furitenEvs) {
+                    // 玩家不选择和牌时，才会进入振听
+                    foreach (var furitenEv in furitenEvs.Where(ev => !ev.player.hand.agari)) {
                         ev.Q.Queue(furitenEv);
                     }
                     return Task.CompletedTask;

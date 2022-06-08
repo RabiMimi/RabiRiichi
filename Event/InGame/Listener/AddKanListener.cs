@@ -39,18 +39,19 @@ namespace RabiRiichi.Event.InGame.Listener {
                 }
                 new EventListener<DiscardTileEvent>(ev.bus)
                     .EarlyPrepare(DelayRevealDora, 1)
-                    .CancelOn<IncreaseJunEvent>()
+                    .CancelOn<NextPlayerEvent>()
                     .ScopeTo(EventScope.Game);
                 new EventListener<KanEvent>(ev.bus)
                     .EarlyPrepare(DelayRevealDora, 1)
-                    .CancelOn<IncreaseJunEvent>()
+                    .CancelOn<NextPlayerEvent>()
                     .ScopeTo(EventScope.Game);
                 // 杠后自摸，仅当血战到底时才会翻Dora
-                new EventListener<IncreaseJunEvent>(ev.bus)
+                new EventListener<NextPlayerEvent>(ev.bus)
                     .EarlyPrepare(DelayRevealDora, 1)
                     .ScopeTo(EventScope.Game);
             }
 
+            ev.Q.Queue(new IncreaseJunEvent(ev, ev.playerId));
             ev.Q.Queue(new DrawTileEvent(ev, ev.playerId, TileSource.Wanpai, DiscardReason.DrawRinshan));
             return Task.CompletedTask;
         }
