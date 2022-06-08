@@ -62,19 +62,19 @@ namespace RabiRiichi.Event.InGame.Listener {
             ev.Q.Queue(new ApplyScoreEvent(ev, ev.scoreChange));
             var option = ev.game.config.renchanPolicy;
             bool switchDealer = true;
+            bool dealerTenpai = ev.tenpaiPlayers.Contains(ev.game.info.dealer);
             if (option.HasAnyFlag(RenchanPolicy.Ryuukyoku)) {
                 switchDealer = false;
-            } else if (option.HasAnyFlag(RenchanPolicy.DealerTenpai)
-                && ev.tenpaiPlayers.Contains(ev.game.info.dealer)) {
+            } else if (option.HasAnyFlag(RenchanPolicy.DealerTenpai) && dealerTenpai) {
                 switchDealer = false;
             }
-            ev.Q.Queue(new NextGameEvent(ev, switchDealer, true));
+            ev.Q.Queue(new NextGameEvent(ev, switchDealer, true, dealerTenpai));
             return Task.CompletedTask;
         }
 
         public static Task ExecuteMidGameRyuukyoku(MidGameRyuukyokuEvent ev) {
             ev.Q.Queue(new ApplyScoreEvent(ev, ev.scoreChange));
-            ev.Q.Queue(new NextGameEvent(ev, false, true));
+            ev.Q.Queue(new NextGameEvent(ev, false, true, false));
             return Task.CompletedTask;
         }
 

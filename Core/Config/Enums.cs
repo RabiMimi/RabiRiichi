@@ -76,13 +76,17 @@ namespace RabiRiichi.Core.Config {
     public enum EndGamePolicy {
         /// <summary> 无 </summary>
         None = 0,
-        /// <summary> 和牌/流局结算时，可以击飞 </summary>
-        TerminateOnApply = 1 << 0,
-        /// <summary> 分数小于天边时立即击飞 </summary>
-        InstantTerminate = 1 << 1,
+        /// <summary> 和牌/流局结算时若分数超出天边，结束游戏 </summary>
+        PointsOutOfRange = 1 << 0,
+        /// <summary> 分数超出天边时立即结束游戏 </summary>
+        InstantPointsOutOfRange = 1 << 1,
+        /// <summary> 若庄家一位听牌且分数达标，结束游戏 </summary>
+        DealerTenpai = 1 << 2,
+        /// <summary> 若庄家一位和牌且分数达标，结束游戏 </summary>
+        DealerAgari = 1 << 3,
         /// <summary> 所有 </summary>
-        All = TerminateOnApply | InstantTerminate,
+        All = PointsOutOfRange | InstantPointsOutOfRange | DealerTenpai | DealerAgari,
         /// <summary> 默认值 </summary>
-        Default = TerminateOnApply,
+        Default = PointsOutOfRange | DealerTenpai | DealerAgari,
     }
 }

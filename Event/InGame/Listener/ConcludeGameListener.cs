@@ -11,7 +11,7 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         public static Task ExecuteConcludeGame(ConcludeGameEvent ev) {
-            ev.Q.Queue(new NextGameEvent(ev, ev.switchDealer, ev.isRyuukyoku));
+            ev.Q.Queue(new NextGameEvent(ev, ev.switchDealer, ev.isRyuukyoku, false));
             return Task.CompletedTask;
         }
 

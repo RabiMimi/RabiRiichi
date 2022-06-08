@@ -8,6 +8,8 @@ namespace RabiRiichi.Event.InGame {
         [RabiBroadcast] public readonly bool switchDealer;
         /// <summary> 是否流局 </summary>
         [RabiBroadcast] public readonly bool isRyuukyoku;
+        /// <summary> 庄家是否听牌 </summary>
+        [RabiBroadcast] public readonly bool dealerTenpai;
         #endregion
 
         #region Response
@@ -21,9 +23,11 @@ namespace RabiRiichi.Event.InGame {
         [RabiBroadcast] public int riichiStick;
         #endregion
 
-        public NextGameEvent(EventBase parent, bool switchDealer, bool isRyuukyoku) : base(parent) {
+        public NextGameEvent(EventBase parent, bool switchDealer, bool isRyuukyoku,
+            bool dealerTenpai) : base(parent) {
             this.switchDealer = switchDealer;
             this.isRyuukyoku = isRyuukyoku;
+            this.dealerTenpai = dealerTenpai;
         }
     }
 }

@@ -32,7 +32,7 @@ namespace RabiRiichi.Event.InGame.Listener {
                 player.points -= player.hand.riichiStick * ev.game.config.pointThreshold.riichiPoints;
                 player.hand.riichiStick = 0;
             }
-            if (info.config.endGamePolicy.HasAnyFlag(EndGamePolicy.TerminateOnApply)
+            if (info.config.endGamePolicy.HasAnyFlag(EndGamePolicy.PointsOutOfRange)
                 && players.Any(p => !info.config.pointThreshold.ArePointsValid(p.points))) {
                 // 天边
                 ev.Q.QueueIfNotExist(new StopGameEvent(ev));
@@ -42,11 +42,25 @@ namespace RabiRiichi.Event.InGame.Listener {
                 // 已额外进行一轮庄
                 ev.Q.QueueIfNotExist(new StopGameEvent(ev));
                 return Task.CompletedTask;
+            } else if (ev.nextRound == info.config.totalRound) {
+                // 检查玩家分数
+                if (players.Any(p => p.points >= info.config.pointThreshold.finishPoints)) {
+                    // 终局
+                    ev.Q.QueueIfNotExist(new StopGameEvent(ev));
+                    return Task.CompletedTask;
+                }
             }
-            if (ev.game.info.IsAllLast && players.Any(p => p.points >= info.config.pointThreshold.finishPoints)) {
-                // 游戏结束
-                if (ev.game.PlayersByRank[0].SamePlayer(ev.game.Dealer)) {
-                    // 庄家胜利
+            // 检查庄家一位
+            if (ev.game.info.IsAllLast
+                && ev.game.PlayersByRank[0].SamePlayer(ev.game.Dealer)
+                && ev.game.Dealer.points >= info.config.pointThreshold.finishPoints) {
+                if ((
+                    info.config.endGamePolicy.HasAnyFlag(EndGamePolicy.DealerTenpai)
+                    && ev.dealerTenpai
+                ) || (
+                    info.config.endGamePolicy.HasAnyFlag(EndGamePolicy.DealerAgari)
+                    && ev.game.Dealer.hand.agari
+                )) {
                     ev.Q.QueueIfNotExist(new StopGameEvent(ev));
                     return Task.CompletedTask;
                 }
@@ -61,7 +75,7 @@ namespace RabiRiichi.Event.InGame.Listener {
                 return Task.CompletedTask;
             }
             var config = ev.game.config;
-            if (config.endGamePolicy.HasAnyFlag(EndGamePolicy.InstantTerminate)
+            if (config.endGamePolicy.HasAnyFlag(EndGamePolicy.InstantPointsOutOfRange)
                 && ev.game.players.Any(p => !config.pointThreshold.ArePointsValid(p.points))) {
                 ev.Q.QueueIfNotExist(new StopGameEvent(ev));
                 return Task.CompletedTask;

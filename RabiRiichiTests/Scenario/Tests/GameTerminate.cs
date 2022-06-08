@@ -72,7 +72,7 @@ namespace RabiRiichiTests.Scenario.Tests {
         [TestMethod]
         public async Task InstantTerminate_LowScore() {
             var scenario = await BuildLowScoreTest(
-                EndGamePolicy.InstantTerminate, POINTS_RANGE[0] + 2000);
+                EndGamePolicy.InstantPointsOutOfRange, POINTS_RANGE[0] + 2000);
 
             var inquiry = await scenario.WaitInquiry();
 
@@ -88,7 +88,7 @@ namespace RabiRiichiTests.Scenario.Tests {
         [TestMethod]
         public async Task NoTerminate_AllowLowScore() {
             var scenario = await BuildLowScoreTest(
-                EndGamePolicy.Default & ~EndGamePolicy.TerminateOnApply,
+                EndGamePolicy.Default & ~EndGamePolicy.PointsOutOfRange,
                 POINTS_RANGE[0] + 1200);
 
             (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => playerInquiry
@@ -167,7 +167,7 @@ namespace RabiRiichiTests.Scenario.Tests {
         [TestMethod]
         public async Task InstantTerminate_HighScore() {
             var scenario = await BuildHighScoreTest(
-                EndGamePolicy.InstantTerminate, POINTS_RANGE[1] - 2000);
+                EndGamePolicy.InstantPointsOutOfRange, POINTS_RANGE[1] - 2000);
 
             var inquiry = await scenario.WaitInquiry();
 
@@ -183,7 +183,7 @@ namespace RabiRiichiTests.Scenario.Tests {
         [TestMethod]
         public async Task NoTerminate_AllowHighScore() {
             var scenario = await BuildHighScoreTest(
-                EndGamePolicy.Default & ~EndGamePolicy.TerminateOnApply,
+                EndGamePolicy.Default & ~EndGamePolicy.PointsOutOfRange,
                 POINTS_RANGE[1] - 1200);
 
             (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => playerInquiry
@@ -242,7 +242,29 @@ namespace RabiRiichiTests.Scenario.Tests {
         }
 
         [TestMethod]
-        public async Task Terminate_SufficientPoints() {
+        public async Task Terminate_SwitchDealerSufficientPoints() {
+            var scenario = new ScenarioBuilder()
+                .WithConfig(config => config.SetFinishPoints(30000))
+                .WithPlayer(2, player => player.SetPoints(30000))
+                .WithState(state => state.SetRound(Wind.E, 3, 2))
+                .WithWall(wall => wall.Reserve("1s"))
+                .Build(1)
+                .ForceHaitei()
+                .Start();
+
+            (await scenario.WaitInquiry()).Finish();
+
+            await scenario
+                .AssertEvent<NextGameEvent>()
+                .AssertEvent<StopGameEvent>()
+                .AssertNoEvent<BeginGameEvent>()
+                .Resolve();
+        }
+        #endregion
+
+        #region Dealer tenpai
+        [TestMethod]
+        public async Task Terminate_DealerRyuukyokuSufficientPoints() {
             var scenario = new ScenarioBuilder()
                 .WithConfig(config => config.SetFinishPoints(30000))
                 .WithPlayer(3, player => player.SetPoints(30000))
@@ -262,7 +284,59 @@ namespace RabiRiichiTests.Scenario.Tests {
         }
 
         [TestMethod]
-        public async Task Terminate_DealerWinsWithSufficientPoints() {
+        public async Task Terminate_DealerTenpaiSufficientPoints() {
+            var scenario = new ScenarioBuilder()
+                .WithConfig(config => config.SetFinishPoints(30000))
+                .WithPlayer(3, player => player
+                    .SetPoints(30000)
+                    .SetFreeTiles("1112345678999p"))
+                .WithState(state => state.SetRound(Wind.E, 3, 2))
+                .WithWall(wall => wall.Reserve("1s"))
+                .Build(1)
+                .ForceHaitei()
+                .Start();
+
+            (await scenario.WaitInquiry()).Finish();
+
+            await scenario
+                .AssertEvent<NextGameEvent>()
+                .AssertEvent<StopGameEvent>()
+                .AssertNoEvent<BeginGameEvent>()
+                .Resolve();
+        }
+
+        [TestMethod]
+        public async Task Renchan_DealerTenpaiSufficientPoints_ConfigOff() {
+            var scenario = new ScenarioBuilder()
+                .WithConfig(config => config
+                    .SetFinishPoints(30000)
+                    .SetEndGamePolicy(EndGamePolicy.Default & ~EndGamePolicy.DealerTenpai))
+                .WithPlayer(3, player => player
+                    .SetPoints(30000)
+                    .SetFreeTiles("1112345678999p"))
+                .WithState(state => state.SetRound(Wind.E, 3, 2))
+                .WithWall(wall => wall.Reserve("1s"))
+                .Build(1)
+                .ForceHaitei()
+                .Start();
+
+            (await scenario.WaitInquiry()).Finish();
+
+            await scenario
+                .AssertEvent<NextGameEvent>()
+                .AssertEvent<BeginGameEvent>(ev => {
+                    Assert.AreEqual(0, ev.round);
+                    Assert.AreEqual(3, ev.dealer);
+                    Assert.AreEqual(3, ev.honba);
+                })
+                .AssertNoEvent<StopGameEvent>()
+                .Resolve();
+        }
+        #endregion
+
+        #region Dealer agari
+        [TestMethod]
+        public async Task Terminate_DealerTopsWithSufficientPoints() {
             var scenario = new ScenarioBuilder()
                 .WithConfig(config => config.SetFinishPoints(30000))
                 .WithState(state => state.SetRound(Wind.E, 3, 2))
@@ -286,9 +360,39 @@ namespace RabiRiichiTests.Scenario.Tests {
                 .Resolve();
         }
 
+        [TestMethod]
+        public async Task Renchan_DealerTopsWithSufficientPoints_ConfigOff() {
+            var scenario = new ScenarioBuilder()
+                .WithConfig(config => config
+                    .SetFinishPoints(30000)
+                    .SetEndGamePolicy(EndGamePolicy.Default & ~EndGamePolicy.DealerAgari))
+                .WithState(state => state.SetRound(Wind.E, 3, 2))
+                .WithPlayer(3, playerBuilder => playerBuilder
+                    .SetFreeTiles("1123456789s444z"))
+                .WithWall(wall => wall.Reserve("1s"))
+                .Build(3)
+                .ForceHaitei()
+                .Start();
+
+            (await scenario.WaitInquiry()).ForPlayer(3, playerInquiry => {
+                playerInquiry.ApplyAction<TsumoAction>();
+            }).AssertAutoFinish();
+
+            await scenario
+                .AssertEvent<NextGameEvent>(ev => {
+                    Assert.IsTrue(ev.game.GetPlayer(3).points >= 30000);
+                })
+                .AssertEvent<BeginGameEvent>(ev => {
+                    Assert.AreEqual(0, ev.round);
+                    Assert.AreEqual(3, ev.dealer);
+                    Assert.AreEqual(3, ev.honba);
+                })
+                .AssertNoEvent<StopGameEvent>()
+                .Resolve();
+        }
 
         [TestMethod]
-        public async Task Renchan_DealerDoesNotWinWithSufficientPoints() {
+        public async Task Renchan_DealerNotTopWithSufficientPoints() {
             var scenario = new ScenarioBuilder()
                 .WithConfig(config => config.SetFinishPoints(30000))
                 .WithState(state => state.SetRound(Wind.E, 3, 2))

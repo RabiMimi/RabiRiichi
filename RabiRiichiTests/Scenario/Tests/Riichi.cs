@@ -5,7 +5,6 @@ using RabiRiichi.Core.Config;
 using RabiRiichi.Event.InGame;
 using RabiRiichi.Pattern;
 using RabiRiichiTests.Helper;
-using RabiRiichiTests.Scenario;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
