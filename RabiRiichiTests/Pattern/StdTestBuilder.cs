@@ -104,7 +104,7 @@ namespace RabiRiichiTests.Pattern {
                 player = currentPlayer.Object,
                 freeTiles = freeTiles,
                 called = fuuro,
-                menzen = forceMenzen ?? fuuro.Count == 0,
+                menzen = forceMenzen ?? fuuro.All(fuuro => fuuro.IsClose),
             }, incoming, scores);
             if (shouldResolve) {
                 Assert.IsTrue(ret, "Expect resolve but failed");
