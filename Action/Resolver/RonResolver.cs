@@ -1,5 +1,7 @@
 ﻿using RabiRiichi.Core;
+using RabiRiichi.Core.Config;
 using RabiRiichi.Pattern;
+using RabiRiichi.Util;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -25,7 +27,9 @@ namespace RabiRiichi.Action.Resolver {
             }
             var maxScore = patternResolver.ResolveMaxScore(hand, incoming, PatternMask.All);
             if (maxScore != null && maxScore.result.IsValid(player.game.config.minHan)) {
-                output.Add(new RonAction(hand.player.id, maxScore, incoming), true);
+                output.Add(new RonAction(hand.player.id, maxScore, incoming,
+                    player.game.config.agariOption.HasAnyFlag(AgariOption.FirstWinner)
+                        ? -incoming.discardInfo.fromPlayer.Dist(player) : 0), true);
                 return true;
             }
             return false;

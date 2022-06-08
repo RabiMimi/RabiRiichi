@@ -93,6 +93,7 @@ namespace RabiRiichiTests.Scenario.Tests {
                 .AssertYaku<DoubleRiichi>()
                 .AssertYaku<Ippatsu>()
                 .AssertYaku<MenzenchinTsumohou>()
+                .AssertYaku<Uradora>(han: 0)
             ).Resolve();
         }
 

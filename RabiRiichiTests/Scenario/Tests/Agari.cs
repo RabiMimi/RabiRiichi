@@ -347,5 +347,58 @@ namespace RabiRiichiTests.Scenario.Tests {
             await scenario.AssertNoRyuukyoku<Sanchahou>().Resolve();
         }
         #endregion
+
+        #region First Winner
+        [TestMethod]
+        public async Task SuccessFirstWinner() {
+            var scenario = new ScenarioBuilder()
+                .WithConfig(config => config
+                    .SetAgariOption(AgariOption.Default | AgariOption.FirstWinner))
+                .WithState(state => state.SetRound(Wind.E, 0, 1).SetRiichiStick(2))
+                .WithPlayer(0, playerBuilder => playerBuilder
+                    .SetFreeTiles("23466m789p22334s")
+                    .SetRiichiTile("5s"))
+                .WithPlayer(2, playerBuilder => playerBuilder
+                    .SetFreeTiles("123m123p1123s")
+                    .AddCalled("111m", 0, 2))
+                .WithPlayer(3, playerBuilder => playerBuilder
+                    .SetFreeTiles("2344s")
+                    .AddCalled("666s", 1, 1)
+                    .AddCalled("777s", 0, 2)
+                    .AddCalled("789s", 0, 2))
+                .WithWall(wall => wall.Reserve("1s").AddDoras("6z"))
+                .Start(1);
+
+            (await scenario.WaitInquiry()).Finish();
+
+            (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry =>
+                playerInquiry.ApplyAction<RonAction>())
+            .ForPlayer(2, playerInquiry =>
+                playerInquiry.ApplyAction<RonAction>())
+            .AssertAutoFinish();
+
+            await scenario
+                .AssertNoRyuukyoku<Sanchahou>()
+                .AssertEvent<AgariEvent>(ev => ev.agariInfos
+                    .AssertRon(1, 2)
+                    .AssertScore(han: 3, fu: 30)
+                    .AssertYaku<JunchanTaiyao>()
+                    .AssertYaku<SanshokuDoujun>(han: 1)
+                )
+                .AssertEvent<ApplyScoreEvent>(ev => {
+                    Assert.AreEqual(0, ev.scoreChange.DeltaScore(0));
+                    Assert.AreEqual(-4200, ev.scoreChange.DeltaScore(1));
+                    Assert.AreEqual(6200, ev.scoreChange.DeltaScore(2));
+                    Assert.AreEqual(0, ev.scoreChange.DeltaScore(3));
+                })
+                .AssertEvent<BeginGameEvent>(ev => {
+                    Assert.AreEqual(0, ev.round);
+                    Assert.AreEqual(1, ev.dealer);
+                    Assert.AreEqual(0, ev.honba);
+                    Assert.AreEqual(0, ev.game.info.riichiStick);
+                })
+                .Resolve();
+        }
+        #endregion
     }
 }
