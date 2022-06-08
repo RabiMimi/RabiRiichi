@@ -19,7 +19,7 @@ namespace RabiRiichiTests.Core {
 
         [TestMethod]
         public void TestTileNum() {
-            int total = Tiles.All.Count;
+            int total = Tiles.All.Value.Count;
             wall.RevealDora(false);
             Assert.AreEqual(total, wall.NumRemaining + Wall.NUM_DORA * 2 + Wall.NUM_RINSHAN);
             Assert.AreEqual(Wall.NUM_RINSHAN, wall.rinshan.Count);

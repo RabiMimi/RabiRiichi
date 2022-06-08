@@ -47,7 +47,7 @@ namespace RabiRiichi.Core {
             rinshan.Clear();
             doras.Clear();
             uradoras.Clear();
-            remaining.AddRange(Tiles.All.ToGameTiles());
+            remaining.AddRange(config.initialTiles.ToGameTiles());
             rand.Shuffle(remaining);
             rinshan.AddRange(remaining.PopMany(NUM_RINSHAN));
             doras.AddRange(remaining.PopMany(NUM_DORA));

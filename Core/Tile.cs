@@ -282,24 +282,22 @@ namespace RabiRiichi.Core {
         public bool IsJan => Count == 2 && this[0].IsSame(this[1]);
 
         /// <summary> 所有牌 </summary>
-        public static Tiles All {
-            get {
-                var ret = new Tiles();
-                for (var g = TileSuit.M; g <= TileSuit.Z; g++) {
-                    int maxTile = g == TileSuit.Z ? 7 : 9;
-                    for (int i = 1; i <= maxTile; i++) {
-                        for (int j = 0; j < 4; j++) {
-                            ret.Add(new Tile {
-                                Suit = g,
-                                Num = (byte)i,
-                                Akadora = maxTile == 9 && i == 5 && j == 0
-                            });
-                        }
+        public static readonly Lazy<Tiles> All = new(() => {
+            var ret = new Tiles();
+            for (var g = TileSuit.M; g <= TileSuit.Z; g++) {
+                int maxTile = g == TileSuit.Z ? 7 : 9;
+                for (int i = 1; i <= maxTile; i++) {
+                    for (int j = 0; j < 4; j++) {
+                        ret.Add(new Tile {
+                            Suit = g,
+                            Num = (byte)i,
+                            Akadora = maxTile == 9 && i == 5 && j == 0
+                        });
                     }
                 }
-                return ret;
             }
-        }
+            return ret;
+        });
 
         /// <summary> 所有牌（不重复，无赤宝） </summary>
         public static Tiles AllDistinct => new("123456789m123456789p123456789s1234567z");

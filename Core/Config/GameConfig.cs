@@ -15,6 +15,9 @@ namespace RabiRiichi.Core.Config {
         /// <summary> 番缚 </summary>
         [RabiBroadcast] public int minHan = 1;
 
+        /// <summary> 初始牌山 </summary>
+        public Tiles initialTiles = Tiles.All.Value;
+
         /// <summary> 分数线 </summary>
         [RabiBroadcast] public PointThreshold pointThreshold = new();
 
