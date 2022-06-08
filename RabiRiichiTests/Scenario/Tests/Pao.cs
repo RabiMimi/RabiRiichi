@@ -1,5 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Action;
+using RabiRiichi.Core.Config;
 using RabiRiichi.Event.InGame;
 using RabiRiichi.Pattern;
 using System.Linq;
@@ -294,6 +295,44 @@ namespace RabiRiichiTests.Scenario.Tests {
                 Assert.AreEqual(-16000, ev.scoreChange.DeltaScore(2));
                 Assert.AreEqual(-16000, ev.scoreChange.DeltaScore(3));
                 Assert.IsFalse(ev.scoreChange.Any(sc => sc.reason == ScoreTransferReason.Pao), "Unexpected Pao transaction found.");
+            })
+            .Resolve();
+        }
+
+        [TestMethod]
+        public async Task FailPao_ConfigOff() {
+            var scenario = new ScenarioBuilder()
+                .WithPlayer(1, playerBuilder => playerBuilder
+                    .SetFreeTiles("9s")
+                    .AddCalled("2222s")
+                    .AddCalled("3333p")
+                    .AddCalled("7777z", 2, 2)
+                    .AddCalled("8888s", 3, 0)
+                )
+                .WithWall(wall => wall.Reserve("9s"))
+                .WithConfig(config => config
+                    .SetAgariOption(AgariOption.Default & ~AgariOption.Pao))
+                .Start(2);
+
+            (await scenario.WaitInquiry()).ForPlayer(2, playerInquiry => playerInquiry
+                .ChooseTile<PlayTileAction>("9s")
+            ).AssertAutoFinish();
+
+            (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => playerInquiry
+                .AssertSkip()
+                .ApplyAction<RonAction>()
+            ).AssertAutoFinish();
+
+            await scenario.AssertEvent<AgariEvent>(ev => {
+                ev.agariInfos
+                    .AssertRon(2, 1)
+                    .AssertScore(yakuman: 1)
+                    .AssertYaku<Suukantsu>();
+            }).AssertEvent<ApplyScoreEvent>(ev => {
+                Assert.AreEqual(32000, ev.scoreChange.DeltaScore(1));
+                Assert.AreEqual(-32000, ev.scoreChange.DeltaScore(2));
+                Assert.AreEqual(0, ev.scoreChange.DeltaScore(0));
+                Assert.IsTrue(ev.scoreChange.All(sc => sc.reason != ScoreTransferReason.Pao), "Unexpected pao transaction found.");
             })
             .Resolve();
         }

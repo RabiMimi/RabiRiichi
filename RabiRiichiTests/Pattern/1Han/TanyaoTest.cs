@@ -1,4 +1,5 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using RabiRiichi.Core.Config;
 using RabiRiichi.Pattern;
 
 namespace RabiRiichiTests.Pattern {
@@ -49,7 +50,7 @@ namespace RabiRiichiTests.Pattern {
                 .AddAgari("1s", "1s")
                 .Resolve(false);
             new StdTestBuilder(V)
-                .WithConfig(config => config.allowKuitan = false)
+                .WithConfig(config => config.agariOption &= ~AgariOption.Kuitan)
                 .AddCalled("234s", 0)
                 .AddFree("345p")
                 .AddFree("456m")

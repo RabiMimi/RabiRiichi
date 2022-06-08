@@ -120,4 +120,19 @@ namespace RabiRiichi.Core.Config {
         /// <summary> 默认值 </summary>
         Default = Dora | Uradora | InstantRevealAfterAnKan,
     }
+
+    /// <summary> 和牌选项 </summary>
+    [Flags]
+    public enum AgariOption {
+        /// <summary> 无 </summary>
+        None = 0,
+        /// <summary> 允许食断 </summary>
+        Kuitan = 1 << 0,
+        /// <summary> 允许包牌 </summary>
+        Pao = 1 << 1,
+        /// <summary> 所有 </summary>
+        All = Kuitan | Pao,
+        /// <summary> 默认值 </summary>
+        Default = All,
+    }
 }

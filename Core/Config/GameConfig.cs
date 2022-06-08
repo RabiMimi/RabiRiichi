@@ -15,12 +15,6 @@ namespace RabiRiichi.Core.Config {
         /// <summary> 番缚 </summary>
         [RabiBroadcast] public int minHan = 1;
 
-        /// <summary> 食断 </summary>
-        [RabiBroadcast] public bool allowKuitan = true;
-
-        /// <summary> 包牌 </summary>
-        [RabiBroadcast] public bool allowPao = true;
-
         /// <summary> 分数线 </summary>
         [RabiBroadcast] public PointThreshold pointThreshold = new();
 
@@ -38,6 +32,9 @@ namespace RabiRiichi.Core.Config {
 
         /// <summary> 宝牌选项 </summary>
         [RabiBroadcast] public DoraOption doraOption = DoraOption.Default;
+
+        /// <summary> 和牌选项 </summary>
+        [RabiBroadcast] public AgariOption agariOption = AgariOption.Default;
 
         /// <summary> 中途流局 </summary>
         [RabiBroadcast] public RyuukyokuTrigger ryuukyokuTrigger = RyuukyokuTrigger.Default;

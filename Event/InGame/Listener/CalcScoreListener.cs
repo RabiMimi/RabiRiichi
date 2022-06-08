@@ -1,4 +1,6 @@
 using RabiRiichi.Core;
+using RabiRiichi.Core.Config;
+using RabiRiichi.Util;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -36,7 +38,7 @@ namespace RabiRiichi.Event.InGame.Listener {
         }
 
         public static Task CalcPao(CalcScoreEvent ev) {
-            if (!ev.game.config.allowPao) {
+            if (!ev.game.config.agariOption.HasAnyFlag(AgariOption.Pao)) {
                 return Task.CompletedTask;
             }
             foreach (var info in ev.agariInfos) {

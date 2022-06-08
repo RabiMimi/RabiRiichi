@@ -294,13 +294,6 @@ namespace RabiRiichiTests.Scenario {
                 return this;
             }
 
-
-            /// <summary> 是否允许食断，默认允许 </summary>
-            public GameConfigBuilder SetAllowKuitan(bool allowKuitan) {
-                config.allowKuitan = allowKuitan;
-                return this;
-            }
-
             /// <summary> 总局数，默认东风战 </summary>
             public GameConfigBuilder SetTotalRound(int totalRound) {
                 config.totalRound = totalRound;
@@ -346,6 +339,12 @@ namespace RabiRiichiTests.Scenario {
             /// <summary> 设置宝牌选项 </summary>
             public GameConfigBuilder SetDoraOption(DoraOption option) {
                 config.doraOption = option;
+                return this;
+            }
+
+            /// <summary> 设置和牌选项 </summary>
+            public GameConfigBuilder SetAgariOption(AgariOption option) {
+                config.agariOption = option;
                 return this;
             }
 
