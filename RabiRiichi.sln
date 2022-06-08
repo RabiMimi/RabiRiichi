@@ -5,11 +5,11 @@ VisualStudioVersion = 17.1.32319.34
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RabiRiichi", "RabiRiichi.csproj", "{46F0CFAF-D8EA-452A-AED4-DA34A9C3ACD6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RabiRiichiTests", "RabiRiichiTests\RabiRiichiTests.csproj", "{4FD4FCCB-54B2-46D3-BD39-F425B5D8EC21}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RabiRiichi.Tests", "RabiRiichi.Tests\RabiRiichi.Tests.csproj", "{4FD4FCCB-54B2-46D3-BD39-F425B5D8EC21}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{17BC3002-678B-41F3-84F3-A8A53CF84BF4}"
 	ProjectSection(SolutionItems) = preProject
-		RabiRiichiTests.runsettings = RabiRiichiTests.runsettings
+		RabiRiichi.Tests.runsettings = RabiRiichi.Tests.runsettings
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RabiRiichiDev", "RabiRiichiDev\RabiRiichiDev.csproj", "{362453D8-A899-469F-9FD9-49975E0BF177}"

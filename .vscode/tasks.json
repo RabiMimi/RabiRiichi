@@ -33,7 +33,7 @@
         "watch",
         "run",
         "--project",
-        "${workspaceFolder}/RabiRiichiTests/RabiRiichiTests.csproj"
+        "${workspaceFolder}/RabiRiichi.Tests/RabiRiichi.Tests.csproj"
       ],
       "problemMatcher": "$msCompile"
     }

@@ -30,11 +30,11 @@ jobs:
         with:
           dotnet-version: ${{ matrix.dotnet-version }}
       - name: Install dependencies
-        run: dotnet restore ./RabiRiichiTests/RabiRiichiTests.csproj
+        run: dotnet restore ./RabiRiichi.Tests/RabiRiichi.Tests.csproj
       - name: Build
-        run: dotnet build --configuration Release --no-restore ./RabiRiichiTests/RabiRiichiTests.csproj
+        run: dotnet build --configuration Release --no-restore ./RabiRiichi.Tests/RabiRiichi.Tests.csproj
       - name: Test
-        run: dotnet test --no-restore --verbosity normal --collect:"XPlat Code Coverage" ./RabiRiichiTests/RabiRiichiTests.csproj
+        run: dotnet test --no-restore --verbosity normal --collect:"XPlat Code Coverage" ./RabiRiichi.Tests/RabiRiichi.Tests.csproj
       - name: Upload to CodeCov
         uses: codecov/codecov-action@v2
         with:
@@ -45,5 +45,5 @@ jobs:
         if: success() || failure()
         with:
           name: RabiRiichi Tests
-          path: RabiRiichiTests/TestResults/*.trx
+          path: RabiRiichi.Tests/TestResults/*.trx
           reporter: dotnet-trx
