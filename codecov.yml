@@ -7,3 +7,6 @@ coverage:
         threshold: 1%
         informational: false
         only_pulls: false
+    patch:
+      default:
+        threshold: 10%
