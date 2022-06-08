@@ -69,7 +69,7 @@ namespace RabiRiichiTests.Scenario.Tests {
             await scenario.AssertEvent<AgariEvent>(ev => ev.agariInfos
                 .AssertTsumo(1)
                 .AssertKazoeYakuman()
-                .AssertScore(han: 13)
+                .AssertScore(han: 13, yakuman: 1)
                 .AssertYaku<Riichi>()
                 .AssertYaku<Ippatsu>()
                 .AssertYaku<MenzenchinTsumohou>()

@@ -30,7 +30,7 @@ namespace RabiRiichiTests.Scenario.Tests {
 
             await scenario.AssertEvent<AgariEvent>((ev) => ev.agariInfos
                 .AssertTsumo(0)
-                .AssertScore(han: 1, fu: 40, yakuman: 3)
+                .AssertScore(yakuman: 3)
                 .AssertYaku<Tenhou>(yakuman: 1)
                 .AssertYaku<JunseiChuurenPoutou>(yakuman: 2)
             ).Resolve();
@@ -58,7 +58,7 @@ namespace RabiRiichiTests.Scenario.Tests {
 
             await scenario.AssertEvent<AgariEvent>((ev) => ev.agariInfos
                 .AssertTsumo(1)
-                .AssertScore(1, 40, 3)
+                .AssertScore(yakuman: 3)
                 .AssertYaku<Chiihou>(yakuman: 1)
                 .AssertYaku<JunseiChuurenPoutou>(yakuman: 2)
             ).Resolve();
@@ -92,7 +92,7 @@ namespace RabiRiichiTests.Scenario.Tests {
 
             await scenario.AssertEvent<AgariEvent>((ev) => ev.agariInfos
                 .AssertTsumo(0)
-                .AssertScore(13, 30)
+                .AssertScore(han: 13, fu: 30, yakuman: 1)
                 .AssertKazoeYakuman()
                 .AssertYaku<DoubleRiichi>(han: 2)
                 .AssertYaku<Ryanpeikou>(han: 3)
