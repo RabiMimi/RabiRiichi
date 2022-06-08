@@ -200,9 +200,9 @@ namespace RabiRiichiTests.Scenario.Tests {
 
         #endregion
 
-        #region Extra round
+        #region Extended round
         [TestMethod]
-        public async Task ExtraRound_InsufficientPoints() {
+        public async Task ExtendedRound_InsufficientPoints() {
             var scenario = new ScenarioBuilder()
                 .WithState(state => state.SetRound(Wind.E, 3, 2))
                 .WithWall(wall => wall.Reserve("1s"))
@@ -220,6 +220,26 @@ namespace RabiRiichiTests.Scenario.Tests {
                     Assert.AreEqual(3, ev.honba);
                 })
                 .AssertNoEvent<StopGameEvent>()
+                .Resolve();
+        }
+
+        [TestMethod]
+        public async Task ExtendedRound_InsufficientPoints_ConfigOff() {
+            var scenario = new ScenarioBuilder()
+                .WithConfig(config => config
+                    .SetEndGamePolicy(EndGamePolicy.Default & ~EndGamePolicy.ExtendedRound))
+                .WithState(state => state.SetRound(Wind.E, 3, 2))
+                .WithWall(wall => wall.Reserve("1s"))
+                .Build(1)
+                .ForceHaitei()
+                .Start();
+
+            (await scenario.WaitInquiry()).Finish();
+
+            await scenario
+                .AssertEvent<NextGameEvent>()
+                .AssertEvent<StopGameEvent>()
+                .AssertNoEvent<BeginGameEvent>()
                 .Resolve();
         }
 

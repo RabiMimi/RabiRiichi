@@ -84,9 +84,11 @@ namespace RabiRiichi.Core.Config {
         DealerTenpai = 1 << 2,
         /// <summary> 若庄家一位和牌且分数达标，结束游戏 </summary>
         DealerAgari = 1 << 3,
+        /// <summary> 不满足终局条件时，南/西入 </summary>
+        ExtendedRound = 1 << 4,
         /// <summary> 所有 </summary>
-        All = PointsOutOfRange | InstantPointsOutOfRange | DealerTenpai | DealerAgari,
+        All = PointsOutOfRange | InstantPointsOutOfRange | DealerTenpai | DealerAgari | ExtendedRound,
         /// <summary> 默认值 </summary>
-        Default = PointsOutOfRange | DealerTenpai | DealerAgari,
+        Default = PointsOutOfRange | DealerTenpai | DealerAgari | ExtendedRound,
     }
 }

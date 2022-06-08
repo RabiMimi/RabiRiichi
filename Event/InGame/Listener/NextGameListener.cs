@@ -44,7 +44,8 @@ namespace RabiRiichi.Event.InGame.Listener {
                 return Task.CompletedTask;
             } else if (ev.nextRound == info.config.totalRound) {
                 // 检查玩家分数
-                if (players.Any(p => p.points >= info.config.pointThreshold.finishPoints)) {
+                if (!info.config.endGamePolicy.HasAnyFlag(EndGamePolicy.ExtendedRound)
+                    || players.Any(p => p.points >= info.config.pointThreshold.finishPoints)) {
                     // 终局
                     ev.Q.QueueIfNotExist(new StopGameEvent(ev));
                     return Task.CompletedTask;
