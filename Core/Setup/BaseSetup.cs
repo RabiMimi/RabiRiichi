@@ -18,14 +18,20 @@ namespace RabiRiichi.Core.Setup {
         #region Inject
 
         /// <summary> 注册Base Pattern </summary>
-        protected void AddBasePattern<T>() where T : BasePattern {
-            basePatterns.Add(typeof(T));
-        }
+        protected void AddBasePattern<T>() where T : BasePattern
+            => basePatterns.Add(typeof(T));
 
         /// <summary> 注册Std Pattern </summary>
-        protected void AddStdPattern<T>() where T : StdPattern {
-            stdPatterns.Add(typeof(T));
-        }
+        protected void AddStdPattern<T>() where T : StdPattern
+            => stdPatterns.Add(typeof(T));
+
+        /// <summary> 移除Base Pattern </summary>
+        protected bool RemoveBasePattern<T>() where T : BasePattern
+            => basePatterns.Remove(typeof(T));
+
+        /// <summary> 移除Std Pattern </summary>
+        protected bool RemoveStdPattern<T>() where T : StdPattern
+            => stdPatterns.Remove(typeof(T));
 
         /// <summary>
         /// 初始化<see cref="basePatterns"/>，<see cref="stdPatterns"/>
