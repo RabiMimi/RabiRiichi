@@ -22,6 +22,7 @@ if (app.Environment.IsDevelopment()) {
 */
 
 app.UseAuthorization();
+app.UseWebSockets();
 
 app.MapControllers();
 
