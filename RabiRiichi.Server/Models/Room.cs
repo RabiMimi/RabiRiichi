@@ -1,14 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
-using System.ComponentModel.DataAnnotations;
+using RabiRiichi.Server.Core;
 
 namespace RabiRiichi.Server.Models {
-    public class CreateRoomReq {
-        [Required]
-        public int sessionCode { get; set; }
-    }
-
     public class CreateRoomResp {
         public int id { get; set; }
 
@@ -20,29 +15,33 @@ namespace RabiRiichi.Server.Models {
     public class Room {
         public int id;
         public Game game;
-        public readonly List<Player> players = new();
+        public readonly List<User> players = new();
 
         public Room() {
-            game = new Game(new GameConfig());
+            game = new Game(new GameConfig {
+                actionCenter = new ServerActionCenter(this),
+            });
         }
 
-        public Player AddPlayer(User user) {
+        public bool AddPlayer([ModelBinder] User user) {
             lock (players) {
                 if (players.Count >= game.config.playerCount) {
-                    return null;
+                    return false;
                 }
-                if (players.Any(p => p.user == user)) {
-                    return null;
+                if (players.Contains(user)) {
+                    return false;
                 }
-                var player = new Player(user, this);
-                players.Add(player);
-                return player;
+                if (Interlocked.CompareExchange(ref user.room, this, null) != null) {
+                    return false;
+                }
+                players.Add(user);
+                return true;
             }
         }
 
         public bool RemovePlayer(User user) {
             lock (players) {
-                int index = players.FindIndex(p => p.user == user);
+                int index = players.IndexOf(user);
                 if (index < 0) {
                     return false;
                 }

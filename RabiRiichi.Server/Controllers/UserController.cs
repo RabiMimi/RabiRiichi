@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using RabiRiichi.Server.Binders;
 using RabiRiichi.Server.Models;
 
 namespace RabiRiichi.Server.Controllers {
@@ -14,7 +15,8 @@ namespace RabiRiichi.Server.Controllers {
         }
 
         [HttpPost("create")]
-        public ActionResult<CreateUserResp> CreateUser([FromBody] CreateUserReq req) {
+        public ActionResult<CreateUserResp> CreateUser(
+            [FromBody] CreateUserReq req) {
             var user = new User {
                 nickname = req.nickname
             };
@@ -22,6 +24,12 @@ namespace RabiRiichi.Server.Controllers {
                 return StatusCode(503);
             }
             return Ok(new CreateUserResp(user.sessionCode));
+        }
+
+        [HttpGet("info")]
+        public ActionResult<CreateUserResp> GetInfo(
+            [FromHeader(Name = "Session-Code"), RequireAuth] User user) {
+            return Ok(new UserInfoResp(user));
         }
     }
 }
