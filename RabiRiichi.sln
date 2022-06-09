@@ -12,6 +12,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		RabiRiichi.Tests.runsettings = RabiRiichi.Tests.runsettings
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RabiRiichi.Server", "RabiRiichi.Server\RabiRiichi.Server.csproj", "{34A5187D-8D9E-4101-9B13-DEBA009330E9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,6 +38,14 @@ Global
 		{4FD4FCCB-54B2-46D3-BD39-F425B5D8EC21}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4FD4FCCB-54B2-46D3-BD39-F425B5D8EC21}.Release|x64.ActiveCfg = Release|x64
 		{4FD4FCCB-54B2-46D3-BD39-F425B5D8EC21}.Release|x64.Build.0 = Release|x64
+		{34A5187D-8D9E-4101-9B13-DEBA009330E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{34A5187D-8D9E-4101-9B13-DEBA009330E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{34A5187D-8D9E-4101-9B13-DEBA009330E9}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{34A5187D-8D9E-4101-9B13-DEBA009330E9}.Debug|x64.Build.0 = Debug|Any CPU
+		{34A5187D-8D9E-4101-9B13-DEBA009330E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{34A5187D-8D9E-4101-9B13-DEBA009330E9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{34A5187D-8D9E-4101-9B13-DEBA009330E9}.Release|x64.ActiveCfg = Release|Any CPU
+		{34A5187D-8D9E-4101-9B13-DEBA009330E9}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
