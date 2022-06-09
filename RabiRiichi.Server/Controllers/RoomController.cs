@@ -10,7 +10,6 @@ namespace RabiRiichi.Server.Controllers {
         private readonly UserList userList;
 
         public RoomController(ILogger<RoomController> logger, RoomList roomList, UserList userList) {
-            logger.LogWarning("Loaded room controller");
             this.logger = logger;
             this.roomList = roomList;
             this.userList = userList;
