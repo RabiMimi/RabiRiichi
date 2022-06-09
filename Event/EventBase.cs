@@ -17,8 +17,6 @@ namespace RabiRiichi.Event {
     }
 
     public abstract class EventBase : IRabiMessage {
-        /// <summary> 广播时的ID，保证递增 </summary>
-        [RabiBroadcast] public int id;
         [RabiBroadcast] public abstract string name { get; }
         [RabiBroadcast] public RabiMessageType msgType => RabiMessageType.Event;
 
@@ -61,11 +59,6 @@ namespace RabiRiichi.Event {
 
         public EventBase(Game game) {
             this.game = game;
-        }
-
-        /// <summary> 事件广播时再初始化唯一事件ID </summary>
-        internal void BeforeBroadcast() {
-            id = game.info.eventId.Next;
         }
 
         /// <summary> 强制取消该事件及其后继事件 </summary>

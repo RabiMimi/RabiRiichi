@@ -6,10 +6,6 @@ namespace RabiRiichi.Action {
     public class SinglePlayerInquiry : IRabiPlayerMessage {
         [RabiBroadcast] public RabiMessageType msgType => RabiMessageType.Inquiry;
         [RabiBroadcast] public readonly List<IPlayerAction> actions = new();
-        /// <summary>
-        /// 对应的Event Id（和Event共享，同一次Inquiry的所有Player相同）
-        /// </summary>
-        [RabiBroadcast] public int id;
         public int playerId { get; init; }
         /// <summary>
         /// 所有操作的最高优先级

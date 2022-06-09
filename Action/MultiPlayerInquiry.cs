@@ -84,14 +84,6 @@ namespace RabiRiichi.Action {
             return this;
         }
 
-        /// <summary> 开始处理询问之前，计算ID </summary>
-        internal void BeforeBroadcast() {
-            id = game.info.eventId.Next;
-            foreach (var inquiry in playerInquiries) {
-                inquiry.id = id;
-            }
-        }
-
         /// <summary> 处理用户的回应，但是不会触发操作 </summary>
         /// <returns> 是否可以终止等待（已无用户可以做出优先级更高或相同的回应） </returns>
         private bool OnResponseWithoutTrigger(InquiryResponse resp) {
