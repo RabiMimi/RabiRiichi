@@ -4,7 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace RabiRiichi.Communication.Json {
-    public static class JsonStringify {
+    public static class RabiJson {
         private static readonly TileJsonConverter tileJsonConverter = new();
         private static readonly TilesJsonConverter tilesJsonConverter = new();
         private static readonly JsonStringEnumConverter stringEnumConverter

@@ -10,7 +10,7 @@ using System.Text.Json.Serialization;
 
 namespace RabiRiichi.Tests.Communication.Json {
     [TestClass]
-    public class JsonStringifyTest {
+    public class RabiJsonTest {
         #region Test Classes
         private abstract class BaseRabiMessage : IRabiMessage {
             public RabiMessageType msgType => RabiMessageType.Unnecessary;
@@ -104,9 +104,9 @@ namespace RabiRiichi.Tests.Communication.Json {
         [TestMethod]
         public void TestSuccessNested() {
             var message = new RabiTestMessage(0);
-            var json = JsonStringify.Stringify(message, 0);
+            var json = RabiJson.Stringify(message, 0);
             // Parse by current player
-            var parsed = JsonStringify.Parse<JsonElement>(json, 0);
+            var parsed = RabiJson.Parse<JsonElement>(json, 0);
             Assert.AreEqual(message.broadcastMessage, parsed.GetProperty("broadcastMessage").GetString());
             Assert.AreEqual(message.privateMessage, parsed.GetProperty("privateMessage").GetString());
             Assert.AreEqual(message.broadcastNested.broadcastMessage, parsed.GetProperty("broadcastNested").GetProperty("broadcastMessage").GetString());
@@ -115,8 +115,8 @@ namespace RabiRiichi.Tests.Communication.Json {
             Assert.IsFalse(parsed.TryGetProperty("notIncluded", out _));
 
             // Parse by the other player
-            var partialJson = JsonStringify.Stringify(message, 1);
-            var partialParsed = JsonStringify.Parse<JsonElement>(partialJson, 1);
+            var partialJson = RabiJson.Stringify(message, 1);
+            var partialParsed = RabiJson.Parse<JsonElement>(partialJson, 1);
             Assert.AreEqual(message.broadcastMessage, partialParsed.GetProperty("broadcastMessage").GetString());
             Assert.IsFalse(partialParsed.TryGetProperty("privateMessage", out _));
             Assert.AreEqual(message.broadcastNested.broadcastMessage, partialParsed.GetProperty("broadcastNested").GetProperty("broadcastMessage").GetString());
@@ -127,16 +127,16 @@ namespace RabiRiichi.Tests.Communication.Json {
         [TestMethod]
         public void TestSuccessNotRabiMessage() {
             var message = new NotRabiMessage();
-            var json = JsonStringify.Stringify(message, 0);
-            var parsed = JsonStringify.Parse<JsonElement>(json, 0);
+            var json = RabiJson.Stringify(message, 0);
+            var parsed = RabiJson.Parse<JsonElement>(json, 0);
             Assert.AreEqual(message.message, parsed.GetProperty("message").GetString());
         }
 
         [TestMethod]
         public void TestSuccessNotIWithPlayer() {
             var message = new NotIWithPlayer();
-            var json = JsonStringify.Stringify(message, 0);
-            var parsed = JsonStringify.Parse<JsonElement>(json, 0);
+            var json = RabiJson.Stringify(message, 0);
+            var parsed = RabiJson.Parse<JsonElement>(json, 0);
             Assert.AreEqual(message.message, parsed.GetProperty("message").GetString());
         }
 
@@ -144,15 +144,15 @@ namespace RabiRiichi.Tests.Communication.Json {
         public void TestInvalidNotIWithPlayer() {
             var message = new InvalidNotIWithPlayer();
             var except = Assert.ThrowsException<JsonException>(
-                () => JsonStringify.Stringify(message, 0),
+                () => RabiJson.Stringify(message, 0),
                 "is not IWithPlayer but has properties or fields that are not broadcastable");
         }
 
         [TestMethod]
         public void TestSuccessNonPublicSet() {
             var message = new ValidMessageNonPublicSet();
-            var json = JsonStringify.Stringify(message, 0);
-            var parsed = JsonStringify.Parse<JsonElement>(json, 0);
+            var json = RabiJson.Stringify(message, 0);
+            var parsed = RabiJson.Parse<JsonElement>(json, 0);
             Assert.AreEqual(message.message, parsed.GetProperty("message").GetString());
         }
 
@@ -160,31 +160,31 @@ namespace RabiRiichi.Tests.Communication.Json {
         public void TestInvalidRabiPrivateNotIWithPlayer() {
             var message = new InvalidRabiPrivateNotIWithPlayer();
             var except = Assert.ThrowsException<JsonException>(
-                () => JsonStringify.Stringify(message, 0),
+                () => RabiJson.Stringify(message, 0),
                 "is not IWithPlayer but marked as RabiPrivate");
         }
 
         [TestMethod]
         public void TestSuccessRabiPrivateWithPlayer() {
             var message = new RabiPrivateWithPlayer(0);
-            var json = JsonStringify.Stringify(message, 0);
-            var parsed = JsonStringify.Parse<JsonElement>(json, 0);
+            var json = RabiJson.Stringify(message, 0);
+            var parsed = RabiJson.Parse<JsonElement>(json, 0);
             Assert.AreEqual(message.message, parsed.GetProperty("message").GetString());
         }
 
         [TestMethod]
         public void TestNullRabiPrivateWithPlayerOtherPlayer() {
             var message = new RabiPrivateWithPlayer(1);
-            var json = JsonStringify.Stringify(message, 0);
-            var parsed = JsonStringify.Parse<JsonElement>(json, 0);
+            var json = RabiJson.Stringify(message, 0);
+            var parsed = RabiJson.Parse<JsonElement>(json, 0);
             Assert.AreEqual(parsed.ValueKind, JsonValueKind.Null);
         }
 
         [TestMethod]
         public void TestSuccessInheritedMessage() {
             var messages = new List<ValidMessageNonPublicSet> { new InheritedMessage() };
-            var json = JsonStringify.Stringify(messages, 0);
-            var parsed = JsonStringify.Parse<JsonElement>(json, 0)[0];
+            var json = RabiJson.Stringify(messages, 0);
+            var parsed = RabiJson.Parse<JsonElement>(json, 0)[0];
             Assert.AreEqual(messages[0].message, parsed.GetProperty("message").GetString());
             Assert.AreEqual((messages[0] as InheritedMessage).newMessage, parsed.GetProperty("newMessage").GetString());
         }
@@ -197,13 +197,13 @@ namespace RabiRiichi.Tests.Communication.Json {
                 discardInfo = new DiscardInfo(
                     new Player(1, TestHelper.CreateGame()), DiscardReason.Draw),
             }, tiles);
-            var json = JsonStringify.Stringify(message, 0);
-            var parsed = JsonStringify.Parse<JsonElement>(json, 0);
+            var json = RabiJson.Stringify(message, 0);
+            var parsed = RabiJson.Parse<JsonElement>(json, 0);
             Assert.AreEqual("r5s", parsed.GetProperty("tile").GetProperty("tile").GetString());
             Assert.AreEqual("wall", parsed.GetProperty("tile").GetProperty("source").GetString());
             Assert.AreEqual(1, parsed.GetProperty("tile").GetProperty("discardInfo").GetProperty("from").GetInt32());
             Assert.AreEqual("123s123m123p", parsed.GetProperty("tiles").GetString());
-            var parsedMsg = JsonStringify.Parse<GameTileMessage>(json, 0);
+            var parsedMsg = RabiJson.Parse<GameTileMessage>(json, 0);
             Assert.AreEqual(message.tile.tile, parsedMsg.tile.tile);
             CollectionAssert.AreEqual(message.tiles, parsedMsg.tiles);
         }
@@ -211,7 +211,7 @@ namespace RabiRiichi.Tests.Communication.Json {
         [TestMethod]
         public void TestIgnoredMessage() {
             var message = new IgnoredMessage();
-            var json = JsonStringify.Stringify(message, 0);
+            var json = RabiJson.Stringify(message, 0);
             Assert.AreEqual("null", json);
         }
     }

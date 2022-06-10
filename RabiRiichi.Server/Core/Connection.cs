@@ -41,7 +41,7 @@ namespace RabiRiichi.Server.Core {
             while (true) {
                 try {
                     var msg = msgQueue.Take(cts.Token);
-                    var jsonStr = JsonStringify.Stringify(msg, playerId);
+                    var jsonStr = RabiJson.Stringify(msg, playerId);
                     await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(jsonStr)), WebSocketMessageType.Text, true, cts.Token);
                 } catch (OperationCanceledException) {
                     break;

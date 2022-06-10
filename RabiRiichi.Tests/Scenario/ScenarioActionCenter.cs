@@ -269,7 +269,7 @@ namespace RabiRiichi.Tests.Scenario {
             if (msg.IsRabiIgnore()) {
                 return;
             }
-            var str = JsonStringify.Stringify(msg, playerId);
+            var str = RabiJson.Stringify(msg, playerId);
             if (str != lastMsg) {
                 SendImmediately();
             }

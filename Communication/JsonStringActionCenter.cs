@@ -42,18 +42,18 @@ namespace RabiRiichi.Communication {
                 inquiries[inquiry.id] = inquiry;
             }
             foreach (var singlePlayerInquiry in inquiry.playerInquiries) {
-                var json = JsonStringify.Stringify(singlePlayerInquiry, singlePlayerInquiry.playerId);
+                var json = RabiJson.Stringify(singlePlayerInquiry, singlePlayerInquiry.playerId);
                 Send(singlePlayerInquiry.playerId, json);
             }
         }
 
         public void OnEvent(int playerId, EventBase ev) {
-            var json = JsonStringify.Stringify(ev, playerId);
+            var json = RabiJson.Stringify(ev, playerId);
             Send(playerId, json);
         }
 
         public void OnMessage(Game game, int playerId, IRabiMessage msg) {
-            var json = JsonStringify.Stringify(msg, playerId);
+            var json = RabiJson.Stringify(msg, playerId);
             Send(playerId, json);
         }
     }
