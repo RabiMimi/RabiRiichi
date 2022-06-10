@@ -83,7 +83,7 @@ namespace RabiRiichi.Server.Core {
                     // Cancellation token cancelled. Could be:
                     // 1. A new ws connection coming in
                     // 2. Client informed that they closed the connection
-                    break;
+                    return;
                 } catch (InvalidOperationException) {
                     // Cannot take from queue anymore.
                     // The upper layer has specified that no more message is being sent,

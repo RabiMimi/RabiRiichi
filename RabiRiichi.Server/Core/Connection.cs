@@ -67,7 +67,7 @@ namespace RabiRiichi.Server.Core {
         /// Whether the connection is closed.<br/>
         /// If true, no more web sockets or connections are accepted.
         /// </summary>
-        public AtomicBool isClosed = new();
+        public readonly AtomicBool isClosed = new();
 
         public Connection(User user) {
             this.user = user;
