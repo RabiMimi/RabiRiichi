@@ -1,4 +1,5 @@
 using RabiRiichi.Action;
+using RabiRiichi.Communication.Json;
 using RabiRiichi.Core;
 using RabiRiichi.Event;
 using System.Collections.Generic;
@@ -41,18 +42,18 @@ namespace RabiRiichi.Communication {
                 inquiries[inquiry.id] = inquiry;
             }
             foreach (var singlePlayerInquiry in inquiry.playerInquiries) {
-                var json = inquiry.game.json.Stringify(singlePlayerInquiry, singlePlayerInquiry.playerId);
+                var json = JsonStringify.Stringify(singlePlayerInquiry, singlePlayerInquiry.playerId);
                 Send(singlePlayerInquiry.playerId, json);
             }
         }
 
         public void OnEvent(int playerId, EventBase ev) {
-            var json = ev.game.json.Stringify(ev, playerId);
+            var json = JsonStringify.Stringify(ev, playerId);
             Send(playerId, json);
         }
 
         public void OnMessage(Game game, int playerId, IRabiMessage msg) {
-            var json = game.json.Stringify(msg, playerId);
+            var json = JsonStringify.Stringify(msg, playerId);
             Send(playerId, json);
         }
     }

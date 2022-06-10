@@ -12,7 +12,6 @@ namespace RabiRiichi.Server.Core {
             public object message;
         }
         protected readonly BlockingCollection<Message> msgQueue = new();
-        protected readonly JsonStringify json;
         protected readonly CancellationTokenSource cts = new();
 
         protected WebSocket _ws;
@@ -34,7 +33,6 @@ namespace RabiRiichi.Server.Core {
 
         public Connection(User user) {
             this.user = user;
-            this.json = new JsonStringify(user.room.config.playerCount);
             this.playerId = user.room.players.IndexOf(user);
         }
 
@@ -43,7 +41,7 @@ namespace RabiRiichi.Server.Core {
             while (true) {
                 try {
                     var msg = msgQueue.Take(cts.Token);
-                    var jsonStr = json.Stringify(msg, playerId);
+                    var jsonStr = JsonStringify.Stringify(msg, playerId);
                     await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(jsonStr)), WebSocketMessageType.Text, true, cts.Token);
                 } catch (OperationCanceledException) {
                     break;

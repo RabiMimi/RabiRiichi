@@ -1,6 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Action;
 using RabiRiichi.Communication;
+using RabiRiichi.Communication.Json;
 using RabiRiichi.Core;
 using RabiRiichi.Event;
 using System;
@@ -268,7 +269,7 @@ namespace RabiRiichi.Tests.Scenario {
             if (msg.IsRabiIgnore()) {
                 return;
             }
-            var str = game.json.Stringify(msg, playerId);
+            var str = JsonStringify.Stringify(msg, playerId);
             if (str != lastMsg) {
                 SendImmediately();
             }

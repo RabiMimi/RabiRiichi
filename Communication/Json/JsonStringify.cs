@@ -1,40 +1,38 @@
-using RabiRiichi.Core.Config;
 using System;
+using System.Collections.Concurrent;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace RabiRiichi.Communication.Json {
-    public class JsonStringify {
-        private readonly JsonSerializerOptions[] options;
+    public static class JsonStringify {
+        private static readonly TileJsonConverter tileJsonConverter = new();
+        private static readonly TilesJsonConverter tilesJsonConverter = new();
+        private static readonly JsonStringEnumConverter stringEnumConverter
+            = new(new EnumNamingPolicy());
+        private static readonly ConcurrentDictionary<int, JsonSerializerOptions> optionsDict = new();
 
-        public JsonStringify(int playerCount) {
-            var tileConverter = new TileJsonConverter();
-            var tilesConverter = new TilesJsonConverter();
-            var stringEnumConverter = new JsonStringEnumConverter(new EnumNamingPolicy());
-            options = new JsonSerializerOptions[playerCount];
-            for (int i = 0; i < playerCount; i++) {
-                options[i] = new JsonSerializerOptions {
-                    Converters = {
-                        new MessageJsonConverter(i),
-                        tileConverter,
-                        tilesConverter,
-                        stringEnumConverter
-                    },
-                    IncludeFields = true,
-                };
-            }
+        private static JsonSerializerOptions GetOption(int playerId) {
+            return optionsDict.GetOrAdd(playerId, _ => new JsonSerializerOptions {
+                Converters = {
+                    new MessageJsonConverter(playerId),
+                    tileJsonConverter,
+                    tilesJsonConverter,
+                    stringEnumConverter
+                },
+                IncludeFields = true,
+            });
         }
 
-        public string Stringify(object obj, int playerId) {
-            return JsonSerializer.Serialize(obj, options[playerId]);
+        public static string Stringify(object obj, int playerId) {
+            return JsonSerializer.Serialize(obj, GetOption(playerId));
         }
 
-        public T Parse<T>(string json, int playerId) {
-            return JsonSerializer.Deserialize<T>(json, options[playerId]);
+        public static T Parse<T>(string json, int playerId) {
+            return JsonSerializer.Deserialize<T>(json, GetOption(playerId));
         }
 
-        public object Parse(string json, Type type, int playerId) {
-            return JsonSerializer.Deserialize(json, type, options[playerId]);
+        public static object Parse(string json, Type type, int playerId) {
+            return JsonSerializer.Deserialize(json, type, GetOption(playerId));
         }
     }
 }

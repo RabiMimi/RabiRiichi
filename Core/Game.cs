@@ -23,7 +23,6 @@ namespace RabiRiichi.Core {
         public GameConfig config => info.config;
         public readonly Wall wall;
         public readonly EventBus eventBus;
-        public readonly JsonStringify json;
         public readonly Player[] players;
         public readonly InitGameEvent initialEvent;
         public readonly EventQueue mainQueue;
@@ -35,13 +34,11 @@ namespace RabiRiichi.Core {
             initialEvent = new(this);
             var rand = new RabiRand(config.seed ?? (ulong)DateTimeOffset.Now.ToUnixTimeMilliseconds());
             var serviceCollection = new ServiceCollection();
-            json = new JsonStringify(config.playerCount);
 
             // Existing instances
             serviceCollection.AddSingleton(this);
             serviceCollection.AddSingleton(rand);
             serviceCollection.AddSingleton(config);
-            serviceCollection.AddSingleton(json);
 
             // Core utils
             serviceCollection.AddSingleton<EventBus>();
