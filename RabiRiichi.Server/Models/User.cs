@@ -85,7 +85,13 @@ namespace RabiRiichi.Server.Models {
         }
 
         public bool Connect(WebSocket ws) {
-            return connection.Connect(ws);
+            lock (this) {
+                if (status == UserStatus.None) {
+                    return false;
+                }
+                connection.Connect(ws);
+            }
+            return true;
         }
         #endregion
 

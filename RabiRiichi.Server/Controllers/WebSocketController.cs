@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using RabiRiichi.Server.Binders;
 using RabiRiichi.Server.Models;
-using System.Net.Sockets;
 
 namespace RabiRiichi.Server.Controllers {
     [ApiController]
@@ -25,6 +24,7 @@ namespace RabiRiichi.Server.Controllers {
                 if (!user.Connect(webSocket)) {
                     return BadRequest();
                 }
+                // TODO: Wait for socket connection to close
                 return Ok();
             } else {
                 return BadRequest();
