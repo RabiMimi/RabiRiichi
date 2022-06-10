@@ -7,10 +7,6 @@ namespace RabiRiichi.Server.Controllers {
     [Route("api/ws")]
     public class WebSocketController : ControllerBase {
         private readonly ILogger<RoomController> logger;
-        private static readonly WebSocketAcceptContext socketOption = new() {
-            SubProtocol = "json",
-            DangerousEnableCompression = true
-        };
 
         public WebSocketController(ILogger<RoomController> logger) {
             this.logger = logger;
@@ -20,7 +16,10 @@ namespace RabiRiichi.Server.Controllers {
         public async Task<ActionResult> ConnectWS([FromRoute(Name = "id"), RequireAuth] User user) {
             if (HttpContext.WebSockets.IsWebSocketRequest) {
                 using var webSocket =
-                    await HttpContext.WebSockets.AcceptWebSocketAsync(socketOption);
+                    await HttpContext.WebSockets.AcceptWebSocketAsync(new WebSocketAcceptContext {
+                        SubProtocol = "json",
+                        DangerousEnableCompression = true
+                    });
                 if (!user.Connect(webSocket)) {
                     return BadRequest();
                 }

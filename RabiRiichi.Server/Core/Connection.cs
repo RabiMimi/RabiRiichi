@@ -138,17 +138,20 @@ namespace RabiRiichi.Server.Core {
             ctx.OnReceive += (JsonElement json) => {
                 received.Set();
                 try {
-                    // Client sends heart beat requesting an event to be resent.
+                    // Client sends heart beat requesting events to be resent.
                     if (json.TryGetProperty("msgType", out var msgType)
-                        && msgType.GetString() == "hb"
-                        && json.TryGetProperty("evId", out var evId)
-                        && evId.TryGetInt32(out var evIdInt)
-                        && evIdInt > 0
-                        && msgLookup.TryGetValue(evIdInt, out var msg)) {
-                        ctx.Queue(msg);
+                        && msgType.GetString() == "reqEv"
+                        && json.TryGetProperty("evs", out var evs)) {
+                        foreach (int evId in evs.EnumerateArray().Select(e => e.GetInt32())) {
+                            if (msgLookup.TryGetValue(evId, out var msg)) {
+                                ctx.Queue(msg);
+                            }
+                        }
                     }
                 } catch (InvalidOperationException) {
                     // Invalid msgType, ignore
+                } catch (FormatException) {
+                    // Invalid message data, ignore
                 }
             };
             while (true) {

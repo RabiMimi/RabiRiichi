@@ -96,7 +96,7 @@ namespace RabiRiichi.Server.Core {
         }
 
         private async Task ReceiveMsgLoop() {
-            var byteArr = new ArraySegment<byte>(new byte[1024]);
+            var byteArr = new ArraySegment<byte>(new byte[4 * 1024]);
             while (true) {
                 try {
                     var msg = await ws.ReceiveAsync(byteArr, cts.Token);
