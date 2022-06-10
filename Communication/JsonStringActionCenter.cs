@@ -1,7 +1,7 @@
-using RabiRiichi.Action;
+using RabiRiichi.Actions;
 using RabiRiichi.Communication.Json;
 using RabiRiichi.Core;
-using RabiRiichi.Event;
+using RabiRiichi.Events;
 using System.Collections.Generic;
 
 namespace RabiRiichi.Communication {

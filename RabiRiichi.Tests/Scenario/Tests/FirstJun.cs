@@ -1,8 +1,8 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using RabiRiichi.Action;
+using RabiRiichi.Actions;
 using RabiRiichi.Core.Config;
-using RabiRiichi.Event.InGame;
-using RabiRiichi.Pattern;
+using RabiRiichi.Events.InGame;
+using RabiRiichi.Patterns;
 using System.Threading.Tasks;
 
 

@@ -1,6 +1,6 @@
-using RabiRiichi.Pattern;
+using RabiRiichi.Patterns;
 using System;
-using PatternPredicate = System.Predicate<System.Collections.Generic.ICollection<RabiRiichi.Pattern.StdPattern>>;
+using PatternPredicate = System.Predicate<System.Collections.Generic.ICollection<RabiRiichi.Patterns.StdPattern>>;
 
 namespace RabiRiichi.Util {
     public static class PredicateExtensions {

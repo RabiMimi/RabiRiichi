@@ -1,8 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using RabiRiichi.Event;
-using RabiRiichi.Event.InGame.Listener;
-using RabiRiichi.Pattern;
+using RabiRiichi.Events;
+using RabiRiichi.Events.InGame.Listener;
+using RabiRiichi.Patterns;
 using System;
 using System.Collections.Generic;
 using System.Linq;

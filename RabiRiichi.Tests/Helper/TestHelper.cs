@@ -1,5 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using RabiRiichi.Action;
+using RabiRiichi.Actions;
 using RabiRiichi.Communication;
 using RabiRiichi.Core;
 using RabiRiichi.Core.Config;

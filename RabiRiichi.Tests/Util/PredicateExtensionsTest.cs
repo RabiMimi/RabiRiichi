@@ -1,5 +1,5 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using RabiRiichi.Pattern;
+using RabiRiichi.Patterns;
 using RabiRiichi.Util;
 
 namespace RabiRiichi.Tests.Util {

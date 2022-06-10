@@ -1,7 +1,7 @@
 using RabiRiichi.Core.Setup;
-using RabiRiichi.Event;
-using RabiRiichi.Event.InGame;
-using RabiRiichi.Pattern;
+using RabiRiichi.Events;
+using RabiRiichi.Events.InGame;
+using RabiRiichi.Patterns;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;

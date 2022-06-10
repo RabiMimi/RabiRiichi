@@ -1,11 +1,11 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using RabiRiichi.Action;
+using RabiRiichi.Actions;
 using RabiRiichi.Communication;
 using RabiRiichi.Communication.Json;
 using RabiRiichi.Core.Config;
-using RabiRiichi.Event;
-using RabiRiichi.Event.InGame;
-using RabiRiichi.Pattern;
+using RabiRiichi.Events;
+using RabiRiichi.Events.InGame;
+using RabiRiichi.Patterns;
 using RabiRiichi.Util;
 using System;
 using System.Linq;

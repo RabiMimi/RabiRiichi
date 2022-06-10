@@ -1,9 +1,9 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using RabiRiichi.Action;
+using RabiRiichi.Actions;
 using RabiRiichi.Communication;
 using RabiRiichi.Communication.Json;
 using RabiRiichi.Core;
-using RabiRiichi.Event;
+using RabiRiichi.Events;
 using System;
 using System.Collections.Generic;
 using System.Linq;

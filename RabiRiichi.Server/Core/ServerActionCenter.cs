@@ -1,7 +1,7 @@
-using RabiRiichi.Action;
+using RabiRiichi.Actions;
 using RabiRiichi.Communication;
 using RabiRiichi.Core;
-using RabiRiichi.Event;
+using RabiRiichi.Events;
 using RabiRiichi.Server.Models;
 
 namespace RabiRiichi.Server.Core {
