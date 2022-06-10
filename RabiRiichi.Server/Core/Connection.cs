@@ -3,7 +3,6 @@ using RabiRiichi.Server.Models;
 using RabiRiichi.Util;
 using System.Collections.Concurrent;
 using System.Net.WebSockets;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -99,10 +98,6 @@ namespace RabiRiichi.Server.Core {
 
             return ctx;
         }
-        #endregion
-
-        #region Receive Msg
-
         #endregion
 
         #region Disconnect & Dispose
