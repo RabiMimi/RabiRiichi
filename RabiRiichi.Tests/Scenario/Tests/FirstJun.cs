@@ -118,6 +118,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
 
             for (int i = 0; i < 4; i++) {
                 (await scenario.WaitInquiry()).ForPlayer(i, (playerInquiry) => {
+                    scenario.WithGameInfo(info => Assert.AreEqual(i, info.currentPlayer));
                     playerInquiry.ChooseTile<PlayTileAction>("4z");
                 }).AssertAutoFinish();
             }

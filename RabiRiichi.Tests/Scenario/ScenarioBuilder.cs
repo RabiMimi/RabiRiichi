@@ -64,6 +64,12 @@ namespace RabiRiichi.Tests.Scenario {
             return this;
         }
 
+        /// <summary> 获取信息实例 </summary>
+        public Scenario WithGameInfo(Action<GameInfo> action) {
+            action(game.info);
+            return this;
+        }
+
         /// <summary> 获取牌山实例 </summary>
         public Scenario WithWall(Action<Wall> action) {
             action(game.wall);

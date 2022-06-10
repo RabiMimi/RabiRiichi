@@ -36,6 +36,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
             scenario.AssertNoEvent<DrawTileEvent>();
 
             (await scenario.WaitInquiry()).ForPlayer(2, playerInquiry => {
+                scenario.WithGameInfo(info => Assert.AreEqual(2, info.currentPlayer));
                 playerInquiry
                     .ChooseTile<PlayTileAction>("3p", action => {
                         action.options.ToTiles().AssertEquals("11122357999p");

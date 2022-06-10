@@ -9,6 +9,7 @@ namespace RabiRiichi.Events.InGame.Listener {
 
         public static Task IncreaseJun(IncreaseJunEvent ev) {
             ev.player.hand.jun = ev.increasedJun;
+            ev.game.info.currentPlayer = ev.player.id;
             return Task.CompletedTask;
         }
 

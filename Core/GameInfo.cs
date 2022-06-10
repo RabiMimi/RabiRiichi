@@ -20,6 +20,8 @@ namespace RabiRiichi.Core {
         [RabiBroadcast] public int dealer = 0;
         /// <summary> 本场 </summary>
         [RabiBroadcast] public int honba = 0;
+        /// <summary> 当前玩家ID </summary>
+        [RabiBroadcast] public int currentPlayer = -1;
         /// <summary> 是否是All Last </summary>
         public bool IsAllLast {
             get {
@@ -44,6 +46,7 @@ namespace RabiRiichi.Core {
 
         /// <summary> 清空本局数据以开始下一局 </summary>
         public void Reset() {
+            currentPlayer = -1;
             timeStamp.Reset();
         }
     }
