@@ -7,12 +7,12 @@ namespace RabiRiichi.Communication.Json {
     public class JsonStringify {
         private readonly JsonSerializerOptions[] options;
 
-        public JsonStringify(GameConfig config) {
+        public JsonStringify(int playerCount) {
             var tileConverter = new TileJsonConverter();
             var tilesConverter = new TilesJsonConverter();
             var stringEnumConverter = new JsonStringEnumConverter(new EnumNamingPolicy());
-            options = new JsonSerializerOptions[config.playerCount];
-            for (int i = 0; i < config.playerCount; i++) {
+            options = new JsonSerializerOptions[playerCount];
+            for (int i = 0; i < playerCount; i++) {
                 options[i] = new JsonSerializerOptions {
                     Converters = {
                         new MessageJsonConverter(i),

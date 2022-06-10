@@ -14,27 +14,34 @@ namespace RabiRiichi.Server.Models {
 
     public class Room {
         public int id;
-        public Game game;
-        public readonly List<User> players = new();
+        public Game game { get; protected set; }
+        public readonly GameConfig config;
+        public readonly List<User> players;
 
         public Room() {
-            game = new Game(new GameConfig {
+            config = new GameConfig {
                 actionCenter = new ServerActionCenter(this),
-            });
+            };
+            players = new List<User>(config.playerCount);
+        }
+
+        public Task RunGame() {
+            return new Game(config).Start();
         }
 
         public bool AddPlayer([ModelBinder] User user) {
             lock (players) {
-                if (players.Count >= game.config.playerCount) {
+                int emptyIndex = players.IndexOf(null);
+                if (emptyIndex < 0) {
                     return false;
                 }
                 if (players.Contains(user)) {
                     return false;
                 }
-                if (Interlocked.CompareExchange(ref user.room, this, null) != null) {
+                if (!user.JoinRoom(this)) {
                     return false;
                 }
-                players.Add(user);
+                players[emptyIndex] = user;
                 return true;
             }
         }

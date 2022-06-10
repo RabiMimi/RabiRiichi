@@ -36,7 +36,9 @@ if (app.Environment.IsDevelopment()) {
 
 app.UseAuthorization();
 app.UseResponseCompression();
-app.UseWebSockets();
+app.UseWebSockets(new WebSocketOptions {
+    KeepAliveInterval = TimeSpan.FromSeconds(30),
+});
 
 app.MapControllers();
 
