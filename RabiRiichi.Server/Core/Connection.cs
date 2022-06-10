@@ -4,26 +4,34 @@ using RabiRiichi.Util;
 using System.Collections.Concurrent;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace RabiRiichi.Server.Core {
     public class Connection : IDisposable {
         protected class Message {
+            [JsonIgnore] public AtomicBool isQueued;
+            public bool TryQueue(BlockingCollection<Message> queue) {
+                if (isQueued.Exchange(true)) {
+                    return false;
+                }
+                queue.Add(this);
+                return true;
+            }
+
             public int id;
             public object message;
         }
         protected readonly BlockingCollection<Message> msgQueue = new();
+        protected readonly ConcurrentDictionary<int, Message> msgLookup = new();
         protected readonly CancellationTokenSource cts = new();
 
         protected WebSocket _ws;
         protected WebSocket ws {
             get => _ws;
             set {
-                if (_ws == null) {
-                    _ws = value;
+                if (Interlocked.Exchange(ref _ws, value) == null) {
                     Task.Run(SendMsgLoop);
                     Task.Run(ReceiveMsgLoop);
-                } else {
-                    _ws = value;
                 }
             }
         }
@@ -41,12 +49,20 @@ namespace RabiRiichi.Server.Core {
             while (true) {
                 try {
                     var msg = msgQueue.Take(cts.Token);
+                    msg.isQueued.Set(false);
                     var jsonStr = RabiJson.Stringify(msg, playerId);
                     await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(jsonStr)), WebSocketMessageType.Text, true, cts.Token);
                 } catch (OperationCanceledException) {
                     break;
                 }
             }
+        }
+
+        protected bool Requeue(int id) {
+            if (msgLookup.TryGetValue(id, out var msg)) {
+                return msg.TryQueue(msgQueue);
+            }
+            return false;
         }
 
         public void Queue(object msg) {
