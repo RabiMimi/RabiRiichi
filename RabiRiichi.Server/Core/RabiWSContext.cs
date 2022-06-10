@@ -10,22 +10,27 @@ namespace RabiRiichi.Server.Core {
         /// Websocket instance
         /// </summary>
         public readonly WebSocket ws;
+
         /// <summary>
         /// Player ID for this websocket
         /// </summary>
         public readonly int playerId;
+
         /// <summary>
         /// Message queue
         /// </summary>
         private readonly BlockingCollection<Connection.Message> msgQueue = new();
+
         /// <summary>
         /// Cancellation token source for all event loops related to this websocket.
         /// </summary>
         public readonly CancellationTokenSource cts = new();
+
         /// <summary>
         /// Callback when a message is received.
         /// </summary>
         public Action<JsonElement> OnReceive;
+
         /// <summary>
         /// Callback when the player is disconnected.
         /// </summary>

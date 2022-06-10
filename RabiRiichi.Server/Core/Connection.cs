@@ -8,6 +8,9 @@ using System.Text.Json.Serialization;
 
 namespace RabiRiichi.Server.Core {
     public class Connection : IDisposable {
+        /// <summary>
+        /// Message structure only used in WS Context.
+        /// </summary>
         internal class Message {
             [JsonIgnore] public readonly AtomicBool isQueued = new();
             public bool TryQueue(BlockingCollection<Message> queue) {
@@ -22,6 +25,9 @@ namespace RabiRiichi.Server.Core {
             public object message;
         }
 
+        /// <summary>
+        /// HeartBeat message. Should always have id = -1.
+        /// </summary>
         protected class HeartBeatMessage {
             public string msgType => "hb";
             public int evId { get; init; }
@@ -31,10 +37,14 @@ namespace RabiRiichi.Server.Core {
             }
         }
 
+        /// <summary>
+        /// Current WebSocket context. Null if not connected.<br/>
+        /// Will not be reset to null when the connection is closed.
+        /// </summary>
         protected RabiWSContext currentCtx;
 
         /// <summary>
-        /// Switch to a new WS context. Old connection will be cancelled.
+        /// Switch to a new WS context. Old connection will be closed.
         /// </summary>
         protected void SwitchWSContext(RabiWSContext newCts) {
             Interlocked.Exchange(ref currentCtx, newCts)?.cts.Cancel();
@@ -42,10 +52,12 @@ namespace RabiRiichi.Server.Core {
 
         protected readonly User user;
         protected readonly int playerId;
+
         /// <summary>
         /// Last message ID. Shared by all connections with the same player.
         /// </summary>
         public readonly AutoIncrementInt lastMsgId = new();
+
         /// <summary>
         /// Mapping from message ID to message. Shared by all connections with the same player.
         /// </summary>
@@ -61,8 +73,6 @@ namespace RabiRiichi.Server.Core {
             this.user = user;
             this.playerId = user.room.players.IndexOf(user);
         }
-
-        #region Send message
 
         /// <summary>
         /// Add a message to queue. It will not be sent immediately.
@@ -91,17 +101,39 @@ namespace RabiRiichi.Server.Core {
 
             var ctx = new RabiWSContext(ws, playerId);
             // Start message loops before context switch
-            ctx.RunLoops(Task.Run(() => HeartBeatLoop(ctx))).ConfigureAwait(false);
+            ctx.RunLoops(
+                HeartBeatLoop(ctx),
+                Task.Run(() => HeartBeatRecvLoop(ctx))
+            ).ConfigureAwait(false);
 
             // Cancel previous connection and switch context
             SwitchWSContext(ctx);
 
             return ctx;
         }
-        #endregion
 
-        #region Disconnect & Dispose
-        private void HeartBeatLoop(RabiWSContext ctx) {
+        /// <summary>
+        /// Sends a heartbeat package every 5 seconds.
+        /// </summary>
+        private async Task HeartBeatLoop(RabiWSContext ctx) {
+            while (true) {
+                try {
+                    await Task.Delay(TimeSpan.FromSeconds(5), ctx.cts.Token);
+                } catch (OperationCanceledException) {
+                    break;
+                }
+                ctx.Queue(new Message {
+                    id = -1, // Heartbeat does not need ID
+                    message = new HeartBeatMessage(lastMsgId.Value),
+                });
+            }
+        }
+
+        /// <summary>
+        /// Receives a heartbeat package.
+        /// If no response is received in 15 seconds, the connection will be closed.
+        /// </summary>
+        private void HeartBeatRecvLoop(RabiWSContext ctx) {
             var received = new ManualResetEvent(false);
             ctx.OnReceive += (JsonElement json) => {
                 received.Set();
@@ -121,13 +153,9 @@ namespace RabiRiichi.Server.Core {
             };
             while (true) {
                 received.Reset();
-                ctx.Queue(new Message {
-                    id = -1, // Heartbeat does not need ID
-                    message = new HeartBeatMessage(lastMsgId.Value),
-                });
                 int index = WaitHandle.WaitAny(
                     new WaitHandle[] { received, ctx.cts.Token.WaitHandle },
-                    TimeSpan.FromSeconds(10));
+                    TimeSpan.FromSeconds(15));
                 if (index == 0) {
                     // Received a message from client
                     continue;
@@ -166,6 +194,5 @@ namespace RabiRiichi.Server.Core {
             Dispose(true);
             GC.SuppressFinalize(this);
         }
-        #endregion
     }
 }
