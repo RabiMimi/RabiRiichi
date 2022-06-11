@@ -7,6 +7,6 @@ namespace RabiRiichi.Communication {
     public interface IActionCenter {
         void OnInquiry(MultiPlayerInquiry inquiry);
         void OnEvent(int playerId, EventBase ev);
-        void OnMessage(Game game, int playerId, IRabiMessage msg);
+        void OnMessage(int playerId, object msg);
     }
 }

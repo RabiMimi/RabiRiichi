@@ -123,9 +123,12 @@ namespace RabiRiichi.Core {
             }
         }
 
-        public void SendMessage(int playerId, IRabiMessage msg) {
+        public void SendMessage(int playerId, object msg) {
             using (messageMutex.Lock(MESSAGE_TIMEOUT)) {
-                config.actionCenter.OnMessage(this, playerId, msg);
+                if (msg.GetType().Has<RabiIgnoreAttribute>()) {
+                    return;
+                }
+                config.actionCenter.OnMessage(playerId, msg);
             }
         }
         #endregion

@@ -11,7 +11,7 @@ namespace RabiRiichi.Communication {
         RabiMessageType msgType { get; }
     }
 
-    public interface IRabiPlayerMessage : IRabiMessage {
+    public interface IRabiPlayerMessage {
         int playerId { get; }
     }
 }

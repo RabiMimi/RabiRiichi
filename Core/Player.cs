@@ -2,6 +2,7 @@
     public enum Wind {
         E, S, W, N
     }
+
     public class Player {
         public int id;
         public Game game;

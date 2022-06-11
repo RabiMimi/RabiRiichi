@@ -30,7 +30,7 @@ namespace RabiRiichi.Communication.Json {
         private class RabiMessageReflectionData {
             private static readonly ConcurrentDictionary<Type, RabiMessageReflectionData> reflectionDataDict = new();
             public static RabiMessageReflectionData Of(Type type) {
-                if (type.IsRabiIgnore()) {
+                if (type.Has<RabiIgnoreAttribute>()) {
                     return null;
                 }
                 return reflectionDataDict.GetOrAdd(type, _ => new RabiMessageReflectionData(type));
@@ -44,18 +44,18 @@ namespace RabiRiichi.Communication.Json {
                 if (!type.IsAssignableTo(typeof(IRabiMessage))) {
                     throw new ArgumentException($"{type} is not IRabiMessage");
                 }
-                if (type.IsRabiIgnore()) {
+                if (type.Has<RabiIgnoreAttribute>()) {
                     throw new ArgumentException($"{type} is RabiIgnore");
                 }
-                isPrivate = type.IsRabiPrivate();
+                isPrivate = type.Has<RabiPrivateAttribute>();
                 var bindingFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
                 var AllProperties = type.GetProperties(bindingFlags)
-                    .Where(p => p.IsRabiPrivate() || p.IsRabiBroadcast());
+                    .Where(p => p.Has<RabiPrivateAttribute>() || p.Has<RabiBroadcastAttribute>());
                 var AllFields = type.GetFields(bindingFlags)
-                    .Where(f => f.IsRabiPrivate() || f.IsRabiBroadcast());
+                    .Where(f => f.Has<RabiPrivateAttribute>() || f.Has<RabiBroadcastAttribute>());
 
-                var BroadCastProperties = AllProperties.Where(p => p.IsRabiBroadcast());
-                var BroadCastFields = AllFields.Where(f => f.IsRabiBroadcast());
+                var BroadCastProperties = AllProperties.Where(p => p.Has<RabiBroadcastAttribute>());
+                var BroadCastFields = AllFields.Where(f => f.Has<RabiBroadcastAttribute>());
                 AllMembers = AllProperties.Cast<MemberInfo>().Concat(AllFields).ToArray();
                 BroadCastMembers = BroadCastProperties.Cast<MemberInfo>().Concat(BroadCastFields).ToArray();
 

@@ -6,7 +6,7 @@ namespace RabiRiichi.Events.InGame {
         public override string name => "sync_state";
 
         #region Response
-        [RabiPrivate] public readonly Dictionary<string, IRabiMessage> states = new();
+        [RabiPrivate] public readonly Dictionary<string, object> states = new();
         #endregion
 
         public SyncGameStateEvent(EventBase parent, int playerId) : base(parent, playerId) { }

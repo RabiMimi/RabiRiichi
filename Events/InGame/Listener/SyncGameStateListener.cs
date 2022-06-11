@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 namespace RabiRiichi.Events.InGame.Listener {
     public static class SyncGameStateListener {
         public static Task AddGameState(SyncGameStateEvent ev) {
-            ev.states["game_state"] = new GameState(ev.game, ev.playerId);
+            ev.states["gameState"] = new GameState(ev.game, ev.playerId);
             return Task.CompletedTask;
         }
 

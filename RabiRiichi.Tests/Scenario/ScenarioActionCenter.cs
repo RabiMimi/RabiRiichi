@@ -206,13 +206,18 @@ namespace RabiRiichi.Tests.Scenario {
     }
 
     public class ScenarioActionCenter : IActionCenter {
-        private int playerCount = -1;
+        private readonly int playerCount;
+
         private TaskCompletionSource<ScenarioInquiryMatcher> nextInquirySource = new();
         private string lastMsg;
         private readonly List<int> lastMsgSentTo = new();
         public Task<ScenarioInquiryMatcher> NextInquiry => nextInquirySource.Task;
         private TaskCompletionSource currentInquirySource = null;
         public Task CurrentInquiry => currentInquirySource.Task;
+
+        public ScenarioActionCenter(int playerCount) {
+            this.playerCount = playerCount;
+        }
 
         ~ScenarioActionCenter() {
             SendImmediately();
@@ -244,7 +249,7 @@ namespace RabiRiichi.Tests.Scenario {
         }
 
         public void OnEvent(int playerId, EventBase ev) {
-            OnMessage(ev.game, playerId, ev);
+            OnMessage(playerId, ev);
         }
 
         public void OnInquiry(MultiPlayerInquiry inquiry) {
@@ -252,7 +257,7 @@ namespace RabiRiichi.Tests.Scenario {
                 return;
             }
             foreach (var playerInquiry in inquiry.playerInquiries) {
-                OnMessage(inquiry.game, playerInquiry.playerId, playerInquiry);
+                OnMessage(playerInquiry.playerId, playerInquiry);
             }
             SendImmediately();
             currentInquirySource = new();
@@ -262,13 +267,7 @@ namespace RabiRiichi.Tests.Scenario {
             }));
         }
 
-        public void OnMessage(Game game, int playerId, IRabiMessage msg) {
-            if (playerCount == -1) {
-                playerCount = game.config.playerCount;
-            }
-            if (msg.IsRabiIgnore()) {
-                return;
-            }
+        public void OnMessage(int playerId, object msg) {
             var str = RabiJson.Stringify(msg, playerId);
             if (str != lastMsg) {
                 SendImmediately();

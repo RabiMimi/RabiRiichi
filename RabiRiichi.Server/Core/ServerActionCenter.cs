@@ -1,6 +1,5 @@
 using RabiRiichi.Actions;
 using RabiRiichi.Communication;
-using RabiRiichi.Core;
 using RabiRiichi.Events;
 using RabiRiichi.Server.Models;
 
@@ -22,7 +21,7 @@ namespace RabiRiichi.Server.Core {
             throw new NotImplementedException();
         }
 
-        public void OnMessage(Game game, int playerId, IRabiMessage msg) {
+        public void OnMessage(int playerId, object msg) {
             throw new NotImplementedException();
         }
     }

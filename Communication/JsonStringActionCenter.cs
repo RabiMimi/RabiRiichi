@@ -1,6 +1,5 @@
 using RabiRiichi.Actions;
 using RabiRiichi.Communication.Json;
-using RabiRiichi.Core;
 using RabiRiichi.Events;
 using System.Collections.Generic;
 
@@ -52,7 +51,7 @@ namespace RabiRiichi.Communication {
             Send(playerId, json);
         }
 
-        public void OnMessage(Game game, int playerId, IRabiMessage msg) {
+        public void OnMessage(int playerId, object msg) {
             var json = RabiJson.Stringify(msg, playerId);
             Send(playerId, json);
         }

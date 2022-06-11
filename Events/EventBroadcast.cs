@@ -6,7 +6,7 @@ namespace RabiRiichi.Events {
     public static class EventBroadcast {
         public static Task Send(EventBase ev) {
             var players = ev.game.players.AsEnumerable();
-            if (ev is IRabiPlayerMessage msg && msg.IsRabiPrivate()) {
+            if (ev is IRabiPlayerMessage msg && msg.GetType().Has<RabiPrivateAttribute>()) {
                 players = players.Where(p => p.id == msg.playerId);
             }
             foreach (var player in players) {

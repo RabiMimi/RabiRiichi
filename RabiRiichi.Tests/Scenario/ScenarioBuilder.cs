@@ -235,7 +235,7 @@ namespace RabiRiichi.Tests.Scenario {
             private GameConfig config;
 
             public GameConfigBuilder(int playerCount) {
-                var actionCenter = new ScenarioActionCenter();
+                var actionCenter = new ScenarioActionCenter(playerCount);
                 config = new() {
                     playerCount = playerCount,
                     setup = new ScenarioSetup(actionCenter),
