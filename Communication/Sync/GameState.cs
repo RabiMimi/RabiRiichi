@@ -5,7 +5,6 @@ using System.Linq;
 
 namespace RabiRiichi.Communication.Sync {
     public class PlayerHandState : IRabiPlayerMessage {
-        public RabiMessageType msgType => RabiMessageType.Unnecessary;
         public int playerId { get; init; }
         [RabiPrivate] public readonly List<GameTile> freeTiles;
         [RabiBroadcast] public readonly List<List<GameTile>> called;
@@ -32,8 +31,8 @@ namespace RabiRiichi.Communication.Sync {
         }
     }
 
-    public class WallState : IRabiMessage {
-        public RabiMessageType msgType => RabiMessageType.Unnecessary;
+    [RabiMessage]
+    public class WallState {
         [RabiBroadcast] public readonly List<GameTile> doras;
         [RabiBroadcast] public readonly int remaining;
         [RabiBroadcast] public readonly int rinshanRemaining;
@@ -46,7 +45,6 @@ namespace RabiRiichi.Communication.Sync {
     }
 
     public class PlayerState : IRabiPlayerMessage {
-        public RabiMessageType msgType => RabiMessageType.Unnecessary;
         public int playerId { get; init; }
         [RabiBroadcast] public readonly int id;
         [RabiBroadcast] public readonly Wind wind;
@@ -63,7 +61,6 @@ namespace RabiRiichi.Communication.Sync {
     }
 
     public class GameState : IRabiPlayerMessage {
-        [RabiBroadcast] public RabiMessageType msgType => RabiMessageType.Sync;
         public int playerId { get; init; }
 
         [RabiBroadcast] public readonly GameConfig config;

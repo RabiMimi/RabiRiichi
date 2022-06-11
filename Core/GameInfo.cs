@@ -7,9 +7,9 @@ namespace RabiRiichi.Core {
         Pending, Running, Finished
     }
 
-    public class GameInfo : IRabiMessage {
-        public RabiMessageType msgType => RabiMessageType.Unnecessary;
-        public GameConfig config = new();
+    [RabiMessage]
+    public class GameInfo {
+        public readonly GameConfig config;
         /// <summary> 游戏状态 </summary>
         public GamePhase phase = GamePhase.Pending;
         /// <summary> 第几轮 </summary>

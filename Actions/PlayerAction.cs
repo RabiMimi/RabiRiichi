@@ -27,7 +27,6 @@ namespace RabiRiichi.Actions {
     [RabiPrivate]
     public abstract class PlayerAction<T> : IPlayerAction {
         [RabiPrivate] public abstract string name { get; }
-        [RabiPrivate] public RabiMessageType msgType => RabiMessageType.Action;
 
         [RabiPrivate] public int playerId { get; init; }
 

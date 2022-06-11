@@ -14,8 +14,8 @@ namespace RabiRiichi.Events.InGame {
         Pao,
     }
 
-    public class ScoreTransfer : IRabiMessage {
-        public RabiMessageType msgType => RabiMessageType.Unnecessary;
+    [RabiMessage]
+    public class ScoreTransfer {
         [RabiBroadcast] public int from;
         [RabiBroadcast] public int to;
         [RabiBroadcast] public long points;

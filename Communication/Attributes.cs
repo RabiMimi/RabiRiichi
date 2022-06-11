@@ -12,12 +12,16 @@ namespace RabiRiichi.Communication {
 
         public static bool Has<T>(this PropertyInfo property) where T : Attribute
             => property.GetCustomAttribute<T>() != null;
+
     }
+
+    [AttributeUsage(AttributeTargets.Class)]
+    public class RabiMessageAttribute : Attribute { }
 
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property | AttributeTargets.Field)]
     public class RabiPrivateAttribute : Attribute { }
 
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property | AttributeTargets.Field)]
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
     public class RabiBroadcastAttribute : Attribute { }
 
     [AttributeUsage(AttributeTargets.Class)]

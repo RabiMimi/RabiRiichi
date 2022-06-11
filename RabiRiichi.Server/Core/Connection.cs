@@ -106,7 +106,7 @@ namespace RabiRiichi.Server.Core {
                 received.Set();
                 try {
                     // Client sends heart beat requesting events to be resent.
-                    if (json.TryGetProperty("msgType", out var msgType)
+                    if (json.TryGetProperty("type", out var msgType)
                         && msgType.GetString() == "reqEv"
                         && json.TryGetProperty("evs", out var evs)) {
                         foreach (int evId in evs.EnumerateArray().Select(e => e.GetInt32())) {
@@ -116,7 +116,7 @@ namespace RabiRiichi.Server.Core {
                         }
                     }
                 } catch (InvalidOperationException) {
-                    // Invalid msgType, ignore
+                    // Invalid type, ignore
                 } catch (FormatException) {
                     // Invalid message data, ignore
                 }

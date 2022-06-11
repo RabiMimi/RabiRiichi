@@ -4,9 +4,9 @@ using RabiRiichi.Util;
 using System;
 
 namespace RabiRiichi.Patterns {
-    public class ScoreCalcResult : IComparable<ScoreCalcResult>, IRabiMessage {
+    [RabiMessage]
+    public class ScoreCalcResult : IComparable<ScoreCalcResult> {
         public const int KAZOE_YAKUMAN_HAN = 13;
-        public RabiMessageType msgType => RabiMessageType.Unnecessary;
         /// <summary> 番 </summary>
         [RabiBroadcast] public int han;
         /// <summary> 记作役的番数 </summary>

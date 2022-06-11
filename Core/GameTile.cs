@@ -42,8 +42,8 @@ namespace RabiRiichi.Core {
         Pretend,
     }
 
-    public class DiscardInfo : IRabiMessage {
-        public RabiMessageType msgType => RabiMessageType.Unnecessary;
+    [RabiMessage]
+    public class DiscardInfo {
         /// <summary> 哪个玩家的弃牌 </summary>
         public readonly Player fromPlayer;
         [RabiBroadcast] public readonly int from;
@@ -58,7 +58,8 @@ namespace RabiRiichi.Core {
 
     }
 
-    public class GameTile : IComparable<GameTile>, IRabiMessage {
+    [RabiMessage]
+    public class GameTile : IComparable<GameTile> {
         internal class Refrigerator : IDisposable {
             public readonly GameTile gameTile;
             public readonly Tile tile;
@@ -84,7 +85,6 @@ namespace RabiRiichi.Core {
             }
         }
 
-        public RabiMessageType msgType => RabiMessageType.Unnecessary;
         [RabiBroadcast] public Tile tile = Tile.Empty;
         /// <summary> 当前归属于哪个玩家，摸切或副露时会被设置 </summary>
         public Player player;

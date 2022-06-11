@@ -16,9 +16,9 @@ namespace RabiRiichi.Events {
         public const int Maximum = (int)1e7;
     }
 
-    public abstract class EventBase : IRabiMessage {
+    [RabiMessage]
+    public abstract class EventBase {
         [RabiBroadcast] public abstract string name { get; }
-        [RabiBroadcast] public RabiMessageType msgType => RabiMessageType.Event;
 
         /// <summary> 游戏实例 </summary>
         public readonly Game game;

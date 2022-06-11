@@ -1,8 +1,8 @@
 using RabiRiichi.Communication;
 
 namespace RabiRiichi.Core.Config {
-    public class PointThreshold : IRabiMessage {
-        public RabiMessageType msgType => RabiMessageType.Unnecessary;
+    [RabiMessage]
+    public class PointThreshold {
         /// <summary> 初始点数 </summary>
         [RabiBroadcast] public long initialPoints = 25000;
 

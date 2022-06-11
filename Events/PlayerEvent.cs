@@ -16,7 +16,7 @@ namespace RabiRiichi.Events {
         public PrivatePlayerEvent(EventBase parent, int playerId) : base(parent, playerId) { }
     }
 
-    [RabiBroadcast]
+    [RabiMessage]
     public abstract class BroadcastPlayerEvent : PlayerEvent {
         public BroadcastPlayerEvent(EventBase parent, int playerId) : base(parent, playerId) { }
     }

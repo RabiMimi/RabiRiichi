@@ -12,9 +12,8 @@ namespace RabiRiichi.Tests.Communication.Json {
     [TestClass]
     public class RabiJsonTest {
         #region Test Classes
-        private abstract class BaseRabiMessage : IRabiMessage {
-            public RabiMessageType msgType => RabiMessageType.Unnecessary;
-        }
+        [RabiMessage]
+        private abstract class BaseRabiMessage { }
 
         private class RabiTestNestedMessage : BaseRabiMessage, IRabiPlayerMessage {
             public int playerId { get; init; }

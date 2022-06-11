@@ -4,7 +4,6 @@ using System.IO;
 
 namespace RabiRiichi.Actions {
     public class SinglePlayerInquiry : IRabiPlayerMessage {
-        [RabiBroadcast] public RabiMessageType msgType => RabiMessageType.Inquiry;
         [RabiBroadcast] public readonly List<IPlayerAction> actions = new();
         public int playerId { get; init; }
         /// <summary>

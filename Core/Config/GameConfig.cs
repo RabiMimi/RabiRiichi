@@ -3,8 +3,8 @@ using RabiRiichi.Core.Setup;
 using RabiRiichi.Util;
 
 namespace RabiRiichi.Core.Config {
-    public class GameConfig : IRabiMessage {
-        public RabiMessageType msgType => RabiMessageType.Unnecessary;
+    [RabiMessage]
+    public class GameConfig {
         #region Config
         /// <summary> 玩家数 </summary>
         [RabiBroadcast] public int playerCount = 2;

@@ -7,7 +7,6 @@ using System.Linq;
 
 namespace RabiRiichi.Events.InGame {
     public class AgariInfo : IRabiPlayerMessage {
-        public RabiMessageType msgType => RabiMessageType.Unnecessary;
         [RabiBroadcast] public int playerId { get; init; }
         [RabiBroadcast] public readonly ScoreStorage scores;
 
@@ -17,8 +16,8 @@ namespace RabiRiichi.Events.InGame {
         }
     }
 
-    public class AgariInfoList : IRabiMessage, IEnumerable<AgariInfo> {
-        public RabiMessageType msgType => RabiMessageType.Unnecessary;
+    [RabiMessage]
+    public class AgariInfoList : IEnumerable<AgariInfo> {
         [RabiBroadcast] private readonly List<AgariInfo> agariInfos;
         [RabiBroadcast] public readonly int fromPlayer;
         [RabiBroadcast] public readonly GameTile incoming;
@@ -40,7 +39,7 @@ namespace RabiRiichi.Events.InGame {
         public AgariInfo this[int index] => agariInfos[index];
     }
 
-    [RabiBroadcast]
+    [RabiMessage]
     public class AgariEvent : EventBase {
         public class Builder : IEventBuilder {
             public readonly EventBase parent;

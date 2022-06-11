@@ -83,8 +83,8 @@ namespace RabiRiichi.Patterns {
         All = Regular | Bonus | Luck,
     }
 
-    public class Scoring : IRabiMessage {
-        public RabiMessageType msgType => RabiMessageType.Unnecessary;
+    [RabiMessage]
+    public class Scoring {
         [RabiBroadcast] public ScoringType Type;
         [RabiBroadcast] public int Val;
         public StdPattern Source;

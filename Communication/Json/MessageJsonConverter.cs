@@ -14,7 +14,7 @@ namespace RabiRiichi.Communication.Json {
         }
 
         public override bool CanConvert(Type typeToConvert) {
-            return typeToConvert.IsAssignableTo(typeof(IRabiMessage));
+            return typeToConvert.Has<RabiMessageAttribute>();
         }
 
         public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options) {
@@ -41,8 +41,8 @@ namespace RabiRiichi.Communication.Json {
             public readonly bool isPrivate;
 
             public RabiMessageReflectionData(Type type) {
-                if (!type.IsAssignableTo(typeof(IRabiMessage))) {
-                    throw new ArgumentException($"{type} is not IRabiMessage");
+                if (!type.Has<RabiMessageAttribute>()) {
+                    throw new ArgumentException($"{type} is not RabiMessage");
                 }
                 if (type.Has<RabiIgnoreAttribute>()) {
                     throw new ArgumentException($"{type} is RabiIgnore");

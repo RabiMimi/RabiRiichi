@@ -6,7 +6,8 @@ using System.Collections;
 using System.Collections.Generic;
 
 namespace RabiRiichi.Patterns {
-    public class ScoreStorage : IComparable<ScoreStorage>, IEnumerable<Scoring>, IRabiMessage {
+    [RabiMessage]
+    public class ScoreStorage : IComparable<ScoreStorage>, IEnumerable<Scoring> {
         internal class Refrigerator : IDisposable {
             private readonly ScoreStorage scores;
             private readonly bool oldValue;
@@ -21,7 +22,6 @@ namespace RabiRiichi.Patterns {
             }
         }
 
-        public RabiMessageType msgType => RabiMessageType.Unnecessary;
         [RabiBroadcast] private readonly List<Scoring> items = new();
 
         /// <summary> 累计役满需要番数 </summary>
