@@ -1,4 +1,5 @@
 using RabiRiichi.Communication.Json;
+using RabiRiichi.Server.Messages;
 using System.Collections.Concurrent;
 using System.Net.WebSockets;
 using System.Text;
@@ -19,7 +20,7 @@ namespace RabiRiichi.Server.Core {
         /// <summary>
         /// Message queue
         /// </summary>
-        private readonly BlockingCollection<Connection.Message> msgQueue = new();
+        private readonly BlockingCollection<OutMessage> msgQueue = new();
 
         /// <summary>
         /// Cancellation token source for all event loops related to this websocket.
@@ -34,7 +35,7 @@ namespace RabiRiichi.Server.Core {
         /// <summary>
         /// Callback when the player is disconnected.
         /// </summary>
-        public System.Action OnDisconnect;
+        public Action OnDisconnect;
 
         public RabiWSContext(WebSocket ws, int playerId) {
             this.ws = ws;
@@ -60,8 +61,11 @@ namespace RabiRiichi.Server.Core {
         /// <summary>
         /// Queue a message to be sent.
         /// </summary>
-        internal void Queue(Connection.Message msg) {
-            msg.TryQueue(msgQueue);
+        internal void Queue(OutMessage msg) {
+            if (msg.isQueued.Exchange(true)) {
+                return;
+            }
+            msgQueue.Add(msg);
         }
 
         /// <summary>

@@ -1,4 +1,5 @@
 using RabiRiichi.Communication.Json;
+using RabiRiichi.Server.Messages;
 using RabiRiichi.Server.Models;
 using RabiRiichi.Util;
 using System.Collections.Concurrent;
@@ -8,35 +9,6 @@ using System.Text.Json.Serialization;
 
 namespace RabiRiichi.Server.Core {
     public class Connection : IDisposable {
-        /// <summary>
-        /// Message structure only used in WS Context.
-        /// </summary>
-        internal class Message {
-            [JsonIgnore] public readonly AtomicBool isQueued = new();
-            public bool TryQueue(BlockingCollection<Message> queue) {
-                if (isQueued.Exchange(true)) {
-                    return false;
-                }
-                queue.Add(this);
-                return true;
-            }
-
-            public int id;
-            public object message;
-        }
-
-        /// <summary>
-        /// HeartBeat message. Should always have id = -1.
-        /// </summary>
-        protected class HeartBeatMessage {
-            public string msgType => "hb";
-            public int evId { get; init; }
-
-            public HeartBeatMessage(int evId) {
-                this.evId = evId;
-            }
-        }
-
         /// <summary>
         /// Current WebSocket context. Null if not connected.<br/>
         /// Will not be reset to null when the connection is closed.
@@ -61,7 +33,7 @@ namespace RabiRiichi.Server.Core {
         /// <summary>
         /// Mapping from message ID to message. Shared by all connections with the same player.
         /// </summary>
-        internal readonly ConcurrentDictionary<int, Message> msgLookup = new();
+        internal readonly ConcurrentDictionary<int, OutMessage> msgLookup = new();
 
         /// <summary>
         /// Whether the connection is closed.<br/>
@@ -77,15 +49,12 @@ namespace RabiRiichi.Server.Core {
         /// <summary>
         /// Add a message to queue. It will not be sent immediately.
         /// </summary>
-        public void Queue<T>(T msg) {
+        public void Queue<T>(string type, T msg) {
             if (isClosed) {
                 return;
             }
             try {
-                currentCtx?.Queue(new Message {
-                    id = lastMsgId.Next,
-                    message = msg,
-                });
+                currentCtx?.Queue(new OutMessage(lastMsgId.Next, type, msg));
             } catch (InvalidOperationException) {
                 // No more message can be queued.
             }
@@ -122,10 +91,8 @@ namespace RabiRiichi.Server.Core {
                 } catch (OperationCanceledException) {
                     break;
                 }
-                ctx.Queue(new Message {
-                    id = -1, // Heartbeat does not need ID
-                    message = new HeartBeatMessage(lastMsgId.Value),
-                });
+                ctx.Queue(new OutMessage(-1, MessageType.HeartBeat,
+                    new HeartBeatMessage(lastMsgId.Value)));
             }
         }
 
