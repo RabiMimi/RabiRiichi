@@ -91,8 +91,8 @@ namespace RabiRiichi.Server.Core {
                 } catch (OperationCanceledException) {
                     break;
                 }
-                ctx.Queue(new OutMessage(-1, MessageType.HeartBeat,
-                    new HeartBeatMessage(lastMsgId.Value)));
+                ctx.Queue(new OutMessage(-1, OutMsgType.HeartBeat,
+                    InOutHeartBeat.From(lastMsgId.Value)));
             }
         }
 
@@ -102,23 +102,20 @@ namespace RabiRiichi.Server.Core {
         /// </summary>
         private void HeartBeatRecvLoop(RabiWSContext ctx) {
             var received = new ManualResetEvent(false);
-            ctx.OnReceive += (JsonElement json) => {
+            ctx.OnReceive += (InMessage incoming) => {
+                // Always resets heartbeat timer even if the message is not a heartbeat
                 received.Set();
-                try {
-                    // Client sends heart beat requesting events to be resent.
-                    if (json.TryGetProperty("type", out var msgType)
-                        && msgType.GetString() == "reqEv"
-                        && json.TryGetProperty("evs", out var evs)) {
-                        foreach (int evId in evs.EnumerateArray().Select(e => e.GetInt32())) {
-                            if (msgLookup.TryGetValue(evId, out var msg)) {
-                                ctx.Queue(msg);
-                            }
-                        }
+                if (!incoming.TryGetMessage<InOutHeartBeat>(out var heartBeat)) {
+                    return;
+                }
+                if (heartBeat.requestingEvents == null) {
+                    return;
+                }
+                // Client requesting events to be resent
+                foreach (var evt in heartBeat.requestingEvents) {
+                    if (msgLookup.TryGetValue(evt, out var msg)) {
+                        ctx.Queue(msg);
                     }
-                } catch (InvalidOperationException) {
-                    // Invalid type, ignore
-                } catch (FormatException) {
-                    // Invalid message data, ignore
                 }
             };
             while (true) {

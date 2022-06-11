@@ -24,17 +24,37 @@ namespace RabiRiichi.Server.Messages {
     /// Messages received from client.
     /// </summary>
     public class InMessage {
+        public static readonly JsonSerializerOptions jsonSerializerOptions = new() {
+            DefaultIgnoreCondition = JsonIgnoreCondition.Never,
+            IncludeFields = true,
+        };
+
         public int id;
         public string type;
         public JsonElement message;
 
         [JsonIgnore]
-        private Lazy<object> messageObj = new(() => {
+        private readonly Lazy<object> lazyMessage;
 
-        });
+        public InMessage() {
+            lazyMessage = new(() => {
+                var msgType = type switch {
+                    InMsgType.HeartBeat => typeof(InOutHeartBeat),
+                    _ => null,
+                };
+                if (msgType == null) {
+                    return null;
+                }
+                try {
+                    return JsonSerializer.Deserialize(message, msgType, jsonSerializerOptions);
+                } catch (JsonException) {
+                    return null;
+                }
+            });
+        }
 
         public bool TryGetMessage<T>(out T message) {
-            if (messageObj is T msg) {
+            if (lazyMessage.Value is T msg) {
                 message = msg;
                 return true;
             }

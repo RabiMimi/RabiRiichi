@@ -30,7 +30,7 @@ namespace RabiRiichi.Server.Core {
         /// <summary>
         /// Callback when a message is received.
         /// </summary>
-        public Action<JsonElement> OnReceive;
+        public Action<InMessage> OnReceive;
 
         /// <summary>
         /// Callback when the player is disconnected.
@@ -114,17 +114,16 @@ namespace RabiRiichi.Server.Core {
                         break;
                     } else if (msg.MessageType == WebSocketMessageType.Text) {
                         var jsonStr = Encoding.UTF8.GetString(byteArr.Array, 0, msg.Count);
-                        var json = JsonSerializer.Deserialize<JsonElement>(jsonStr);
-                        OnReceive?.Invoke(json);
+                        var inMsg = JsonSerializer.Deserialize<InMessage>(jsonStr);
+                        if (inMsg != null) {
+                            OnReceive?.Invoke(inMsg);
+                        }
                     }
                 } catch (OperationCanceledException) {
                     // Cancellation token cancelled. Could be:
                     // 1. A new ws connection coming in
                     // 2. Client informed that they closed the connection
                     return;
-                } catch (ArgumentException) {
-                    // Invalid message
-                    continue;
                 } catch (JsonException) {
                     // Invalid message
                     continue;
