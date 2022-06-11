@@ -7,9 +7,7 @@ using DpLoc = System.ValueTuple<byte, byte, byte, byte>;
 
 namespace RabiRiichi.Patterns {
     public class Base33332 : BasePattern {
-        private int M;
         private List<MenLike> current;
-        private List<List<MenLike>> output;
         private GameTileBucket tileBucket;
 
         #region Resolve
@@ -80,7 +78,7 @@ namespace RabiRiichi.Patterns {
             }
         }
 
-        private void DFSPattern(Tile curTile, int janCnt) {
+        private void DFSPattern(Tile curTile, int janCnt, List<List<MenLike>> output) {
             if (!curTile.IsValid) {
                 if (janCnt == 1) {
                     output.Add(current.ToList());
@@ -97,14 +95,14 @@ namespace RabiRiichi.Patterns {
             // 获取当前牌桶
             var bucket = tileBucket.GetBucket(curTile);
             if (bucket.Count == 0) {
-                DFSPattern(nextTile, janCnt);
+                DFSPattern(nextTile, janCnt, output);
                 return;
             }
             if (bucket.Count >= 2 && janCnt < 1) {
                 // 雀头
                 using var helper = new DFSHelper(this);
                 helper.Remove(curTile, curTile);
-                DFSPattern(curTile, janCnt + 1);
+                DFSPattern(curTile, janCnt + 1, output);
             }
             // 先存下来后面两张牌用于顺子计算
             var nxt1 = curTile.Next;
@@ -120,7 +118,7 @@ namespace RabiRiichi.Patterns {
             while (true) {
                 // 检查顺子
                 if (bucket.Count == 0) {
-                    DFSPattern(nextTile, janCnt);
+                    DFSPattern(nextTile, janCnt, output);
                 } else if (nxt2.IsValid) {
                     int shunCnt = bucket.Count;
                     if (bucket1.Count >= shunCnt && bucket2.Count >= shunCnt) {
@@ -128,7 +126,7 @@ namespace RabiRiichi.Patterns {
                         for (int i = 0; i < shunCnt; i++) {
                             shunHelper.Remove(curTile, nxt1, nxt2);
                         }
-                        DFSPattern(nextTile, janCnt);
+                        DFSPattern(nextTile, janCnt, output);
                     }
                 }
                 if (bucket.Count < 3)
@@ -165,8 +163,7 @@ namespace RabiRiichi.Patterns {
             var extraOutput = new List<List<MenLike>>();
             tileBucket = GetTileGroups(hand, incoming, false);
             current = new List<MenLike>();
-            this.output = output;
-            DFSPattern(new Tile(TileSuit.M, 1), janCnt);
+            DFSPattern(new Tile(TileSuit.M, 1), janCnt, output);
             foreach (var gr in output) {
                 GenerateOtherPatterns(gr, incoming, extraOutput);
             }
@@ -197,7 +194,6 @@ namespace RabiRiichi.Patterns {
             }
         }
 
-        private DpVal[,,,] CreateDpSubArray() => new DpVal[3, 3, 2, M * 2 + 1];
         private static void AddToList(ref DpVal list, int dist, DpLoc loc) {
             if (list == null) {
                 list = new DpVal();
@@ -240,17 +236,18 @@ namespace RabiRiichi.Patterns {
         }
 
         public override int Shanten(Hand hand, GameTile incoming, out Tiles output, int maxShanten = 8) {
-            if (maxShanten <= Game.HAND_SIZE) {
-                maxShanten++;
-            }
-            if (maxShanten < 0) {
+            int maxDist = Math.Min(Game.HAND_SIZE, maxShanten) + 1; // 最大修改距离为向听数+1
+            if (maxDist < 0) {
                 return Reject(out output);
             }
-            if (maxShanten == 0 && incoming == null) {
+            if (maxDist == 0 && incoming == null) {
                 return Reject(out output);
             }
             tileBucket = GetTileGroups(hand, incoming, false);
-            M = Math.Min(9, maxShanten);
+            maxDist = Math.Min(9, maxDist);
+
+            DpVal[,,,] NewDpSubArray() => new DpVal[3, 3, 2, maxDist * 2 + 1];
+
             // 是否有雀头
             int janCnt = hand.called.Count(gr => gr is Jantou);
             if (janCnt > 1) {
@@ -266,9 +263,9 @@ namespace RabiRiichi.Patterns {
             dp = new DpVal[5, 10][,,,];
             visitedDp = new Dictionary<DpLoc, int>[5, 10];
             // 初始化dp值
-            var dpPre = CreateDpSubArray();
+            var dpPre = NewDpSubArray();
             dp[0, 9] = dpPre;
-            dpPre[0, 0, janCnt, M] = new DpVal(0) { (0, 0, 0, 0) };
+            dpPre[0, 0, janCnt, maxDist] = new DpVal(0) { (0, 0, 0, 0) };
             int Lj = dpPre.GetLength(0);
             int Lk = dpPre.GetLength(2);
             int Ll = dpPre.GetLength(3);
@@ -277,7 +274,7 @@ namespace RabiRiichi.Patterns {
             for (TileSuit i1 = TileSuit.M; i1 <= TileSuit.Z; i1++) {
                 for (int i2 = 1; i2 <= (i1 == TileSuit.Z ? 7 : 9); i2++) {
                     var tile = new Tile(i1, i2);
-                    var dpCur = CreateDpSubArray();
+                    var dpCur = NewDpSubArray();
                     dp[(int)i1, i2] = dpCur;
                     visitedDp[(int)i1, i2] = new Dictionary<DpLoc, int>();
                     int N = tileBucket.GetBucket(tile).Count;
@@ -332,9 +329,9 @@ namespace RabiRiichi.Patterns {
             }
 
             // 检查非法输入
-            DpLoc destLoc = (0, 0, 1, (byte)(incoming == null ? M + 1 : M));
+            DpLoc destLoc = (0, 0, 1, (byte)(incoming == null ? maxDist + 1 : maxDist));
             var dest = dpPre[destLoc.Item1, destLoc.Item2, destLoc.Item3, destLoc.Item4];
-            if (dest == null || dest.dist > M) {
+            if (dest == null || dest.dist > maxDist) {
                 return Reject(out output);
             }
 

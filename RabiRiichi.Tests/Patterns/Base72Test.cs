@@ -77,6 +77,9 @@ namespace RabiRiichi.Tests.Patterns {
 
             Assert.AreEqual(int.MaxValue, Shanten("2222333344445s", null, 5));
             Assert.IsNull(tiles);
+
+            Assert.AreEqual(-1, Shanten("2233445566778s", "8s", -1));
+            tiles.AssertEquals("");
         }
 
 

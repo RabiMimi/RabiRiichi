@@ -70,7 +70,6 @@ namespace RabiRiichi.Tests.Patterns {
         #region Shanten
         [TestMethod]
         public void TestShanten() {
-
             Assert.AreEqual(-1, Shanten("2233445566778s", "8s"));
             tiles.AssertEquals("");
 
@@ -85,6 +84,9 @@ namespace RabiRiichi.Tests.Patterns {
 
             Assert.AreEqual(8, Shanten("159s159p159m1234z", "5z"));
             tiles.AssertEquals("159s159p159m12345z");
+
+            Assert.AreEqual(8, Shanten("159s159p159m1234z", null));
+            tiles.AssertEquals("123456789s123456789p123456789m1234z");
 
             Assert.AreEqual(8, Shanten("159s159p159m1234z", null));
             tiles.AssertEquals("123456789s123456789p123456789m1234z");
@@ -109,6 +111,9 @@ namespace RabiRiichi.Tests.Patterns {
 
             Assert.AreEqual(6, Shanten("25569m2589p5s357z", null, 6));
             tiles.AssertEquals("123456789m1234567p34567s357z");
+
+            Assert.AreEqual(-1, Shanten("2233445566778s", "8s", -1));
+            tiles.AssertEquals("");
         }
 
         [TestMethod]

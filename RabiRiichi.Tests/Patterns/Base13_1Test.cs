@@ -84,6 +84,9 @@ namespace RabiRiichi.Tests.Patterns {
 
             Assert.AreEqual(int.MaxValue, Shanten("1199m11999s1199p", null, 5));
             Assert.IsNull(tiles);
+
+            Assert.AreEqual(-1, Shanten("19m19p19s1234567z", "1z", -1));
+            tiles.AssertEquals("");
         }
 
         [TestMethod]
