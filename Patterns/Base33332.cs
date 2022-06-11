@@ -178,7 +178,7 @@ namespace RabiRiichi.Patterns {
         #endregion Resolve
 
         #region Shanten
-        class DpVal : List<DpLoc> {
+        private class DpVal : List<DpLoc> {
             public int dist;
 
             public DpVal(int dist = int.MaxValue) {
@@ -196,17 +196,19 @@ namespace RabiRiichi.Patterns {
             }
         }
 
-        private static void AddToList(ref DpVal list, int dist, DpLoc loc) {
-            if (list == null) {
-                list = new DpVal();
+        private class DpContext {
+            public readonly DpVal[,][,,,] dp = new DpVal[5, 10][,,,];
+            public readonly Dictionary<DpLoc, int>[,] visitedDp = new Dictionary<DpLoc, int>[5, 10];
+
+            public static void Add(ref DpVal list, int dist, DpLoc loc) {
+                if (list == null) {
+                    list = new DpVal();
+                }
+                list.Update(dist, loc);
             }
-            list.Update(dist, loc);
         }
 
-        private DpVal[,][,,,] dp;
-        private Dictionary<DpLoc, int>[,] visitedDp;
-
-        private int ShantenDfs(Tile tile, DpLoc loc, Tiles output) {
+        private int ShantenDfs(Tile tile, DpLoc loc, Tiles output, DpContext ctx) {
             if (!tile.IsValid) {
                 return 0;
             }
@@ -215,20 +217,20 @@ namespace RabiRiichi.Patterns {
             if (!prev.IsValid) {
                 prev = new Tile(tile.Suit - 1, 9);
             }
-            if (visitedDp[gr, num].TryGetValue(loc, out int dist)) {
+            if (ctx.visitedDp[gr, num].TryGetValue(loc, out int dist)) {
                 return dist;
             }
-            if (dp[gr, num] == null) {
-                dist = ShantenDfs(prev, loc, output);
-                visitedDp[gr, num].Add(loc, dist);
+            if (ctx.dp[gr, num] == null) {
+                dist = ShantenDfs(prev, loc, output, ctx);
+                ctx.visitedDp[gr, num].Add(loc, dist);
                 return dist;
             }
-            var cur = dp[gr, num][loc.Item1, loc.Item2, loc.Item3, loc.Item4];
+            var cur = ctx.dp[gr, num][loc.Item1, loc.Item2, loc.Item3, loc.Item4];
             dist = cur.dist;
-            visitedDp[gr, num].Add(loc, dist);
+            ctx.visitedDp[gr, num].Add(loc, dist);
             bool shouldAdd = false;
             foreach (var pre in cur) {
-                var preDist = ShantenDfs(prev, pre, output);
+                var preDist = ShantenDfs(prev, pre, output, ctx);
                 shouldAdd |= preDist < dist;
             }
             if (shouldAdd && !output.Contains(tile)) {
@@ -262,8 +264,9 @@ namespace RabiRiichi.Patterns {
             // k表示是否匹配了雀头
             // l表示牌数-4
             // dp值表示前驱
-            dp = new DpVal[5, 10][,,,];
-            visitedDp = new Dictionary<DpLoc, int>[5, 10];
+            var ctx = new DpContext();
+            var dp = ctx.dp;
+            var visitedDp = ctx.visitedDp;
             // 初始化dp值
             var dpPre = NewDpSubArray();
             dp[0, 9] = dpPre;
@@ -313,7 +316,7 @@ namespace RabiRiichi.Patterns {
                                                 if (newL < 0 || newL >= Ll) {
                                                     continue;
                                                 }
-                                                AddToList(ref dpCur[newJ2, newJ1, newK, newL],
+                                                DpContext.Add(ref dpCur[newJ2, newJ1, newK, newL],
                                                     prevList.dist + (incoming == null
                                                         ? Math.Max(0, newL - l)
                                                         : Math.Max(0, l - newL)),
@@ -339,7 +342,7 @@ namespace RabiRiichi.Patterns {
 
             // 反向寻路
             output = new Tiles();
-            ShantenDfs(new Tile("7z"), destLoc, output);
+            ShantenDfs(new Tile("7z"), destLoc, output, ctx);
             output.Sort();
             return dest.dist - 1;
         }
