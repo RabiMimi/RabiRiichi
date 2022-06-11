@@ -7,44 +7,52 @@ using DpLoc = System.ValueTuple<byte, byte, byte, byte>;
 
 namespace RabiRiichi.Patterns {
     public class Base33332 : BasePattern {
-        private List<MenLike> current;
-        private GameTileBucket tileBucket;
-
         #region Resolve
-        private class DFSHelper : IDisposable {
-            private readonly Base33332 instance;
-            private readonly Stack<GameTile> removed = new();
-            private int groupNum = 0;
+        private class ResolutionContext {
+            internal class Refrigerator : IDisposable {
+                private readonly ResolutionContext context;
+                private readonly Stack<GameTile> removed = new();
+                private int groupNum = 0;
 
-            public DFSHelper(Base33332 instance) {
-                this.instance = instance;
-            }
-
-            public GameTile Remove(Tile tile) {
-                var bucket = instance.tileBucket.GetBucket(tile);
-                var cnt = bucket.Count - 1;
-                var ret = bucket[cnt];
-                bucket.RemoveAt(cnt);
-                removed.Push(ret);
-                return ret;
-            }
-
-            public MenLike Remove(params Tile[] indexes) {
-                var gr = MenLike.From(indexes.Select(index => Remove(index)).ToList());
-                instance.current.Add(gr);
-                groupNum++;
-                return gr;
-            }
-
-            public void Dispose() {
-                while (removed.Count > 0) {
-                    var item = removed.Pop();
-                    instance.tileBucket.Add(item);
+                public Refrigerator(ResolutionContext context) {
+                    this.context = context;
                 }
-                for (int i = 0; i < groupNum; i++) {
-                    instance.current.RemoveAt(instance.current.Count - 1);
+
+                public GameTile Remove(Tile tile) {
+                    var bucket = context.tileBucket.GetBucket(tile);
+                    var index = bucket.Count - 1;
+                    var ret = bucket[index];
+                    bucket.RemoveAt(index);
+                    removed.Push(ret);
+                    return ret;
+                }
+
+                public MenLike Remove(params Tile[] indexes) {
+                    var gr = MenLike.From(indexes.Select(index => Remove(index)));
+                    context.current.Add(gr);
+                    groupNum++;
+                    return gr;
+                }
+
+                public void Dispose() {
+                    while (removed.Count > 0) {
+                        context.tileBucket.Add(removed.Pop());
+                    }
+                    context.current.RemoveRange(context.current.Count - groupNum, groupNum);
                 }
             }
+
+            public readonly List<MenLike> current = new();
+            public readonly GameTileBucket tileBucket;
+            public readonly List<List<MenLike>> output;
+
+            public ResolutionContext(GameTileBucket tileBucket, List<List<MenLike>> output) {
+                this.tileBucket = tileBucket;
+                this.output = output;
+            }
+
+            public Refrigerator Save() => new(this);
+            public void AddCurrentToOutput() => output.Add(current.ToList());
         }
 
         /// <summary> 和了牌算进哪一组会影响符数计算，因此需要生成不同组合 </summary>
@@ -78,10 +86,10 @@ namespace RabiRiichi.Patterns {
             }
         }
 
-        private void DFSPattern(Tile curTile, int janCnt, List<List<MenLike>> output) {
+        private void DFSPattern(Tile curTile, int janCnt, ResolutionContext context) {
             if (!curTile.IsValid) {
                 if (janCnt == 1) {
-                    output.Add(current.ToList());
+                    context.AddCurrentToOutput();
                 }
                 return;
             }
@@ -93,16 +101,16 @@ namespace RabiRiichi.Patterns {
             }
 
             // 获取当前牌桶
-            var bucket = tileBucket.GetBucket(curTile);
+            var bucket = context.tileBucket.GetBucket(curTile);
             if (bucket.Count == 0) {
-                DFSPattern(nextTile, janCnt, output);
+                DFSPattern(nextTile, janCnt, context);
                 return;
             }
             if (bucket.Count >= 2 && janCnt < 1) {
                 // 雀头
-                using var helper = new DFSHelper(this);
-                helper.Remove(curTile, curTile);
-                DFSPattern(curTile, janCnt + 1, output);
+                using var savePoint = context.Save();
+                savePoint.Remove(curTile, curTile);
+                DFSPattern(curTile, janCnt + 1, context);
             }
             // 先存下来后面两张牌用于顺子计算
             var nxt1 = curTile.Next;
@@ -110,34 +118,29 @@ namespace RabiRiichi.Patterns {
             List<GameTile> bucket1 = null;
             List<GameTile> bucket2 = null;
             if (nxt2.IsValid) {
-                bucket1 = tileBucket.GetBucket(nxt1.Suit, nxt1.Num);
-                bucket2 = tileBucket.GetBucket(nxt2.Suit, nxt2.Num);
+                bucket1 = context.tileBucket.GetBucket(nxt1.Suit, nxt1.Num);
+                bucket2 = context.tileBucket.GetBucket(nxt2.Suit, nxt2.Num);
             }
             // 枚举刻子数量
-            var helpers = new Stack<DFSHelper>();
+            var save = context.Save();
             while (true) {
                 // 检查顺子
                 if (bucket.Count == 0) {
-                    DFSPattern(nextTile, janCnt, output);
+                    DFSPattern(nextTile, janCnt, context);
                 } else if (nxt2.IsValid) {
                     int shunCnt = bucket.Count;
                     if (bucket1.Count >= shunCnt && bucket2.Count >= shunCnt) {
-                        using var shunHelper = new DFSHelper(this);
+                        using var shunSavePoint = context.Save();
                         for (int i = 0; i < shunCnt; i++) {
-                            shunHelper.Remove(curTile, nxt1, nxt2);
+                            shunSavePoint.Remove(curTile, nxt1, nxt2);
                         }
-                        DFSPattern(nextTile, janCnt, output);
+                        DFSPattern(nextTile, janCnt, context);
                     }
                 }
                 if (bucket.Count < 3)
                     break;
                 // 移除刻子
-                var helper = new DFSHelper(this);
-                helpers.Push(helper);
-                helper.Remove(curTile, curTile, curTile);
-            }
-            while (helpers.Count > 0) {
-                helpers.Pop().Dispose();
+                save.Remove(curTile, curTile, curTile);
             }
         }
 
@@ -161,9 +164,8 @@ namespace RabiRiichi.Patterns {
             // DFS output
             output = new List<List<MenLike>>();
             var extraOutput = new List<List<MenLike>>();
-            tileBucket = GetTileGroups(hand, incoming, false);
-            current = new List<MenLike>();
-            DFSPattern(new Tile(TileSuit.M, 1), janCnt, output);
+            var context = new ResolutionContext(GetTileGroups(hand, incoming, false), output);
+            DFSPattern(new Tile(TileSuit.M, 1), janCnt, context);
             foreach (var gr in output) {
                 GenerateOtherPatterns(gr, incoming, extraOutput);
             }
@@ -243,7 +245,7 @@ namespace RabiRiichi.Patterns {
             if (maxDist == 0 && incoming == null) {
                 return Reject(out output);
             }
-            tileBucket = GetTileGroups(hand, incoming, false);
+            var tileBucket = GetTileGroups(hand, incoming, false);
             maxDist = Math.Min(9, maxDist);
 
             DpVal[,,,] NewDpSubArray() => new DpVal[3, 3, 2, maxDist * 2 + 1];
