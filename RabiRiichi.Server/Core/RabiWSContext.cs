@@ -28,6 +28,16 @@ namespace RabiRiichi.Server.Core {
         public readonly CancellationTokenSource cts = new();
 
         /// <summary>
+        /// Maximum client message ID.
+        /// </summary>
+        public int maxClientMsgId = 0;
+
+        /// <summary>
+        /// Maximum received message ID.
+        /// </summary>
+        public int maxReceivedMsgId = 0;
+
+        /// <summary>
         /// Callback when a message is received.
         /// </summary>
         public Action<InMessage> OnReceive;
@@ -116,6 +126,7 @@ namespace RabiRiichi.Server.Core {
                         var jsonStr = Encoding.UTF8.GetString(byteArr.Array, 0, msg.Count);
                         var inMsg = JsonSerializer.Deserialize<InMessage>(jsonStr);
                         if (inMsg != null) {
+                            RabiInterlocked.ExchangeMax(ref maxReceivedMsgId, inMsg.id);
                             OnReceive?.Invoke(inMsg);
                         }
                     }

@@ -5,15 +5,15 @@ namespace RabiRiichi.Server.Messages {
     /// HeartBeat message. Should always have id = -1.
     /// </summary>
     public class InOutHeartBeat {
-        [JsonPropertyName("ev")]
-        public int maxEventId { get; init; }
+        [JsonPropertyName("id")]
+        public int maxMsgId { get; init; }
 
         [JsonPropertyName("reqs")]
         public List<int> requestingEvents;
 
-        public static InOutHeartBeat From(int maxEventId, List<int> requestingEvents = null) {
+        public static InOutHeartBeat From(int maxMsgId, List<int> requestingEvents) {
             return new InOutHeartBeat {
-                maxEventId = maxEventId,
+                maxMsgId = maxMsgId,
                 requestingEvents = requestingEvents,
             };
         }

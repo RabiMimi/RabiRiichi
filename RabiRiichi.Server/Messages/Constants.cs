@@ -6,6 +6,7 @@ namespace RabiRiichi.Server.Messages {
     }
 
     public static class InMsgType {
+        public const string Empty = "";
         public const string HeartBeat = "h";
         public const string Action = "act";
     }

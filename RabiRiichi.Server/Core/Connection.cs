@@ -1,11 +1,8 @@
-using RabiRiichi.Communication.Json;
 using RabiRiichi.Server.Messages;
 using RabiRiichi.Server.Models;
 using RabiRiichi.Util;
 using System.Collections.Concurrent;
 using System.Net.WebSockets;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace RabiRiichi.Server.Core {
     public class Connection : IDisposable {
@@ -28,7 +25,7 @@ namespace RabiRiichi.Server.Core {
         /// <summary>
         /// Last message ID. Shared by all connections with the same player.
         /// </summary>
-        public readonly AutoIncrementInt lastMsgId = new();
+        public readonly AutoIncrementInt msgId = new();
 
         /// <summary>
         /// Mapping from message ID to message. Shared by all connections with the same player.
@@ -54,7 +51,7 @@ namespace RabiRiichi.Server.Core {
                 return;
             }
             try {
-                currentCtx?.Queue(new OutMessage(lastMsgId.Next, type, msg));
+                currentCtx?.Queue(new OutMessage(msgId.Next, type, msg));
             } catch (InvalidOperationException) {
                 // No more message can be queued.
             }
@@ -91,8 +88,14 @@ namespace RabiRiichi.Server.Core {
                 } catch (OperationCanceledException) {
                     break;
                 }
+                // Get a list of missing events
+                int nextReceiveMsgId = ctx.maxReceivedMsgId + 1;
+                int maxClientMsgId = ctx.maxClientMsgId;
+                int count = Math.Min(16, maxClientMsgId - nextReceiveMsgId);
+                List<int> requestingEvents = count > 0
+                    ? new(Enumerable.Range(nextReceiveMsgId, count)) : null;
                 ctx.Queue(new OutMessage(-1, OutMsgType.HeartBeat,
-                    InOutHeartBeat.From(lastMsgId.Value)));
+                    InOutHeartBeat.From(msgId.Value, requestingEvents)));
             }
         }
 
@@ -108,6 +111,8 @@ namespace RabiRiichi.Server.Core {
                 if (!incoming.TryGetMessage<InOutHeartBeat>(out var heartBeat)) {
                     return;
                 }
+                // Update maximum client message ID
+                ctx.maxClientMsgId = heartBeat.maxMsgId;
                 if (heartBeat.requestingEvents == null) {
                     return;
                 }
