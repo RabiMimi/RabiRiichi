@@ -197,7 +197,7 @@ namespace RabiRiichi.Patterns {
             }
         }
 
-        private DpVal[,,,] CreateDpSubArray() => new DpVal[5, 5, 2, M * 2 + 1];
+        private DpVal[,,,] CreateDpSubArray() => new DpVal[3, 3, 2, M * 2 + 1];
         private static void AddToList(ref DpVal list, int dist, DpLoc loc) {
             if (list == null) {
                 list = new DpVal();
