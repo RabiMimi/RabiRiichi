@@ -34,7 +34,7 @@ namespace RabiRiichi.Server.Messages {
         public int id;
 
         [JsonPropertyName("resp")]
-        public int responseTo;
+        public int respondTo;
         public string type;
         public JsonElement message;
 

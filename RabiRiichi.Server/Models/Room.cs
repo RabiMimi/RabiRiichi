@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
+using RabiRiichi.Server.Messages;
 using RabiRiichi.Server.Utils;
 using System.Net.WebSockets;
 
@@ -22,6 +23,13 @@ namespace RabiRiichi.Server.Models {
             return players.Any(p => p == user);
         }
 
+        private void BroadcastRoomState() {
+            var state = OutRoomState.From(this);
+            foreach (var player in players) {
+                player?.connection?.Queue(OutMsgType.RoomState, state);
+            }
+        }
+
         public Room() {
             config = new GameConfig();
             players = new User[config.playerCount];
@@ -41,6 +49,7 @@ namespace RabiRiichi.Server.Models {
                 }
                 ServerActionCenter actionCenter = new(this);
                 config.actionCenter = actionCenter;
+                BroadcastRoomState();
                 task = new Game(config).Start();
                 return true;
             }
@@ -57,6 +66,7 @@ namespace RabiRiichi.Server.Models {
                             $"Player status transition failed, unexpected modification not guarded by lock?");
                     }
                 }
+                BroadcastRoomState();
                 return true;
             }
         }
@@ -75,7 +85,11 @@ namespace RabiRiichi.Server.Models {
                 if (!HasPlayer(user)) {
                     return false;
                 }
-                return user.Transit(UserStatus.InRoom, UserStatus.Ready);
+                if (!user.Transit(UserStatus.InRoom, UserStatus.Ready)) {
+                    return false;
+                }
+                BroadcastRoomState();
+                return true;
             }
         }
 
@@ -84,7 +98,11 @@ namespace RabiRiichi.Server.Models {
                 if (!HasPlayer(user)) {
                     return false;
                 }
-                return user.Transit(UserStatus.Ready, UserStatus.InRoom);
+                if (!user.Transit(UserStatus.Ready, UserStatus.InRoom)) {
+                    return false;
+                }
+                BroadcastRoomState();
+                return true;
             }
         }
 
@@ -102,6 +120,7 @@ namespace RabiRiichi.Server.Models {
                         return false;
                     }
                     players[emptyIndex] = user;
+                    BroadcastRoomState();
                     return true;
                 }
         }
@@ -117,6 +136,7 @@ namespace RabiRiichi.Server.Models {
                         throw new InvalidOperationException("Player not found in room");
                     }
                     players[index] = null;
+                    BroadcastRoomState();
                     return true;
                 }
         }

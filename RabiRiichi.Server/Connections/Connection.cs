@@ -133,7 +133,7 @@ namespace RabiRiichi.Server.Utils {
                 received.Set();
                 OnReceive?.Invoke(incoming);
                 // Check if the message is responding to a server message
-                if (msgLookup.TryGetValue(incoming.responseTo, out var msg)) {
+                if (msgLookup.TryGetValue(incoming.respondTo, out var msg)) {
                     msg.responseTcs.TrySetResult(incoming);
                 }
                 if (!incoming.TryGetMessage<InOutHeartBeat>(out var heartBeat)) {

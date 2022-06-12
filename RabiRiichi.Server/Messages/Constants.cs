@@ -5,6 +5,7 @@ namespace RabiRiichi.Server.Messages {
         public const string Event = "ev";
         public const string VersionCheck = "ver";
         public const string Other = "oth";
+        public const string RoomState = "rm";
     }
 
     public static class InMsgType {
