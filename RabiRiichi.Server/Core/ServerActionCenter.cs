@@ -7,10 +7,10 @@ using RabiRiichi.Server.Models;
 namespace RabiRiichi.Server.Core {
     public class ServerActionCenter : IActionCenter {
         private class InquiryContext {
-            public MultiPlayerInquiry inquiry;
+            public readonly MultiPlayerInquiry inquiry;
 
             /// <summary> (msgId, playerId) </summary>
-            public List<(int, int)> messages = new();
+            public readonly List<(int, int)> messages = new();
 
             public InquiryContext(MultiPlayerInquiry inquiry) {
                 this.inquiry = inquiry;
@@ -68,7 +68,7 @@ namespace RabiRiichi.Server.Core {
             }
             foreach (var playerInquiry in inquiry.playerInquiries) {
                 int playerId = playerInquiry.playerId;
-                int msgId = SendMessage(playerId, OutMsgType.Inquiry, playerInquiry);
+                int msgId = SendMessage(playerId, OutMsgType.Inquiry, OutInquiry.From(playerInquiry));
                 ctx.messages.Add((msgId, playerId));
             }
         }
