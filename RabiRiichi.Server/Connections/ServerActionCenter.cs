@@ -4,7 +4,7 @@ using RabiRiichi.Events;
 using RabiRiichi.Server.Messages;
 using RabiRiichi.Server.Models;
 
-namespace RabiRiichi.Server.Core {
+namespace RabiRiichi.Server.Connections {
     public class ServerActionCenter : IActionCenter {
         private class InquiryContext {
             public readonly MultiPlayerInquiry inquiry;

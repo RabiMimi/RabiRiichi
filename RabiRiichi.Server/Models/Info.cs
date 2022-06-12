@@ -1,4 +1,4 @@
-using RabiRiichi.Server.Core;
+using RabiRiichi.Server.Connections;
 using System.Reflection;
 
 namespace RabiRiichi.Server.Models {

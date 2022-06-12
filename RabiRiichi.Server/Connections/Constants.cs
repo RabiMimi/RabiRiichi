@@ -1,4 +1,4 @@
-namespace RabiRiichi.Server.Core {
+namespace RabiRiichi.Server.Connections {
     public static class ServerConstants {
         public const string GAME = "RabiRiichi";
         public const string SERVER = "vanilla";

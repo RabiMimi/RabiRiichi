@@ -4,7 +4,7 @@ using RabiRiichi.Util;
 using System.Collections.Concurrent;
 using System.Net.WebSockets;
 
-namespace RabiRiichi.Server.Core {
+namespace RabiRiichi.Server.Connections {
     public class Connection : IDisposable {
         /// <summary>
         /// Current WebSocket context. Null if not connected.<br/>

@@ -5,7 +5,7 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
 
-namespace RabiRiichi.Server.Core {
+namespace RabiRiichi.Server.Connections {
     public class RabiWSContext {
         /// <summary>
         /// Websocket instance
