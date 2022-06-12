@@ -39,11 +39,12 @@ namespace RabiRiichi.Server.Models {
         public long sessionCode = 0;
         public UserStatus status { get; protected set; } = UserStatus.None;
         public Room room { get; protected set; }
+        public int playerId;
         public Connection connection { get; protected set; }
         #endregion
 
         #region Game
-        protected bool Transit(UserStatus expected, UserStatus next) {
+        public bool Transit(UserStatus expected, UserStatus next) {
             if (status != expected) {
                 return false;
             }
@@ -60,61 +61,28 @@ namespace RabiRiichi.Server.Models {
             }
         }
 
-        public bool StopGame() {
-            lock (this) {
-                return Transit(UserStatus.Playing, UserStatus.InRoom);
-            }
-        }
-
-        public bool StartGame() {
-            lock (this) {
-                return Transit(UserStatus.Ready, UserStatus.Playing);
-            }
-        }
-
-        public bool GetReady() {
-            lock (this) {
-                return Transit(UserStatus.InRoom, UserStatus.Ready);
-            }
-        }
-
-        public bool ResetReady() {
-            lock (this) {
-                return Transit(UserStatus.Ready, UserStatus.InRoom);
-            }
-        }
-
-        public bool Connect(WebSocket ws) {
-            lock (this) {
-                if (status == UserStatus.None) {
-                    return false;
-                }
-                connection.Connect(ws);
-            }
-            return true;
+        public RabiWSContext Connect(WebSocket ws) {
+            return room?.Connect(this, ws);
         }
         #endregion
 
         #region Room
-        public bool JoinRoom(Room room) {
-            lock (this) {
-                if (!Transit(UserStatus.None, UserStatus.InRoom)) {
-                    return false;
-                }
-                this.room = room;
-                SetConnection();
+        public bool JoinRoom(Room room, int playerId) {
+            if (!Transit(UserStatus.None, UserStatus.InRoom)) {
+                return false;
             }
+            this.room = room;
+            this.playerId = playerId;
+            SetConnection();
             return true;
         }
 
-        public bool ExitRoom() {
-            lock (this) {
-                if (!Transit(UserStatus.InRoom, UserStatus.None)) {
-                    return false;
-                }
-                room = null;
-                SetConnection(true);
+        public bool ExitRoom(Room room) {
+            if (this.room != room || !Transit(UserStatus.InRoom, UserStatus.None)) {
+                return false;
             }
+            this.room = null;
+            SetConnection(true);
             return true;
         }
         #endregion

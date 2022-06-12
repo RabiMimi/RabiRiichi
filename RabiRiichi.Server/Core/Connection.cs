@@ -13,6 +13,11 @@ namespace RabiRiichi.Server.Core {
         protected RabiWSContext currentCtx;
 
         /// <summary>
+        /// Callback when a message is received.
+        /// </summary>
+        public Action<InMessage> OnReceive;
+
+        /// <summary>
         /// Switch to a new WS context. Old connection will be closed.
         /// </summary>
         protected void SwitchWSContext(RabiWSContext newCts) {
@@ -40,21 +45,24 @@ namespace RabiRiichi.Server.Core {
 
         public Connection(User user) {
             this.user = user;
-            this.playerId = user.room.players.IndexOf(user);
+            this.playerId = user.playerId;
         }
 
         /// <summary>
         /// Add a message to queue. It will not be sent immediately.
         /// </summary>
-        public void Queue<T>(string type, T msg) {
+        /// <returns>The message ID. -1 if connection closed.</returns>
+        public int Queue<T>(string type, T msg) {
             if (isClosed) {
-                return;
+                return -1;
             }
+            var message = new OutMessage(msgId.Next, type, msg);
             try {
-                currentCtx?.Queue(new OutMessage(msgId.Next, type, msg));
+                currentCtx?.Queue(message);
             } catch (InvalidOperationException) {
                 // No more message can be queued.
             }
+            return message.id;
         }
 
         /// <summary>
@@ -108,6 +116,7 @@ namespace RabiRiichi.Server.Core {
             ctx.OnReceive += (InMessage incoming) => {
                 // Always resets heartbeat timer even if the message is not a heartbeat
                 received.Set();
+                OnReceive?.Invoke(incoming);
                 if (!incoming.TryGetMessage<InOutHeartBeat>(out var heartBeat)) {
                     return;
                 }

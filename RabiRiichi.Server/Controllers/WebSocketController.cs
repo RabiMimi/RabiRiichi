@@ -20,7 +20,7 @@ namespace RabiRiichi.Server.Controllers {
                         SubProtocol = "json",
                         DangerousEnableCompression = true
                     });
-                if (!user.Connect(webSocket)) {
+                if (user.Connect(webSocket) == null) {
                     return BadRequest();
                 }
                 // TODO: Wait for socket connection to close

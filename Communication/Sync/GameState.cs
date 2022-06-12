@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace RabiRiichi.Communication.Sync {
+    [RabiMessage]
     public class PlayerHandState : IRabiPlayerMessage {
         public int playerId { get; init; }
         [RabiPrivate] public readonly List<GameTile> freeTiles;
@@ -44,6 +45,7 @@ namespace RabiRiichi.Communication.Sync {
         }
     }
 
+    [RabiMessage]
     public class PlayerState : IRabiPlayerMessage {
         public int playerId { get; init; }
         [RabiBroadcast] public readonly int id;
@@ -60,6 +62,7 @@ namespace RabiRiichi.Communication.Sync {
         }
     }
 
+    [RabiMessage]
     public class GameState : IRabiPlayerMessage {
         public int playerId { get; init; }
 

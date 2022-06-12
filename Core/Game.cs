@@ -92,12 +92,12 @@ namespace RabiRiichi.Core {
 
         #region Start
 
-        public async Task Start() {
+        public async Task Start(CancellationToken? token = null) {
             // 开始游戏
             info.phase = GamePhase.Running;
 
             // 游戏逻辑
-            await mainQueue.ProcessQueue();
+            await mainQueue.ProcessQueue(token);
 
             // 结束游戏
             info.phase = GamePhase.Finished;

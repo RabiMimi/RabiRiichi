@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace RabiRiichi.Events.InGame {
+    [RabiMessage]
     public class AgariInfo : IRabiPlayerMessage {
         [RabiBroadcast] public int playerId { get; init; }
         [RabiBroadcast] public readonly ScoreStorage scores;

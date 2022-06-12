@@ -3,6 +3,7 @@ namespace RabiRiichi.Server.Messages {
         public const string HeartBeat = "h";
         public const string Inquiry = "inq";
         public const string Event = "ev";
+        public const string Other = "oth";
     }
 
     public static class InMsgType {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 
 namespace RabiRiichi.Actions {
+    [RabiMessage]
     public class SinglePlayerInquiry : IRabiPlayerMessage {
         [RabiBroadcast] public readonly List<IPlayerAction> actions = new();
         public int playerId { get; init; }

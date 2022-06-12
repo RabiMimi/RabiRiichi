@@ -2,6 +2,7 @@ using RabiRiichi.Communication;
 using RabiRiichi.Core;
 
 namespace RabiRiichi.Events {
+    [RabiMessage]
     public abstract class PlayerEvent : EventBase, IRabiPlayerMessage {
         public Player player => game.GetPlayer(playerId);
         [RabiBroadcast] public int playerId { get; init; }

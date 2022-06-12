@@ -2,6 +2,7 @@ using RabiRiichi.Events.InGame;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Events {
@@ -38,9 +39,10 @@ namespace RabiRiichi.Events {
         }
 
         /// <summary> 开始处理事件队列 </summary>
-        public async Task ProcessQueue() {
+        public async Task ProcessQueue(CancellationToken? token) {
             while (true) {
                 await Task.Yield();
+                token?.ThrowIfCancellationRequested();
                 EventBase ev;
                 lock (queue) {
                     if (!queue.TryDequeue(out ev)) {

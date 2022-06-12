@@ -46,7 +46,7 @@ namespace RabiRiichi.Events {
         /// <summary> 该事件的子事件 </summary>
         public readonly List<EventBase> children = new();
         /// <summary> 在事件成功处理后执行回调 </summary>
-        public System.Action OnFinish;
+        public Action OnFinish;
 
         public EventBase(EventBase parent) {
             if (parent != null) {

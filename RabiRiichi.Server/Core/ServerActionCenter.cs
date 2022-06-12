@@ -1,28 +1,80 @@
 using RabiRiichi.Actions;
 using RabiRiichi.Communication;
 using RabiRiichi.Events;
+using RabiRiichi.Server.Messages;
 using RabiRiichi.Server.Models;
 
 namespace RabiRiichi.Server.Core {
     public class ServerActionCenter : IActionCenter {
-        public readonly Room room;
-        public MultiPlayerInquiry currentInquiry;
+        private class InquiryContext {
+            public MultiPlayerInquiry inquiry;
+
+            /// <summary> (msgId, playerId) </summary>
+            public List<(int, int)> messages = new();
+
+            public InquiryContext(MultiPlayerInquiry inquiry) {
+                this.inquiry = inquiry;
+            }
+
+            public bool OnResponse(int playerId, InInquiryResponse resp) {
+                var item = messages.Find(x => x.Item1 == resp.id && x.Item2 == playerId);
+                if (item == default) {
+                    return false;
+                }
+                return inquiry.OnResponse(new InquiryResponse(playerId, resp.index, resp.response));
+            }
+        }
+
+        private readonly Room room;
+        private InquiryContext context;
 
         public ServerActionCenter(Room room) {
             this.room = room;
+            for (int i = 0; i < room.players.Length; i++) {
+                room.players[i].connection.OnReceive +=
+                    (InMessage msg) => OnReceiveMessage(i, msg);
+            }
+        }
+
+        private int SendMessage(int playerId, string type, object msg)
+            => room.players[playerId].connection.Queue(type, msg);
+
+        private void OnReceiveMessage(int playerId, InMessage msg) {
+            if (!msg.TryGetMessage<InInquiryResponse>(out var resp)) {
+                return;
+            }
+            var ctx = context;
+            if (ctx?.OnResponse(playerId, resp) == true) {
+                EndInquiry(ctx);
+            }
+        }
+
+        private void EndInquiry(InquiryContext context) {
+            var oldContext = Interlocked.CompareExchange(ref this.context, null, context);
+            if (oldContext != context) {
+                return;
+            }
+            oldContext.inquiry.Finish();
         }
 
         public void OnEvent(int playerId, EventBase ev) {
-            throw new NotImplementedException();
+            SendMessage(playerId, OutMsgType.Event, ev);
         }
 
         public void OnInquiry(MultiPlayerInquiry inquiry) {
-            currentInquiry = inquiry;
-            throw new NotImplementedException();
+            var ctx = new InquiryContext(inquiry);
+            if (Interlocked.CompareExchange(ref this.context, ctx, null) != null) {
+                throw new InvalidOperationException("Inquiry already in progress");
+            }
+            foreach (var playerInquiry in inquiry.playerInquiries) {
+                int playerId = playerInquiry.playerId;
+                int msgId = SendMessage(playerId, OutMsgType.Inquiry, playerInquiry);
+                ctx.messages.Add((msgId, playerId));
+            }
         }
 
         public void OnMessage(int playerId, object msg) {
-            throw new NotImplementedException();
+            SendMessage(playerId, OutMsgType.Other, msg);
         }
     }
 }
