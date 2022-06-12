@@ -52,8 +52,8 @@ namespace RabiRiichi.Server.Utils {
         /// <summary>
         /// Create an outgoing message but do not send it.
         /// </summary>
-        public OutMessage CreateMessage<T>(string type, T msg)
-            => new(msgId.Next, type, msg);
+        public OutMessage CreateMessage<T>(string type, T msg, int? respondTo = null)
+            => new(msgId.Next, type, msg, respondTo);
 
         /// <summary>
         /// Add a message to queue. It will not be sent immediately.

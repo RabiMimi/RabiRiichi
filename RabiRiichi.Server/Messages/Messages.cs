@@ -8,16 +8,20 @@ namespace RabiRiichi.Server.Messages {
     /// </summary>
     public class OutMessage {
         public int id;
+
+        [JsonPropertyName("resp")]
+        public int? respondTo;
         public string type;
         public object message;
 
         [JsonIgnore] public readonly AtomicBool isQueued = new();
         [JsonIgnore] public readonly TaskCompletionSource<InMessage> responseTcs = new();
 
-        public OutMessage(int id, string type, object message) {
+        public OutMessage(int id, string type, object message, int? respondTo = null) {
             this.id = id;
             this.type = type;
             this.message = message;
+            this.respondTo = respondTo;
         }
     }
 
