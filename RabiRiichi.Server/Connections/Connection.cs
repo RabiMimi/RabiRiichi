@@ -91,7 +91,6 @@ namespace RabiRiichi.Server.Utils {
             var ctx = new RabiWSContext(this, ws, playerId);
             // Start message loops before context switch
             ctx.RunLoops(
-                HeartBeatLoop(ctx),
                 Task.Run(() => HeartBeatRecvLoop(ctx))
             ).ConfigureAwait(false);
 
@@ -102,23 +101,26 @@ namespace RabiRiichi.Server.Utils {
         }
 
         /// <summary>
-        /// Sends a heartbeat package every second.
+        /// When a heartbeat arrives, updates relevant fields and replies.
         /// </summary>
-        private async Task HeartBeatLoop(RabiWSContext ctx) {
-            while (true) {
-                try {
-                    await Task.Delay(TimeSpan.FromSeconds(1), ctx.cts.Token);
-                } catch (OperationCanceledException) {
-                    break;
+        private void OnReceiveHeartBeat(RabiWSContext ctx, InOutHeartBeat msg) {
+            // Update maximum client message ID
+            ctx.maxClientMsgId = msg.maxMsgId;
+            // Respond to the heartbeat
+            int maxReceivedMsgId = ctx.maxReceivedMsgId;
+            int count = Math.Min(16, msg.maxMsgId - maxReceivedMsgId);
+            List<int> requestingEvents = count > 0
+                ? new(Enumerable.Range(maxReceivedMsgId + 1, count)) : null;
+            ctx.Queue(new OutMessage(-1, OutMsgType.HeartBeat,
+                InOutHeartBeat.From(msgId.Value, requestingEvents)));
+            if (msg.requestingEvents == null) {
+                return;
+            }
+            // Client requesting events to be resent
+            foreach (var evt in msg.requestingEvents) {
+                if (msgLookup.TryGetValue(evt, out var oldMsg)) {
+                    ctx.Queue(oldMsg);
                 }
-                // Get a list of missing events
-                int nextReceiveMsgId = ctx.maxReceivedMsgId + 1;
-                int maxClientMsgId = ctx.maxClientMsgId;
-                int count = Math.Min(16, maxClientMsgId - nextReceiveMsgId);
-                List<int> requestingEvents = count > 0
-                    ? new(Enumerable.Range(nextReceiveMsgId, count)) : null;
-                ctx.Queue(new OutMessage(-1, OutMsgType.HeartBeat,
-                    InOutHeartBeat.From(msgId.Value, requestingEvents)));
             }
         }
 
@@ -136,19 +138,8 @@ namespace RabiRiichi.Server.Utils {
                 if (msgLookup.TryGetValue(incoming.respondTo, out var msg)) {
                     msg.responseTcs.TrySetResult(incoming);
                 }
-                if (!incoming.TryGetMessage<InOutHeartBeat>(out var heartBeat)) {
-                    return;
-                }
-                // Update maximum client message ID
-                ctx.maxClientMsgId = heartBeat.maxMsgId;
-                if (heartBeat.requestingEvents == null) {
-                    return;
-                }
-                // Client requesting events to be resent
-                foreach (var evt in heartBeat.requestingEvents) {
-                    if (msgLookup.TryGetValue(evt, out msg)) {
-                        ctx.Queue(msg);
-                    }
+                if (incoming.TryGetMessage<InOutHeartBeat>(out var heartBeat)) {
+                    OnReceiveHeartBeat(ctx, heartBeat);
                 }
             };
             while (true) {
