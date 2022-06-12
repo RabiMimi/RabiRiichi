@@ -30,7 +30,6 @@ namespace RabiRiichi.Server.Messages {
     /// </summary>
     public class InMessage {
         public static readonly JsonSerializerOptions jsonSerializerOptions = new() {
-            DefaultIgnoreCondition = JsonIgnoreCondition.Never,
             IncludeFields = true,
         };
 

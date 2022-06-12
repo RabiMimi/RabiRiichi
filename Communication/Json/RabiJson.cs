@@ -13,6 +13,7 @@ namespace RabiRiichi.Communication.Json {
 
         private static JsonSerializerOptions GetOption(int playerId) {
             return optionsDict.GetOrAdd(playerId, _ => new JsonSerializerOptions {
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
                 Converters = {
                     new MessageJsonConverter(playerId),
                     tileJsonConverter,
