@@ -46,11 +46,20 @@ namespace RabiRiichi.Server.Utils {
         }
 
         public static void AddRoomListeners(this User user) {
-            user.connection.OnReceive.AddListener((InRoomReady msg) => {
-                if (msg.ready) {
-                    user.room?.GetReady(user);
-                } else {
-                    user.room?.CancelReady(user);
+            var onReceive = user.connection.OnReceive;
+            onReceive.AddListener((InRoomUpdate msg) => {
+                switch (msg.status) {
+                    case UserStatus.Ready:
+                        user.room?.GetReady(user);
+                        break;
+                    case UserStatus.InRoom:
+                        user.room?.CancelReady(user);
+                        break;
+                    case UserStatus.None:
+                        user.room?.RemovePlayer(user);
+                        break;
+                    default:
+                        break;
                 }
             });
         }

@@ -26,10 +26,10 @@ namespace RabiRiichi.Server.Models {
     }
 
     public enum UserStatus {
-        None,
-        InRoom,
-        Ready,
-        Playing,
+        None = 0,
+        InRoom = 1,
+        Ready = 2,
+        Playing = 3,
     }
 
     public class User {

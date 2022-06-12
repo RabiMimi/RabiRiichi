@@ -15,6 +15,7 @@ namespace RabiRiichi.Server.Messages {
             };
         }
     }
+
     public class OutRoomState {
         public List<OutPlayerState> players;
         public GameConfig config;

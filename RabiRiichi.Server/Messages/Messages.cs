@@ -44,6 +44,9 @@ namespace RabiRiichi.Server.Messages {
             lazyMessage = new(() => {
                 var msgType = type switch {
                     InMsgType.HeartBeat => typeof(InOutHeartBeat),
+                    InMsgType.InquiryResponse => typeof(InInquiryResponse),
+                    InMsgType.RoomUpdate => typeof(InRoomUpdate),
+                    InMsgType.VersionCheck => typeof(InVersionCheck),
                     _ => null,
                 };
                 if (msgType == null) {

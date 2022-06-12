@@ -37,9 +37,6 @@ namespace RabiRiichi.Server.Utils {
         }
 
         private void SendInquiry(InquiryContext ctx, int playerId) {
-            if (ctx == null) {
-                return;
-            }
             var inquiry = ctx?.inquiry.GetByPlayerId(playerId);
             if (inquiry == null) {
                 return;
