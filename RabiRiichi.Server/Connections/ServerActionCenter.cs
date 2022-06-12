@@ -36,24 +36,38 @@ namespace RabiRiichi.Server.Utils {
             SendMessage(playerId, OutMsgType.Event, ev);
         }
 
+        private void SendInquiry(InquiryContext ctx, int playerId) {
+            if (ctx == null) {
+                return;
+            }
+            var inquiry = ctx?.inquiry.GetByPlayerId(playerId);
+            if (inquiry == null) {
+                return;
+            }
+            var msg = SendMessage(playerId, OutMsgType.Inquiry, OutInquiry.From(inquiry));
+            if (msg != null) {
+                Task.Run(async () => {
+                    var resp = await msg.WaitResponse<InInquiryResponse>(TimeSpan.FromHours(1));
+                    var inquiryResp = resp == null ? InquiryResponse.Default(playerId)
+                        : new InquiryResponse(playerId, resp.index, resp.response);
+                    if (ctx.inquiry.OnResponse(inquiryResp)) {
+                        EndInquiry(ctx);
+                    }
+                });
+            }
+        }
+
+        public void SyncInquiryTo(int playerId) {
+            SendInquiry(context, playerId);
+        }
+
         public void OnInquiry(MultiPlayerInquiry inquiry) {
             var ctx = new InquiryContext(inquiry);
             if (Interlocked.CompareExchange(ref context, ctx, null) != null) {
                 throw new InvalidOperationException("Inquiry already in progress");
             }
             foreach (var playerInquiry in inquiry.playerInquiries) {
-                int playerId = playerInquiry.playerId;
-                var msg = SendMessage(playerId, OutMsgType.Inquiry, OutInquiry.From(playerInquiry));
-                if (msg != null) {
-                    Task.Run(async () => {
-                        var resp = await msg.WaitResponse<InInquiryResponse>(TimeSpan.FromHours(1));
-                        var inquiryResp = resp == null ? InquiryResponse.Default(playerId)
-                            : new InquiryResponse(playerId, resp.index, resp.response);
-                        if (inquiry.OnResponse(inquiryResp)) {
-                            EndInquiry(ctx);
-                        }
-                    });
-                }
+                SendInquiry(ctx, playerInquiry.playerId);
             }
         }
 

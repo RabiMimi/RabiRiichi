@@ -77,7 +77,14 @@ namespace RabiRiichi.Server.Models {
                 if (!HasPlayer(user)) {
                     return null;
                 }
-                return user.connection.Connect(ws);
+                var ctx = user.connection.Connect(ws);
+                if (ctx == null) {
+                    return null;
+                }
+                if (config.actionCenter is ServerActionCenter sac) {
+                    sac.SyncInquiryTo(user.playerId);
+                }
+                return ctx;
             }
         }
 
