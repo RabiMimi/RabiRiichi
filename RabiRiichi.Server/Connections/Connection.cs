@@ -102,12 +102,12 @@ namespace RabiRiichi.Server.Utils {
         }
 
         /// <summary>
-        /// Sends a heartbeat package every 5 seconds.
+        /// Sends a heartbeat package every second.
         /// </summary>
         private async Task HeartBeatLoop(RabiWSContext ctx) {
             while (true) {
                 try {
-                    await Task.Delay(TimeSpan.FromSeconds(5), ctx.cts.Token);
+                    await Task.Delay(TimeSpan.FromSeconds(1), ctx.cts.Token);
                 } catch (OperationCanceledException) {
                     break;
                 }

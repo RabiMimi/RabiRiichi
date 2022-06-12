@@ -2,11 +2,12 @@ using RabiRiichi.Server.Messages;
 
 namespace RabiRiichi.Server.Utils {
     public static class Extensions {
-        public static bool HandShake(this RabiWSContext ctx) {
+        public static async Task<bool> HandShake(this RabiWSContext ctx) {
             var msg = ctx.connection.CreateMessage(
                 OutMsgType.VersionCheck, new OutVersionCheck());
             ctx.Queue(msg);
-            if (!msg.WaitResponse.Wait(TimeSpan.FromSeconds(15))) {
+            await msg.WaitResponse.WaitAsync(TimeSpan.FromSeconds(15));
+            if (!msg.WaitResponse.IsCompletedSuccessfully) {
                 return false;
             }
             if (!msg.WaitResponse.Result.TryGetMessage<InVersionCheck>(out var clientVersion)) {

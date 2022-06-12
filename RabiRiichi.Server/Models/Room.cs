@@ -35,9 +35,8 @@ namespace RabiRiichi.Server.Models {
             players = new User[config.playerCount];
         }
 
-        public bool TryStartGame(out Task task) {
+        public bool TryStartGame() {
             lock (players) {
-                task = null;
                 if (players.Any(p => p == null || p.status != UserStatus.Ready)) {
                     return false;
                 }
@@ -50,7 +49,9 @@ namespace RabiRiichi.Server.Models {
                 ServerActionCenter actionCenter = new(this);
                 config.actionCenter = actionCenter;
                 BroadcastRoomState();
-                task = new Game(config).Start();
+                Task.Run(() => new Game(config).Start()).ContinueWith(t => {
+                    TryEndGame();
+                });
                 return true;
             }
         }
@@ -89,6 +90,9 @@ namespace RabiRiichi.Server.Models {
                     return false;
                 }
                 BroadcastRoomState();
+                if (players.All(p => p?.status == UserStatus.Ready)) {
+                    return TryStartGame();
+                }
                 return true;
             }
         }

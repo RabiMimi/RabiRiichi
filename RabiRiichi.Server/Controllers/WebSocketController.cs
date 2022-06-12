@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using RabiRiichi.Server.Binders;
 using RabiRiichi.Server.Models;
+using RabiRiichi.Server.Utils;
 
 namespace RabiRiichi.Server.Controllers {
     [ApiController]
@@ -25,7 +26,10 @@ namespace RabiRiichi.Server.Controllers {
                 if (rabiCtx == null) {
                     return BadRequest();
                 }
-                // TODO: Wait for socket connection to close
+                if (!await rabiCtx.HandShake()) {
+                    return BadRequest();
+                }
+                rabiCtx.cts.Token.WaitHandle.WaitOne();
                 return Ok();
             } else {
                 return BadRequest();
