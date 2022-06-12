@@ -1,4 +1,4 @@
-﻿using RabiRiichi.Server.Connections;
+﻿using RabiRiichi.Server.Utils;
 using System.ComponentModel.DataAnnotations;
 using System.Net.WebSockets;
 

@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
-using RabiRiichi.Server.Connections;
+using RabiRiichi.Server.Utils;
 using System.Net.WebSockets;
 
 namespace RabiRiichi.Server.Models {

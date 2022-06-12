@@ -12,6 +12,8 @@ namespace RabiRiichi.Server.Messages {
         public object message;
 
         [JsonIgnore] public readonly AtomicBool isQueued = new();
+        [JsonIgnore] public readonly TaskCompletionSource<InMessage> responseTcs = new();
+        [JsonIgnore] public Task<InMessage> WaitResponse => responseTcs.Task;
 
         public OutMessage(int id, string type, object message) {
             this.id = id;
@@ -30,6 +32,9 @@ namespace RabiRiichi.Server.Messages {
         };
 
         public int id;
+
+        [JsonPropertyName("resp")]
+        public int responseTo;
         public string type;
         public JsonElement message;
 

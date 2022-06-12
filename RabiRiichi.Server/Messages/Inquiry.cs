@@ -13,8 +13,6 @@ namespace RabiRiichi.Server.Messages {
     }
 
     public class InInquiryResponse {
-        public int id;
-
         [JsonPropertyName("idx")]
         public int index;
 

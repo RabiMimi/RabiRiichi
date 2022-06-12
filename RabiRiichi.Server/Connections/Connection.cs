@@ -4,13 +4,14 @@ using RabiRiichi.Util;
 using System.Collections.Concurrent;
 using System.Net.WebSockets;
 
-namespace RabiRiichi.Server.Connections {
+namespace RabiRiichi.Server.Utils {
     public class Connection : IDisposable {
         /// <summary>
         /// Current WebSocket context. Null if not connected.<br/>
         /// Will not be reset to null when the connection is closed.
         /// </summary>
         protected RabiWSContext currentCtx;
+        public RabiWSContext Current => currentCtx;
 
         /// <summary>
         /// Callback when a message is received.
@@ -49,20 +50,34 @@ namespace RabiRiichi.Server.Connections {
         }
 
         /// <summary>
+        /// Create an outgoing message but do not send it.
+        /// </summary>
+        public OutMessage CreateMessage<T>(string type, T msg)
+            => new(msgId.Next, type, msg);
+
+        /// <summary>
         /// Add a message to queue. It will not be sent immediately.
         /// </summary>
-        /// <returns>The message ID. -1 if connection closed.</returns>
-        public int Queue<T>(string type, T msg) {
+        /// <param name="msg">Message to send</param>
+        /// <returns>Whether the message was added to queue.</returns>
+        public bool Queue(OutMessage msg) {
             if (isClosed) {
-                return -1;
+                return false;
             }
-            var message = new OutMessage(msgId.Next, type, msg);
             try {
-                currentCtx?.Queue(message);
+                currentCtx?.Queue(msg);
             } catch (InvalidOperationException) {
                 // No more message can be queued.
             }
-            return message.id;
+            return true;
+        }
+
+        /// <summary>
+        /// Add a message to queue. It will not be sent immediately.
+        /// </summary>
+        public OutMessage Queue<T>(string type, T msg) {
+            var ret = CreateMessage(type, msg);
+            return Queue(ret) ? ret : null;
         }
 
         /// <summary>
@@ -73,7 +88,7 @@ namespace RabiRiichi.Server.Connections {
                 throw new InvalidOperationException("Connection is closed");
             }
 
-            var ctx = new RabiWSContext(ws, playerId);
+            var ctx = new RabiWSContext(this, ws, playerId);
             // Start message loops before context switch
             ctx.RunLoops(
                 HeartBeatLoop(ctx),
@@ -117,6 +132,10 @@ namespace RabiRiichi.Server.Connections {
                 // Always resets heartbeat timer even if the message is not a heartbeat
                 received.Set();
                 OnReceive?.Invoke(incoming);
+                // Check if the message is responding to a server message
+                if (msgLookup.TryGetValue(incoming.responseTo, out var msg)) {
+                    msg.responseTcs.TrySetResult(incoming);
+                }
                 if (!incoming.TryGetMessage<InOutHeartBeat>(out var heartBeat)) {
                     return;
                 }
@@ -127,7 +146,7 @@ namespace RabiRiichi.Server.Connections {
                 }
                 // Client requesting events to be resent
                 foreach (var evt in heartBeat.requestingEvents) {
-                    if (msgLookup.TryGetValue(evt, out var msg)) {
+                    if (msgLookup.TryGetValue(evt, out msg)) {
                         ctx.Queue(msg);
                     }
                 }

@@ -5,8 +5,13 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
 
-namespace RabiRiichi.Server.Connections {
+namespace RabiRiichi.Server.Utils {
     public class RabiWSContext {
+        /// <summary>
+        /// Parent connection.
+        /// </summary>
+        public readonly Connection connection;
+
         /// <summary>
         /// Websocket instance
         /// </summary>
@@ -47,7 +52,8 @@ namespace RabiRiichi.Server.Connections {
         /// </summary>
         public Action OnDisconnect;
 
-        public RabiWSContext(WebSocket ws, int playerId) {
+        public RabiWSContext(Connection connection, WebSocket ws, int playerId) {
+            this.connection = connection;
             this.ws = ws;
             this.playerId = playerId;
         }
