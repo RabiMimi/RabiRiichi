@@ -53,11 +53,15 @@ namespace RabiRiichi.Server.Models {
         }
 
         protected void SetConnection(bool clear = false) {
-            connection?.Dispose();
+            if (connection != null) {
+                connection.Current?.Close();
+                connection.Dispose();
+            }
             if (clear) {
                 connection = null;
             } else {
                 connection = new Connection(this);
+                this.AddRoomListeners();
             }
         }
 
