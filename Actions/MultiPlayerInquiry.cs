@@ -15,6 +15,9 @@ namespace RabiRiichi.Actions {
             this.index = index;
             this.response = response;
         }
+        public static InquiryResponse Default(int playerId) {
+            return new InquiryResponse(playerId, -1, "");
+        }
     }
 
     public interface IResponseHandler {

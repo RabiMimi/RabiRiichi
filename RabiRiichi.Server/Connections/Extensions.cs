@@ -3,15 +3,37 @@ using RabiRiichi.Server.Models;
 
 namespace RabiRiichi.Server.Utils {
     public static class ConnectionExtensions {
+        public static async Task<InMessage> WaitResponse(this OutMessage msg,
+            TimeSpan? timeout = null) {
+            var task = msg.responseTcs.Task;
+            if (timeout == null) {
+                timeout = ServerConstants.RESPONSE_TIMEOUT;
+            }
+            try {
+                return await task.WaitAsync(timeout.Value);
+            } catch (TimeoutException) {
+                return null;
+            }
+        }
+
+        public static async Task<T> WaitResponse<T>(this OutMessage msg,
+            TimeSpan? timeout = null) {
+            var inMsg = await msg.WaitResponse(timeout);
+            if (inMsg == null) {
+                return default;
+            }
+            return inMsg.TryGetMessage<T>(out var ret) ? ret : default;
+        }
+
         public static async Task<bool> HandShake(this RabiWSContext ctx) {
             var msg = ctx.connection.CreateMessage(
                 OutMsgType.VersionCheck, new OutVersionCheck());
             ctx.Queue(msg);
-            await msg.WaitResponse.WaitAsync(TimeSpan.FromSeconds(15));
-            if (!msg.WaitResponse.IsCompletedSuccessfully) {
+            var inMsg = await msg.WaitResponse();
+            if (inMsg == null) {
                 return false;
             }
-            if (!msg.WaitResponse.Result.TryGetMessage<InVersionCheck>(out var clientVersion)) {
+            if (!inMsg.TryGetMessage<InVersionCheck>(out var clientVersion)) {
                 return false;
             }
             if (!ServerUtils.IsClientVersionSupported(clientVersion.clientVersion)) {

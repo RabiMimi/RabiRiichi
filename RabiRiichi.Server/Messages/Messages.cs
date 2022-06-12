@@ -13,7 +13,6 @@ namespace RabiRiichi.Server.Messages {
 
         [JsonIgnore] public readonly AtomicBool isQueued = new();
         [JsonIgnore] public readonly TaskCompletionSource<InMessage> responseTcs = new();
-        [JsonIgnore] public Task<InMessage> WaitResponse => responseTcs.Task;
 
         public OutMessage(int id, string type, object message) {
             this.id = id;

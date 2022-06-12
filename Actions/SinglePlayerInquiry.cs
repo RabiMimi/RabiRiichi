@@ -52,16 +52,18 @@ namespace RabiRiichi.Actions {
         }
 
         public bool OnResponse(int index, string response) {
-            if (hasResponded || index < 0 || index >= actions.Count) {
+            if (hasResponded) {
                 return false;
             }
-            var action = actions[index];
-            if (!action.OnResponse(response)) {
-                return false;
+            if (index >= 0 && index < actions.Count) {
+                var action = actions[index];
+                if (!action.OnResponse(response)) {
+                    return false;
+                }
+                responseIndex = index;
+                curPriority = action.priority;
             }
-            responseIndex = index;
             hasResponded = true;
-            curPriority = action.priority;
             return true;
         }
     }

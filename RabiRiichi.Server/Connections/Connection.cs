@@ -155,7 +155,7 @@ namespace RabiRiichi.Server.Utils {
                 received.Reset();
                 int index = WaitHandle.WaitAny(
                     new WaitHandle[] { received, ctx.cts.Token.WaitHandle },
-                    TimeSpan.FromSeconds(15));
+                    ServerConstants.RESPONSE_TIMEOUT);
                 if (index == 0) {
                     // Received a message from client
                     continue;

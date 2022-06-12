@@ -45,12 +45,11 @@ namespace RabiRiichi.Server.Utils {
                 int playerId = playerInquiry.playerId;
                 var msg = SendMessage(playerId, OutMsgType.Inquiry, OutInquiry.From(playerInquiry));
                 if (msg != null) {
-                    msg.WaitResponse.ContinueWith(async inMsgTask => {
-                        InMessage inMsg = await inMsgTask;
-                        if (!inMsg.TryGetMessage<InInquiryResponse>(out var resp)) {
-                            return;
-                        }
-                        if (inquiry.OnResponse(new InquiryResponse(playerId, resp.index, resp.response))) {
+                    Task.Run(async () => {
+                        var resp = await msg.WaitResponse<InInquiryResponse>(TimeSpan.FromHours(1));
+                        var inquiryResp = resp == null ? InquiryResponse.Default(playerId)
+                            : new InquiryResponse(playerId, resp.index, resp.response);
+                        if (inquiry.OnResponse(inquiryResp)) {
                             EndInquiry(ctx);
                         }
                     });
