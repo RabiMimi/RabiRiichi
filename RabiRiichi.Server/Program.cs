@@ -3,6 +3,16 @@ using RabiRiichi.Server.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Cors
+builder.Services.AddCors(options => {
+    options.AddPolicy("AllowAll",
+        builder => {
+            builder.AllowAnyOrigin()
+                   .AllowAnyHeader()
+                   .AllowAnyMethod();
+        });
+});
+
 // Add services to the container.
 
 builder.Services.AddControllers(options => {
@@ -33,6 +43,7 @@ if (app.Environment.IsDevelopment()) {
     app.UseSwaggerUI();
 }
 */
+app.UseCors("AllowAll");
 
 app.UseAuthorization();
 app.UseResponseCompression();
