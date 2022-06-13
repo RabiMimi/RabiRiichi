@@ -18,7 +18,7 @@ namespace RabiRiichi.Server.Controllers {
         [HttpPost("create")]
         public ActionResult<CreateRoomResp> CreateRoom(
             [AuthHeader, RequireAuth] User user) {
-            var room = new Room();
+            var room = new Room(roomList);
             if (roomList.Add(room) && room.AddPlayer(user)) {
                 return Ok(new CreateRoomResp(room.id));
             }

@@ -29,6 +29,10 @@ namespace RabiRiichi.Server.Models {
             return rooms.TryGetValue(id, out room);
         }
 
+        public bool Remove(int id) {
+            return rooms.TryRemove(id, out _);
+        }
+
         public bool TryRemove(int id, out Room room) {
             return rooms.TryRemove(id, out room);
         }

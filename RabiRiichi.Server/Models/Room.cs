@@ -18,6 +18,8 @@ namespace RabiRiichi.Server.Models {
         public int id;
         public readonly GameConfig config;
         public readonly User[] players;
+        public readonly RoomList roomList;
+        private bool isDestroyed = false;
 
         private bool HasPlayer(User user) {
             return players.Any(p => p == user);
@@ -30,7 +32,8 @@ namespace RabiRiichi.Server.Models {
             }
         }
 
-        public Room() {
+        public Room(RoomList roomList) {
+            this.roomList = roomList;
             config = new GameConfig();
             players = new User[config.playerCount];
         }
@@ -120,6 +123,9 @@ namespace RabiRiichi.Server.Models {
         public bool AddPlayer([ModelBinder] User user) {
             lock (players)
                 lock (user) {
+                    if (isDestroyed) {
+                        return false;
+                    }
                     int emptyIndex = Array.IndexOf(players, null);
                     if (emptyIndex < 0) {
                         return false;
@@ -148,6 +154,10 @@ namespace RabiRiichi.Server.Models {
                     }
                     players[index] = null;
                     BroadcastRoomState();
+                    if (players.All(p => p == null)) {
+                        roomList.Remove(id);
+                        isDestroyed = true;
+                    }
                     return true;
                 }
         }
