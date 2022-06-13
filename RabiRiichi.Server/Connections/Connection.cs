@@ -103,7 +103,7 @@ namespace RabiRiichi.Server.Utils {
         /// <summary>
         /// When a heartbeat arrives, updates relevant fields and replies.
         /// </summary>
-        private void OnReceiveHeartBeat(RabiWSContext ctx, InOutHeartBeat msg) {
+        private void OnReceiveHeartBeat(RabiWSContext ctx, InOutHeartBeat msg, int respondTo) {
             // Update maximum client message ID
             ctx.maxClientMsgId = msg.maxMsgId;
             // Respond to the heartbeat
@@ -112,7 +112,7 @@ namespace RabiRiichi.Server.Utils {
             List<int> requestingEvents = count > 0
                 ? new(Enumerable.Range(maxReceivedMsgId + 1, count)) : null;
             ctx.Queue(new OutMessage(-1, OutMsgType.HeartBeat,
-                InOutHeartBeat.From(msgId.Value, requestingEvents)));
+                InOutHeartBeat.From(msgId.Value, requestingEvents), respondTo));
             if (msg.requestingEvents == null) {
                 return;
             }
@@ -139,7 +139,7 @@ namespace RabiRiichi.Server.Utils {
                     msg.responseTcs.TrySetResult(incoming);
                 }
                 if (incoming.TryGetMessage<InOutHeartBeat>(out var heartBeat)) {
-                    OnReceiveHeartBeat(ctx, heartBeat);
+                    OnReceiveHeartBeat(ctx, heartBeat, msg.id);
                 }
             };
             while (true) {
