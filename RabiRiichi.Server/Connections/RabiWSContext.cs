@@ -64,7 +64,10 @@ namespace RabiRiichi.Server.Utils {
         /// </summary>
         public async Task RunLoops(params Task[] extraTasks) {
             Task.WaitAll(
-                extraTasks.Append(SendMsgLoop()).Append(ReceiveMsgLoop()).ToArray()
+                extraTasks
+                    .Append(Task.Run(() => SendMsgLoop()))
+                    .Append(Task.Run(() => ReceiveMsgLoop()))
+                    .ToArray()
             );
             // Close connection.
             await ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
@@ -97,6 +100,7 @@ namespace RabiRiichi.Server.Utils {
                     var msg = msgQueue.Take(cts.Token);
                     msg.isQueued.Set(false);
                     var jsonStr = RabiJson.Stringify(msg, playerId);
+                    Console.WriteLine($"Sending: {jsonStr}");
                     await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(jsonStr)),
                         WebSocketMessageType.Text, true, cts.Token);
                 } catch (OperationCanceledException) {
@@ -130,6 +134,7 @@ namespace RabiRiichi.Server.Utils {
                         break;
                     } else if (msg.MessageType == WebSocketMessageType.Text) {
                         var jsonStr = Encoding.UTF8.GetString(byteArr.Array, 0, msg.Count);
+                        Console.WriteLine($"Received: {jsonStr}");
                         var inMsg = JsonSerializer.Deserialize<InMessage>(jsonStr);
                         if (inMsg != null) {
                             RabiInterlocked.ExchangeMax(ref maxReceivedMsgId, inMsg.id);

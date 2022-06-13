@@ -90,9 +90,9 @@ namespace RabiRiichi.Server.Utils {
 
             var ctx = new RabiWSContext(this, ws, playerId);
             // Start message loops before context switch
-            ctx.RunLoops(
+            Task.Run(() => ctx.RunLoops(
                 Task.Run(() => HeartBeatRecvLoop(ctx))
-            ).ConfigureAwait(false);
+            ));
 
             // Cancel previous connection and switch context
             SwitchWSContext(ctx);

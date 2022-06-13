@@ -14,25 +14,24 @@ namespace RabiRiichi.Server.Controllers {
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult> ConnectWS([FromRoute(Name = "id"), RequireAuth] User user) {
+        public async Task ConnectWS([FromRoute(Name = "id"), RequireAuth] User user) {
             if (HttpContext.WebSockets.IsWebSocketRequest) {
                 using var webSocket =
                     await HttpContext.WebSockets.AcceptWebSocketAsync(new WebSocketAcceptContext {
-                        SubProtocol = "json",
                         DangerousEnableCompression = true
                     });
 
                 var rabiCtx = user.Connect(webSocket);
                 if (rabiCtx == null) {
-                    return BadRequest();
+                    return;
                 }
                 if (!await rabiCtx.HandShake()) {
-                    return BadRequest();
+                    return;
                 }
                 rabiCtx.cts.Token.WaitHandle.WaitOne();
-                return Ok();
+                return;
             } else {
-                return BadRequest();
+                HttpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
             }
         }
     }
