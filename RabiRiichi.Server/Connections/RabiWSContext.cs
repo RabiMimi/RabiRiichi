@@ -18,6 +18,11 @@ namespace RabiRiichi.Server.Utils {
         public readonly WebSocket ws;
 
         /// <summary>
+        /// Whether the connection is closing and no more messages can be queued.
+        /// </summary>
+        public bool IsClosing { get; private set; } = false;
+
+        /// <summary>
         /// Player ID for this websocket
         /// </summary>
         public readonly int playerId;
@@ -25,7 +30,7 @@ namespace RabiRiichi.Server.Utils {
         /// <summary>
         /// Message queue
         /// </summary>
-        private readonly BlockingCollection<OutMessage> msgQueue = new();
+        private readonly ConcurrentBag<OutMessage> msgQueue = new();
 
         /// <summary>
         /// Cancellation token source for all event loops related to this websocket.
@@ -63,10 +68,10 @@ namespace RabiRiichi.Server.Utils {
         /// Must call this method before using any callbacks.
         /// </summary>
         public async Task RunLoops(params Task[] extraTasks) {
-            Task.WaitAll(
+            await Task.WhenAll(
                 extraTasks
-                    .Append(Task.Run(() => SendMsgLoop()))
-                    .Append(Task.Run(() => ReceiveMsgLoop()))
+                    .Append(SendMsgLoop())
+                    .Append(ReceiveMsgLoop())
                     .ToArray()
             );
             // Close connection.
@@ -81,7 +86,7 @@ namespace RabiRiichi.Server.Utils {
         /// Queue a message to be sent.
         /// </summary>
         internal void Queue(OutMessage msg) {
-            if (msg.isQueued.Exchange(true)) {
+            if (IsClosing || msg.isQueued.Exchange(true)) {
                 return;
             }
             msgQueue.Add(msg);
@@ -91,32 +96,30 @@ namespace RabiRiichi.Server.Utils {
         /// Notify that no more message will be sent.
         /// </summary>
         internal void Close() {
-            msgQueue.CompleteAdding();
+            IsClosing = true;
         }
 
         private async Task SendMsgLoop() {
             while (true) {
                 try {
-                    var msg = msgQueue.Take(cts.Token);
-                    msg.isQueued.Set(false);
-                    var jsonStr = RabiJson.Stringify(msg, playerId);
-                    Console.WriteLine($"Sending: {jsonStr}");
-                    await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(jsonStr)),
-                        WebSocketMessageType.Text, true, cts.Token);
+                    await Task.Delay(100, cts.Token);
+                    while (msgQueue.TryTake(out var msg)) {
+                        msg.isQueued.Set(false);
+                        var jsonStr = RabiJson.Stringify(msg, playerId);
+                        Console.WriteLine($"Sending: {jsonStr}");
+                        await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(jsonStr)),
+                            WebSocketMessageType.Text, true, cts.Token);
+                    }
                 } catch (OperationCanceledException) {
                     // Cancellation token cancelled. Could be:
                     // 1. A new ws connection coming in
                     // 2. Client informed that they closed the connection
                     return;
-                } catch (InvalidOperationException) {
-                    // Cannot take from queue anymore.
-                    // The upper layer has specified that no more message is being sent,
-                    // so we can safely close the connection. No further connection will be made.
-                    break;
+                } catch (WebSocketException) {
+                    // Connection closed.
+                    return;
                 }
             }
-            // Notify other loops to stop
-            cts.Cancel();
         }
 
         private async Task ReceiveMsgLoop() {
@@ -135,7 +138,7 @@ namespace RabiRiichi.Server.Utils {
                     } else if (msg.MessageType == WebSocketMessageType.Text) {
                         var jsonStr = Encoding.UTF8.GetString(byteArr.Array, 0, msg.Count);
                         Console.WriteLine($"Received: {jsonStr}");
-                        var inMsg = JsonSerializer.Deserialize<InMessage>(jsonStr);
+                        var inMsg = JsonSerializer.Deserialize<InMessage>(jsonStr, InMessage.jsonSerializerOptions);
                         if (inMsg != null) {
                             RabiInterlocked.ExchangeMax(ref maxReceivedMsgId, inMsg.id);
                             OnReceive?.Invoke(inMsg);
@@ -149,6 +152,9 @@ namespace RabiRiichi.Server.Utils {
                 } catch (JsonException) {
                     // Invalid message
                     continue;
+                } catch (WebSocketException) {
+                    // Connection closed.
+                    break;
                 }
             }
             // Notify other loops to stop

@@ -90,9 +90,7 @@ namespace RabiRiichi.Server.Utils {
 
             var ctx = new RabiWSContext(this, ws, playerId);
             // Start message loops before context switch
-            Task.Run(() => ctx.RunLoops(
-                Task.Run(() => HeartBeatRecvLoop(ctx))
-            ));
+            _ = ctx.RunLoops(HeartBeatRecvLoop(ctx));
 
             // Cancel previous connection and switch context
             SwitchWSContext(ctx);
@@ -128,34 +126,39 @@ namespace RabiRiichi.Server.Utils {
         /// Receives a heartbeat package.
         /// If no response is received in 15 seconds, the connection will be closed.
         /// </summary>
-        private void HeartBeatRecvLoop(RabiWSContext ctx) {
-            var received = new ManualResetEvent(false);
+        private async Task HeartBeatRecvLoop(RabiWSContext ctx) {
+            TaskCompletionSource received = null;
+            Task completed;
             ctx.OnReceive += (InMessage incoming) => {
                 // Always resets heartbeat timer even if the message is not a heartbeat
-                received.Set();
+                received?.TrySetResult();
                 OnReceive?.Invoke(incoming);
                 // Check if the message is responding to a server message
                 if (msgLookup.TryGetValue(incoming.respondTo, out var msg)) {
                     msg.responseTcs.TrySetResult(incoming);
                 }
                 if (incoming.TryGetMessage<InOutHeartBeat>(out var heartBeat)) {
-                    OnReceiveHeartBeat(ctx, heartBeat, msg.id);
+                    OnReceiveHeartBeat(ctx, heartBeat, incoming.id);
                 }
             };
             while (true) {
-                received.Reset();
-                int index = WaitHandle.WaitAny(
-                    new WaitHandle[] { received, ctx.cts.Token.WaitHandle },
-                    ServerConstants.RESPONSE_TIMEOUT);
-                if (index == 0) {
-                    // Received a message from client
-                    continue;
-                } else if (index == 1) {
+                received = new();
+                try {
+                    Console.WriteLine("Waiting for heartbeat");
+                    completed = await Task.WhenAny(received.Task,
+                    Task.Delay(ServerConstants.RESPONSE_TIMEOUT, ctx.cts.Token));
+                    if (completed == received.Task) {
+                        // Received a message from client
+                        Console.WriteLine("Received heartbeat");
+                        continue;
+                    } else {
+                        // No response from client, close connection
+                        Console.WriteLine("Cancelled");
+                        ctx.cts.Cancel();
+                        break;
+                    }
+                } catch (OperationCanceledException) {
                     // Closed connection
-                    break;
-                } else {
-                    // No response from client, close connection
-                    ctx.cts.Cancel();
                     break;
                 }
             }

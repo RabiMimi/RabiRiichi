@@ -28,8 +28,9 @@ namespace RabiRiichi.Server.Controllers {
                 if (!await rabiCtx.HandShake()) {
                     return;
                 }
-                rabiCtx.cts.Token.WaitHandle.WaitOne();
-                return;
+                try {
+                    await Task.Delay(TimeSpan.FromDays(7), rabiCtx.cts.Token);
+                } catch (OperationCanceledException) { }
             } else {
                 HttpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
             }

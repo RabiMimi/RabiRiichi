@@ -43,14 +43,15 @@ namespace RabiRiichi.Server.Utils {
             }
             var msg = SendMessage(playerId, OutMsgType.Inquiry, OutInquiry.From(inquiry));
             if (msg != null) {
-                Task.Run(async () => {
+                async Task WaitResponse() {
                     var resp = await msg.WaitResponse<InInquiryResponse>(TimeSpan.FromHours(1));
                     var inquiryResp = resp == null ? InquiryResponse.Default(playerId)
                         : new InquiryResponse(playerId, resp.index, resp.response);
                     if (ctx.inquiry.OnResponse(inquiryResp)) {
                         EndInquiry(ctx);
                     }
-                });
+                }
+                _ = WaitResponse();
             }
         }
 

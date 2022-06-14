@@ -1,5 +1,4 @@
 using RabiRiichi.Server.Utils;
-using System.Reflection;
 
 namespace RabiRiichi.Server.Messages {
     public class OutVersionCheck {
