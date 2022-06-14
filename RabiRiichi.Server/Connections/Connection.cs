@@ -31,7 +31,7 @@ namespace RabiRiichi.Server.Utils {
         /// <summary>
         /// Last message ID. Shared by all connections with the same player.
         /// </summary>
-        public readonly AutoIncrementInt msgId = new();
+        public AutoIncrementInt msgId = new();
 
         /// <summary>
         /// Mapping from message ID to message. Shared by all connections with the same player.
@@ -64,11 +64,8 @@ namespace RabiRiichi.Server.Utils {
             if (isClosed) {
                 return false;
             }
-            try {
-                currentCtx?.Queue(msg);
-            } catch (InvalidOperationException) {
-                // No more message can be queued.
-            }
+            msgLookup.TryAdd(msg.id, msg);
+            currentCtx?.Queue(msg);
             return true;
         }
 
@@ -128,7 +125,6 @@ namespace RabiRiichi.Server.Utils {
         /// </summary>
         private async Task HeartBeatRecvLoop(RabiWSContext ctx) {
             TaskCompletionSource received = null;
-            Task completed;
             ctx.OnReceive += (InMessage incoming) => {
                 // Always resets heartbeat timer even if the message is not a heartbeat
                 received?.TrySetResult();
@@ -144,16 +140,13 @@ namespace RabiRiichi.Server.Utils {
             while (true) {
                 received = new();
                 try {
-                    Console.WriteLine("Waiting for heartbeat");
-                    completed = await Task.WhenAny(received.Task,
-                    Task.Delay(ServerConstants.RESPONSE_TIMEOUT, ctx.cts.Token));
+                    var delayTask = Task.Delay(ServerConstants.RESPONSE_TIMEOUT, ctx.cts.Token);
+                    var completed = await Task.WhenAny(received.Task, delayTask);
                     if (completed == received.Task) {
                         // Received a message from client
-                        Console.WriteLine("Received heartbeat");
                         continue;
                     } else {
                         // No response from client, close connection
-                        Console.WriteLine("Cancelled");
                         ctx.cts.Cancel();
                         break;
                     }

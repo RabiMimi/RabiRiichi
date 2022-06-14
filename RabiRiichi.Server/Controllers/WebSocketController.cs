@@ -28,6 +28,10 @@ namespace RabiRiichi.Server.Controllers {
                 if (!await rabiCtx.HandShake()) {
                     return;
                 }
+                var room = user.room;
+                if (room != null) {
+                    room.BroadcastRoomState();
+                }
                 try {
                     await Task.Delay(TimeSpan.FromDays(7), rabiCtx.cts.Token);
                 } catch (OperationCanceledException) { }

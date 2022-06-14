@@ -26,9 +26,7 @@ namespace RabiRiichi.Server.Utils {
         }
 
         public static async Task<bool> HandShake(this RabiWSContext ctx) {
-            var msg = ctx.connection.CreateMessage(
-                OutMsgType.VersionCheck, new OutVersionCheck());
-            ctx.Queue(msg);
+            var msg = ctx.connection.Queue(OutMsgType.VersionCheck, new OutVersionCheck());
             var inMsg = await msg.WaitResponse();
             if (inMsg == null) {
                 return false;

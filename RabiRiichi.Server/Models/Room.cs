@@ -25,10 +25,12 @@ namespace RabiRiichi.Server.Models {
             return players.Any(p => p == user);
         }
 
-        private void BroadcastRoomState() {
-            var state = OutRoomState.From(this);
-            foreach (var player in players) {
-                player?.connection?.Queue(OutMsgType.RoomState, state);
+        public void BroadcastRoomState() {
+            lock (players) {
+                var state = OutRoomState.From(this);
+                foreach (var player in players) {
+                    player?.connection?.Queue(OutMsgType.RoomState, state);
+                }
             }
         }
 
