@@ -12,6 +12,8 @@ namespace RabiRiichi.Server.Messages {
         [JsonPropertyName("resp")]
         public int? respondTo;
         public string type;
+
+        [JsonPropertyName("msg")]
         public object message;
 
         [JsonIgnore] public readonly AtomicBool isQueued = new();
@@ -38,6 +40,8 @@ namespace RabiRiichi.Server.Messages {
         [JsonPropertyName("resp")]
         public int respondTo;
         public string type;
+
+        [JsonPropertyName("msg")]
         public JsonElement message;
 
         [JsonIgnore]
