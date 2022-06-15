@@ -1,45 +1,43 @@
 ﻿using RabiRiichi.Communication;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace RabiRiichi.Core {
     public enum TileSource {
-        None,
+        None = 0,
         /// <summary> 王牌 </summary>
-        Wanpai,
+        Wanpai = 1,
         /// <summary> 牌山 </summary>
-        Wall,
+        Wall = 2,
         /// <summary> 手牌 </summary>
-        Hand,
+        Hand = 3,
         /// <summary> 弃牌 </summary>
-        Discard,
+        Discard = 4,
         /// <summary> 吃 </summary>
-        Chii,
+        Chii = 5,
         /// <summary> 碰 </summary>
-        Pon,
+        Pon = 6,
         /// <summary> 加杠 </summary>
-        KaKan,
+        KaKan = 7,
         /// <summary> 暗杠 </summary>
-        AnKan,
+        AnKan = 8,
         /// <summary> 大明杠 </summary>
-        DaiMinKan,
+        DaiMinKan = 9,
     }
 
     public enum DiscardReason {
-        None,
+        None = 0,
         /// <summary> 抽牌 </summary>
-        Draw,
+        Draw = 1,
         /// <summary> 抽岭上 </summary>
-        DrawRinshan,
+        DrawRinshan = 2,
         /// <summary> 吃 </summary>
-        Chii,
+        Chii = 3,
         /// <summary> 碰 </summary>
-        Pon,
+        Pon = 4,
         /// <summary> 仅用于抢杠计算，非实质弃牌，而是加杠/暗杠的牌 </summary>
-        ChanKan,
+        ChanKan = 5,
         /// <summary> 非实质弃牌，仅用于假设计算 </summary>
-        Pretend,
+        Pretend = 6,
     }
 
     [RabiMessage]

@@ -2,7 +2,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Communication;
 using RabiRiichi.Communication.Json;
 using RabiRiichi.Core;
-using RabiRiichi.Core.Config;
 using RabiRiichi.Tests.Helper;
 using System.Collections.Generic;
 using System.Text.Json;
@@ -199,7 +198,7 @@ namespace RabiRiichi.Tests.Communication.Json {
             var json = RabiJson.Stringify(message, 0);
             var parsed = RabiJson.Parse<JsonElement>(json, 0);
             Assert.AreEqual("r5s", parsed.GetProperty("tile").GetProperty("tile").GetString());
-            Assert.AreEqual("wall", parsed.GetProperty("tile").GetProperty("source").GetString());
+            Assert.AreEqual((int)TileSource.Wall, parsed.GetProperty("tile").GetProperty("source").GetInt32());
             Assert.AreEqual(1, parsed.GetProperty("tile").GetProperty("discardInfo").GetProperty("from").GetInt32());
             Assert.AreEqual("123s123m123p", parsed.GetProperty("tiles").GetString());
             var parsedMsg = RabiJson.Parse<GameTileMessage>(json, 0);
