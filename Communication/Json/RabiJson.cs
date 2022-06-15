@@ -7,8 +7,8 @@ namespace RabiRiichi.Communication.Json {
     public static class RabiJson {
         private static readonly TileJsonConverter tileJsonConverter = new();
         private static readonly TilesJsonConverter tilesJsonConverter = new();
-        private static readonly JsonStringEnumConverter stringEnumConverter
-            = new(new EnumNamingPolicy());
+        // private static readonly JsonStringEnumConverter stringEnumConverter
+        //     = new(new EnumNamingPolicy());
         private static readonly ConcurrentDictionary<int, JsonSerializerOptions> optionsDict = new();
 
         private static JsonSerializerOptions GetOption(int playerId) {
@@ -18,7 +18,7 @@ namespace RabiRiichi.Communication.Json {
                     new MessageJsonConverter(playerId),
                     tileJsonConverter,
                     tilesJsonConverter,
-                    stringEnumConverter
+                    // stringEnumConverter
                 },
                 IncludeFields = true,
             });
