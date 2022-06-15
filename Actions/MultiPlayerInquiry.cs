@@ -39,7 +39,6 @@ namespace RabiRiichi.Actions {
     }
 
     public class MultiPlayerInquiry {
-        public int id { get; private set; }
         public readonly List<SinglePlayerInquiry> playerInquiries = new();
         private readonly TaskCompletionSource finishTcs = new();
         public readonly List<IPlayerAction> responses = new();

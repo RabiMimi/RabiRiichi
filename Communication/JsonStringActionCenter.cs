@@ -1,14 +1,13 @@
 using RabiRiichi.Actions;
 using RabiRiichi.Communication.Json;
 using RabiRiichi.Events;
-using System.Collections.Generic;
 
 namespace RabiRiichi.Communication {
     public class JsonStringActionCenter : IActionCenter {
         public delegate void MessageSender(int playerId, string message);
 
         private readonly MessageSender sender;
-        private readonly Dictionary<int, MultiPlayerInquiry> inquiries = new();
+        private MultiPlayerInquiry current;
 
         public JsonStringActionCenter(MessageSender sender) {
             this.sender = sender;
@@ -22,13 +21,13 @@ namespace RabiRiichi.Communication {
             sender?.Invoke(playerId, json);
         }
 
-        public void OnMessage(int inquiryId, int playerId, int actionIndex, string message) {
-            lock (inquiries) {
-                if (!inquiries.TryGetValue(inquiryId, out var inquiry)) {
+        public void OnMessage(int playerId, int actionIndex, string message) {
+            lock (this) {
+                if (current == null) {
                     return;
                 }
-                if (inquiry.OnResponse(new InquiryResponse(playerId, actionIndex, message))) {
-                    inquiries.Remove(inquiryId);
+                if (current.OnResponse(new InquiryResponse(playerId, actionIndex, message))) {
+                    current = null;
                 }
             }
         }
@@ -37,8 +36,8 @@ namespace RabiRiichi.Communication {
             if (inquiry.IsEmpty) {
                 return;
             }
-            lock (inquiries) {
-                inquiries[inquiry.id] = inquiry;
+            lock (this) {
+                current = inquiry;
             }
             foreach (var singlePlayerInquiry in inquiry.playerInquiries) {
                 var json = RabiJson.Stringify(singlePlayerInquiry, singlePlayerInquiry.playerId);
