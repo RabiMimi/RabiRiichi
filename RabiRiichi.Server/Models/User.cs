@@ -9,19 +9,19 @@ namespace RabiRiichi.Server.Models {
         public string nickname { get; set; }
     }
 
-    public class CreateUserResp {
+    public class UserInfoResp {
+        public int id { get; set; }
+        public int? room { get; set; }
+        public string nickname { get; set; }
+        public UserStatus status { get; set; }
         public string sessionCode { get; set; }
 
-        public CreateUserResp(long sessionCode) {
-            this.sessionCode = sessionCode.ToString("x");
-        }
-    }
-
-    public class UserInfoResp {
-        public int? room { get; set; }
-
         public UserInfoResp(User user) {
-            this.room = user.room?.id;
+            id = user.playerId;
+            room = user.room?.id;
+            nickname = user.nickname;
+            status = user.status;
+            sessionCode = user.sessionCode.ToString("x");
         }
     }
 
@@ -39,7 +39,7 @@ namespace RabiRiichi.Server.Models {
         public long sessionCode = 0;
         public UserStatus status { get; protected set; } = UserStatus.None;
         public Room room { get; protected set; }
-        public int playerId;
+        public int playerId = -1;
         public Connection connection { get; protected set; }
         #endregion
 
@@ -86,6 +86,7 @@ namespace RabiRiichi.Server.Models {
                 return false;
             }
             this.room = null;
+            this.playerId = -1;
             SetConnection(true);
             return true;
         }

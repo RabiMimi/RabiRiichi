@@ -15,7 +15,7 @@ namespace RabiRiichi.Server.Controllers {
         }
 
         [HttpPost("create")]
-        public ActionResult<CreateUserResp> CreateUser(
+        public ActionResult<UserInfoResp> CreateUser(
             [FromBody] CreateUserReq req) {
             var user = new User {
                 nickname = req.nickname
@@ -23,11 +23,11 @@ namespace RabiRiichi.Server.Controllers {
             if (!userList.Add(user)) {
                 return StatusCode(503);
             }
-            return Ok(new CreateUserResp(user.sessionCode));
+            return Ok(new UserInfoResp(user));
         }
 
         [HttpGet("info")]
-        public ActionResult<CreateUserResp> GetInfo(
+        public ActionResult<UserInfoResp> GetInfo(
             [FromHeader(Name = "Session-Code"), RequireAuth] User user) {
             return Ok(new UserInfoResp(user));
         }
