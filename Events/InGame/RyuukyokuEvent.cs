@@ -13,7 +13,7 @@ namespace RabiRiichi.Events.InGame {
         #endregion
 
         public RyuukyokuEvent(EventBase parent) : base(parent) {
-            scoreChange = new ScoreTransferList(game.config.playerCount);
+            scoreChange = new ScoreTransferList();
         }
 
         public void AddScoreTransfer(int from, int to, long points, ScoreTransferReason reason)

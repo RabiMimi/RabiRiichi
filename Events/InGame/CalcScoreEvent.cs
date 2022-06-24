@@ -33,12 +33,6 @@ namespace RabiRiichi.Events.InGame {
     }
 
     public class ScoreTransferList : List<ScoreTransfer> {
-        public readonly int playerCount;
-
-        public ScoreTransferList(int playerCount) {
-            this.playerCount = playerCount;
-        }
-
         public long DeltaScore(int playerId)
             => this.Where(x => x.to == playerId).Sum(x => x.points)
                 - this.Where(x => x.from == playerId).Sum(x => x.points);
@@ -53,7 +47,6 @@ namespace RabiRiichi.Events.InGame {
 
         #region Request
         [RabiBroadcast] public readonly AgariInfoList agariInfos;
-        [RabiBroadcast] public readonly bool isAgari;
         #endregion
 
         #region Response
@@ -62,8 +55,7 @@ namespace RabiRiichi.Events.InGame {
 
         public CalcScoreEvent(EventBase parent, AgariInfoList agariInfos) : base(parent) {
             this.agariInfos = agariInfos;
-            this.isAgari = true;
-            scoreChange = new ScoreTransferList(game.config.playerCount);
+            scoreChange = new ScoreTransferList();
         }
     }
 }
