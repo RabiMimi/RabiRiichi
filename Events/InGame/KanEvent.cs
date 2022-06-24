@@ -17,7 +17,7 @@ namespace RabiRiichi.Events.InGame {
         #endregion
 
         #region Response
-        [RabiBroadcast] public readonly WaitPlayerActionEvent waitEvent;
+        public readonly WaitPlayerActionEvent waitEvent;
         #endregion
 
         public KanEvent(EventBase parent, int playerId, Kan kan, GameTile incoming) : base(parent, playerId) {
