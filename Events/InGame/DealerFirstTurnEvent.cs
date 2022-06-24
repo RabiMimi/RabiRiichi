@@ -1,3 +1,4 @@
+using RabiRiichi.Communication;
 using RabiRiichi.Core;
 
 namespace RabiRiichi.Events.InGame {
@@ -5,7 +6,7 @@ namespace RabiRiichi.Events.InGame {
         public override string name => "dealer_first_turn";
 
         #region request
-        public GameTile incoming;
+        [RabiPrivate] public GameTile incoming;
         #endregion
 
         #region Response

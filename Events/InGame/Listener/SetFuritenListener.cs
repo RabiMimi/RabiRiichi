@@ -9,11 +9,11 @@ namespace RabiRiichi.Events.InGame.Listener {
     public static class SetFuritenListener {
         public static Task SetFuriten(SetFuritenEvent ev) {
             if (ev is SetRiichiFuritenEvent) {
-                ev.player.hand.isRiichiFuriten = ev.isFuriten;
+                ev.player.hand.isRiichiFuriten = ev.furiten;
             } else if (ev is SetTempFuritenEvent) {
-                ev.player.hand.isTempFuriten = ev.isFuriten;
+                ev.player.hand.isTempFuriten = ev.furiten;
             } else if (ev is SetDiscardFuritenEvent) {
-                ev.player.hand.isDiscardFuriten = ev.isFuriten;
+                ev.player.hand.isDiscardFuriten = ev.furiten;
             }
             return Task.CompletedTask;
         }
