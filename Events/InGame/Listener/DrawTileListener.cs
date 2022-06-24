@@ -41,7 +41,8 @@ namespace RabiRiichi.Events.InGame.Listener {
                 resolver.Resolve(e.player, e.tile, e.waitEvent.inquiry);
             }
             e.waitEvent.inquiry.GetByPlayerId(e.playerId).DisableSkip();
-            AddActionHandler(e.waitEvent, e.reason);
+            AddActionHandler(e.waitEvent, e.source == TileSource.Wanpai
+                ? DiscardReason.DrawRinshan : DiscardReason.Draw);
             e.Q.Queue(e.waitEvent);
             e.Q.Queue(new AddTileEvent(e));
             return Task.CompletedTask;

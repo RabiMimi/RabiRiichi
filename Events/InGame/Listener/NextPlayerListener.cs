@@ -17,7 +17,7 @@ namespace RabiRiichi.Events.InGame.Listener {
                 ev.Q.Queue(new EndGameRyuukyokuEvent(ev));
             } else {
                 ev.Q.Queue(new IncreaseJunEvent(ev, ev.nextPlayerId));
-                ev.Q.Queue(new DrawTileEvent(ev, ev.nextPlayerId, TileSource.Wall, DiscardReason.Draw));
+                ev.Q.Queue(new DrawTileEvent(ev, ev.nextPlayerId, TileSource.Wall));
             }
             return Task.CompletedTask;
         }

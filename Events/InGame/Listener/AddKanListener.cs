@@ -52,7 +52,7 @@ namespace RabiRiichi.Events.InGame.Listener {
             }
 
             ev.Q.Queue(new IncreaseJunEvent(ev, ev.playerId));
-            ev.Q.Queue(new DrawTileEvent(ev, ev.playerId, TileSource.Wanpai, DiscardReason.DrawRinshan));
+            ev.Q.Queue(new DrawTileEvent(ev, ev.playerId, TileSource.Wanpai));
             return Task.CompletedTask;
         }
 
