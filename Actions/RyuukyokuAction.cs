@@ -1,6 +1,6 @@
 using RabiRiichi.Communication;
 using RabiRiichi.Events.InGame;
-
+using RabiRiichi.Generated.Actions;
 
 namespace RabiRiichi.Actions {
 
@@ -11,6 +11,12 @@ namespace RabiRiichi.Actions {
         public RyuukyokuAction(int playerId, RyuukyokuEvent ev, int priorityDelta = 0) : base(playerId) {
             this.ev = ev;
             this.priority = ActionPriority.Ryuukyoku + priorityDelta;
+        }
+
+        public RyuukyokuActionMsg ToProto() {
+            return new RyuukyokuActionMsg {
+                Reason = reason
+            };
         }
     }
 }

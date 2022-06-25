@@ -1,6 +1,7 @@
 ﻿using RabiRiichi.Actions;
 using RabiRiichi.Actions.Resolver;
 using RabiRiichi.Core;
+using RabiRiichi.Generated.Core;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;

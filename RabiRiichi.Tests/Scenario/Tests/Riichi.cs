@@ -3,6 +3,7 @@ using RabiRiichi.Actions;
 using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
 using RabiRiichi.Events.InGame;
+using RabiRiichi.Generated.Core;
 using RabiRiichi.Patterns;
 using RabiRiichi.Tests.Helper;
 using System;

@@ -1,6 +1,7 @@
 ﻿using RabiRiichi.Communication;
 using RabiRiichi.Core;
 using RabiRiichi.Events.InGame;
+using RabiRiichi.Generated.Events.InGame;
 using RabiRiichi.Generated.Patterns;
 using RabiRiichi.Util;
 using System;

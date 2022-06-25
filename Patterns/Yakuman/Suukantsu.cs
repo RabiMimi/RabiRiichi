@@ -1,5 +1,7 @@
 using RabiRiichi.Core;
 using RabiRiichi.Events.InGame;
+using RabiRiichi.Generated.Core;
+using RabiRiichi.Generated.Patterns;
 using System.Collections.Generic;
 using System.Linq;
 

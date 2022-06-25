@@ -1,5 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Events.InGame;
+using RabiRiichi.Generated.Patterns;
 using RabiRiichi.Patterns;
 using System.Linq;
 

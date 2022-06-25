@@ -1,6 +1,7 @@
 using RabiRiichi.Core;
+using RabiRiichi.Generated.Actions;
 using System.Collections.Generic;
-
+using System.Linq;
 
 namespace RabiRiichi.Actions {
     public class PlayTileAction : ChooseTileAction {
@@ -13,6 +14,13 @@ namespace RabiRiichi.Actions {
             if (ValidateResponse(index)) {
                 response = index;
             }
+        }
+
+        public PlayTileActionMsg ToProto() {
+            var ret = new PlayTileActionMsg();
+            ret.Tiles.AddRange(options.Select(
+                o => ((ChooseTileActionOption)o).tile.ToProto()));
+            return ret;
         }
     }
 }

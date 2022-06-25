@@ -1,5 +1,6 @@
 using RabiRiichi.Core;
 using RabiRiichi.Events.InGame;
+using RabiRiichi.Generated.Actions;
 using RabiRiichi.Patterns;
 
 namespace RabiRiichi.Actions {
@@ -11,6 +12,10 @@ namespace RabiRiichi.Actions {
             this.incoming = incoming;
             priority = ActionPriority.Ron + priorityDelta;
         }
+
+        public virtual AgariActionMsg ToProto() {
+            return new AgariActionMsg();
+        }
     }
 
     public class RonAction : AgariAction {
@@ -19,6 +24,12 @@ namespace RabiRiichi.Actions {
             : base(agariInfo.playerId, agariInfo, incoming, priorityDelta) { }
         public RonAction(int playerId, ScoreStorage scores, GameTile incoming, int priorityDelta = 0)
             : base(playerId, new AgariInfo(playerId, scores), incoming, priorityDelta) { }
+
+        public override AgariActionMsg ToProto() {
+            var ret = base.ToProto();
+            ret.Type = AgariType.Ron;
+            return ret;
+        }
     }
 
     public class TsumoAction : AgariAction {
@@ -27,5 +38,11 @@ namespace RabiRiichi.Actions {
             : base(agariInfo.playerId, agariInfo, incoming, priorityDelta) { }
         public TsumoAction(int playerId, ScoreStorage scores, GameTile incoming, int priorityDelta = 0)
             : this(new AgariInfo(playerId, scores), incoming, priorityDelta) { }
+
+        public override AgariActionMsg ToProto() {
+            var ret = base.ToProto();
+            ret.Type = AgariType.Tsumo;
+            return ret;
+        }
     }
 }

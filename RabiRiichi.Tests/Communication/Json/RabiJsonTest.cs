@@ -2,6 +2,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Communication;
 using RabiRiichi.Communication.Json;
 using RabiRiichi.Core;
+using RabiRiichi.Generated.Core;
 using RabiRiichi.Tests.Helper;
 using System.Collections.Generic;
 using System.Text.Json;

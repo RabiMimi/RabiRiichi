@@ -29,18 +29,18 @@ namespace RabiRiichi.Generated.Core {
             "aW1lGAMgASgFIoUBCgtHYW1lVGlsZU1zZxIMCgR0aWxlGAEgASgFEhEKCXBs",
             "YXllcl9pZBgCIAEoBRIlCgxkaXNjYXJkX2luZm8YAyABKAsyDy5EaXNjYXJk",
             "SW5mb01zZxIbCgZzb3VyY2UYBCABKA4yCy5UaWxlU291cmNlEhEKCWZvcm1f",
-            "dGltZRgFIAEoBSrKAQoNRGlzY2FyZFJlYXNvbhIXChNESVNDQVJEX1JFQVNP",
-            "Tl9OT05FEAASFwoTRElTQ0FSRF9SRUFTT05fRFJBVxABEh4KGkRJU0NBUkRf",
-            "UkVBU09OX0RSQVdSSU5TSEFOEAISFwoTRElTQ0FSRF9SRUFTT05fQ0hJSRAD",
-            "EhYKEkRJU0NBUkRfUkVBU09OX1BPThAEEhoKFkRJU0NBUkRfUkVBU09OX0NI",
-            "QU5LQU4QBRIaChZESVNDQVJEX1JFQVNPTl9QUkVURU5EEAYq8wEKClRpbGVT",
-            "b3VyY2USFAoQVElMRV9TT1VSQ0VfTk9ORRAAEhYKElRJTEVfU09VUkNFX1dB",
-            "TlBBSRABEhQKEFRJTEVfU09VUkNFX1dBTEwQAhIUChBUSUxFX1NPVVJDRV9I",
-            "QU5EEAMSFwoTVElMRV9TT1VSQ0VfRElTQ0FSRBAEEhQKEFRJTEVfU09VUkNF",
-            "X0NISUkQBRITCg9USUxFX1NPVVJDRV9QT04QBhIVChFUSUxFX1NPVVJDRV9L",
-            "QUtBThAHEhUKEVRJTEVfU09VUkNFX0FOS0FOEAgSGQoVVElMRV9TT1VSQ0Vf",
-            "REFJTUlOS0FOEAlCHKoCGVJhYmlSaWljaGkuR2VuZXJhdGVkLkNvcmViBnBy",
-            "b3RvMw=="));
+            "dGltZRgFIAEoBSrLAQoNRGlzY2FyZFJlYXNvbhIXChNESVNDQVJEX1JFQVNP",
+            "Tl9OT05FEAASFwoTRElTQ0FSRF9SRUFTT05fRFJBVxABEh8KG0RJU0NBUkRf",
+            "UkVBU09OX0RSQVdfUklOU0hBThACEhcKE0RJU0NBUkRfUkVBU09OX0NISUkQ",
+            "AxIWChJESVNDQVJEX1JFQVNPTl9QT04QBBIaChZESVNDQVJEX1JFQVNPTl9D",
+            "SEFOS0FOEAUSGgoWRElTQ0FSRF9SRUFTT05fUFJFVEVORBAGKvMBCgpUaWxl",
+            "U291cmNlEhQKEFRJTEVfU09VUkNFX05PTkUQABIWChJUSUxFX1NPVVJDRV9X",
+            "QU5QQUkQARIUChBUSUxFX1NPVVJDRV9XQUxMEAISFAoQVElMRV9TT1VSQ0Vf",
+            "SEFORBADEhcKE1RJTEVfU09VUkNFX0RJU0NBUkQQBBIUChBUSUxFX1NPVVJD",
+            "RV9DSElJEAUSEwoPVElMRV9TT1VSQ0VfUE9OEAYSFQoRVElMRV9TT1VSQ0Vf",
+            "S0FLQU4QBxIVChFUSUxFX1NPVVJDRV9BTktBThAIEhkKFVRJTEVfU09VUkNF",
+            "X0RBSU1JTktBThAJQhyqAhlSYWJpUmlpY2hpLkdlbmVyYXRlZC5Db3JlYgZw",
+            "cm90bzM="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(new[] {typeof(global::RabiRiichi.Generated.Core.DiscardReason), typeof(global::RabiRiichi.Generated.Core.TileSource), }, new pbr::GeneratedClrTypeInfo[] {
@@ -64,7 +64,7 @@ namespace RabiRiichi.Generated.Core {
     /// <summary>
     /// Discard due to drawing another tile from wanpai
     /// </summary>
-    [pbr::OriginalName("DISCARD_REASON_DRAWRINSHAN")] Drawrinshan = 2,
+    [pbr::OriginalName("DISCARD_REASON_DRAW_RINSHAN")] DrawRinshan = 2,
     /// <summary>
     /// Discard due to claiming a tile by Chii
     /// </summary>

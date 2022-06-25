@@ -1,4 +1,5 @@
 using RabiRiichi.Core;
+using RabiRiichi.Generated.Patterns;
 using System.Collections.Generic;
 using System.Linq;
 

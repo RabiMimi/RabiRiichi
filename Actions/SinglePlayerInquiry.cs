@@ -1,6 +1,9 @@
 using RabiRiichi.Communication;
+using RabiRiichi.Communication.Proto;
+using RabiRiichi.Generated.Actions;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace RabiRiichi.Actions {
     [RabiMessage]
@@ -65,6 +68,12 @@ namespace RabiRiichi.Actions {
             }
             hasResponded = true;
             return true;
+        }
+
+        public SinglePlayerInquiryMsg ToProto() {
+            var ret = new SinglePlayerInquiryMsg();
+            ret.Actions.AddRange(actions.Select(action => ProtoConverters.ToProto(action)));
+            return ret;
         }
     }
 }
