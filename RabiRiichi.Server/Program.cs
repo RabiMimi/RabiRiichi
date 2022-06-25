@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using RabiRiichi.Server.Binders;
 using RabiRiichi.Server.Models;
+using RabiRiichi.Server.Rpc;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,7 +16,7 @@ builder.Services.AddCors(options => {
 });
 
 // Add services to the container.
-
+/*
 builder.Services.AddControllers(options => {
     options.ModelBinderProviders.Insert(0, new AuthBinderProvider());
     options.ModelBinderProviders.Insert(0, new RoomBinderProvider());
@@ -22,7 +24,9 @@ builder.Services.AddControllers(options => {
 
 builder.Services.AddResponseCompression(options => {
     options.EnableForHttps = true;
-});
+});*/
+
+builder.Services.AddGrpc();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 // builder.Services.AddEndpointsApiExplorer();
@@ -45,12 +49,20 @@ if (app.Environment.IsDevelopment()) {
 */
 app.UseCors("AllowAll");
 
-app.UseAuthorization();
-app.UseResponseCompression();
-app.UseWebSockets(new WebSocketOptions {
-    KeepAliveInterval = TimeSpan.FromSeconds(30),
-});
 
-app.MapControllers();
+// app.UseResponseCompression();
+// app.UseWebSockets(new WebSocketOptions {
+//    KeepAliveInterval = TimeSpan.FromSeconds(30),
+// });
+
+app.UseRouting();
+
+// app.MapControllers();
+app.UseEndpoints(endpoints => {
+    endpoints.MapGrpcService<InfoServiceImpl>();
+    endpoints.MapGet("/", async context => {
+        await context.Response.WriteAsync("Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
+    });
+});
 
 app.Run();
