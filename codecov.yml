@@ -1,3 +1,6 @@
+ignore:
+  - "Generated"
+  - "RabiRiichi.Server/Generated"
 coverage:
   round: up
   range: 60..90
