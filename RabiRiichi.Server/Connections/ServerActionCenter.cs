@@ -91,9 +91,5 @@ namespace RabiRiichi.Server.Utils {
                 EndInquiry(ctx);
             }
         }
-
-        public void OnMessage(int playerId, object msg) {
-            SendMessage(playerId, OutMsgType.Other, msg);
-        }
     }
 }

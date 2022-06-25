@@ -267,7 +267,7 @@ namespace RabiRiichi.Tests.Scenario {
             }));
         }
 
-        public void OnMessage(int playerId, object msg) {
+        private void OnMessage(int playerId, object msg) {
             var str = RabiJson.Stringify(msg, playerId);
             if (str != lastMsg) {
                 SendImmediately();

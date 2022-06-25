@@ -49,10 +49,5 @@ namespace RabiRiichi.Communication {
             var json = RabiJson.Stringify(ev, playerId);
             Send(playerId, json);
         }
-
-        public void OnMessage(int playerId, object msg) {
-            var json = RabiJson.Stringify(msg, playerId);
-            Send(playerId, json);
-        }
     }
 }
