@@ -19,7 +19,7 @@ namespace RabiRiichi.Events.InGame {
         public SetRiichiEventMsg ToProto() {
             return new SetRiichiEventMsg {
                 PlayerId = playerId,
-                RiichiTile = riichiTile.ToProto(),
+                RiichiTile = riichiTile?.ToProto(),
                 WRiichi = wRiichi,
             };
         }

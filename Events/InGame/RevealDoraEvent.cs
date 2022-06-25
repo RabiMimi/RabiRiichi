@@ -18,7 +18,7 @@ namespace RabiRiichi.Events.InGame {
         public RevealDoraEventMsg ToProto() {
             return new RevealDoraEventMsg {
                 PlayerId = playerId,
-                Dora = dora.ToProto(),
+                Dora = dora?.ToProto(),
             };
         }
     }

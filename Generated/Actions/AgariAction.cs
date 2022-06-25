@@ -25,9 +25,10 @@ namespace RabiRiichi.Generated.Actions {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
             "ChlBY3Rpb25zL0FnYXJpQWN0aW9uLnByb3RvIioKDkFnYXJpQWN0aW9uTXNn",
-            "EhgKBHR5cGUYASABKA4yCi5BZ2FyaVR5cGUqNQoJQWdhcmlUeXBlEhIKDkFH",
-            "QVJJX1RZUEVfUk9OEAASFAoQQUdBUklfVFlQRV9UU1VNTxABQh+qAhxSYWJp",
-            "UmlpY2hpLkdlbmVyYXRlZC5BY3Rpb25zYgZwcm90bzM="));
+            "EhgKBHR5cGUYASABKA4yCi5BZ2FyaVR5cGUqSgoJQWdhcmlUeXBlEhMKD0FH",
+            "QVJJX1RZUEVfTk9ORRAAEhIKDkFHQVJJX1RZUEVfUk9OEAESFAoQQUdBUklf",
+            "VFlQRV9UU1VNTxACQh+qAhxSYWJpUmlpY2hpLkdlbmVyYXRlZC5BY3Rpb25z",
+            "YgZwcm90bzM="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(new[] {typeof(global::RabiRiichi.Generated.Actions.AgariType), }, new pbr::GeneratedClrTypeInfo[] {
@@ -40,13 +41,17 @@ namespace RabiRiichi.Generated.Actions {
   #region Enums
   public enum AgariType {
     /// <summary>
+    /// None
+    /// </summary>
+    [pbr::OriginalName("AGARI_TYPE_NONE")] None = 0,
+    /// <summary>
     /// Ron
     /// </summary>
-    [pbr::OriginalName("AGARI_TYPE_RON")] Ron = 0,
+    [pbr::OriginalName("AGARI_TYPE_RON")] Ron = 1,
     /// <summary>
     /// Tsumo
     /// </summary>
-    [pbr::OriginalName("AGARI_TYPE_TSUMO")] Tsumo = 1,
+    [pbr::OriginalName("AGARI_TYPE_TSUMO")] Tsumo = 2,
   }
 
   #endregion

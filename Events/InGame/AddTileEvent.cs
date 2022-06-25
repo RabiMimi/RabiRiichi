@@ -25,7 +25,7 @@ namespace RabiRiichi.Events.InGame {
                 PlayerId = this.playerId,
             };
             if (this.playerId == playerId) {
-                ret.Incoming = incoming.ToProto();
+                ret.Incoming = incoming?.ToProto();
             }
             return ret;
         }

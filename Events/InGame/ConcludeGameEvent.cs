@@ -30,8 +30,8 @@ namespace RabiRiichi.Events.InGame {
         #endregion
 
         #region Response
-        [RabiBroadcast] public Tiles doras;
-        [RabiBroadcast] public Tiles uradoras;
+        [RabiBroadcast] public readonly Tiles doras = new();
+        [RabiBroadcast] public readonly Tiles uradoras = new();
         #endregion
 
         public ConcludeGameEvent(EventBase parent, ConcludeGameReason reason, int[] tenpaiPlayers = null) : base(parent) {

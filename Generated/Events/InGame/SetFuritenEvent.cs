@@ -26,10 +26,11 @@ namespace RabiRiichi.Generated.Events.InGame {
           string.Concat(
             "CiNFdmVudHMvSW5HYW1lL1NldEZ1cml0ZW5FdmVudC5wcm90byJcChJTZXRG",
             "dXJpdGVuRXZlbnRNc2cSEQoJcGxheWVyX2lkGAEgASgFEg8KB2Z1cml0ZW4Y",
-            "AiABKAgSIgoMZnVyaXRlbl90eXBlGAMgASgOMgwuRnVyaXRlblR5cGUqMAoL",
-            "RnVyaXRlblR5cGUSCAoEVEVNUBAAEgoKBlJJSUNISRABEgsKB0RJU0NBUkQQ",
-            "AkIlqgIiUmFiaVJpaWNoaS5HZW5lcmF0ZWQuRXZlbnRzLkluR2FtZWIGcHJv",
-            "dG8z"));
+            "AiABKAgSIgoMZnVyaXRlbl90eXBlGAMgASgOMgwuRnVyaXRlblR5cGUqbgoL",
+            "RnVyaXRlblR5cGUSFQoRRlVSSVRFTl9UWVBFX05PTkUQABIVChFGVVJJVEVO",
+            "X1RZUEVfVEVNUBABEhcKE0ZVUklURU5fVFlQRV9SSUlDSEkQAhIYChRGVVJJ",
+            "VEVOX1RZUEVfRElTQ0FSRBADQiWqAiJSYWJpUmlpY2hpLkdlbmVyYXRlZC5F",
+            "dmVudHMuSW5HYW1lYgZwcm90bzM="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(new[] {typeof(global::RabiRiichi.Generated.Events.InGame.FuritenType), }, new pbr::GeneratedClrTypeInfo[] {
@@ -42,17 +43,21 @@ namespace RabiRiichi.Generated.Events.InGame {
   #region Enums
   public enum FuritenType {
     /// <summary>
+    /// 无
+    /// </summary>
+    [pbr::OriginalName("FURITEN_TYPE_NONE")] None = 0,
+    /// <summary>
     /// 同巡振听
     /// </summary>
-    [pbr::OriginalName("TEMP")] Temp = 0,
+    [pbr::OriginalName("FURITEN_TYPE_TEMP")] Temp = 1,
     /// <summary>
     /// 立直振听
     /// </summary>
-    [pbr::OriginalName("RIICHI")] Riichi = 1,
+    [pbr::OriginalName("FURITEN_TYPE_RIICHI")] Riichi = 2,
     /// <summary>
     /// 舍牌振听
     /// </summary>
-    [pbr::OriginalName("DISCARD")] Discard = 2,
+    [pbr::OriginalName("FURITEN_TYPE_DISCARD")] Discard = 3,
   }
 
   #endregion

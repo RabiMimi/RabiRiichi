@@ -12,7 +12,7 @@ namespace RabiRiichi.Events.InGame {
         #endregion
 
         #region  response
-        [RabiBroadcast] public List<GameTile> tiles;
+        [RabiBroadcast] public readonly List<GameTile> tiles = new();
         #endregion
 
         public DealHandEvent(EventBase parent, int playerId, int count) : base(parent, playerId) {

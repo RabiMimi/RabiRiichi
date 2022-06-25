@@ -27,7 +27,7 @@ namespace RabiRiichi.Events.InGame {
                 Source = source,
             };
             if (this.playerId == playerId) {
-                ret.Tile = tile.ToProto();
+                ret.Tile = tile?.ToProto();
             }
             return ret;
         }

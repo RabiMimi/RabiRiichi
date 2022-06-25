@@ -129,7 +129,7 @@ namespace RabiRiichi.Patterns {
 
         public ScoreStorageMsg ToProto() {
             var msg = new ScoreStorageMsg {
-                Result = result.ToProto(),
+                Result = result?.ToProto(),
             };
             msg.Items.AddRange(items.ConvertAll(s => s.ToProto()));
             return msg;

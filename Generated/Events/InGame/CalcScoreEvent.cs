@@ -30,13 +30,14 @@ namespace RabiRiichi.Generated.Events.InGame {
             "ZWFzb24YBCABKA4yFC5TY29yZVRyYW5zZmVyUmVhc29uImQKEUNhbGNTY29y",
             "ZUV2ZW50TXNnEiYKC2FnYXJpX2luZm9zGAEgASgLMhEuQWdhcmlJbmZvTGlz",
             "dE1zZxInCgxzY29yZV9jaGFuZ2UYAiADKAsyES5TY29yZVRyYW5zZmVyTXNn",
-            "KoYCChNTY29yZVRyYW5zZmVyUmVhc29uEh0KGVNDT1JFX1RSQU5TRkVSX1JF",
-            "QVNPTl9ST04QABIfChtTQ09SRV9UUkFOU0ZFUl9SRUFTT05fVFNVTU8QARIj",
-            "Ch9TQ09SRV9UUkFOU0ZFUl9SRUFTT05fUllVVUtZT0tVEAISKAokU0NPUkVf",
-            "VFJBTlNGRVJfUkVBU09OX05BR0FTSElfTUFOR0FOEAMSIAocU0NPUkVfVFJB",
-            "TlNGRVJfUkVBU09OX1JJSUNISRAEEh8KG1NDT1JFX1RSQU5TRkVSX1JFQVNP",
-            "Tl9IT05CQRAFEh0KGVNDT1JFX1RSQU5TRkVSX1JFQVNPTl9QQU8QBkIlqgIi",
-            "UmFiaVJpaWNoaS5HZW5lcmF0ZWQuRXZlbnRzLkluR2FtZWIGcHJvdG8z"));
+            "KqYCChNTY29yZVRyYW5zZmVyUmVhc29uEh4KGlNDT1JFX1RSQU5TRkVSX1JF",
+            "QVNPTl9OT05FEAASHQoZU0NPUkVfVFJBTlNGRVJfUkVBU09OX1JPThABEh8K",
+            "G1NDT1JFX1RSQU5TRkVSX1JFQVNPTl9UU1VNTxACEiMKH1NDT1JFX1RSQU5T",
+            "RkVSX1JFQVNPTl9SWVVVS1lPS1UQAxIoCiRTQ09SRV9UUkFOU0ZFUl9SRUFT",
+            "T05fTkFHQVNISV9NQU5HQU4QBBIgChxTQ09SRV9UUkFOU0ZFUl9SRUFTT05f",
+            "UklJQ0hJEAUSHwobU0NPUkVfVFJBTlNGRVJfUkVBU09OX0hPTkJBEAYSHQoZ",
+            "U0NPUkVfVFJBTlNGRVJfUkVBU09OX1BBTxAHQiWqAiJSYWJpUmlpY2hpLkdl",
+            "bmVyYXRlZC5FdmVudHMuSW5HYW1lYgZwcm90bzM="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::RabiRiichi.Generated.Events.InGame.AgariEventReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(new[] {typeof(global::RabiRiichi.Generated.Events.InGame.ScoreTransferReason), }, new pbr::GeneratedClrTypeInfo[] {
@@ -50,33 +51,37 @@ namespace RabiRiichi.Generated.Events.InGame {
   #region Enums
   public enum ScoreTransferReason {
     /// <summary>
+    /// 无
+    /// </summary>
+    [pbr::OriginalName("SCORE_TRANSFER_REASON_NONE")] None = 0,
+    /// <summary>
     /// 荣和
     /// </summary>
-    [pbr::OriginalName("SCORE_TRANSFER_REASON_RON")] Ron = 0,
+    [pbr::OriginalName("SCORE_TRANSFER_REASON_RON")] Ron = 1,
     /// <summary>
     /// 自摸
     /// </summary>
-    [pbr::OriginalName("SCORE_TRANSFER_REASON_TSUMO")] Tsumo = 1,
+    [pbr::OriginalName("SCORE_TRANSFER_REASON_TSUMO")] Tsumo = 2,
     /// <summary>
     /// 流局
     /// </summary>
-    [pbr::OriginalName("SCORE_TRANSFER_REASON_RYUUKYOKU")] Ryuukyoku = 2,
+    [pbr::OriginalName("SCORE_TRANSFER_REASON_RYUUKYOKU")] Ryuukyoku = 3,
     /// <summary>
     /// 流局满贯
     /// </summary>
-    [pbr::OriginalName("SCORE_TRANSFER_REASON_NAGASHI_MANGAN")] NagashiMangan = 3,
+    [pbr::OriginalName("SCORE_TRANSFER_REASON_NAGASHI_MANGAN")] NagashiMangan = 4,
     /// <summary>
     /// 立直
     /// </summary>
-    [pbr::OriginalName("SCORE_TRANSFER_REASON_RIICHI")] Riichi = 4,
+    [pbr::OriginalName("SCORE_TRANSFER_REASON_RIICHI")] Riichi = 5,
     /// <summary>
     /// 本场棒
     /// </summary>
-    [pbr::OriginalName("SCORE_TRANSFER_REASON_HONBA")] Honba = 5,
+    [pbr::OriginalName("SCORE_TRANSFER_REASON_HONBA")] Honba = 6,
     /// <summary>
     /// 包牌
     /// </summary>
-    [pbr::OriginalName("SCORE_TRANSFER_REASON_PAO")] Pao = 6,
+    [pbr::OriginalName("SCORE_TRANSFER_REASON_PAO")] Pao = 7,
   }
 
   #endregion

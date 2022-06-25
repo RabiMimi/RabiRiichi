@@ -26,9 +26,11 @@ namespace RabiRiichi.Generated.Patterns {
           string.Concat(
             "ChlQYXR0ZXJucy9TdGRQYXR0ZXJuLnByb3RvIkIKClNjb3JpbmdNc2cSGgoE",
             "VHlwZRgBIAEoDjIMLlNjb3JpbmdUeXBlEgsKA1ZhbBgCIAEoBRILCgNTcmMY",
-            "AyABKAkqOgoLU2NvcmluZ1R5cGUSBwoDSEFOEAASDQoJQk9OVVNfSEFOEAES",
-            "BgoCRlUQAhILCgdZQUtVTUFOEANCIKoCHVJhYmlSaWljaGkuR2VuZXJhdGVk",
-            "LlBhdHRlcm5zYgZwcm90bzM="));
+            "AyABKAkqhQEKC1Njb3JpbmdUeXBlEhUKEVNDT1JJTkdfVFlQRV9OT05FEAAS",
+            "FAoQU0NPUklOR19UWVBFX0hBThABEhoKFlNDT1JJTkdfVFlQRV9CT05VU19I",
+            "QU4QAhITCg9TQ09SSU5HX1RZUEVfRlUQAxIYChRTQ09SSU5HX1RZUEVfWUFL",
+            "VU1BThAEQiCqAh1SYWJpUmlpY2hpLkdlbmVyYXRlZC5QYXR0ZXJuc2IGcHJv",
+            "dG8z"));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(new[] {typeof(global::RabiRiichi.Generated.Patterns.ScoringType), }, new pbr::GeneratedClrTypeInfo[] {
@@ -41,21 +43,25 @@ namespace RabiRiichi.Generated.Patterns {
   #region Enums
   public enum ScoringType {
     /// <summary>
+    /// 无
+    /// </summary>
+    [pbr::OriginalName("SCORING_TYPE_NONE")] None = 0,
+    /// <summary>
     /// 番
     /// </summary>
-    [pbr::OriginalName("HAN")] Han = 0,
+    [pbr::OriginalName("SCORING_TYPE_HAN")] Han = 1,
     /// <summary>
     /// 奖励番，不记役
     /// </summary>
-    [pbr::OriginalName("BONUS_HAN")] BonusHan = 1,
+    [pbr::OriginalName("SCORING_TYPE_BONUS_HAN")] BonusHan = 2,
     /// <summary>
     /// 符
     /// </summary>
-    [pbr::OriginalName("FU")] Fu = 2,
+    [pbr::OriginalName("SCORING_TYPE_FU")] Fu = 3,
     /// <summary>
     /// 役满
     /// </summary>
-    [pbr::OriginalName("YAKUMAN")] Yakuman = 3,
+    [pbr::OriginalName("SCORING_TYPE_YAKUMAN")] Yakuman = 4,
   }
 
   #endregion

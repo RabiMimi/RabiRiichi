@@ -37,8 +37,8 @@ namespace RabiRiichi.Communication.Sync {
             var ret = new PlayerHandStateMsg {
                 Jun = jun,
                 RiichiStick = riichiStick,
-                AgariTile = agariTile.ToProto(),
-                RiichiTile = riichiTile.ToProto(),
+                AgariTile = agariTile?.ToProto(),
+                RiichiTile = riichiTile?.ToProto(),
             };
             ret.Called.AddRange(called.Select(x => x.ToProto()));
             ret.Discarded.AddRange(discarded.Select(x => x.ToProto()));
