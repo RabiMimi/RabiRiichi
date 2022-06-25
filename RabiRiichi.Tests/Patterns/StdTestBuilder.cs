@@ -25,7 +25,7 @@ namespace RabiRiichi.Tests.Patterns {
             var t = new Tiles(tiles).ToGameTileList();
             for (int i = 0; i < t.Count; i++) {
                 t[i].player = currentPlayer.Object;
-                t[i].discardInfo = fuuroIndex == i ? new DiscardInfo(anotherPlayer.Object, DiscardReason.Draw) : null;
+                t[i].discardInfo = fuuroIndex == i ? new DiscardInfo(anotherPlayer.Object, DiscardReason.Draw, 0) : null;
             }
             return MenLike.From(t);
         }
@@ -84,7 +84,7 @@ namespace RabiRiichi.Tests.Patterns {
             this.incoming = new GameTile(new Tile(incoming)) {
                 player = currentPlayer.Object,
                 discardInfo = isTsumo ? null
-                    : new DiscardInfo(anotherPlayer.Object, reason),
+                    : new DiscardInfo(anotherPlayer.Object, reason, 0),
                 source = tileSource,
             };
             var group = new Tiles(tiles).ToGameTileList();

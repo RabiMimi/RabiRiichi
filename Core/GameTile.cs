@@ -47,11 +47,14 @@ namespace RabiRiichi.Core {
         [RabiBroadcast] public readonly int from;
         /// <summary> 弃牌原因 </summary>
         [RabiBroadcast] public readonly DiscardReason reason;
+        /// <summary> 弃牌时间戳 </summary>
+        [RabiBroadcast] public readonly int time;
 
-        public DiscardInfo(Player fromPlayer, DiscardReason reason) {
+        public DiscardInfo(Player fromPlayer, DiscardReason reason, int time) {
             this.fromPlayer = fromPlayer;
             this.from = fromPlayer?.id ?? -1;
             this.reason = reason;
+            this.time = time;
         }
 
     }
@@ -90,7 +93,7 @@ namespace RabiRiichi.Core {
         /// <summary> 弃牌信息 </summary>
         [RabiBroadcast] public DiscardInfo discardInfo;
         /// <summary> 该牌成为副露或暗杠的时间戳 </summary>
-        public int formTime = -1;
+        [RabiBroadcast] public int formTime = -1;
         /// <summary> 是否是自摸 </summary>
         public bool IsTsumo => discardInfo == null;
         [RabiBroadcast] public TileSource source = TileSource.Hand;

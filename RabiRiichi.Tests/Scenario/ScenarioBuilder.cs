@@ -431,7 +431,7 @@ namespace RabiRiichi.Tests.Scenario {
 
                 public MenLike Create(List<GameTile> tiles, Player[] players) {
                     if (!IsClosed) {
-                        tiles[fuuroIndex].discardInfo = new DiscardInfo(players[fromPlayer], reason);
+                        tiles[fuuroIndex].discardInfo = new DiscardInfo(players[fromPlayer], reason, 0);
                     }
                     return MenLike.From(tiles);
                 }

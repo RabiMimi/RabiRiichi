@@ -95,7 +95,7 @@ namespace RabiRiichi.Core {
         }
 
         public void Play(GameTile tile, DiscardReason reason) {
-            tile.discardInfo = new DiscardInfo(player, reason);
+            tile.discardInfo = new DiscardInfo(player, reason, game.info.timeStamp.Next);
             tile.source = TileSource.Discard;
             freeTiles.Remove(tile);
             if (reason != DiscardReason.ChanKan && reason != DiscardReason.Pretend) {
@@ -116,7 +116,7 @@ namespace RabiRiichi.Core {
                 tile.player = player;
                 tile.source = source;
                 if (tile.formTime == -1) {
-                    tile.formTime = game.info.timeStamp.Next;
+                    tile.formTime = game.Time;
                 }
                 Remove(tile);
             }

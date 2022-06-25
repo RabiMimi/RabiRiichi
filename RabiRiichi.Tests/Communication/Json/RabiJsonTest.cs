@@ -193,7 +193,7 @@ namespace RabiRiichi.Tests.Communication.Json {
             var message = new GameTileMessage(new GameTile(new Tile("r5s")) {
                 source = TileSource.Wall,
                 discardInfo = new DiscardInfo(
-                    new Player(1, TestHelper.CreateGame()), DiscardReason.Draw),
+                    new Player(1, TestHelper.CreateGame()), DiscardReason.Draw, 0),
             }, tiles);
             var json = RabiJson.Stringify(message, 0);
             var parsed = RabiJson.Parse<JsonElement>(json, 0);
