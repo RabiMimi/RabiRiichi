@@ -3,9 +3,9 @@ using RabiRiichi.Patterns;
 
 
 namespace RabiRiichi.Actions.Resolver {
-    public class ChanAnKanResolver : ChanKanResolver {
+    public class ChanAnkanResolver : ChankanResolver {
         private readonly Base13_1 base13_1;
-        public ChanAnKanResolver(PatternResolver patternResolver, Base13_1 base13_1) : base(patternResolver) {
+        public ChanAnkanResolver(PatternResolver patternResolver, Base13_1 base13_1) : base(patternResolver) {
             this.base13_1 = base13_1;
         }
 

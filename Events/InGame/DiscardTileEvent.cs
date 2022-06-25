@@ -1,5 +1,7 @@
 using RabiRiichi.Communication;
 using RabiRiichi.Core;
+using RabiRiichi.Generated.Core;
+using RabiRiichi.Generated.Events.InGame;
 
 namespace RabiRiichi.Events.InGame {
     public class DiscardTileEvent : BroadcastPlayerEvent {
@@ -7,7 +9,7 @@ namespace RabiRiichi.Events.InGame {
 
         #region Request
         [RabiPrivate] public GameTile incoming;
-        [RabiBroadcast] public GameTile tile;
+        [RabiBroadcast] public GameTile discarded;
         [RabiBroadcast] public DiscardReason reason;
         /// <summary> 用于判定摸切还是手切 </summary>
         [RabiBroadcast] public TileSource origin;
@@ -17,13 +19,26 @@ namespace RabiRiichi.Events.InGame {
         public readonly WaitPlayerActionEvent waitEvent;
         #endregion
 
-        public DiscardTileEvent(EventBase parent, int playerId, GameTile tile, GameTile incoming, DiscardReason reason) : base(parent, playerId) {
-            this.tile = tile;
+        public DiscardTileEvent(EventBase parent, int playerId, GameTile discarded, GameTile incoming, DiscardReason reason) : base(parent, playerId) {
+            this.discarded = discarded;
             this.incoming = incoming;
             this.reason = reason;
             // 此时tile还没有被加入手牌，保存当前source以判定摸切还是手切
-            origin = tile.source;
+            origin = discarded.source;
             waitEvent = new WaitPlayerActionEvent(this);
+        }
+
+        public DiscardTileEventMsg ToProto(int playerId) {
+            var ret = new DiscardTileEventMsg {
+                PlayerId = this.playerId,
+                Discarded = discarded.ToProto(),
+                Reason = reason,
+                Origin = origin,
+            };
+            if (this.playerId == playerId) {
+                ret.Incoming = incoming.ToProto();
+            }
+            return ret;
         }
     }
 

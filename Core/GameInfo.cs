@@ -1,5 +1,6 @@
 using RabiRiichi.Communication;
 using RabiRiichi.Core.Config;
+using RabiRiichi.Generated.Core;
 using RabiRiichi.Util;
 
 namespace RabiRiichi.Core {
@@ -48,6 +49,17 @@ namespace RabiRiichi.Core {
         public void Reset() {
             currentPlayer = -1;
             timeStamp.Reset();
+        }
+
+        public GameInfoMsg ToProto() {
+            return new GameInfoMsg {
+                Round = round,
+                Wind = wind,
+                Dealer = dealer,
+                Honba = honba,
+                CurrentPlayer = currentPlayer,
+                RiichiStick = riichiStick,
+            };
         }
     }
 }

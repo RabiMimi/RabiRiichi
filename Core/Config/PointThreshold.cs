@@ -1,4 +1,5 @@
 using RabiRiichi.Communication;
+using RabiRiichi.Generated.Core.Config;
 
 namespace RabiRiichi.Core.Config {
     [RabiMessage]
@@ -25,5 +26,17 @@ namespace RabiRiichi.Core.Config {
         public bool ArePointsValid(long points)
             => points >= validPointsRange[0] && points <= validPointsRange[1];
         #endregion
+
+        public PointThresholdMsg ToProto() {
+            var ret = new PointThresholdMsg {
+                InitialPoints = initialPoints,
+                RiichiPoints = riichiPoints,
+                HonbaPoints = honbaPoints,
+                FinishPoints = finishPoints,
+            };
+            ret.RyuukyokuPoints.AddRange(ryuukyokuPoints);
+            ret.ValidPointsRange.AddRange(validPointsRange);
+            return ret;
+        }
     }
 }

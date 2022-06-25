@@ -1,5 +1,6 @@
 using RabiRiichi.Communication;
 using RabiRiichi.Core.Setup;
+using RabiRiichi.Generated.Core.Config;
 using RabiRiichi.Util;
 
 namespace RabiRiichi.Core.Config {
@@ -73,6 +74,23 @@ namespace RabiRiichi.Core.Config {
 
         /// <summary> 随机种子 </summary>
         public ulong? seed;
+
+        public GameConfigMsg ToProto() {
+            return new GameConfigMsg {
+                PlayerCount = playerCount,
+                TotalRound = totalRound,
+                MinHan = minHan,
+                PointThreshold = pointThreshold.ToProto(),
+                RenchanPolicy = (int)renchanPolicy,
+                EndGamePolicy = (int)endGamePolicy,
+                KuikaePolicy = (int)kuikaePolicy,
+                RiichiPolicy = (int)riichiPolicy,
+                DoraOption = (int)doraOption,
+                AgariOption = (int)agariOption,
+                ScoringOption = (int)scoringOption,
+                RyuukyokuTrigger = (int)ryuukyokuTrigger,
+            };
+        }
         #endregion
     }
 }

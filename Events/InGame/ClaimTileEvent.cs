@@ -1,5 +1,7 @@
 using RabiRiichi.Communication;
 using RabiRiichi.Core;
+using RabiRiichi.Generated.Core;
+using RabiRiichi.Generated.Events.InGame;
 
 namespace RabiRiichi.Events.InGame {
     public class ClaimTileEvent : BroadcastPlayerEvent {
@@ -17,6 +19,15 @@ namespace RabiRiichi.Events.InGame {
         public ClaimTileEvent(EventBase parent, int playerId, MenLike group, GameTile tile) : base(parent, playerId) {
             this.group = group;
             this.tile = tile;
+        }
+
+        public ClaimTileEventMsg ToProto() {
+            return new ClaimTileEventMsg {
+                PlayerId = playerId,
+                Tile = tile.ToProto(),
+                Group = group.ToProto(),
+                Reason = reason,
+            };
         }
     }
 }

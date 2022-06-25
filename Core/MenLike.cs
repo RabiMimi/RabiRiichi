@@ -1,3 +1,4 @@
+using RabiRiichi.Generated.Core;
 using RabiRiichi.Util;
 using System;
 using System.Collections.Generic;
@@ -106,6 +107,12 @@ namespace RabiRiichi.Core {
         public static MenLike From(IEnumerable<Tile> tiles) {
             return From(tiles.ToGameTiles());
         }
+
+        public MenLikeMsg ToProto() {
+            var msg = new MenLikeMsg();
+            msg.Tiles.AddRange(this.Select(t => t.ToProto()));
+            return msg;
+        }
     }
 
     /// <summary> 顺子 </summary>
@@ -155,11 +162,11 @@ namespace RabiRiichi.Core {
             if (!kanSource.HasValue) {
                 // 检查是哪种杠
                 if (IsClose) {
-                    kanSource = TileSource.AnKan;
+                    kanSource = TileSource.Ankan;
                 } else if (tiles.Any(t => t.formTime != tiles.First().formTime)) {
-                    kanSource = TileSource.KaKan;
+                    kanSource = TileSource.Kakan;
                 } else {
-                    kanSource = TileSource.DaiMinKan;
+                    kanSource = TileSource.Daiminkan;
                 }
             }
             KanSource = kanSource.Value;

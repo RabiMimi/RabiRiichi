@@ -1,5 +1,6 @@
 using RabiRiichi.Communication;
 using RabiRiichi.Core.Config;
+using RabiRiichi.Generated.Patterns;
 using RabiRiichi.Util;
 using System;
 
@@ -88,6 +89,17 @@ namespace RabiRiichi.Patterns {
 
         public static bool operator >(ScoreCalcResult lhs, ScoreCalcResult rhs) {
             return lhs.CompareTo(rhs) > 0;
+        }
+
+        public ScoreCalcResultMsg ToProto() {
+            return new ScoreCalcResultMsg {
+                Han = han,
+                Yaku = yaku,
+                Fu = fu,
+                Yakuman = yakuman,
+                KazoeYakuman = KazoeYakuman,
+                FinalYakuman = FinalYakuman,
+            };
         }
     }
 }

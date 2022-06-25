@@ -9,7 +9,7 @@ namespace RabiRiichi.Patterns {
             BaseOn(allBasePatterns);
         }
         public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
-            if (incoming.discardInfo?.reason == DiscardReason.ChanKan) {
+            if (incoming.discardInfo?.reason == DiscardReason.Chankan) {
                 scores.Add(new Scoring(ScoringType.Han, 1, this));
                 return true;
             }

@@ -1,19 +1,10 @@
 using RabiRiichi.Communication;
+using RabiRiichi.Generated.Events.InGame;
 using RabiRiichi.Util;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace RabiRiichi.Events.InGame {
-    public enum ScoreTransferReason {
-        Ron,
-        Tsumo,
-        Ryuukyoku,
-        NagashiMangan,
-        Riichi,
-        Honba,
-        Pao,
-    }
-
     [RabiMessage]
     public class ScoreTransfer {
         [RabiBroadcast] public int from;
@@ -29,6 +20,15 @@ namespace RabiRiichi.Events.InGame {
             } else {
                 this.points = points;
             }
+        }
+
+        public ScoreTransferMsg ToProto() {
+            return new ScoreTransferMsg {
+                From = from,
+                To = to,
+                Points = points,
+                Reason = reason,
+            };
         }
     }
 
@@ -56,6 +56,14 @@ namespace RabiRiichi.Events.InGame {
         public CalcScoreEvent(EventBase parent, AgariInfoList agariInfos) : base(parent) {
             this.agariInfos = agariInfos;
             scoreChange = new ScoreTransferList();
+        }
+
+        public CalcScoreEventMsg ToProto() {
+            var ret = new CalcScoreEventMsg {
+                AgariInfos = agariInfos.ToProto(),
+            };
+            ret.ScoreChange.AddRange(scoreChange.Select(x => x.ToProto()));
+            return ret;
         }
     }
 }

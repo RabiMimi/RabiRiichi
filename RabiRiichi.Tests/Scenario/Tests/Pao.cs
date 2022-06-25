@@ -232,7 +232,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
 
         #region Failed
         [TestMethod]
-        public async Task FailPao_RonButAnKan() {
+        public async Task FailPao_RonButAnkan() {
             var scenario = new ScenarioBuilder()
                 .WithPlayer(1, playerBuilder => playerBuilder
                     .SetFreeTiles("9s")

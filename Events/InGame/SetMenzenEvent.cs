@@ -1,4 +1,5 @@
 using RabiRiichi.Communication;
+using RabiRiichi.Generated.Events.InGame;
 
 namespace RabiRiichi.Events.InGame {
     public class SetMenzenEvent : BroadcastPlayerEvent {
@@ -10,6 +11,13 @@ namespace RabiRiichi.Events.InGame {
 
         public SetMenzenEvent(EventBase parent, int playerId, bool menzen) : base(parent, playerId) {
             this.menzen = menzen;
+        }
+
+        public SetMenzenEventMsg ToProto() {
+            return new SetMenzenEventMsg {
+                PlayerId = playerId,
+                Menzen = menzen,
+            };
         }
     }
 }

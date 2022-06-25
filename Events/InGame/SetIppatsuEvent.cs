@@ -1,6 +1,6 @@
 
 using RabiRiichi.Communication;
-
+using RabiRiichi.Generated.Events.InGame;
 
 namespace RabiRiichi.Events.InGame {
     public class SetIppatsuEvent : BroadcastPlayerEvent {
@@ -12,6 +12,13 @@ namespace RabiRiichi.Events.InGame {
 
         public SetIppatsuEvent(EventBase parent, int playerId, bool ippatsu) : base(parent, playerId) {
             this.ippatsu = ippatsu;
+        }
+
+        public SetIppatsuEventMsg ToProto() {
+            return new SetIppatsuEventMsg {
+                PlayerId = playerId,
+                Ippatsu = ippatsu,
+            };
         }
     }
 }

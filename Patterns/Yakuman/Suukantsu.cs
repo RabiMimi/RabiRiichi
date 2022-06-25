@@ -25,7 +25,7 @@ namespace RabiRiichi.Patterns {
                 return false;
             }
             var lastGroup = kans[^1];
-            if (lastGroup.KanSource != TileSource.DaiMinKan) {
+            if (lastGroup.KanSource != TileSource.Daiminkan) {
                 return false;
             }
             if (PaoUtil.TryGetPaoPlayer(lastGroup, out int paoPlayer)) {

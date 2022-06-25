@@ -1,4 +1,5 @@
 using RabiRiichi.Communication;
+using RabiRiichi.Generated.Events.InGame;
 
 namespace RabiRiichi.Events.InGame {
     public class NextPlayerEvent : BroadcastPlayerEvent {
@@ -9,5 +10,12 @@ namespace RabiRiichi.Events.InGame {
         #endregion
 
         public NextPlayerEvent(EventBase parent, int playerId) : base(parent, playerId) { }
+
+        public NextPlayerEventMsg ToProto() {
+            return new NextPlayerEventMsg {
+                PlayerId = playerId,
+                NextPlayerId = nextPlayerId,
+            };
+        }
     }
 }

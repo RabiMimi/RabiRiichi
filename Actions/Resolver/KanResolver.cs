@@ -38,7 +38,7 @@ namespace RabiRiichi.Actions.Resolver {
                 result.RemoveAll((gameTiles) => {
                     // 假装杠了
                     hand.freeTiles.RemoveAll(tile => gameTiles.Contains(tile));
-                    var kan = new Kan(gameTiles, TileSource.AnKan);
+                    var kan = new Kan(gameTiles, TileSource.Ankan);
                     hand.called.Add(kan);
                     // 检查听牌
                     var newTenpai = hand.Tenpai;

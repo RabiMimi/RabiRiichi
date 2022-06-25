@@ -1,5 +1,6 @@
 using RabiRiichi.Communication;
 using RabiRiichi.Core;
+using RabiRiichi.Generated.Events.InGame;
 
 namespace RabiRiichi.Events.InGame {
     public class SetRiichiEvent : BroadcastPlayerEvent {
@@ -13,6 +14,14 @@ namespace RabiRiichi.Events.InGame {
         public SetRiichiEvent(EventBase parent, int playerId, GameTile riichiTile, bool wRiichi) : base(parent, playerId) {
             this.riichiTile = riichiTile;
             this.wRiichi = wRiichi;
+        }
+
+        public SetRiichiEventMsg ToProto() {
+            return new SetRiichiEventMsg {
+                PlayerId = playerId,
+                RiichiTile = riichiTile.ToProto(),
+                WRiichi = wRiichi,
+            };
         }
     }
 }

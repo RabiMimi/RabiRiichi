@@ -1,4 +1,5 @@
 using RabiRiichi.Communication;
+using RabiRiichi.Generated.Events.InGame;
 
 namespace RabiRiichi.Events.InGame {
     public class BeginGameEvent : EventBase {
@@ -17,6 +18,14 @@ namespace RabiRiichi.Events.InGame {
             this.round = round;
             this.dealer = dealer;
             this.honba = honba;
+        }
+
+        public BeginGameEventMsg ToProto() {
+            return new BeginGameEventMsg {
+                Round = round,
+                Dealer = dealer,
+                Honba = honba,
+            };
         }
     }
 }

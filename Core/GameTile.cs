@@ -1,45 +1,8 @@
 ﻿using RabiRiichi.Communication;
+using RabiRiichi.Generated.Core;
 using System;
 
 namespace RabiRiichi.Core {
-    public enum TileSource {
-        None = 0,
-        /// <summary> 王牌 </summary>
-        Wanpai = 1,
-        /// <summary> 牌山 </summary>
-        Wall = 2,
-        /// <summary> 手牌 </summary>
-        Hand = 3,
-        /// <summary> 弃牌 </summary>
-        Discard = 4,
-        /// <summary> 吃 </summary>
-        Chii = 5,
-        /// <summary> 碰 </summary>
-        Pon = 6,
-        /// <summary> 加杠 </summary>
-        KaKan = 7,
-        /// <summary> 暗杠 </summary>
-        AnKan = 8,
-        /// <summary> 大明杠 </summary>
-        DaiMinKan = 9,
-    }
-
-    public enum DiscardReason {
-        None = 0,
-        /// <summary> 抽牌 </summary>
-        Draw = 1,
-        /// <summary> 抽岭上 </summary>
-        DrawRinshan = 2,
-        /// <summary> 吃 </summary>
-        Chii = 3,
-        /// <summary> 碰 </summary>
-        Pon = 4,
-        /// <summary> 仅用于抢杠计算，非实质弃牌，而是加杠/暗杠的牌 </summary>
-        ChanKan = 5,
-        /// <summary> 非实质弃牌，仅用于假设计算 </summary>
-        Pretend = 6,
-    }
-
     [RabiMessage]
     public class DiscardInfo {
         /// <summary> 哪个玩家的弃牌 </summary>
@@ -57,6 +20,13 @@ namespace RabiRiichi.Core {
             this.time = time;
         }
 
+        public DiscardInfoMsg ToProto() {
+            return new DiscardInfoMsg {
+                From = from,
+                Reason = reason,
+                Time = time,
+            };
+        }
     }
 
     [RabiMessage]
@@ -125,6 +95,16 @@ namespace RabiRiichi.Core {
 
         public override string ToString() {
             return tile.ToString();
+        }
+
+        public GameTileMsg ToProto() {
+            return new GameTileMsg {
+                Tile = tile.Val,
+                PlayerId = playerId,
+                DiscardInfo = discardInfo?.ToProto(),
+                FormTime = formTime,
+                Source = source,
+            };
         }
     }
 }

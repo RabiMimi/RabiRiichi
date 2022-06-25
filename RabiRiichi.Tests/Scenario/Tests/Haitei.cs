@@ -30,7 +30,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
         }
 
         [TestMethod]
-        public async Task Haitei_CannotKaKan() {
+        public async Task Haitei_CannotKakan() {
             var scenario = new ScenarioBuilder()
                 .WithPlayer(1, playerBuilder => playerBuilder
                     .SetFreeTiles("19m23356789s")
@@ -93,7 +93,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
         }
 
         [TestMethod]
-        public async Task NoHaiteiRaoyueWithAnKan() {
+        public async Task NoHaiteiRaoyueWithAnkan() {
             var scenario = new ScenarioBuilder()
                 .WithPlayer(1, playerBuilder => playerBuilder
                     .SetFreeTiles("9m455667999s")
@@ -129,7 +129,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
         }
 
         [TestMethod]
-        public async Task IshiueSannenWithAnKan() {
+        public async Task IshiueSannenWithAnkan() {
             var scenario = new ScenarioBuilder()
                 .WithConfig(config => config.Setup(
                     setup => setup.AddExtraStdPattern<IshiueSannen>()))
@@ -191,7 +191,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
         }
 
         [TestMethod]
-        public async Task SuccessHouteiRaoyuiWithAnKan() {
+        public async Task SuccessHouteiRaoyuiWithAnkan() {
             var scenario = new ScenarioBuilder()
                 .WithPlayer(1, playerBuilder => playerBuilder
                     .SetFreeTiles("9m455667999s")

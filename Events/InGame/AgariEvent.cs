@@ -1,5 +1,6 @@
 using RabiRiichi.Communication;
 using RabiRiichi.Core;
+using RabiRiichi.Generated.Events.InGame;
 using RabiRiichi.Patterns;
 using System.Collections;
 using System.Collections.Generic;
@@ -14,6 +15,13 @@ namespace RabiRiichi.Events.InGame {
         public AgariInfo(int playerId, ScoreStorage scores) {
             this.playerId = playerId;
             this.scores = scores;
+        }
+
+        public AgariInfoMsg ToProto() {
+            return new AgariInfoMsg {
+                PlayerId = playerId,
+                Scores = scores.ToProto(),
+            };
         }
     }
 
@@ -38,6 +46,15 @@ namespace RabiRiichi.Events.InGame {
 
         public int Count => agariInfos.Count;
         public AgariInfo this[int index] => agariInfos[index];
+
+        public AgariInfoListMsg ToProto() {
+            var ret = new AgariInfoListMsg {
+                FromPlayer = fromPlayer,
+                Incoming = incoming.ToProto(),
+            };
+            ret.AgariInfos.Add(agariInfos.Select(x => x.ToProto()));
+            return ret;
+        }
     }
 
     [RabiMessage]
@@ -68,6 +85,14 @@ namespace RabiRiichi.Events.InGame {
 
         public AgariEvent(EventBase parent, AgariInfoList info) : base(parent) {
             agariInfos = info;
+        }
+
+        public AgariEventMsg ToProto() {
+            var ret = new AgariEventMsg {
+                IsTsumo = isTsumo,
+                AgariInfos = agariInfos.ToProto(),
+            };
+            return ret;
         }
     }
 }

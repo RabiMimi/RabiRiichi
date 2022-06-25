@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 namespace RabiRiichi.Events.InGame.Listener {
     public static class DiscardTileListener {
         public static Task ExecuteDiscardTile(DiscardTileEvent ev) {
-            ev.player.hand.Play(ev.tile, ev.reason);
+            ev.player.hand.Play(ev.discarded, ev.reason);
             var resolvers = GetDiscardTileResolvers(ev.game);
             foreach (var resolver in resolvers) {
-                resolver.Resolve(ev.player, ev.tile, ev.waitEvent.inquiry);
+                resolver.Resolve(ev.player, ev.discarded, ev.waitEvent.inquiry);
             }
             AddPlayerAction(ev);
             ev.Q.Queue(ev.waitEvent);
@@ -22,22 +22,22 @@ namespace RabiRiichi.Events.InGame.Listener {
             var ev = discardEv.waitEvent;
             ev.inquiry.AddHandler<ChiiAction>((action) => {
                 var option = (ChooseTilesActionOption)action.chosen;
-                eventBuilder.AddEvent(new ClaimTileEvent(ev, action.playerId, new Shun(option.tiles), discardEv.tile));
+                eventBuilder.AddEvent(new ClaimTileEvent(ev, action.playerId, new Shun(option.tiles), discardEv.discarded));
             });
             ev.inquiry.AddHandler<PonAction>((action) => {
                 var option = (ChooseTilesActionOption)action.chosen;
-                eventBuilder.AddEvent(new ClaimTileEvent(ev, action.playerId, new Kou(option.tiles), discardEv.tile));
+                eventBuilder.AddEvent(new ClaimTileEvent(ev, action.playerId, new Kou(option.tiles), discardEv.discarded));
             });
             ev.inquiry.AddHandler<KanAction>((action) => {
                 var option = (ChooseTilesActionOption)action.chosen;
-                eventBuilder.AddEvent(new ClaimTileEvent(ev, action.playerId, new Kan(option.tiles), discardEv.tile));
+                eventBuilder.AddEvent(new ClaimTileEvent(ev, action.playerId, new Kan(option.tiles), discardEv.discarded));
             });
             ev.inquiry.AddHandler<RonAction>((action) => {
-                eventBuilder.AddAgari(ev, discardEv.playerId, discardEv.tile, action.agariInfo);
+                eventBuilder.AddAgari(ev, discardEv.playerId, discardEv.discarded, action.agariInfo);
             });
             ev.OnFinish += () => {
                 if (discardEv is RiichiEvent) {
-                    var riichiEv = new SetRiichiEvent(discardEv, discardEv.playerId, discardEv.tile, ev.game.IsFirstJun);
+                    var riichiEv = new SetRiichiEvent(discardEv, discardEv.playerId, discardEv.discarded, ev.game.IsFirstJun);
                     // 巡目增加说明立直牌被鸣牌或进入下一个玩家的回合，更新立直状态
                     // 如果立直牌被荣和，立直棒在和后才会放
                     new EventListener<IncreaseJunEvent>(ev.bus)

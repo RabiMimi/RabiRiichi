@@ -1,6 +1,7 @@
 using RabiRiichi.Actions;
 using RabiRiichi.Actions.Resolver;
 using RabiRiichi.Core;
+using RabiRiichi.Generated.Core;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -8,7 +9,7 @@ namespace RabiRiichi.Events.InGame.Listener {
     public static class KanListener {
         public static Task ExecuteKan(KanEvent ev) {
             // Pretend that kan tile is discarded to resolve chankan, and recover state later
-            ev.player.hand.Play(ev.incoming, DiscardReason.ChanKan);
+            ev.player.hand.Play(ev.incoming, DiscardReason.Chankan);
 
             // Resolve chankan
             var resolvers = GetKanResolvers(ev.game, ev.kanSource);
@@ -34,8 +35,8 @@ namespace RabiRiichi.Events.InGame.Listener {
 
         private static IEnumerable<ResolverBase> GetKanResolvers(Game game, TileSource kanSource) {
             var resolver = kanSource switch {
-                TileSource.AnKan => game.Get<ChanAnKanResolver>(),
-                TileSource.KaKan => game.Get<ChanKanResolver>(),
+                TileSource.Ankan => game.Get<ChanAnkanResolver>(),
+                TileSource.Kakan => game.Get<ChankanResolver>(),
                 _ => null
             };
             if (resolver != null) {

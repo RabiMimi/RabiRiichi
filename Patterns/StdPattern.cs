@@ -1,11 +1,11 @@
 ﻿using RabiRiichi.Communication;
 using RabiRiichi.Core;
 using RabiRiichi.Events.InGame;
+using RabiRiichi.Generated.Patterns;
 using RabiRiichi.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
 
 namespace RabiRiichi.Patterns {
     /// <summary> 用于包牌计算 </summary>
@@ -59,17 +59,6 @@ namespace RabiRiichi.Patterns {
         }
     }
 
-    public enum ScoringType {
-        /// <summary> 番 </summary>
-        Han,
-        /// <summary> 奖励番 </summary>
-        BonusHan,
-        /// <summary> 符 </summary>
-        Fu,
-        /// <summary> 役满 </summary>
-        Yakuman,
-    }
-
     [Flags]
     public enum PatternMask {
         None = 0,
@@ -94,6 +83,14 @@ namespace RabiRiichi.Patterns {
             Type = type;
             Val = val;
             Source = source;
+        }
+
+        public ScoringMsg ToProto() {
+            return new ScoringMsg {
+                Type = Type,
+                Val = Val,
+                Src = Src
+            };
         }
     }
 

@@ -1,4 +1,5 @@
 using RabiRiichi.Communication;
+using RabiRiichi.Generated.Events.InGame;
 
 namespace RabiRiichi.Events.InGame {
     public class NextGameEvent : EventBase {
@@ -15,5 +16,14 @@ namespace RabiRiichi.Events.InGame {
         #endregion
 
         public NextGameEvent(ConcludeGameEvent parent) : base(parent) { }
+
+        public NextGameEventMsg ToProto() {
+            return new NextGameEventMsg {
+                NextRound = nextRound,
+                NextDealer = nextDealer,
+                NextHonba = nextHonba,
+                RiichiStick = riichiStick,
+            };
+        }
     }
 }

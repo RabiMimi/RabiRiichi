@@ -112,15 +112,15 @@ namespace RabiRiichi.Core.Config {
         /// <summary> 表宝牌 </summary>
         Dora = InitialDora | KanDora,
         /// <summary> 大明杠宝牌即开 </summary>
-        InstantRevealAfterDaiMinKan = 1 << 4,
+        InstantRevealAfterDaiminkan = 1 << 4,
         /// <summary> 加杠宝牌即开 </summary>
-        InstantRevealAfterKaKan = 1 << 5,
+        InstantRevealAfterKakan = 1 << 5,
         /// <summary> 暗杠宝牌即开 </summary>
-        InstantRevealAfterAnKan = 1 << 6,
+        InstantRevealAfterAnkan = 1 << 6,
         /// <summary> 所有 </summary>
-        All = Dora | Uradora | InstantRevealAfterDaiMinKan | InstantRevealAfterKaKan | InstantRevealAfterAnKan,
+        All = Dora | Uradora | InstantRevealAfterDaiminkan | InstantRevealAfterKakan | InstantRevealAfterAnkan,
         /// <summary> 默认值 </summary>
-        Default = Dora | Uradora | InstantRevealAfterAnKan,
+        Default = Dora | Uradora | InstantRevealAfterAnkan,
     }
 
     /// <summary> 和牌选项 </summary>

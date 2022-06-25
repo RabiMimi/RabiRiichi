@@ -1,5 +1,7 @@
 using RabiRiichi.Communication;
 using RabiRiichi.Core;
+using RabiRiichi.Generated.Core;
+using RabiRiichi.Generated.Events.InGame;
 
 namespace RabiRiichi.Events.InGame {
     public class LateClaimTileEvent : BroadcastPlayerEvent {
@@ -17,6 +19,13 @@ namespace RabiRiichi.Events.InGame {
         public LateClaimTileEvent(ClaimTileEvent parent) : base(parent, parent.playerId) {
             waitEvent = new WaitPlayerActionEvent(this);
             reason = parent.reason;
+        }
+
+        public LateClaimTileEventMsg ToProto() {
+            return new LateClaimTileEventMsg {
+                PlayerId = playerId,
+                Reason = reason,
+            };
         }
     }
 }

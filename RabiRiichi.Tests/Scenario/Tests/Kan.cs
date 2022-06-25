@@ -14,7 +14,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
     public class ScenarioKan {
         #region Kan
         [TestMethod]
-        public async Task SuccessDaiMinKan() {
+        public async Task SuccessDaiminkan() {
             var scenario = new ScenarioBuilder()
                 .WithPlayer(0, playerBuilder => {
                     playerBuilder.SetFreeTiles("11112223333s19m");
@@ -40,10 +40,10 @@ namespace RabiRiichi.Tests.Scenario.Tests {
             }).AssertAutoFinish();
 
             scenario.AssertEvent<AddKanEvent>((ev) => {
-                Assert.AreEqual(TileSource.DaiMinKan, ev.kanSource);
+                Assert.AreEqual(TileSource.Daiminkan, ev.kanSource);
             }).AssertNoEvent<RevealDoraEvent>();
 
-            // AnKan after DaiMinKan
+            // Ankan after Daiminkan
             (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
                 playerInquiry
                     .AssertAction<PlayTileAction>()
@@ -54,14 +54,14 @@ namespace RabiRiichi.Tests.Scenario.Tests {
             }).AssertAutoFinish();
 
             scenario.AssertEvent<AddKanEvent>((ev) => {
-                Assert.AreEqual(TileSource.AnKan, ev.kanSource);
+                Assert.AreEqual(TileSource.Ankan, ev.kanSource);
             }).AssertEvent<RevealDoraEvent>((ev) => {
                 Assert.AreEqual(0, ev.playerId);
             }).AssertEvent<RevealDoraEvent>((ev) => {
                 Assert.AreEqual(0, ev.playerId);
             });
 
-            // AnKan after AnKan
+            // Ankan after Ankan
             (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
                 playerInquiry
                     .AssertAction<PlayTileAction>()
@@ -72,12 +72,12 @@ namespace RabiRiichi.Tests.Scenario.Tests {
             }).AssertAutoFinish();
 
             scenario.AssertEvent<AddKanEvent>((ev) => {
-                Assert.AreEqual(TileSource.AnKan, ev.kanSource);
+                Assert.AreEqual(TileSource.Ankan, ev.kanSource);
             }).AssertEvent<RevealDoraEvent>((ev) => {
                 Assert.AreEqual(0, ev.playerId);
             });
 
-            // 4th AnKan
+            // 4th Ankan
             (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
                 playerInquiry
                     .AssertAction<PlayTileAction>()
@@ -88,7 +88,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
             }).AssertAutoFinish();
 
             scenario.AssertEvent<AddKanEvent>((ev) => {
-                Assert.AreEqual(TileSource.AnKan, ev.kanSource);
+                Assert.AreEqual(TileSource.Ankan, ev.kanSource);
             }).AssertEvent<RevealDoraEvent>((ev) => {
                 Assert.AreEqual(0, ev.playerId);
             });
@@ -108,7 +108,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
                 player.hand.called.AssertContains("1111m");
             });
 
-            // Other player plays waited tile, not allowed to AnKan
+            // Other player plays waited tile, not allowed to Ankan
             (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
                 playerInquiry
                     .ChooseTile<PlayTileAction>("9m")
@@ -132,7 +132,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
         }
 
         [TestMethod]
-        public async Task SuccessAnKan() {
+        public async Task SuccessAnkan() {
             var scenario = new ScenarioBuilder()
                 .WithPlayer(0, playerBuilder => {
                     playerBuilder.SetFreeTiles("11112223334s19m");
@@ -141,7 +141,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
                 .WithWall(wall => wall.AddRinshan("2s"))
                 .Start(1);
 
-            // DaiMinKan
+            // Daiminkan
             (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
                 playerInquiry.ChooseTile<PlayTileAction>("3s");
             }).AssertAutoFinish();
@@ -158,11 +158,11 @@ namespace RabiRiichi.Tests.Scenario.Tests {
 
             scenario
                 .AssertEvent<AddKanEvent>((ev) => {
-                    Assert.AreEqual(TileSource.DaiMinKan, ev.kanSource);
+                    Assert.AreEqual(TileSource.Daiminkan, ev.kanSource);
                 })
                 .AssertNoEvent<RevealDoraEvent>();
 
-            // When tsumo, ok to AnKan but not DaiMinKan
+            // When tsumo, ok to Ankan but not Daiminkan
             (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
                 playerInquiry
                     .AssertAction<PlayTileAction>()
@@ -173,11 +173,11 @@ namespace RabiRiichi.Tests.Scenario.Tests {
                     .AssertNoMoreActions();
             }).AssertAutoFinish();
 
-            // Dora is revealed immediately after AnKan
-            // Dora is revealed after playing a tile when DaiMinKan
+            // Dora is revealed immediately after Ankan
+            // Dora is revealed after playing a tile when Daiminkan
             scenario
                 .AssertEvent<AddKanEvent>(ev => {
-                    Assert.AreEqual(TileSource.AnKan, ev.kanSource);
+                    Assert.AreEqual(TileSource.Ankan, ev.kanSource);
                 })
                 .AssertEvent<RevealDoraEvent>(ev => {
                     Assert.AreEqual(0, ev.playerId);
@@ -186,7 +186,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
                     Assert.AreEqual(0, ev.playerId);
                 });
 
-            // Can AnKan after AnKan
+            // Can Ankan after Ankan
             (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
                 playerInquiry
                     .AssertAction<PlayTileAction>()
@@ -198,7 +198,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
 
             await scenario
                 .AssertEvent<AddKanEvent>((ev) => {
-                    Assert.AreEqual(TileSource.AnKan, ev.kanSource);
+                    Assert.AreEqual(TileSource.Ankan, ev.kanSource);
                 })
                 .AssertEvent<RevealDoraEvent>(ev => {
                     Assert.AreEqual(0, ev.playerId);
@@ -214,7 +214,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
         #endregion
 
         #region SuukanSanra
-        private static async Task<Scenario> BuildSuuKanSanRaFromKaKan(Action<ScenarioBuilder> setup = null) {
+        private static async Task<Scenario> BuildSuuKanSanRaFromKakan(Action<ScenarioBuilder> setup = null) {
             var scenarioBuilder = new ScenarioBuilder()
                 .WithPlayer(0, playerBuilder => {
                     playerBuilder.SetFreeTiles("111122339s1239m");
@@ -262,7 +262,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
                 playerInquiry.ChooseTile<PlayTileAction>("9s");
             }).AssertAutoFinish();
 
-            // KaKan 3s
+            // Kakan 3s
             (await scenario.WaitPlayerTurn(0)).ForPlayer(0, playerInquiry => {
                 playerInquiry
                     .AssertAction<PlayTileAction>()
@@ -273,10 +273,10 @@ namespace RabiRiichi.Tests.Scenario.Tests {
             }).AssertAutoFinish();
 
             scenario.AssertEvent<AddKanEvent>((ev) => {
-                Assert.AreEqual(TileSource.KaKan, ev.kanSource);
+                Assert.AreEqual(TileSource.Kakan, ev.kanSource);
             }).AssertNoEvent<RevealDoraEvent>();
 
-            // AnKan 1s
+            // Ankan 1s
             (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
                 playerInquiry
                     .AssertAction<PlayTileAction>()
@@ -287,14 +287,14 @@ namespace RabiRiichi.Tests.Scenario.Tests {
             }).AssertAutoFinish();
 
             scenario.AssertEvent<AddKanEvent>((ev) => {
-                Assert.AreEqual(TileSource.AnKan, ev.kanSource);
+                Assert.AreEqual(TileSource.Ankan, ev.kanSource);
             }).AssertEvent<RevealDoraEvent>(ev => {
                 Assert.AreEqual(0, ev.playerId);
             }).AssertEvent<RevealDoraEvent>(ev => {
                 Assert.AreEqual(0, ev.playerId);
             });
 
-            // KaKan 2s
+            // Kakan 2s
             (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
                 playerInquiry
                     .AssertAction<PlayTileAction>()
@@ -305,7 +305,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
             }).AssertAutoFinish();
 
             scenario.AssertEvent<AddKanEvent>((ev) => {
-                Assert.AreEqual(TileSource.KaKan, ev.kanSource);
+                Assert.AreEqual(TileSource.Kakan, ev.kanSource);
             }).AssertNoEvent<RevealDoraEvent>();
 
             // Play 1p
@@ -319,7 +319,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
                 Assert.AreEqual(0, ev.playerId);
             });
 
-            // DaiMinKan 1p
+            // Daiminkan 1p
             (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
                 playerInquiry
                     .AssertSkip()
@@ -332,7 +332,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
             }).AssertAutoFinish();
 
             scenario.AssertEvent<AddKanEvent>((ev) => {
-                Assert.AreEqual(TileSource.DaiMinKan, ev.kanSource);
+                Assert.AreEqual(TileSource.Daiminkan, ev.kanSource);
             }).AssertNoEvent<RevealDoraEvent>();
 
             // Play 1z
@@ -350,8 +350,8 @@ namespace RabiRiichi.Tests.Scenario.Tests {
         }
 
         [TestMethod]
-        public async Task SuccessKaKan_SuccessSuuKanSanRa() {
-            var scenario = await BuildSuuKanSanRaFromKaKan();
+        public async Task SuccessKakan_SuccessSuuKanSanRa() {
+            var scenario = await BuildSuuKanSanRaFromKakan();
 
             // Player 0 does not ron
             (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
@@ -371,8 +371,8 @@ namespace RabiRiichi.Tests.Scenario.Tests {
         }
 
         [TestMethod]
-        public async Task SuccessKaKan_FailSuuKanSanRa() {
-            var scenario = await BuildSuuKanSanRaFromKaKan();
+        public async Task SuccessKakan_FailSuuKanSanRa() {
+            var scenario = await BuildSuuKanSanRaFromKakan();
 
             // Player 0 does not ron
             (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
@@ -394,7 +394,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
 
         [TestMethod]
         public async Task DisabledInConfig_FailSuukanSanra() {
-            var scenario = await BuildSuuKanSanRaFromKaKan(scenarioBuilder => {
+            var scenario = await BuildSuuKanSanRaFromKakan(scenarioBuilder => {
                 scenarioBuilder.WithConfig(config => {
                     config.SetRyuukyokuTrigger(RyuukyokuTrigger.All & ~RyuukyokuTrigger.SuukanSanra);
                 });
@@ -417,7 +417,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
 
         #region Failed Kan
         [TestMethod]
-        public async Task FailAnKanAfterChii() {
+        public async Task FailAnkanAfterChii() {
             var scenario = new ScenarioBuilder()
                 .WithPlayer(0, playerBuilder => {
                     playerBuilder.SetFreeTiles("1111223333s129m");
@@ -444,7 +444,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
         }
 
         [TestMethod]
-        public async Task FailAnKanAfterPon() {
+        public async Task FailAnkanAfterPon() {
             var scenario = new ScenarioBuilder()
                 .WithPlayer(0, playerBuilder => {
                     playerBuilder.SetFreeTiles("1111223333s129m");
@@ -474,7 +474,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
         #region Chankan
 
         [TestMethod]
-        public async Task SuccessChankan4KaKan() {
+        public async Task SuccessChankan4Kakan() {
             var scenario = new ScenarioBuilder()
                 .WithPlayer(0, playerBuilder => {
                     playerBuilder.SetFreeTiles("111s23456789m11z");
@@ -494,7 +494,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
             }).AssertAutoFinish();
 
             scenario.AssertEvent<KanEvent>((ev) => {
-                Assert.AreEqual(TileSource.KaKan, ev.kanSource);
+                Assert.AreEqual(TileSource.Kakan, ev.kanSource);
             }).AssertNoEvent<RevealDoraEvent>();
 
             (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
@@ -512,7 +512,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
         }
 
         [TestMethod]
-        public async Task SuccessChankan4AnKan_Kokushi() {
+        public async Task SuccessChankan4Ankan_Kokushi() {
             var scenario = new ScenarioBuilder()
                 .WithPlayer(0, playerBuilder => {
                     playerBuilder.SetFreeTiles("19s99m19p1234567z");
@@ -532,7 +532,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
             }).AssertAutoFinish();
 
             scenario.AssertEvent<KanEvent>((ev) => {
-                Assert.AreEqual(TileSource.AnKan, ev.kanSource);
+                Assert.AreEqual(TileSource.Ankan, ev.kanSource);
             }).AssertNoEvent<RevealDoraEvent>();
 
             (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
@@ -551,7 +551,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
         }
 
         [TestMethod]
-        public async Task FailChankan4AnKan_NoKokushi() {
+        public async Task FailChankan4Ankan_NoKokushi() {
             var scenario = new ScenarioBuilder()
                 .WithPlayer(0, playerBuilder => {
                     playerBuilder.SetFreeTiles("111s23456789m11z");
@@ -571,14 +571,14 @@ namespace RabiRiichi.Tests.Scenario.Tests {
             }).AssertAutoFinish();
 
             scenario.AssertEvent<AddKanEvent>((ev) => {
-                Assert.AreEqual(TileSource.AnKan, ev.kanSource);
+                Assert.AreEqual(TileSource.Ankan, ev.kanSource);
             }).AssertEvent<RevealDoraEvent>();
 
             (await scenario.WaitInquiry()).AssertNoActionForPlayer(0);
         }
 
         [TestMethod]
-        public async Task FailChankan4DaiMinKan() {
+        public async Task FailChankan4Daiminkan() {
             var scenario = new ScenarioBuilder()
                 .WithPlayer(0, playerBuilder => {
                     playerBuilder.SetFreeTiles("111s23456789m11z");
@@ -602,7 +602,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
             }).AssertAutoFinish();
 
             scenario.AssertEvent<AddKanEvent>((ev) => {
-                Assert.AreEqual(TileSource.DaiMinKan, ev.kanSource);
+                Assert.AreEqual(TileSource.Daiminkan, ev.kanSource);
             }).AssertNoEvent<RevealDoraEvent>();
 
             (await scenario.WaitInquiry()).AssertNoActionForPlayer(0);
@@ -624,8 +624,8 @@ namespace RabiRiichi.Tests.Scenario.Tests {
         }
 
         [TestMethod]
-        public async Task InstantReveal_DaiMinKan() {
-            var scenario = BuildRevealDoraOption(DoraOption.InstantRevealAfterDaiMinKan);
+        public async Task InstantReveal_Daiminkan() {
+            var scenario = BuildRevealDoraOption(DoraOption.InstantRevealAfterDaiminkan);
 
             (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
                 playerInquiry.ChooseTile<PlayTileAction>("6m");
@@ -645,8 +645,8 @@ namespace RabiRiichi.Tests.Scenario.Tests {
         }
 
         [TestMethod]
-        public async Task DelayedReveal_DaiMinKan() {
-            var scenario = BuildRevealDoraOption(DoraOption.All & ~DoraOption.InstantRevealAfterDaiMinKan);
+        public async Task DelayedReveal_Daiminkan() {
+            var scenario = BuildRevealDoraOption(DoraOption.All & ~DoraOption.InstantRevealAfterDaiminkan);
 
             (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
                 playerInquiry.ChooseTile<PlayTileAction>("6m");
@@ -666,8 +666,8 @@ namespace RabiRiichi.Tests.Scenario.Tests {
         }
 
         [TestMethod]
-        public async Task InstantReveal_KaKan() {
-            var scenario = BuildRevealDoraOption(DoraOption.InstantRevealAfterKaKan);
+        public async Task InstantReveal_Kakan() {
+            var scenario = BuildRevealDoraOption(DoraOption.InstantRevealAfterKakan);
 
             (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
                 playerInquiry.ChooseTiles<KanAction>("2222s");
@@ -683,8 +683,8 @@ namespace RabiRiichi.Tests.Scenario.Tests {
         }
 
         [TestMethod]
-        public async Task DelayedReveal_KaKan() {
-            var scenario = BuildRevealDoraOption(DoraOption.All & ~DoraOption.InstantRevealAfterKaKan);
+        public async Task DelayedReveal_Kakan() {
+            var scenario = BuildRevealDoraOption(DoraOption.All & ~DoraOption.InstantRevealAfterKakan);
 
             (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
                 playerInquiry.ChooseTiles<KanAction>("2222s");
@@ -700,8 +700,8 @@ namespace RabiRiichi.Tests.Scenario.Tests {
         }
 
         [TestMethod]
-        public async Task InstantReveal_AnKan() {
-            var scenario = BuildRevealDoraOption(DoraOption.InstantRevealAfterAnKan);
+        public async Task InstantReveal_Ankan() {
+            var scenario = BuildRevealDoraOption(DoraOption.InstantRevealAfterAnkan);
 
             (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
                 playerInquiry.ChooseTiles<KanAction>("1111s");
@@ -717,8 +717,8 @@ namespace RabiRiichi.Tests.Scenario.Tests {
         }
 
         [TestMethod]
-        public async Task DelayedReveal_AnKan() {
-            var scenario = BuildRevealDoraOption(DoraOption.All & ~DoraOption.InstantRevealAfterAnKan);
+        public async Task DelayedReveal_Ankan() {
+            var scenario = BuildRevealDoraOption(DoraOption.All & ~DoraOption.InstantRevealAfterAnkan);
 
             (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
                 playerInquiry.ChooseTiles<KanAction>("1111s");
@@ -792,7 +792,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
             }).AssertAutoFinish();
 
             await scenario.AssertEvent<AddKanEvent>((ev) => {
-                Assert.AreEqual(TileSource.AnKan, ev.kanSource);
+                Assert.AreEqual(TileSource.Ankan, ev.kanSource);
             }).AssertEvent<RevealDoraEvent>(ev => {
                 Assert.IsNull(ev.dora);
             }).Resolve();

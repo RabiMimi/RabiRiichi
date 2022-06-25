@@ -1,4 +1,5 @@
-﻿using RabiRiichi.Patterns;
+﻿using RabiRiichi.Generated.Core;
+using RabiRiichi.Patterns;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -98,7 +99,7 @@ namespace RabiRiichi.Core {
             tile.discardInfo = new DiscardInfo(player, reason, game.info.timeStamp.Next);
             tile.source = TileSource.Discard;
             freeTiles.Remove(tile);
-            if (reason != DiscardReason.ChanKan && reason != DiscardReason.Pretend) {
+            if (reason != DiscardReason.Chankan && reason != DiscardReason.Pretend) {
                 // Do not consider kan tile to be discarded
                 discarded.Add(tile);
             }
@@ -131,14 +132,14 @@ namespace RabiRiichi.Core {
         }
 
         public void AddKan(Kan tiles) {
-            AddGroup(tiles, tiles.IsClose ? TileSource.AnKan : TileSource.DaiMinKan);
+            AddGroup(tiles, tiles.IsClose ? TileSource.Ankan : TileSource.Daiminkan);
         }
 
-        public void KaKan(Kan tiles) {
+        public void Kakan(Kan tiles) {
             var original = called.OfType<Kou>().FirstOrDefault(gr => gr.Contains(tiles[0]) || gr.Contains(tiles[1]));
             Debug.Assert(original != null, "加杠了个空气");
             called.Remove(original);
-            AddGroup(tiles, TileSource.KaKan);
+            AddGroup(tiles, TileSource.Kakan);
         }
     }
 }

@@ -25,15 +25,15 @@ namespace RabiRiichi.Generated.Events.InGame {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
             "CiJFdmVudHMvSW5HYW1lL0NsYWltVGlsZUV2ZW50LnByb3RvGhNDb3JlL0dh",
-            "bWVUaWxlLnByb3RvGhJDb3JlL01lbkxpa2UucHJvdG8iawoRQ2xhaW1UaWxl",
-            "RXZlbnRNc2cSGgoEdGlsZRgBIAEoCzIMLkdhbWVUaWxlTXNnEhoKBWdyb3Vw",
-            "GAIgASgLMgsuTWVuTGlrZU1zZxIeCgZyZWFzb24YAyABKA4yDi5EaXNjYXJk",
-            "UmVhc29uQiWqAiJSYWJpUmlpY2hpLkdlbmVyYXRlZC5FdmVudHMuSW5HYW1l",
-            "YgZwcm90bzM="));
+            "bWVUaWxlLnByb3RvGhJDb3JlL01lbkxpa2UucHJvdG8ifgoRQ2xhaW1UaWxl",
+            "RXZlbnRNc2cSEQoJcGxheWVyX2lkGAEgASgFEhoKBHRpbGUYAiABKAsyDC5H",
+            "YW1lVGlsZU1zZxIaCgVncm91cBgDIAEoCzILLk1lbkxpa2VNc2cSHgoGcmVh",
+            "c29uGAQgASgOMg4uRGlzY2FyZFJlYXNvbkIlqgIiUmFiaVJpaWNoaS5HZW5l",
+            "cmF0ZWQuRXZlbnRzLkluR2FtZWIGcHJvdG8z"));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::RabiRiichi.Generated.Core.GameTileReflection.Descriptor, global::RabiRiichi.Generated.Core.MenLikeReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::RabiRiichi.Generated.Events.InGame.ClaimTileEventMsg), global::RabiRiichi.Generated.Events.InGame.ClaimTileEventMsg.Parser, new[]{ "Tile", "Group", "Reason" }, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::RabiRiichi.Generated.Events.InGame.ClaimTileEventMsg), global::RabiRiichi.Generated.Events.InGame.ClaimTileEventMsg.Parser, new[]{ "PlayerId", "Tile", "Group", "Reason" }, null, null, null)
           }));
     }
     #endregion
@@ -65,6 +65,7 @@ namespace RabiRiichi.Generated.Events.InGame {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public ClaimTileEventMsg(ClaimTileEventMsg other) : this() {
+      playerId_ = other.playerId_;
       tile_ = other.tile_ != null ? other.tile_.Clone() : null;
       group_ = other.group_ != null ? other.group_.Clone() : null;
       reason_ = other.reason_;
@@ -76,8 +77,19 @@ namespace RabiRiichi.Generated.Events.InGame {
       return new ClaimTileEventMsg(this);
     }
 
+    /// <summary>Field number for the "player_id" field.</summary>
+    public const int PlayerIdFieldNumber = 1;
+    private int playerId_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public int PlayerId {
+      get { return playerId_; }
+      set {
+        playerId_ = value;
+      }
+    }
+
     /// <summary>Field number for the "tile" field.</summary>
-    public const int TileFieldNumber = 1;
+    public const int TileFieldNumber = 2;
     private global::RabiRiichi.Generated.Core.GameTileMsg tile_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public global::RabiRiichi.Generated.Core.GameTileMsg Tile {
@@ -88,7 +100,7 @@ namespace RabiRiichi.Generated.Events.InGame {
     }
 
     /// <summary>Field number for the "group" field.</summary>
-    public const int GroupFieldNumber = 2;
+    public const int GroupFieldNumber = 3;
     private global::RabiRiichi.Generated.Core.MenLikeMsg group_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public global::RabiRiichi.Generated.Core.MenLikeMsg Group {
@@ -99,7 +111,7 @@ namespace RabiRiichi.Generated.Events.InGame {
     }
 
     /// <summary>Field number for the "reason" field.</summary>
-    public const int ReasonFieldNumber = 3;
+    public const int ReasonFieldNumber = 4;
     private global::RabiRiichi.Generated.Core.DiscardReason reason_ = 0;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public global::RabiRiichi.Generated.Core.DiscardReason Reason {
@@ -122,6 +134,7 @@ namespace RabiRiichi.Generated.Events.InGame {
       if (ReferenceEquals(other, this)) {
         return true;
       }
+      if (PlayerId != other.PlayerId) return false;
       if (!object.Equals(Tile, other.Tile)) return false;
       if (!object.Equals(Group, other.Group)) return false;
       if (Reason != other.Reason) return false;
@@ -131,6 +144,7 @@ namespace RabiRiichi.Generated.Events.InGame {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override int GetHashCode() {
       int hash = 1;
+      if (PlayerId != 0) hash ^= PlayerId.GetHashCode();
       if (tile_ != null) hash ^= Tile.GetHashCode();
       if (group_ != null) hash ^= Group.GetHashCode();
       if (Reason != 0) hash ^= Reason.GetHashCode();
@@ -147,16 +161,20 @@ namespace RabiRiichi.Generated.Events.InGame {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void WriteTo(pb::CodedOutputStream output) {
+      if (PlayerId != 0) {
+        output.WriteRawTag(8);
+        output.WriteInt32(PlayerId);
+      }
       if (tile_ != null) {
-        output.WriteRawTag(10);
+        output.WriteRawTag(18);
         output.WriteMessage(Tile);
       }
       if (group_ != null) {
-        output.WriteRawTag(18);
+        output.WriteRawTag(26);
         output.WriteMessage(Group);
       }
       if (Reason != 0) {
-        output.WriteRawTag(24);
+        output.WriteRawTag(32);
         output.WriteEnum((int) Reason);
       }
       if (_unknownFields != null) {
@@ -167,6 +185,9 @@ namespace RabiRiichi.Generated.Events.InGame {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public int CalculateSize() {
       int size = 0;
+      if (PlayerId != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeInt32Size(PlayerId);
+      }
       if (tile_ != null) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(Tile);
       }
@@ -186,6 +207,9 @@ namespace RabiRiichi.Generated.Events.InGame {
     public void MergeFrom(ClaimTileEventMsg other) {
       if (other == null) {
         return;
+      }
+      if (other.PlayerId != 0) {
+        PlayerId = other.PlayerId;
       }
       if (other.tile_ != null) {
         if (tile_ == null) {
@@ -213,21 +237,25 @@ namespace RabiRiichi.Generated.Events.InGame {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
-          case 10: {
+          case 8: {
+            PlayerId = input.ReadInt32();
+            break;
+          }
+          case 18: {
             if (tile_ == null) {
               tile_ = new global::RabiRiichi.Generated.Core.GameTileMsg();
             }
             input.ReadMessage(tile_);
             break;
           }
-          case 18: {
+          case 26: {
             if (group_ == null) {
               group_ = new global::RabiRiichi.Generated.Core.MenLikeMsg();
             }
             input.ReadMessage(group_);
             break;
           }
-          case 24: {
+          case 32: {
             reason_ = (global::RabiRiichi.Generated.Core.DiscardReason) input.ReadEnum();
             break;
           }

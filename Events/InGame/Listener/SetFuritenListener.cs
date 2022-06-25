@@ -1,4 +1,5 @@
 using RabiRiichi.Core;
+using RabiRiichi.Generated.Core;
 using RabiRiichi.Patterns;
 using System;
 using System.Collections.Generic;
@@ -61,10 +62,10 @@ namespace RabiRiichi.Events.InGame.Listener {
             // Check kan type
             var base13_1 = ev.game.Get<Base13_1>();
             OnDiscardOrKan(ev, ev.incoming.tile, hand => {
-                if (ev.kanSource == TileSource.KaKan) {
+                if (ev.kanSource == TileSource.Kakan) {
                     return hand.Tenpai;
                 }
-                if (ev.kanSource != TileSource.AnKan || base13_1 == null) {
+                if (ev.kanSource != TileSource.Ankan || base13_1 == null) {
                     return Tiles.Empty;
                 }
                 if (base13_1.Shanten(hand, ev.incoming, out var tiles, -1) == -1) {
@@ -76,7 +77,7 @@ namespace RabiRiichi.Events.InGame.Listener {
         }
 
         public static Task OnDiscardTile(DiscardTileEvent ev) {
-            OnDiscardOrKan(ev, ev.tile.tile, hand => hand.Tenpai);
+            OnDiscardOrKan(ev, ev.discarded.tile, hand => hand.Tenpai);
             return Task.CompletedTask;
         }
 

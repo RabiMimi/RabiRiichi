@@ -14,7 +14,7 @@ namespace RabiRiichi.Tests.Patterns {
                 .AddFree("345p")
                 .AddFree("456m")
                 .AddFree("22m")
-                .AddAgari("23s", "1s", false, reason: DiscardReason.ChanKan)
+                .AddAgari("23s", "1s", false, reason: DiscardReason.Chankan)
                 .Resolve(true)
                 .ExpectScoring(ScoringType.Han, 1)
                 .NoMore();

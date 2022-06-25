@@ -1,5 +1,7 @@
 ﻿using RabiRiichi.Communication;
 using RabiRiichi.Core;
+using RabiRiichi.Generated.Core;
+using RabiRiichi.Generated.Events.InGame;
 
 namespace RabiRiichi.Events.InGame {
     public class DrawTileEvent : BroadcastPlayerEvent {
@@ -17,6 +19,17 @@ namespace RabiRiichi.Events.InGame {
         public DrawTileEvent(EventBase parent, int playerId, TileSource source) : base(parent, playerId) {
             this.source = source;
             waitEvent = new WaitPlayerActionEvent(this);
+        }
+
+        public DrawTileEventMsg ToProto(int playerId) {
+            var ret = new DrawTileEventMsg {
+                PlayerId = this.playerId,
+                Source = source,
+            };
+            if (this.playerId == playerId) {
+                ret.Tile = tile.ToProto();
+            }
+            return ret;
         }
     }
 }

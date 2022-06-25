@@ -21,9 +21,9 @@ namespace RabiRiichi.Tests.Scenario.Tests {
             }).AssertAutoFinish();
 
             scenario.AssertEvent<RiichiEvent>((ev) => {
-                Assert.AreEqual(TileSource.Discard, ev.tile.source);
+                Assert.AreEqual(TileSource.Discard, ev.discarded.source);
                 Assert.AreEqual(DiscardReason.Draw, ev.reason);
-                ev.tile.tile.AssertEquals(tile);
+                ev.discarded.tile.AssertEquals(tile);
             });
         }
 
@@ -98,7 +98,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
         }
 
         [TestMethod]
-        public async Task NoAnKanIfTenpaiChanges() {
+        public async Task NoAnkanIfTenpaiChanges() {
             var scenario = new ScenarioBuilder()
                 .WithPlayer(1, playerBuilder => {
                     playerBuilder.SetFreeTiles("45667s234m34566p");
@@ -286,7 +286,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
         }
 
         [TestMethod]
-        public async Task SuccessIppatsuOnChanKan() {
+        public async Task SuccessIppatsuOnChankan() {
             var scenario = new ScenarioBuilder()
                 .WithPlayer(1, playerBuilder => {
                     playerBuilder.SetFreeTiles("12367s234m34567p");

@@ -1,5 +1,7 @@
 using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
+using RabiRiichi.Generated.Communication.Sync;
+using RabiRiichi.Generated.Core;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -8,7 +10,7 @@ namespace RabiRiichi.Communication.Sync {
     public class PlayerHandState : IRabiPlayerMessage {
         public int playerId { get; init; }
         [RabiPrivate] public readonly List<GameTile> freeTiles;
-        [RabiBroadcast] public readonly List<List<GameTile>> called;
+        [RabiBroadcast] public readonly List<MenLike> called;
         [RabiBroadcast] public readonly List<GameTile> discarded;
         [RabiBroadcast] public readonly int jun;
         [RabiBroadcast] public readonly int riichiStick;
@@ -20,7 +22,7 @@ namespace RabiRiichi.Communication.Sync {
         public PlayerHandState(Hand hand, int playerId) {
             this.playerId = playerId;
             freeTiles = hand.freeTiles.ToList();
-            called = hand.called.Select(x => x.ToList()).ToList();
+            called = hand.called.ToList();
             discarded = hand.discarded.ToList();
             jun = hand.jun;
             riichiStick = hand.riichiStick;
@@ -29,6 +31,24 @@ namespace RabiRiichi.Communication.Sync {
             isTempFuriten = hand.isTempFuriten;
             isRiichiFuriten = hand.isRiichiFuriten;
             isDiscardFuriten = hand.isDiscardFuriten;
+        }
+
+        public PlayerHandStateMsg ToProto(int playerId) {
+            var ret = new PlayerHandStateMsg {
+                Jun = jun,
+                RiichiStick = riichiStick,
+                AgariTile = agariTile.ToProto(),
+                RiichiTile = riichiTile.ToProto(),
+            };
+            ret.Called.AddRange(called.Select(x => x.ToProto()));
+            ret.Discarded.AddRange(discarded.Select(x => x.ToProto()));
+            if (this.playerId == playerId) {
+                ret.FreeTiles.AddRange(freeTiles.Select(x => x.ToProto()));
+                ret.IsTempFuriten = isTempFuriten;
+                ret.IsRiichiFuriten = isRiichiFuriten;
+                ret.IsDiscardFuriten = isDiscardFuriten;
+            }
+            return ret;
         }
     }
 
@@ -42,6 +62,15 @@ namespace RabiRiichi.Communication.Sync {
             doras = wall.doras.Take(wall.revealedDoraCount).ToList();
             remaining = wall.NumRemaining;
             rinshanRemaining = wall.rinshan.Count;
+        }
+
+        public WallStateMsg ToProto() {
+            var ret = new WallStateMsg {
+                Remaining = remaining,
+                RinshanRemaining = rinshanRemaining,
+            };
+            ret.Doras.AddRange(doras.Select(x => x.ToProto()));
+            return ret;
         }
     }
 
@@ -60,6 +89,15 @@ namespace RabiRiichi.Communication.Sync {
             points = player.points;
             hand = new PlayerHandState(player.hand, receiverId);
         }
+
+        public PlayerStateMsg ToProto(int playerId) {
+            return new PlayerStateMsg {
+                Id = id,
+                Wind = wind,
+                Points = points,
+                Hand = hand.ToProto(playerId)
+            };
+        }
     }
 
     [RabiMessage]
@@ -77,6 +115,16 @@ namespace RabiRiichi.Communication.Sync {
             info = game.info;
             wall = new WallState(game.wall);
             players = game.players.Select(p => new PlayerState(p, playerId)).ToArray();
+        }
+
+        public GameStateMsg ToProto(int playerId) {
+            var ret = new GameStateMsg {
+                Config = config.ToProto(),
+                Info = info.ToProto(),
+                Wall = wall.ToProto(),
+            };
+            ret.Players.AddRange(players.Select(x => x.ToProto(playerId)));
+            return ret;
         }
     }
 }

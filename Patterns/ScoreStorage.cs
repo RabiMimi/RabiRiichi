@@ -1,5 +1,6 @@
 ﻿using RabiRiichi.Communication;
 using RabiRiichi.Core.Config;
+using RabiRiichi.Generated.Patterns;
 using RabiRiichi.Util;
 using System;
 using System.Collections;
@@ -124,6 +125,14 @@ namespace RabiRiichi.Patterns {
 
         public static bool operator >(ScoreStorage lhs, ScoreStorage rhs) {
             return lhs.CompareTo(rhs) > 0;
+        }
+
+        public ScoreStorageMsg ToProto() {
+            var msg = new ScoreStorageMsg {
+                Result = result.ToProto(),
+            };
+            msg.Items.AddRange(items.ConvertAll(s => s.ToProto()));
+            return msg;
         }
     }
 }

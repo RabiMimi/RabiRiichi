@@ -1,5 +1,5 @@
-using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
+using RabiRiichi.Generated.Core;
 using RabiRiichi.Util;
 using System;
 using System.Threading.Tasks;
@@ -9,19 +9,19 @@ namespace RabiRiichi.Events.InGame.Listener {
         private static Task ExecuteAddKan(AddKanEvent ev) {
             // Remove fake discard info
             ev.incoming.discardInfo = null;
-            if (ev.kanSource == TileSource.AnKan || ev.kanSource == TileSource.DaiMinKan) {
+            if (ev.kanSource == TileSource.Ankan || ev.kanSource == TileSource.Daiminkan) {
                 ev.player.hand.AddKan(ev.kan);
-            } else if (ev.kanSource == TileSource.KaKan) {
-                ev.player.hand.KaKan(ev.kan);
+            } else if (ev.kanSource == TileSource.Kakan) {
+                ev.player.hand.Kakan(ev.kan);
             } else {
                 return Task.CompletedTask;
             }
 
             // Check if should reveal dora immediately
             bool instantReveal = ev.game.config.doraOption.HasAnyFlag(ev.kanSource switch {
-                TileSource.AnKan => DoraOption.InstantRevealAfterAnKan,
-                TileSource.KaKan => DoraOption.InstantRevealAfterKaKan,
-                TileSource.DaiMinKan => DoraOption.InstantRevealAfterDaiMinKan,
+                TileSource.Ankan => DoraOption.InstantRevealAfterAnkan,
+                TileSource.Kakan => DoraOption.InstantRevealAfterKakan,
+                TileSource.Daiminkan => DoraOption.InstantRevealAfterDaiminkan,
                 _ => throw new ArgumentException($"Invalid kan source: {ev.kanSource}")
             });
 

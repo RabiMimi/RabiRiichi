@@ -1,5 +1,6 @@
 using RabiRiichi.Communication;
 using RabiRiichi.Core;
+using RabiRiichi.Generated.Events.InGame;
 using RabiRiichi.Util;
 using System;
 
@@ -36,6 +37,13 @@ namespace RabiRiichi.Events.InGame {
         public ConcludeGameEvent(EventBase parent, ConcludeGameReason reason, int[] tenpaiPlayers = null) : base(parent) {
             this.reason = reason;
             this.tenpaiPlayers = tenpaiPlayers;
+        }
+
+        public ConcludeGameEventMsg ToProto(int playerId) {
+            return new ConcludeGameEventMsg {
+                Doras = doras.ToString(),
+                Uradoras = uradoras.ToString(),
+            };
         }
     }
 }

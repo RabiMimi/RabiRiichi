@@ -1,6 +1,7 @@
 using RabiRiichi.Communication;
+using RabiRiichi.Generated.Events.InGame;
 using System;
-
+using System.Linq;
 
 namespace RabiRiichi.Events.InGame {
     /// <summary>
@@ -18,6 +19,12 @@ namespace RabiRiichi.Events.InGame {
 
         public void AddScoreTransfer(int from, int to, long points, ScoreTransferReason reason)
             => scoreChange.Add(new ScoreTransfer(from, to, points, reason));
+
+        public virtual RyuukyokuEventMsg ToProto() {
+            var ret = new RyuukyokuEventMsg();
+            ret.ScoreChange.AddRange(scoreChange.Select(x => x.ToProto()));
+            return ret;
+        }
     }
 
     public class EndGameRyuukyokuEvent : RyuukyokuEvent {
@@ -30,10 +37,27 @@ namespace RabiRiichi.Events.InGame {
         #endregion
 
         public EndGameRyuukyokuEvent(EventBase parent) : base(parent) { }
+
+        public override RyuukyokuEventMsg ToProto() {
+            var ret = base.ToProto();
+            ret.EndGameRyuukyoku = new EndGameRyuukyokuEventMsg();
+            ret.EndGameRyuukyoku.RemainingPlayers.AddRange(remainingPlayers);
+            ret.EndGameRyuukyoku.NagashiManganPlayers.AddRange(nagashiManganPlayers);
+            ret.EndGameRyuukyoku.TenpaiPlayers.AddRange(tenpaiPlayers);
+            return ret;
+        }
     }
 
     public abstract class MidGameRyuukyokuEvent : RyuukyokuEvent {
         public MidGameRyuukyokuEvent(EventBase parent) : base(parent) { }
+
+        public override RyuukyokuEventMsg ToProto() {
+            var ret = base.ToProto();
+            ret.MidGameRyuukyoku = new MidGameRyuukyokuEventMsg {
+                Name = name,
+            };
+            return ret;
+        }
     }
 
     public class SuufonRenda : MidGameRyuukyokuEvent {

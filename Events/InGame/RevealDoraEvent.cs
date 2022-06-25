@@ -1,5 +1,6 @@
 using RabiRiichi.Communication;
 using RabiRiichi.Core;
+using RabiRiichi.Generated.Events.InGame;
 
 namespace RabiRiichi.Events.InGame {
     /// <summary>
@@ -13,5 +14,12 @@ namespace RabiRiichi.Events.InGame {
         #endregion
 
         public RevealDoraEvent(EventBase parent, int playerId = -1) : base(parent, playerId) { }
+
+        public RevealDoraEventMsg ToProto() {
+            return new RevealDoraEventMsg {
+                PlayerId = playerId,
+                Dora = dora.ToProto(),
+            };
+        }
     }
 }

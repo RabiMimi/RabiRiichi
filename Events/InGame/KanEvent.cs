@@ -1,5 +1,7 @@
 using RabiRiichi.Communication;
 using RabiRiichi.Core;
+using RabiRiichi.Generated.Core;
+using RabiRiichi.Generated.Events.InGame;
 
 namespace RabiRiichi.Events.InGame {
     /// <summary>
@@ -25,6 +27,15 @@ namespace RabiRiichi.Events.InGame {
             this.incoming = incoming;
             this.kanSource = kan.KanSource;
             this.waitEvent = new WaitPlayerActionEvent(this);
+        }
+
+        public KanEventMsg ToProto() {
+            var ret = new KanEventMsg {
+                PlayerId = playerId,
+                Kan = kan.ToProto(),
+                KanSource = kanSource,
+            };
+            return ret;
         }
     }
 }
