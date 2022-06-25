@@ -13,7 +13,7 @@ namespace RabiRiichi.Communication.Sync {
         [RabiBroadcast] public readonly int jun;
         [RabiBroadcast] public readonly int riichiStick;
         [RabiBroadcast] public readonly GameTile agariTile;
-        [RabiBroadcast] public readonly bool riichi;
+        [RabiBroadcast] public readonly GameTile riichiTile;
         [RabiPrivate] public readonly bool isTempFuriten;
         [RabiPrivate] public readonly bool isRiichiFuriten;
         [RabiPrivate] public readonly bool isDiscardFuriten;
@@ -25,7 +25,7 @@ namespace RabiRiichi.Communication.Sync {
             jun = hand.jun;
             riichiStick = hand.riichiStick;
             agariTile = hand.agariTile;
-            riichi = hand.riichi;
+            riichiTile = hand.riichiTile;
             isTempFuriten = hand.isTempFuriten;
             isRiichiFuriten = hand.isRiichiFuriten;
             isDiscardFuriten = hand.isDiscardFuriten;
