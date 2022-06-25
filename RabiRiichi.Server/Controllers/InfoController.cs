@@ -12,7 +12,7 @@ namespace RabiRiichi.Server.Controllers {
         }
 
         [HttpGet("")]
-        public ActionResult<CreateRoomResp> GetInfo() {
+        public ActionResult<ServerInfo> GetInfo() {
             return Ok(new ServerInfo());
         }
     }
