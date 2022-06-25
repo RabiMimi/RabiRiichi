@@ -40,9 +40,21 @@ namespace RabiRiichi.Generated.Patterns {
   }
   #region Enums
   public enum ScoringType {
+    /// <summary>
+    /// 番
+    /// </summary>
     [pbr::OriginalName("HAN")] Han = 0,
+    /// <summary>
+    /// 奖励番，不记役
+    /// </summary>
     [pbr::OriginalName("BONUS_HAN")] BonusHan = 1,
+    /// <summary>
+    /// 符
+    /// </summary>
     [pbr::OriginalName("FU")] Fu = 2,
+    /// <summary>
+    /// 役满
+    /// </summary>
     [pbr::OriginalName("YAKUMAN")] Yakuman = 3,
   }
 

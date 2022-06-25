@@ -26,17 +26,14 @@ namespace RabiRiichi.Generated.Core.Config {
           string.Concat(
             "ChxDb3JlL0NvbmZpZy9HYW1lQ29uZmlnLnByb3RvGhdDb3JlL0NvbmZpZy9F",
             "bnVtcy5wcm90bxogQ29yZS9Db25maWcvUG9pbnRUaHJlc2hvbGQucHJvdG8i",
-            "sQMKDUdhbWVDb25maWdNc2cSFAoMcGxheWVyX2NvdW50GAEgASgFEhMKC3Rv",
+            "tQIKDUdhbWVDb25maWdNc2cSFAoMcGxheWVyX2NvdW50GAEgASgFEhMKC3Rv",
             "dGFsX3JvdW5kGAIgASgFEg8KB21pbl9oYW4YAyABKAUSKwoPcG9pbnRfdGhy",
-            "ZXNob2xkGAQgASgLMhIuUG9pbnRUaHJlc2hvbGRNc2cSJgoOcmVuY2hhbl9w",
-            "b2xpY3kYBSABKA4yDi5SZW5jaGFuUG9saWN5EicKD2VuZF9nYW1lX3BvbGlj",
-            "eRgGIAEoDjIOLkVuZEdhbWVQb2xpY3kSJAoNa3Vpa2FlX3BvbGljeRgHIAEo",
-            "DjINLkt1aWthZVBvbGljeRIkCg1yaWljaGlfcG9saWN5GAggASgOMg0uUmlp",
-            "Y2hpUG9saWN5EiAKC2RvcmFfb3B0aW9uGAkgASgOMgsuRG9yYU9wdGlvbhIi",
-            "CgxhZ2FyaV9vcHRpb24YCiABKA4yDC5BZ2FyaU9wdGlvbhImCg5zY29yaW5n",
-            "X29wdGlvbhgLIAEoDjIOLlNjb3JpbmdPcHRpb24SLAoRcnl1dWt5b2t1X3Ry",
-            "aWdnZXIYDCABKA4yES5SeXV1a3lva3VUcmlnZ2VyQiOqAiBSYWJpUmlpY2hp",
-            "LkdlbmVyYXRlZC5Db3JlLkNvbmZpZ2IGcHJvdG8z"));
+            "ZXNob2xkGAQgASgLMhIuUG9pbnRUaHJlc2hvbGRNc2cSFgoOcmVuY2hhbl9w",
+            "b2xpY3kYBSABKAUSFwoPZW5kX2dhbWVfcG9saWN5GAYgASgFEhUKDWt1aWth",
+            "ZV9wb2xpY3kYByABKAUSFQoNcmlpY2hpX3BvbGljeRgIIAEoBRITCgtkb3Jh",
+            "X29wdGlvbhgJIAEoBRIUCgxhZ2FyaV9vcHRpb24YCiABKAUSFgoOc2Nvcmlu",
+            "Z19vcHRpb24YCyABKAUSGQoRcnl1dWt5b2t1X3RyaWdnZXIYDCABKAVCI6oC",
+            "IFJhYmlSaWljaGkuR2VuZXJhdGVkLkNvcmUuQ29uZmlnYgZwcm90bzM="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::RabiRiichi.Generated.Core.Config.EnumsReflection.Descriptor, global::RabiRiichi.Generated.Core.Config.PointThresholdReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, new pbr::GeneratedClrTypeInfo[] {
@@ -138,9 +135,9 @@ namespace RabiRiichi.Generated.Core.Config {
 
     /// <summary>Field number for the "renchan_policy" field.</summary>
     public const int RenchanPolicyFieldNumber = 5;
-    private global::RabiRiichi.Generated.Core.Config.RenchanPolicy renchanPolicy_ = 0;
+    private int renchanPolicy_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::RabiRiichi.Generated.Core.Config.RenchanPolicy RenchanPolicy {
+    public int RenchanPolicy {
       get { return renchanPolicy_; }
       set {
         renchanPolicy_ = value;
@@ -149,9 +146,9 @@ namespace RabiRiichi.Generated.Core.Config {
 
     /// <summary>Field number for the "end_game_policy" field.</summary>
     public const int EndGamePolicyFieldNumber = 6;
-    private global::RabiRiichi.Generated.Core.Config.EndGamePolicy endGamePolicy_ = 0;
+    private int endGamePolicy_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::RabiRiichi.Generated.Core.Config.EndGamePolicy EndGamePolicy {
+    public int EndGamePolicy {
       get { return endGamePolicy_; }
       set {
         endGamePolicy_ = value;
@@ -160,9 +157,9 @@ namespace RabiRiichi.Generated.Core.Config {
 
     /// <summary>Field number for the "kuikae_policy" field.</summary>
     public const int KuikaePolicyFieldNumber = 7;
-    private global::RabiRiichi.Generated.Core.Config.KuikaePolicy kuikaePolicy_ = 0;
+    private int kuikaePolicy_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::RabiRiichi.Generated.Core.Config.KuikaePolicy KuikaePolicy {
+    public int KuikaePolicy {
       get { return kuikaePolicy_; }
       set {
         kuikaePolicy_ = value;
@@ -171,9 +168,9 @@ namespace RabiRiichi.Generated.Core.Config {
 
     /// <summary>Field number for the "riichi_policy" field.</summary>
     public const int RiichiPolicyFieldNumber = 8;
-    private global::RabiRiichi.Generated.Core.Config.RiichiPolicy riichiPolicy_ = 0;
+    private int riichiPolicy_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::RabiRiichi.Generated.Core.Config.RiichiPolicy RiichiPolicy {
+    public int RiichiPolicy {
       get { return riichiPolicy_; }
       set {
         riichiPolicy_ = value;
@@ -182,9 +179,9 @@ namespace RabiRiichi.Generated.Core.Config {
 
     /// <summary>Field number for the "dora_option" field.</summary>
     public const int DoraOptionFieldNumber = 9;
-    private global::RabiRiichi.Generated.Core.Config.DoraOption doraOption_ = 0;
+    private int doraOption_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::RabiRiichi.Generated.Core.Config.DoraOption DoraOption {
+    public int DoraOption {
       get { return doraOption_; }
       set {
         doraOption_ = value;
@@ -193,9 +190,9 @@ namespace RabiRiichi.Generated.Core.Config {
 
     /// <summary>Field number for the "agari_option" field.</summary>
     public const int AgariOptionFieldNumber = 10;
-    private global::RabiRiichi.Generated.Core.Config.AgariOption agariOption_ = 0;
+    private int agariOption_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::RabiRiichi.Generated.Core.Config.AgariOption AgariOption {
+    public int AgariOption {
       get { return agariOption_; }
       set {
         agariOption_ = value;
@@ -204,9 +201,9 @@ namespace RabiRiichi.Generated.Core.Config {
 
     /// <summary>Field number for the "scoring_option" field.</summary>
     public const int ScoringOptionFieldNumber = 11;
-    private global::RabiRiichi.Generated.Core.Config.ScoringOption scoringOption_ = 0;
+    private int scoringOption_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::RabiRiichi.Generated.Core.Config.ScoringOption ScoringOption {
+    public int ScoringOption {
       get { return scoringOption_; }
       set {
         scoringOption_ = value;
@@ -215,9 +212,9 @@ namespace RabiRiichi.Generated.Core.Config {
 
     /// <summary>Field number for the "ryuukyoku_trigger" field.</summary>
     public const int RyuukyokuTriggerFieldNumber = 12;
-    private global::RabiRiichi.Generated.Core.Config.RyuukyokuTrigger ryuukyokuTrigger_ = 0;
+    private int ryuukyokuTrigger_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::RabiRiichi.Generated.Core.Config.RyuukyokuTrigger RyuukyokuTrigger {
+    public int RyuukyokuTrigger {
       get { return ryuukyokuTrigger_; }
       set {
         ryuukyokuTrigger_ = value;
@@ -298,35 +295,35 @@ namespace RabiRiichi.Generated.Core.Config {
       }
       if (RenchanPolicy != 0) {
         output.WriteRawTag(40);
-        output.WriteEnum((int) RenchanPolicy);
+        output.WriteInt32(RenchanPolicy);
       }
       if (EndGamePolicy != 0) {
         output.WriteRawTag(48);
-        output.WriteEnum((int) EndGamePolicy);
+        output.WriteInt32(EndGamePolicy);
       }
       if (KuikaePolicy != 0) {
         output.WriteRawTag(56);
-        output.WriteEnum((int) KuikaePolicy);
+        output.WriteInt32(KuikaePolicy);
       }
       if (RiichiPolicy != 0) {
         output.WriteRawTag(64);
-        output.WriteEnum((int) RiichiPolicy);
+        output.WriteInt32(RiichiPolicy);
       }
       if (DoraOption != 0) {
         output.WriteRawTag(72);
-        output.WriteEnum((int) DoraOption);
+        output.WriteInt32(DoraOption);
       }
       if (AgariOption != 0) {
         output.WriteRawTag(80);
-        output.WriteEnum((int) AgariOption);
+        output.WriteInt32(AgariOption);
       }
       if (ScoringOption != 0) {
         output.WriteRawTag(88);
-        output.WriteEnum((int) ScoringOption);
+        output.WriteInt32(ScoringOption);
       }
       if (RyuukyokuTrigger != 0) {
         output.WriteRawTag(96);
-        output.WriteEnum((int) RyuukyokuTrigger);
+        output.WriteInt32(RyuukyokuTrigger);
       }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
@@ -349,28 +346,28 @@ namespace RabiRiichi.Generated.Core.Config {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(PointThreshold);
       }
       if (RenchanPolicy != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) RenchanPolicy);
+        size += 1 + pb::CodedOutputStream.ComputeInt32Size(RenchanPolicy);
       }
       if (EndGamePolicy != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) EndGamePolicy);
+        size += 1 + pb::CodedOutputStream.ComputeInt32Size(EndGamePolicy);
       }
       if (KuikaePolicy != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) KuikaePolicy);
+        size += 1 + pb::CodedOutputStream.ComputeInt32Size(KuikaePolicy);
       }
       if (RiichiPolicy != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) RiichiPolicy);
+        size += 1 + pb::CodedOutputStream.ComputeInt32Size(RiichiPolicy);
       }
       if (DoraOption != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) DoraOption);
+        size += 1 + pb::CodedOutputStream.ComputeInt32Size(DoraOption);
       }
       if (AgariOption != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) AgariOption);
+        size += 1 + pb::CodedOutputStream.ComputeInt32Size(AgariOption);
       }
       if (ScoringOption != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) ScoringOption);
+        size += 1 + pb::CodedOutputStream.ComputeInt32Size(ScoringOption);
       }
       if (RyuukyokuTrigger != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) RyuukyokuTrigger);
+        size += 1 + pb::CodedOutputStream.ComputeInt32Size(RyuukyokuTrigger);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -453,35 +450,35 @@ namespace RabiRiichi.Generated.Core.Config {
             break;
           }
           case 40: {
-            renchanPolicy_ = (global::RabiRiichi.Generated.Core.Config.RenchanPolicy) input.ReadEnum();
+            RenchanPolicy = input.ReadInt32();
             break;
           }
           case 48: {
-            endGamePolicy_ = (global::RabiRiichi.Generated.Core.Config.EndGamePolicy) input.ReadEnum();
+            EndGamePolicy = input.ReadInt32();
             break;
           }
           case 56: {
-            kuikaePolicy_ = (global::RabiRiichi.Generated.Core.Config.KuikaePolicy) input.ReadEnum();
+            KuikaePolicy = input.ReadInt32();
             break;
           }
           case 64: {
-            riichiPolicy_ = (global::RabiRiichi.Generated.Core.Config.RiichiPolicy) input.ReadEnum();
+            RiichiPolicy = input.ReadInt32();
             break;
           }
           case 72: {
-            doraOption_ = (global::RabiRiichi.Generated.Core.Config.DoraOption) input.ReadEnum();
+            DoraOption = input.ReadInt32();
             break;
           }
           case 80: {
-            agariOption_ = (global::RabiRiichi.Generated.Core.Config.AgariOption) input.ReadEnum();
+            AgariOption = input.ReadInt32();
             break;
           }
           case 88: {
-            scoringOption_ = (global::RabiRiichi.Generated.Core.Config.ScoringOption) input.ReadEnum();
+            ScoringOption = input.ReadInt32();
             break;
           }
           case 96: {
-            ryuukyokuTrigger_ = (global::RabiRiichi.Generated.Core.Config.RyuukyokuTrigger) input.ReadEnum();
+            RyuukyokuTrigger = input.ReadInt32();
             break;
           }
         }

@@ -41,8 +41,17 @@ namespace RabiRiichi.Generated.Events.InGame {
   }
   #region Enums
   public enum FuritenType {
+    /// <summary>
+    /// 同巡振听
+    /// </summary>
     [pbr::OriginalName("TEMP")] Temp = 0,
+    /// <summary>
+    /// 立直振听
+    /// </summary>
     [pbr::OriginalName("RIICHI")] Riichi = 1,
+    /// <summary>
+    /// 舍牌振听
+    /// </summary>
     [pbr::OriginalName("DISCARD")] Discard = 2,
   }
 

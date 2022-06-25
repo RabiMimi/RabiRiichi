@@ -47,9 +47,21 @@ namespace RabiRiichi.Server.Generated.Messages {
   }
   #region Enums
   public enum UserStatus {
+    /// <summary>
+    /// Not in any room
+    /// </summary>
     [pbr::OriginalName("USER_STATUS_NONE")] None = 0,
+    /// <summary>
+    /// In room
+    /// </summary>
     [pbr::OriginalName("USER_STATUS_IN_ROOM")] InRoom = 1,
+    /// <summary>
+    /// In room and ready
+    /// </summary>
     [pbr::OriginalName("USER_STATUS_READY")] Ready = 2,
+    /// <summary>
+    /// In room and playing
+    /// </summary>
     [pbr::OriginalName("USER_STATUS_PLAYING")] Playing = 3,
   }
 

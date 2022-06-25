@@ -39,7 +39,13 @@ namespace RabiRiichi.Generated.Actions {
   }
   #region Enums
   public enum AgariType {
+    /// <summary>
+    /// Ron
+    /// </summary>
     [pbr::OriginalName("AGARI_TYPE_RON")] Ron = 0,
+    /// <summary>
+    /// Tsumo
+    /// </summary>
     [pbr::OriginalName("AGARI_TYPE_TSUMO")] Tsumo = 1,
   }
 

@@ -49,12 +49,33 @@ namespace RabiRiichi.Generated.Events.InGame {
   }
   #region Enums
   public enum ScoreTransferReason {
+    /// <summary>
+    /// 荣和
+    /// </summary>
     [pbr::OriginalName("SCORE_TRANSFER_REASON_RON")] Ron = 0,
+    /// <summary>
+    /// 自摸
+    /// </summary>
     [pbr::OriginalName("SCORE_TRANSFER_REASON_TSUMO")] Tsumo = 1,
+    /// <summary>
+    /// 流局
+    /// </summary>
     [pbr::OriginalName("SCORE_TRANSFER_REASON_RYUUKYOKU")] Ryuukyoku = 2,
+    /// <summary>
+    /// 流局满贯
+    /// </summary>
     [pbr::OriginalName("SCORE_TRANSFER_REASON_NAGASHI_MANGAN")] NagashiMangan = 3,
+    /// <summary>
+    /// 立直
+    /// </summary>
     [pbr::OriginalName("SCORE_TRANSFER_REASON_RIICHI")] Riichi = 4,
+    /// <summary>
+    /// 本场棒
+    /// </summary>
     [pbr::OriginalName("SCORE_TRANSFER_REASON_HONBA")] Honba = 5,
+    /// <summary>
+    /// 包牌
+    /// </summary>
     [pbr::OriginalName("SCORE_TRANSFER_REASON_PAO")] Pao = 6,
   }
 

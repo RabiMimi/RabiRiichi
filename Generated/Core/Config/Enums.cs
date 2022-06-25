@@ -24,53 +24,42 @@ namespace RabiRiichi.Generated.Core.Config {
     static EnumsReflection() {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
-            "ChdDb3JlL0NvbmZpZy9FbnVtcy5wcm90byqQAQoMS3Vpa2FlUG9saWN5EhYK",
-            "EktVSUtBRV9QT0xJQ1lfTk9ORRAAEhoKFktVSUtBRV9QT0xJQ1lfR0VOQlVU",
-            "U1UQARIWChJLVUlLQUVfUE9MSUNZX1NVSkkQAhIVChFLVUlLQUVfUE9MSUNZ",
-            "X0FMTBADEhkKFUtVSUtBRV9QT0xJQ1lfREVGQVVMVBADGgIQASrBAQoMUmlp",
-            "Y2hpUG9saWN5EhYKElJJSUNISV9QT0xJQ1lfTk9ORRAAEiMKH1JJSUNISV9Q",
-            "T0xJQ1lfU1VGRklDSUVOVF9QT0lOVFMQARIeChpSSUlDSElfUE9MSUNZX1ZB",
-            "TElEX1BPSU5UUxACEiIKHlJJSUNISV9QT0xJQ1lfU1VGRklDSUVOVF9USUxF",
-            "UxAEEhUKEVJJSUNISV9QT0xJQ1lfQUxMEAcSGQoVUklJQ0hJX1BPTElDWV9E",
-            "RUZBVUxUEAUqoQIKEFJ5dXVreW9rdVRyaWdnZXISGgoWUllVVUtZT0tVX1RS",
-            "SUdHRVJfTk9ORRAAEiIKHlJZVVVLWU9LVV9UUklHR0VSX1NVVUZPTl9SRU5E",
-            "QRABEiUKIVJZVVVLWU9LVV9UUklHR0VSX0tZVVVTSFVfS1lVVUhBSRACEiMK",
-            "H1JZVVVLWU9LVV9UUklHR0VSX1NVVUNIQV9SSUlDSEkQBBIfChtSWVVVS1lP",
-            "S1VfVFJJR0dFUl9TQU5DSEFIT1UQCBIiCh5SWVVVS1lPS1VfVFJJR0dFUl9T",
-            "VVVLQU5fU0FOUkEQEBIZChVSWVVVS1lPS1VfVFJJR0dFUl9BTEwQHxIdChlS",
-            "WVVVS1lPS1VfVFJJR0dFUl9ERUZBVUxUEB8aAhABKusBCg1SZW5jaGFuUG9s",
-            "aWN5EhcKE1JFTkNIQU5fUE9MSUNZX05PTkUQABIdChlSRU5DSEFOX1BPTElD",
-            "WV9ERUFMRVJfV0lOEAESIAocUkVOQ0hBTl9QT0xJQ1lfREVBTEVSX1RFTlBB",
-            "SRACEiUKIVJFTkNIQU5fUE9MSUNZX0VORF9HQU1FX1JZVVVLWU9LVRAEEiUK",
-            "IVJFTkNIQU5fUE9MSUNZX01JRF9HQU1FX1JZVVVLWU9LVRAIEhYKElJFTkNI",
-            "QU5fUE9MSUNZX0FMTBAPEhoKFlJFTkNIQU5fUE9MSUNZX0RFRkFVTFQQCyqi",
-            "AgoNRW5kR2FtZVBvbGljeRIYChRFTkRfR0FNRV9QT0xJQ1lfTk9ORRAAEicK",
-            "I0VORF9HQU1FX1BPTElDWV9QT0lOVFNfT1VUX09GX1JBTkdFEAESLworRU5E",
-            "X0dBTUVfUE9MSUNZX0lOU1RBTlRfUE9JTlRTX09VVF9PRl9SQU5HRRACEiEK",
-            "HUVORF9HQU1FX1BPTElDWV9ERUFMRVJfVEVOUEFJEAQSIAocRU5EX0dBTUVf",
-            "UE9MSUNZX0RFQUxFUl9BR0FSSRAIEiIKHkVORF9HQU1FX1BPTElDWV9FWFRF",
-            "TkRFRF9ST1VORBAQEhcKE0VORF9HQU1FX1BPTElDWV9BTEwQHxIbChdFTkRf",
-            "R0FNRV9QT0xJQ1lfREVGQVVMVBAdKoEDCgpEb3JhT3B0aW9uEhQKEERPUkFf",
-            "T1BUSU9OX05PTkUQABIcChhET1JBX09QVElPTl9JTklUSUFMX0RPUkEQARIf",
-            "ChtET1JBX09QVElPTl9JTklUSUFMX1VSQURPUkEQAhIYChRET1JBX09QVElP",
-            "Tl9LQU5fRE9SQRAEEhsKF0RPUkFfT1BUSU9OX0tBTl9VUkFET1JBEAgSFwoT",
-            "RE9SQV9PUFRJT05fVVJBRE9SQRAKEhQKEERPUkFfT1BUSU9OX0RPUkEQBRIw",
-            "CixET1JBX09QVElPTl9JTlNUQU5UX1JFVkVBTF9BRlRFUl9EQUlfTUlOX0tB",
-            "ThAQEisKJ0RPUkFfT1BUSU9OX0lOU1RBTlRfUkVWRUFMX0FGVEVSX0tBX0tB",
-            "ThAgEisKJ0RPUkFfT1BUSU9OX0lOU1RBTlRfUkVWRUFMX0FGVEVSX0FOX0tB",
-            "ThBAEhMKD0RPUkFfT1BUSU9OX0FMTBB/EhcKE0RPUkFfT1BUSU9OX0RFRkFV",
-            "TFQQTyrDAQoLQWdhcmlPcHRpb24SFQoRQUdBUklfT1BUSU9OX05PTkUQABIX",
-            "ChNBR0FSSV9PUFRJT05fS1VJVEFOEAESFAoQQUdBUklfT1BUSU9OX1BBTxAC",
-            "Eh8KG0FHQVJJX09QVElPTl9OQUdBU0hJX01BTkdBThAEEh0KGUFHQVJJX09Q",
-            "VElPTl9GSVJTVF9XSU5ORVIQCBIUChBBR0FSSV9PUFRJT05fQUxMEA8SGAoU",
-            "QUdBUklfT1BUSU9OX0RFRkFVTFQQByqDAgoNU2NvcmluZ09wdGlvbhIXChNT",
-            "Q09SSU5HX09QVElPTl9OT05FEAASIQodU0NPUklOR19PUFRJT05fS0lSSUFH",
-            "RV9NQU5HQU4QARIaChZTQ09SSU5HX09QVElPTl9ZQUtVTUFOEAISIwofU0NP",
-            "UklOR19PUFRJT05fTVVMVElQTEVfWUFLVU1BThAEEiAKHFNDT1JJTkdfT1BU",
-            "SU9OX0tBWk9FX1lBS1VNQU4QCBIbChdTQ09SSU5HX09QVElPTl9BT1RFTkpP",
-            "VRAAEhYKElNDT1JJTkdfT1BUSU9OX0FMTBAPEhoKFlNDT1JJTkdfT1BUSU9O",
-            "X0RFRkFVTFQQDhoCEAFCI6oCIFJhYmlSaWljaGkuR2VuZXJhdGVkLkNvcmUu",
-            "Q29uZmlnYgZwcm90bzM="));
+            "ChdDb3JlL0NvbmZpZy9FbnVtcy5wcm90bypaCgxLdWlrYWVQb2xpY3kSFgoS",
+            "S1VJS0FFX1BPTElDWV9OT05FEAASGgoWS1VJS0FFX1BPTElDWV9HRU5CVVRT",
+            "VRABEhYKEktVSUtBRV9QT0xJQ1lfU1VKSRACKo8BCgxSaWljaGlQb2xpY3kS",
+            "FgoSUklJQ0hJX1BPTElDWV9OT05FEAASIwofUklJQ0hJX1BPTElDWV9TVUZG",
+            "SUNJRU5UX1BPSU5UUxABEh4KGlJJSUNISV9QT0xJQ1lfVkFMSURfUE9JTlRT",
+            "EAISIgoeUklJQ0hJX1BPTElDWV9TVUZGSUNJRU5UX1RJTEVTEAQq4wEKEFJ5",
+            "dXVreW9rdVRyaWdnZXISGgoWUllVVUtZT0tVX1RSSUdHRVJfTk9ORRAAEiIK",
+            "HlJZVVVLWU9LVV9UUklHR0VSX1NVVUZPTl9SRU5EQRABEiUKIVJZVVVLWU9L",
+            "VV9UUklHR0VSX0tZVVVTSFVfS1lVVUhBSRACEiMKH1JZVVVLWU9LVV9UUklH",
+            "R0VSX1NVVUNIQV9SSUlDSEkQBBIfChtSWVVVS1lPS1VfVFJJR0dFUl9TQU5D",
+            "SEFIT1UQCBIiCh5SWVVVS1lPS1VfVFJJR0dFUl9TVVVLQU5fU0FOUkEQECq3",
+            "AQoNUmVuY2hhblBvbGljeRIXChNSRU5DSEFOX1BPTElDWV9OT05FEAASHQoZ",
+            "UkVOQ0hBTl9QT0xJQ1lfREVBTEVSX1dJThABEiAKHFJFTkNIQU5fUE9MSUNZ",
+            "X0RFQUxFUl9URU5QQUkQAhIlCiFSRU5DSEFOX1BPTElDWV9FTkRfR0FNRV9S",
+            "WVVVS1lPS1UQBBIlCiFSRU5DSEFOX1BPTElDWV9NSURfR0FNRV9SWVVVS1lP",
+            "S1UQCCrsAQoNRW5kR2FtZVBvbGljeRIYChRFTkRfR0FNRV9QT0xJQ1lfTk9O",
+            "RRAAEicKI0VORF9HQU1FX1BPTElDWV9QT0lOVFNfT1VUX09GX1JBTkdFEAES",
+            "LworRU5EX0dBTUVfUE9MSUNZX0lOU1RBTlRfUE9JTlRTX09VVF9PRl9SQU5H",
+            "RRACEiEKHUVORF9HQU1FX1BPTElDWV9ERUFMRVJfVEVOUEFJEAQSIAocRU5E",
+            "X0dBTUVfUE9MSUNZX0RFQUxFUl9BR0FSSRAIEiIKHkVORF9HQU1FX1BPTElD",
+            "WV9FWFRFTkRFRF9ST1VORBAQKqQCCgpEb3JhT3B0aW9uEhQKEERPUkFfT1BU",
+            "SU9OX05PTkUQABIcChhET1JBX09QVElPTl9JTklUSUFMX0RPUkEQARIfChtE",
+            "T1JBX09QVElPTl9JTklUSUFMX1VSQURPUkEQAhIYChRET1JBX09QVElPTl9L",
+            "QU5fRE9SQRAEEhsKF0RPUkFfT1BUSU9OX0tBTl9VUkFET1JBEAgSMAosRE9S",
+            "QV9PUFRJT05fSU5TVEFOVF9SRVZFQUxfQUZURVJfREFJX01JTl9LQU4QEBIr",
+            "CidET1JBX09QVElPTl9JTlNUQU5UX1JFVkVBTF9BRlRFUl9LQV9LQU4QIBIr",
+            "CidET1JBX09QVElPTl9JTlNUQU5UX1JFVkVBTF9BRlRFUl9BTl9LQU4QQCqT",
+            "AQoLQWdhcmlPcHRpb24SFQoRQUdBUklfT1BUSU9OX05PTkUQABIXChNBR0FS",
+            "SV9PUFRJT05fS1VJVEFOEAESFAoQQUdBUklfT1BUSU9OX1BBTxACEh8KG0FH",
+            "QVJJX09QVElPTl9OQUdBU0hJX01BTkdBThAEEh0KGUFHQVJJX09QVElPTl9G",
+            "SVJTVF9XSU5ORVIQCCquAQoNU2NvcmluZ09wdGlvbhIXChNTQ09SSU5HX09Q",
+            "VElPTl9OT05FEAASIQodU0NPUklOR19PUFRJT05fS0lSSUFHRV9NQU5HQU4Q",
+            "ARIaChZTQ09SSU5HX09QVElPTl9ZQUtVTUFOEAISIwofU0NPUklOR19PUFRJ",
+            "T05fTVVMVElQTEVfWUFLVU1BThAEEiAKHFNDT1JJTkdfT1BUSU9OX0tBWk9F",
+            "X1lBS1VNQU4QCEIjqgIgUmFiaVJpaWNoaS5HZW5lcmF0ZWQuQ29yZS5Db25m",
+            "aWdiBnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(new[] {typeof(global::RabiRiichi.Generated.Core.Config.KuikaePolicy), typeof(global::RabiRiichi.Generated.Core.Config.RiichiPolicy), typeof(global::RabiRiichi.Generated.Core.Config.RyuukyokuTrigger), typeof(global::RabiRiichi.Generated.Core.Config.RenchanPolicy), typeof(global::RabiRiichi.Generated.Core.Config.EndGamePolicy), typeof(global::RabiRiichi.Generated.Core.Config.DoraOption), typeof(global::RabiRiichi.Generated.Core.Config.AgariOption), typeof(global::RabiRiichi.Generated.Core.Config.ScoringOption), }, null));
@@ -80,88 +69,195 @@ namespace RabiRiichi.Generated.Core.Config {
   }
   #region Enums
   public enum KuikaePolicy {
+    /// <summary>
+    /// 无
+    /// </summary>
     [pbr::OriginalName("KUIKAE_POLICY_NONE")] None = 0,
+    /// <summary>
+    /// 禁止现物食替
+    /// </summary>
     [pbr::OriginalName("KUIKAE_POLICY_GENBUTSU")] Genbutsu = 1,
+    /// <summary>
+    /// 禁止筋食替
+    /// </summary>
     [pbr::OriginalName("KUIKAE_POLICY_SUJI")] Suji = 2,
-    [pbr::OriginalName("KUIKAE_POLICY_ALL")] All = 3,
-    [pbr::OriginalName("KUIKAE_POLICY_DEFAULT", PreferredAlias = false)] Default = 3,
   }
 
   public enum RiichiPolicy {
+    /// <summary>
+    /// 立直无特殊要求 
+    /// </summary>
     [pbr::OriginalName("RIICHI_POLICY_NONE")] None = 0,
+    /// <summary>
+    /// 禁止立直后被飞
+    /// </summary>
     [pbr::OriginalName("RIICHI_POLICY_SUFFICIENT_POINTS")] SufficientPoints = 1,
+    /// <summary>
+    /// 禁止被飞状态下立直
+    /// </summary>
     [pbr::OriginalName("RIICHI_POLICY_VALID_POINTS")] ValidPoints = 2,
+    /// <summary>
+    /// 禁止牌山剩余牌数小于玩家数时立直
+    /// </summary>
     [pbr::OriginalName("RIICHI_POLICY_SUFFICIENT_TILES")] SufficientTiles = 4,
-    [pbr::OriginalName("RIICHI_POLICY_ALL")] All = 7,
-    [pbr::OriginalName("RIICHI_POLICY_DEFAULT")] Default = 5,
   }
 
   public enum RyuukyokuTrigger {
+    /// <summary>
+    /// 无
+    /// </summary>
     [pbr::OriginalName("RYUUKYOKU_TRIGGER_NONE")] None = 0,
+    /// <summary>
+    /// 四风连打
+    /// </summary>
     [pbr::OriginalName("RYUUKYOKU_TRIGGER_SUUFON_RENDA")] SuufonRenda = 1,
+    /// <summary>
+    /// 九种九牌
+    /// </summary>
     [pbr::OriginalName("RYUUKYOKU_TRIGGER_KYUUSHU_KYUUHAI")] KyuushuKyuuhai = 2,
+    /// <summary>
+    /// 四家立直
+    /// </summary>
     [pbr::OriginalName("RYUUKYOKU_TRIGGER_SUUCHA_RIICHI")] SuuchaRiichi = 4,
+    /// <summary>
+    /// 三家荣和
+    /// </summary>
     [pbr::OriginalName("RYUUKYOKU_TRIGGER_SANCHAHOU")] Sanchahou = 8,
+    /// <summary>
+    /// 四杠散了
+    /// </summary>
     [pbr::OriginalName("RYUUKYOKU_TRIGGER_SUUKAN_SANRA")] SuukanSanra = 16,
-    [pbr::OriginalName("RYUUKYOKU_TRIGGER_ALL")] All = 31,
-    [pbr::OriginalName("RYUUKYOKU_TRIGGER_DEFAULT", PreferredAlias = false)] Default = 31,
   }
 
   public enum RenchanPolicy {
+    /// <summary>
+    /// 无
+    /// </summary>
     [pbr::OriginalName("RENCHAN_POLICY_NONE")] None = 0,
+    /// <summary>
+    /// 庄家和了时连庄
+    /// </summary>
     [pbr::OriginalName("RENCHAN_POLICY_DEALER_WIN")] DealerWin = 1,
+    /// <summary>
+    /// 庄家流局听牌时连庄
+    /// </summary>
     [pbr::OriginalName("RENCHAN_POLICY_DEALER_TENPAI")] DealerTenpai = 2,
+    /// <summary>
+    /// 终局流局时必定连庄
+    /// </summary>
     [pbr::OriginalName("RENCHAN_POLICY_END_GAME_RYUUKYOKU")] EndGameRyuukyoku = 4,
+    /// <summary>
+    /// 中途流局时连庄
+    /// </summary>
     [pbr::OriginalName("RENCHAN_POLICY_MID_GAME_RYUUKYOKU")] MidGameRyuukyoku = 8,
-    [pbr::OriginalName("RENCHAN_POLICY_ALL")] All = 15,
-    [pbr::OriginalName("RENCHAN_POLICY_DEFAULT")] Default = 11,
   }
 
   public enum EndGamePolicy {
+    /// <summary>
+    /// 无
+    /// </summary>
     [pbr::OriginalName("END_GAME_POLICY_NONE")] None = 0,
+    /// <summary>
+    /// 和牌/流局结算时若分数超出天边，结束游戏
+    /// </summary>
     [pbr::OriginalName("END_GAME_POLICY_POINTS_OUT_OF_RANGE")] PointsOutOfRange = 1,
+    /// <summary>
+    /// 分数超出天边时立即结束游戏
+    /// </summary>
     [pbr::OriginalName("END_GAME_POLICY_INSTANT_POINTS_OUT_OF_RANGE")] InstantPointsOutOfRange = 2,
+    /// <summary>
+    /// 若庄家一位听牌且分数达标，结束游戏
+    /// </summary>
     [pbr::OriginalName("END_GAME_POLICY_DEALER_TENPAI")] DealerTenpai = 4,
+    /// <summary>
+    /// 若庄家一位和牌且分数达标，结束游戏
+    /// </summary>
     [pbr::OriginalName("END_GAME_POLICY_DEALER_AGARI")] DealerAgari = 8,
+    /// <summary>
+    /// 不满足终局条件时，南/西入
+    /// </summary>
     [pbr::OriginalName("END_GAME_POLICY_EXTENDED_ROUND")] ExtendedRound = 16,
-    [pbr::OriginalName("END_GAME_POLICY_ALL")] All = 31,
-    [pbr::OriginalName("END_GAME_POLICY_DEFAULT")] Default = 29,
   }
 
   public enum DoraOption {
+    /// <summary>
+    /// 无
+    /// </summary>
     [pbr::OriginalName("DORA_OPTION_NONE")] None = 0,
+    /// <summary>
+    /// 初始表宝牌
+    /// </summary>
     [pbr::OriginalName("DORA_OPTION_INITIAL_DORA")] InitialDora = 1,
+    /// <summary>
+    /// 初始里宝牌
+    /// </summary>
     [pbr::OriginalName("DORA_OPTION_INITIAL_URADORA")] InitialUradora = 2,
+    /// <summary>
+    /// 杠表宝牌
+    /// </summary>
     [pbr::OriginalName("DORA_OPTION_KAN_DORA")] KanDora = 4,
+    /// <summary>
+    /// 杠里宝牌
+    /// </summary>
     [pbr::OriginalName("DORA_OPTION_KAN_URADORA")] KanUradora = 8,
-    [pbr::OriginalName("DORA_OPTION_URADORA")] Uradora = 10,
-    [pbr::OriginalName("DORA_OPTION_DORA")] Dora = 5,
+    /// <summary>
+    /// 大明杠宝牌即开
+    /// </summary>
     [pbr::OriginalName("DORA_OPTION_INSTANT_REVEAL_AFTER_DAI_MIN_KAN")] InstantRevealAfterDaiMinKan = 16,
+    /// <summary>
+    /// 加杠宝牌即开
+    /// </summary>
     [pbr::OriginalName("DORA_OPTION_INSTANT_REVEAL_AFTER_KA_KAN")] InstantRevealAfterKaKan = 32,
+    /// <summary>
+    /// 暗杠宝牌即开
+    /// </summary>
     [pbr::OriginalName("DORA_OPTION_INSTANT_REVEAL_AFTER_AN_KAN")] InstantRevealAfterAnKan = 64,
-    [pbr::OriginalName("DORA_OPTION_ALL")] All = 127,
-    [pbr::OriginalName("DORA_OPTION_DEFAULT")] Default = 79,
   }
 
   public enum AgariOption {
+    /// <summary>
+    /// 无
+    /// </summary>
     [pbr::OriginalName("AGARI_OPTION_NONE")] None = 0,
+    /// <summary>
+    /// 允许食断
+    /// </summary>
     [pbr::OriginalName("AGARI_OPTION_KUITAN")] Kuitan = 1,
+    /// <summary>
+    /// 允许包牌
+    /// </summary>
     [pbr::OriginalName("AGARI_OPTION_PAO")] Pao = 2,
+    /// <summary>
+    /// 启用流局满贯
+    /// </summary>
     [pbr::OriginalName("AGARI_OPTION_NAGASHI_MANGAN")] NagashiMangan = 4,
+    /// <summary>
+    /// 启用头跳
+    /// </summary>
     [pbr::OriginalName("AGARI_OPTION_FIRST_WINNER")] FirstWinner = 8,
-    [pbr::OriginalName("AGARI_OPTION_ALL")] All = 15,
-    [pbr::OriginalName("AGARI_OPTION_DEFAULT")] Default = 7,
   }
 
   public enum ScoringOption {
+    /// <summary>
+    /// 无
+    /// </summary>
     [pbr::OriginalName("SCORING_OPTION_NONE")] None = 0,
+    /// <summary>
+    /// 启用切上满贯
+    /// </summary>
     [pbr::OriginalName("SCORING_OPTION_KIRIAGE_MANGAN")] KiriageMangan = 1,
+    /// <summary>
+    /// 启用役满。若不启用役满，则以下役满相关选项全部无效，且计分时采用青天井规则
+    /// </summary>
     [pbr::OriginalName("SCORING_OPTION_YAKUMAN")] Yakuman = 2,
+    /// <summary>
+    /// 启用多倍役满
+    /// </summary>
     [pbr::OriginalName("SCORING_OPTION_MULTIPLE_YAKUMAN")] MultipleYakuman = 4,
+    /// <summary>
+    /// 启用累计役满
+    /// </summary>
     [pbr::OriginalName("SCORING_OPTION_KAZOE_YAKUMAN")] KazoeYakuman = 8,
-    [pbr::OriginalName("SCORING_OPTION_AOTENJOU", PreferredAlias = false)] Aotenjou = 0,
-    [pbr::OriginalName("SCORING_OPTION_ALL")] All = 15,
-    [pbr::OriginalName("SCORING_OPTION_DEFAULT")] Default = 14,
   }
 
   #endregion

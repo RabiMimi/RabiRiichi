@@ -53,25 +53,76 @@ namespace RabiRiichi.Generated.Core {
   }
   #region Enums
   public enum DiscardReason {
+    /// <summary>
+    /// None
+    /// </summary>
     [pbr::OriginalName("DISCARD_REASON_NONE")] None = 0,
+    /// <summary>
+    /// Discard due to drawing another tile from wall
+    /// </summary>
     [pbr::OriginalName("DISCARD_REASON_DRAW")] Draw = 1,
+    /// <summary>
+    /// Discard due to drawing another tile from wanpai
+    /// </summary>
     [pbr::OriginalName("DISCARD_REASON_DRAWRINSHAN")] Drawrinshan = 2,
+    /// <summary>
+    /// Discard due to claiming a tile by Chii
+    /// </summary>
     [pbr::OriginalName("DISCARD_REASON_CHII")] Chii = 3,
+    /// <summary>
+    /// Discard due to claiming a tile by Pon
+    /// </summary>
     [pbr::OriginalName("DISCARD_REASON_PON")] Pon = 4,
+    /// <summary>
+    /// Only used for chankan calculation, not for actual discard. This tile is the tile triggering kakan or ankan
+    /// </summary>
     [pbr::OriginalName("DISCARD_REASON_CHANKAN")] Chankan = 5,
+    /// <summary>
+    /// Only for calculations, not for actual discard
+    /// </summary>
     [pbr::OriginalName("DISCARD_REASON_PRETEND")] Pretend = 6,
   }
 
   public enum TileSource {
+    /// <summary>
+    /// None
+    /// </summary>
     [pbr::OriginalName("TILE_SOURCE_NONE")] None = 0,
+    /// <summary>
+    /// From wanpai
+    /// </summary>
     [pbr::OriginalName("TILE_SOURCE_WANPAI")] Wanpai = 1,
+    /// <summary>
+    /// From wall
+    /// </summary>
     [pbr::OriginalName("TILE_SOURCE_WALL")] Wall = 2,
+    /// <summary>
+    /// From hand
+    /// </summary>
     [pbr::OriginalName("TILE_SOURCE_HAND")] Hand = 3,
+    /// <summary>
+    /// From discard
+    /// </summary>
     [pbr::OriginalName("TILE_SOURCE_DISCARD")] Discard = 4,
+    /// <summary>
+    /// Part of Chii
+    /// </summary>
     [pbr::OriginalName("TILE_SOURCE_CHII")] Chii = 5,
+    /// <summary>
+    /// Part of Pon
+    /// </summary>
     [pbr::OriginalName("TILE_SOURCE_PON")] Pon = 6,
+    /// <summary>
+    /// Part of Kakan
+    /// </summary>
     [pbr::OriginalName("TILE_SOURCE_KAKAN")] Kakan = 7,
+    /// <summary>
+    /// Part of Ankan
+    /// </summary>
     [pbr::OriginalName("TILE_SOURCE_ANKAN")] Ankan = 8,
+    /// <summary>
+    /// Part of Daiminkan
+    /// </summary>
     [pbr::OriginalName("TILE_SOURCE_DAIMINKAN")] Daiminkan = 9,
   }
 
