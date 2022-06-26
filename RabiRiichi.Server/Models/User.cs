@@ -15,14 +15,12 @@ namespace RabiRiichi.Server.Models {
         public int? room { get; set; }
         public string nickname { get; set; }
         public UserStatus status { get; set; }
-        public string sessionCode { get; set; }
 
         public UserInfoResp(User user) {
             id = user.playerId;
             room = user.room?.id;
             nickname = user.nickname;
             status = user.status;
-            sessionCode = user.sessionCode.ToString("x");
         }
     }
 
@@ -31,7 +29,6 @@ namespace RabiRiichi.Server.Models {
         public string nickname = "无名兔兔";
 
         #region Server logic data members
-        public long sessionCode = 0;
         public UserStatus status { get; protected set; } = UserStatus.None;
         public Room room { get; protected set; }
         public int playerId = -1;

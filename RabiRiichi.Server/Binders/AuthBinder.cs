@@ -52,9 +52,9 @@ namespace RabiRiichi.Server.Binders {
                 return Task.CompletedTask;
             }
 
-            long id;
+            int id;
             try {
-                id = Convert.ToInt64(value, 16);
+                id = Convert.ToInt32(value, 16);
             } catch {
                 // Non-integer arguments result in model state errors
                 bindingContext.ModelState.TryAddModelError(

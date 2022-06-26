@@ -6,7 +6,8 @@
       "launchBrowser": false,
       "applicationUrl": "http://localhost:5150;https://localhost:7258",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "JWT_SECRET": "b1e58effaad0ea1884798f824b9553e23804c61ddfa1a143d3c170ce35bc59308d3abb4edb44e614a0d07eaf103dabe4d3567a68495a431273df81e7e7544ca9"
       }
     }
   }

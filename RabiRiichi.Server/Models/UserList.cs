@@ -4,36 +4,26 @@ using System.Collections.Concurrent;
 
 namespace RabiRiichi.Server.Models {
     public class UserList : IEnumerable<User> {
-        public readonly ConcurrentDictionary<long, User> users = new();
-        private readonly Random rand;
+        public readonly ConcurrentDictionary<int, User> users = new();
         private readonly AutoIncrementInt idGenerator;
 
-        public UserList(Random rand) {
-            this.rand = rand;
-        }
+        public UserList() { }
 
         public bool Add(User user) {
-            for (int i = 0; i < 10; i++) {
-                long sessionCode = rand.NextInt64();
-                if (users.TryAdd(sessionCode, user)) {
-                    user.sessionCode = sessionCode;
-                    user.id = idGenerator.Next;
-                    return true;
-                }
-            }
-            return false;
+            user.id = idGenerator.Next;
+            return users.TryAdd(user.id, user);
         }
 
-        public User Get(long id) {
+        public User Get(int id) {
             return TryGet(id, out var user) ? user : null;
         }
 
-        public bool TryGet(long sessionCode, out User user) {
-            return users.TryGetValue(sessionCode, out user);
+        public bool TryGet(int id, out User user) {
+            return users.TryGetValue(id, out user);
         }
 
-        public bool TryRemove(long sessionCode, out User user) {
-            return users.TryRemove(sessionCode, out user);
+        public bool TryRemove(int id, out User user) {
+            return users.TryRemove(id, out user);
         }
 
         public IEnumerator<User> GetEnumerator() {
