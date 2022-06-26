@@ -1,10 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <Platforms>AnyCPU;x86;x64</Platforms>
     <DebugType>portable</DebugType>
     <Version>0.1.0</Version>
   </PropertyGroup>
+
   <ItemGroup>
     <Compile Remove="RabiRiichi.Server\**" />
     <Compile Remove="RabiRiichi.Tests\**" />
@@ -13,9 +15,11 @@
     <None Remove="RabiRiichi.Server\**" />
     <None Remove="RabiRiichi.Tests\**" />
   </ItemGroup>
+
   <ItemGroup>
     <Protobuf ProtoRoot="Protos" Include="Protos\**\*.proto" Exclude="Protos\Server\**\*.proto" />
   </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Google.Protobuf" Version="3.21.1" />
     <PackageReference Include="Grpc.Tools" Version="2.47.0">
@@ -24,4 +28,5 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
   </ItemGroup>
+  
 </Project>
