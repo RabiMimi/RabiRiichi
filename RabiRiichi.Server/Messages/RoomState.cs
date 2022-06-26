@@ -1,4 +1,5 @@
 using RabiRiichi.Core.Config;
+using RabiRiichi.Server.Generated.Messages;
 using RabiRiichi.Server.Models;
 
 namespace RabiRiichi.Server.Messages {

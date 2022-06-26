@@ -3,7 +3,6 @@ using RabiRiichi.Events;
 using RabiRiichi.Events.InGame;
 using RabiRiichi.Generated.Actions;
 using RabiRiichi.Generated.Events;
-using System;
 
 namespace RabiRiichi.Communication.Proto {
     public static class ProtoConverters {
@@ -26,7 +25,7 @@ namespace RabiRiichi.Communication.Proto {
             } else if (action is SkipAction skipAction) {
                 ret.SkipAction = skipAction.ToProto();
             } else {
-                throw new ArgumentException($"Unknown action type: {action.GetType()}");
+                return null;
             }
             return ret;
         }
@@ -84,7 +83,7 @@ namespace RabiRiichi.Communication.Proto {
             } else if (ev is SyncGameStateEvent syncGameStateEvent) {
                 ret.SyncGameStateEvent = syncGameStateEvent.ToProto(playerId);
             } else {
-                throw new ArgumentException($"Unknown event type: {ev.GetType()}");
+                return null;
             }
             return ret;
         }

@@ -1,3 +1,4 @@
+using RabiRiichi.Util;
 using System.Collections;
 using System.Collections.Concurrent;
 
@@ -5,6 +6,7 @@ namespace RabiRiichi.Server.Models {
     public class UserList : IEnumerable<User> {
         public readonly ConcurrentDictionary<long, User> users = new();
         private readonly Random rand;
+        private readonly AutoIncrementInt idGenerator;
 
         public UserList(Random rand) {
             this.rand = rand;
@@ -15,6 +17,7 @@ namespace RabiRiichi.Server.Models {
                 long sessionCode = rand.NextInt64();
                 if (users.TryAdd(sessionCode, user)) {
                     user.sessionCode = sessionCode;
+                    user.id = idGenerator.Next;
                     return true;
                 }
             }

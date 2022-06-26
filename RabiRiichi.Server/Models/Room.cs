@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
+using RabiRiichi.Server.Generated.Messages;
 using RabiRiichi.Server.Messages;
 using RabiRiichi.Server.Utils;
 using System.Net.WebSockets;

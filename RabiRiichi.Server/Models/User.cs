@@ -1,4 +1,5 @@
-﻿using RabiRiichi.Server.Utils;
+﻿using RabiRiichi.Server.Generated.Messages;
+using RabiRiichi.Server.Utils;
 using System.ComponentModel.DataAnnotations;
 using System.Net.WebSockets;
 
@@ -25,14 +26,8 @@ namespace RabiRiichi.Server.Models {
         }
     }
 
-    public enum UserStatus {
-        None = 0,
-        InRoom = 1,
-        Ready = 2,
-        Playing = 3,
-    }
-
     public class User {
+        public int id;
         public string nickname = "无名兔兔";
 
         #region Server logic data members
