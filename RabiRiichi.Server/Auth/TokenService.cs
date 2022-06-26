@@ -16,6 +16,7 @@ namespace RabiRiichi.Server.Auth {
             ValidateIssuerSigningKey = true,
             ValidIssuer = Issuer,
             IssuerSigningKey = SigningKey,
+            ValidateAudience = false,
         };
         internal static readonly SigningCredentials Credentials
             = new(SigningKey, SecurityAlgorithms.HmacSha256Signature);

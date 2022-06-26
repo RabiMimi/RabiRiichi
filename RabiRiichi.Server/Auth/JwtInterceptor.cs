@@ -33,6 +33,7 @@ namespace RabiRiichi.Server.Auth {
             if (user == null) {
                 throw new RpcException(new Status(StatusCode.Unauthenticated, "Cannot find user from token"));
             }
+            context.UserState.Add("USER", user);
             return continuation(request, context);
         }
     }
