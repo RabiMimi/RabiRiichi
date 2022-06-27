@@ -3,7 +3,7 @@ using Grpc.Core;
 using RabiRiichi.Server.Generated.Rpc;
 using RabiRiichi.Server.Utils;
 
-namespace RabiRiichi.Server.Rpc {
+namespace RabiRiichi.Server.Services {
     public class InfoServiceImpl : InfoService.InfoServiceBase {
         private readonly ILogger<InfoServiceImpl> logger;
 

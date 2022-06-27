@@ -5,7 +5,7 @@ using RabiRiichi.Server.Auth;
 using RabiRiichi.Server.Generated.Rpc;
 using RabiRiichi.Server.Models;
 
-namespace RabiRiichi.Server.Rpc {
+namespace RabiRiichi.Server.Services {
     public class UserServiceImpl : UserService.UserServiceBase {
         private readonly ILogger<UserServiceImpl> logger;
         private readonly UserList userList;

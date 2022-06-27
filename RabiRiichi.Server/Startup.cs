@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using RabiRiichi.Server.Auth;
 using RabiRiichi.Server.Models;
-using RabiRiichi.Server.Rpc;
+using RabiRiichi.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
