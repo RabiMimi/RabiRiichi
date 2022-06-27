@@ -1,30 +1,20 @@
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
+using Microsoft.AspNetCore.Authorization;
 using RabiRiichi.Server.Auth;
 using RabiRiichi.Server.Generated.Rpc;
 using RabiRiichi.Server.Models;
-using RabiRiichi.Server.Utils;
 
 namespace RabiRiichi.Server.Rpc {
-    public class PublicServiceImpl : PublicService.PublicServiceBase {
-        private readonly ILogger<PublicServiceImpl> logger;
+    public class UserServiceImpl : UserService.UserServiceBase {
+        private readonly ILogger<UserServiceImpl> logger;
         private readonly UserList userList;
         private readonly TokenService tokenService;
 
-        public PublicServiceImpl(ILogger<PublicServiceImpl> logger, UserList userList, TokenService tokenService) {
+        public UserServiceImpl(ILogger<UserServiceImpl> logger, UserList userList, TokenService tokenService) {
             this.logger = logger;
             this.userList = userList;
             this.tokenService = tokenService;
-        }
-
-        public override Task<GetInfoResponse> GetInfo(Empty request, ServerCallContext context) {
-            return Task.FromResult(new GetInfoResponse {
-                Game = ServerConstants.GAME,
-                GameVersion = RabiRiichi.VERSION,
-                Server = ServerConstants.SERVER,
-                ServerVersion = ServerConstants.SERVER_VERSION,
-                MinClientVersion = ServerConstants.MIN_CLIENT_VERSION,
-            });
         }
 
         public override Task<CreateUserResponse> CreateUser(CreateUserRequest request, ServerCallContext context) {
@@ -37,6 +27,17 @@ namespace RabiRiichi.Server.Rpc {
             return Task.FromResult(new CreateUserResponse {
                 Id = user.id,
                 AccessToken = tokenService.BuildToken(user.id)
+            });
+        }
+
+        [Authorize]
+        public override Task<UserInfoResponse> GetMyInfo(Empty request, ServerCallContext context) {
+            var user = userList.Fetch(context);
+            return Task.FromResult(new UserInfoResponse {
+                Id = user.id,
+                Nickname = user.nickname,
+                Room = user.room?.id ?? 0,
+                Status = user.status,
             });
         }
     }

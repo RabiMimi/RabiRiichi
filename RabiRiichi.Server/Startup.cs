@@ -1,5 +1,4 @@
-using Grpc.AspNetCore.Server;
-using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using RabiRiichi.Server.Auth;
 using RabiRiichi.Server.Models;
 using RabiRiichi.Server.Rpc;
@@ -17,18 +16,20 @@ services.AddCors(options => {
         });
 });
 
+// Auth
+services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options => {
+        options.TokenValidationParameters = TokenService.ValidationParameters;
+    });
+services.AddAuthorization();
+
 // gRPC
 var GrpcBuilder = services.AddGrpc();
-
-IGrpcServerBuilder AddJwtInterceptor<TService>() where TService: class
-    => GrpcBuilder.AddServiceOptions<TService>(o => o.Interceptors.Add<JwtInterceptor>());
-
-AddJwtInterceptor<UserServiceImpl>();
 
 // Objects for DI
 services.AddSingleton<RoomList>();
 services.AddSingleton<UserList>();
-services.TryAddSingleton<TokenService>();
+services.AddSingleton<TokenService>();
 
 services.AddSingleton(new Random(builder.Environment.IsDevelopment()
     ? 0 : (int)(DateTimeOffset.Now.ToUnixTimeMilliseconds() & 0xffffffff)));
@@ -39,8 +40,12 @@ var app = builder.Build();
 // Use cors
 app.UseCors("AllowAll");
 
-// Add gRPC services
-app.MapGrpcService<PublicServiceImpl>();
+// Use auth
+app.UseAuthentication();
+app.UseAuthorization();
+
+// Map gRPC services
+app.MapGrpcService<InfoServiceImpl>();
 app.MapGrpcService<UserServiceImpl>();
 
 // Run app
