@@ -10,7 +10,7 @@ namespace RabiRiichi.Server.Messages {
 
         public static OutPlayerState From(User player) {
             return player == null ? null : new OutPlayerState {
-                id = player.playerId,
+                id = player.seat,
                 nickname = player.nickname,
                 status = player.status,
             };
@@ -23,7 +23,7 @@ namespace RabiRiichi.Server.Messages {
 
         public static OutRoomState From(Room room) {
             return room == null ? null : new OutRoomState {
-                players = room.players.Select(p => OutPlayerState.From(p)).ToList(),
+                players = room.users.Select(p => OutPlayerState.From(p)).ToList(),
                 config = room.config,
             };
         }

@@ -23,8 +23,8 @@ namespace RabiRiichi.Server.Utils {
             this.room = room;
         }
 
-        private OutMessage SendMessage(int playerId, string type, object msg)
-            => room.players[playerId].connection.Queue(type, msg);
+        private OutMessage SendMessage(int seat, string type, object msg)
+            => room.GetPlayerBySeat(seat).connection.Queue(type, msg);
 
         private void EndInquiry(InquiryContext context) {
             var oldContext = Interlocked.CompareExchange(ref this.context, null, context);
@@ -40,16 +40,16 @@ namespace RabiRiichi.Server.Utils {
             }
         }
 
-        public void OnEvent(int playerId, EventBase ev) {
-            SendMessage(playerId, OutMsgType.GameEvent, ev);
+        public void OnEvent(int seat, EventBase ev) {
+            SendMessage(seat, OutMsgType.GameEvent, ev);
         }
 
-        private OutMessage SendInquiry(InquiryContext ctx, int playerId) {
-            var inquiry = ctx?.inquiry.GetByPlayerId(playerId);
+        private OutMessage SendInquiry(InquiryContext ctx, int seat) {
+            var inquiry = ctx?.inquiry.GetByPlayerId(seat);
             if (inquiry == null) {
                 return null;
             }
-            var msg = SendMessage(playerId, OutMsgType.Inquiry, OutInquiry.From(inquiry));
+            var msg = SendMessage(seat, OutMsgType.Inquiry, OutInquiry.From(inquiry));
             if (msg != null) {
                 async Task WaitResponse() {
                     var waitAny = await Task.WhenAny(
@@ -60,8 +60,8 @@ namespace RabiRiichi.Server.Utils {
                         return;
                     }
                     var resp = responseTask.Result;
-                    var inquiryResp = resp == null ? InquiryResponse.Default(playerId)
-                        : new InquiryResponse(playerId, resp.index, resp.response);
+                    var inquiryResp = resp == null ? InquiryResponse.Default(seat)
+                        : new InquiryResponse(seat, resp.index, resp.response);
                     if (ctx.inquiry.OnResponse(inquiryResp)) {
                         EndInquiry(ctx);
                     }
@@ -71,8 +71,8 @@ namespace RabiRiichi.Server.Utils {
             return msg;
         }
 
-        public void SyncInquiryTo(int playerId) {
-            SendInquiry(context, playerId);
+        public void SyncInquiryTo(int seat) {
+            SendInquiry(context, seat);
         }
 
         public void OnInquiry(MultiPlayerInquiry inquiry) {

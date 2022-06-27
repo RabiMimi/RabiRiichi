@@ -7,9 +7,9 @@ namespace RabiRiichi.Server.Controllers {
     [ApiController]
     [Route("api/ws")]
     public class WebSocketController : ControllerBase {
-        private readonly ILogger<RoomController> logger;
+        private readonly ILogger<WebSocketController> logger;
 
-        public WebSocketController(ILogger<RoomController> logger) {
+        public WebSocketController(ILogger<WebSocketController> logger) {
             this.logger = logger;
         }
 

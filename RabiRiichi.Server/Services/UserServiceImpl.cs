@@ -22,7 +22,7 @@ namespace RabiRiichi.Server.Services {
                 nickname = request.Nickname
             };
             if (!userList.Add(user)) {
-                throw new RpcException(new Status(StatusCode.Unavailable, "Cannot add user"));
+                throw new RpcException(new Status(StatusCode.Internal, "Cannot add user"));
             }
             return Task.FromResult(new CreateUserResponse {
                 Id = user.id,

@@ -47,6 +47,7 @@ app.UseAuthorization();
 // Map gRPC services
 app.MapGrpcService<InfoServiceImpl>();
 app.MapGrpcService<UserServiceImpl>();
+app.MapGrpcService<RoomServiceImpl>();
 
 // Run app
 app.Run();

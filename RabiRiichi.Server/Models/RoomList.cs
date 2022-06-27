@@ -11,6 +11,7 @@ namespace RabiRiichi.Server.Models {
         }
 
         public bool Add(Room room) {
+            room.roomList = this;
             for (int i = 0; i < 10; i++) {
                 int id = rand.Next(1000, 10000);
                 if (rooms.TryAdd(id, room)) {

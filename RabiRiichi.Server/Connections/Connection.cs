@@ -46,7 +46,7 @@ namespace RabiRiichi.Server.Utils {
 
         public Connection(User user) {
             this.user = user;
-            this.playerId = user.playerId;
+            this.playerId = user.seat;
         }
 
         /// <summary>

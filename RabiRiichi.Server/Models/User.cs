@@ -17,7 +17,7 @@ namespace RabiRiichi.Server.Models {
         public UserStatus status { get; set; }
 
         public UserInfoResp(User user) {
-            id = user.playerId;
+            id = user.seat;
             room = user.room?.id;
             nickname = user.nickname;
             status = user.status;
@@ -31,7 +31,7 @@ namespace RabiRiichi.Server.Models {
         #region Server logic data members
         public UserStatus status { get; protected set; } = UserStatus.None;
         public Room room { get; protected set; }
-        public int playerId = -1;
+        public int seat => room.SeatIndexOf(this);
         public Connection connection { get; protected set; }
         #endregion
 
@@ -63,12 +63,11 @@ namespace RabiRiichi.Server.Models {
         #endregion
 
         #region Room
-        public bool JoinRoom(Room room, int playerId) {
+        public bool JoinRoom(Room room) {
             if (!Transit(UserStatus.None, UserStatus.InRoom)) {
                 return false;
             }
             this.room = room;
-            this.playerId = playerId;
             SetConnection();
             return true;
         }
@@ -78,7 +77,6 @@ namespace RabiRiichi.Server.Models {
                 return false;
             }
             this.room = null;
-            this.playerId = -1;
             SetConnection(true);
             return true;
         }
