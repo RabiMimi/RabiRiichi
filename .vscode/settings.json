@@ -122,5 +122,10 @@
     "Yakus"
   ],
   "cSpell.enabled": true,
-  "cSpell.ignoreWords": ["shopt", "globstar"]
+  "cSpell.ignoreWords": ["shopt", "globstar"],
+  "protoc": {
+    "options": [
+      "--proto_path=${workspaceRoot}/Protos",
+    ]
+  }
 }
