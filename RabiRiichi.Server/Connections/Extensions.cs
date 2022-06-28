@@ -43,13 +43,13 @@ namespace RabiRiichi.Server.Connections {
         }
 
         public static async Task<bool> HandShake(this RabiStreamingContext ctx) {
-            var msg = ctx.connection.Queue(ProtoUtils.CreateServerMsg(new ServerVersionCheckMsg {
+            var msg = ctx.connection.Queue(ProtoUtils.CreateDto(new ServerVersionCheckMsg {
                 Game = ServerConstants.GAME,
                 GameVersion = RabiRiichi.VERSION,
                 Server = ServerConstants.SERVER,
                 ServerVersion = ServerConstants.SERVER_VERSION,
                 MinClientVersion = ServerConstants.MIN_CLIENT_VERSION,
-            }).CreateDto());
+            }));
             var inMsg = await msg.WaitResponse();
             var reply = inMsg.ClientMsg?.VersionCheckMsg;
             if (reply == null) {

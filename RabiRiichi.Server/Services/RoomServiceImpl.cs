@@ -21,8 +21,7 @@ namespace RabiRiichi.Server.Services {
             this.rand = rand;
         }
 
-        public override Task<CreateRoomResponse> CreateRoom(Empty request, ServerCallContext context) {
-            var user = userList.Fetch(context);
+        public Task<CreateRoomResponse> CreateRoom(User user) {
             var room = new Room(rand, new GameConfig());
             if (roomList.Add(room) && room.AddPlayer(user)) {
                 return Task.FromResult(new CreateRoomResponse {
@@ -32,8 +31,12 @@ namespace RabiRiichi.Server.Services {
             return Task.FromException<CreateRoomResponse>(new RpcException(new Status(StatusCode.Internal, "Cannot add room or join room")));
         }
 
-        public override Task<Empty> JoinRoom(JoinRoomRequest request, ServerCallContext context) {
+        public override Task<CreateRoomResponse> CreateRoom(Empty request, ServerCallContext context) {
             var user = userList.Fetch(context);
+            return CreateRoom(user);
+        }
+
+        public Task<Empty> JoinRoom(JoinRoomRequest request, User user) {
             if (!roomList.TryGet(request.RoomId, out var room)) {
                 throw new RpcException(
                     new Status(StatusCode.NotFound, "Cannot find room"));
@@ -43,6 +46,11 @@ namespace RabiRiichi.Server.Services {
                     new Status(StatusCode.Unavailable, "Room is full"));
             }
             return Task.FromResult(new Empty());
+        }
+
+        public override Task<Empty> JoinRoom(JoinRoomRequest request, ServerCallContext context) {
+            var user = userList.Fetch(context);
+            return JoinRoom(request, user);
         }
     }
 }

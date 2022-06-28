@@ -1,7 +1,9 @@
 using Grpc.Core;
 using RabiRiichi.Server.Generated.Rpc;
+using RabiRiichi.Server.WebSockets;
 using RabiRiichi.Util;
 using System.Collections.Concurrent;
+using System.Net.WebSockets;
 
 namespace RabiRiichi.Server.Connections {
     public class RabiStreamingContext {
@@ -80,6 +82,10 @@ namespace RabiRiichi.Server.Connections {
                     .Append(ReceiveMsgLoop())
                     .ToArray()
             );
+            // Close connection for websocket compatibility.
+            if (requestStream is WebSocketAdapter adapter) {
+                await adapter.Close();
+            }
             // Invoke callback. This will be called once and only once.
             OnDisconnect?.Invoke();
             // Dispose cancellation token source.
@@ -131,6 +137,9 @@ namespace RabiRiichi.Server.Connections {
                     // Cancellation token cancelled. Could be:
                     // 1. A new connection coming in
                     // 2. Client informed that they closed the connection
+                    return;
+                } catch (WebSocketException) {
+                    // Using websocket adapter, client closed the connection.
                     return;
                 }
             }

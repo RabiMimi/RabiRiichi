@@ -43,7 +43,7 @@ namespace RabiRiichi.Server.Models {
                     Config = config.ToProto(),
                 };
                 roomState.Players.AddRange(players.Select(p => p.GetState()));
-                var msg = ProtoUtils.CreateServerMsg(roomState).CreateDto();
+                var msg = ProtoUtils.CreateDto(roomState);
                 foreach (var player in players) {
                     player?.connection?.Queue(msg);
                 }

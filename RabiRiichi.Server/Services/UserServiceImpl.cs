@@ -17,7 +17,7 @@ namespace RabiRiichi.Server.Services {
             this.tokenService = tokenService;
         }
 
-        public override Task<CreateUserResponse> CreateUser(CreateUserRequest request, ServerCallContext context) {
+        public Task<CreateUserResponse> CreateUser(CreateUserRequest request) {
             var user = new User {
                 nickname = request.Nickname
             };
@@ -30,15 +30,23 @@ namespace RabiRiichi.Server.Services {
             });
         }
 
-        [Authorize]
-        public override Task<UserInfoResponse> GetMyInfo(Empty request, ServerCallContext context) {
-            var user = userList.Fetch(context);
+        public override Task<CreateUserResponse> CreateUser(CreateUserRequest request, ServerCallContext context) {
+            return CreateUser(request);
+        }
+
+        public Task<UserInfoResponse> GetMyInfo(User user) {
             return Task.FromResult(new UserInfoResponse {
                 Id = user.id,
                 Nickname = user.nickname,
                 Room = user.room?.id ?? 0,
                 Status = user.status,
             });
+        }
+
+        [Authorize]
+        public override Task<UserInfoResponse> GetMyInfo(Empty request, ServerCallContext context) {
+            var user = userList.Fetch(context);
+            return GetMyInfo(user);
         }
     }
 }

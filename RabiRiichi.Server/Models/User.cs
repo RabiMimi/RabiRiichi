@@ -62,7 +62,7 @@ namespace RabiRiichi.Server.Models {
             if (clear) {
                 connection = null;
             } else {
-                connection = new Connection(this);
+                connection = new Connection();
                 this.AddRoomListeners();
             }
         }

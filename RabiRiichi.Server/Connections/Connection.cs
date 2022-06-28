@@ -1,7 +1,6 @@
 using Grpc.Core;
 using RabiRiichi.Server.Generated.Messages;
 using RabiRiichi.Server.Generated.Rpc;
-using RabiRiichi.Server.Models;
 using RabiRiichi.Server.Utils;
 using RabiRiichi.Util;
 using System.Collections.Concurrent;
@@ -27,9 +26,6 @@ namespace RabiRiichi.Server.Connections {
             Interlocked.Exchange(ref currentCtx, newCts)?.Close();
         }
 
-        protected readonly User user;
-        protected readonly int playerId;
-
         /// <summary>
         /// Last message ID. Shared by all connections with the same player.
         /// </summary>
@@ -45,11 +41,6 @@ namespace RabiRiichi.Server.Connections {
         /// If true, no more web sockets or connections are accepted.
         /// </summary>
         public readonly AtomicBool isClosed = new();
-
-        public Connection(User user) {
-            this.user = user;
-            this.playerId = user.seat;
-        }
 
         /// <summary>
         /// Create an outgoing message but do not send it.

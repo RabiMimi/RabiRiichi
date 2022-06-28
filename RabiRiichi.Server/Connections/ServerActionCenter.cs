@@ -37,9 +37,9 @@ namespace RabiRiichi.Server.Connections {
             for (int i = 0; i < oldContext.inquiry.playerInquiries.Count; i++) {
                 SendMessage(
                     oldContext.inquiry.playerInquiries[i].playerId,
-                    ProtoUtils.CreateServerMsg(new ServerInquiryEndMsg {
+                    ProtoUtils.CreateDto(new ServerInquiryEndMsg {
                         EndId = oldContext.inquiryIds[i],
-                    }).CreateDto());
+                    }));
             }
         }
 
