@@ -151,11 +151,13 @@ namespace RabiRiichi.Server.Connections {
                         // Regular message with positive ID.
                         clientMsgs.TryAdd(msg.Id, msg);
                         if (msg.Id == lastBroadcastedMsgId + 1) {
-                            // Broadcast messages in order.
+                            OnReceive?.Invoke(msg);
+                            lastBroadcastedMsgId++;
+                            // Broadcast other messages in order.
                             while (lastBroadcastedMsgId < maxClientMsgId
                                 && clientMsgs.TryGetValue(lastBroadcastedMsgId + 1, out var clientMsg)) {
-                                lastBroadcastedMsgId++;
                                 OnReceive?.Invoke(clientMsg);
+                                lastBroadcastedMsgId++;
                             }
                         }
                     } else {
