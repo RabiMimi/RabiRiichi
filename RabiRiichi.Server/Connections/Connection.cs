@@ -1,28 +1,30 @@
-using RabiRiichi.Server.Messages;
+using Grpc.Core;
+using RabiRiichi.Server.Generated.Messages;
+using RabiRiichi.Server.Generated.Rpc;
 using RabiRiichi.Server.Models;
+using RabiRiichi.Server.Utils;
 using RabiRiichi.Util;
 using System.Collections.Concurrent;
-using System.Net.WebSockets;
 
-namespace RabiRiichi.Server.Utils {
+namespace RabiRiichi.Server.Connections {
     public class Connection : IDisposable {
         /// <summary>
-        /// Current WebSocket context. Null if not connected.<br/>
+        /// Current streaming context. Null if not connected.<br/>
         /// Will not be reset to null when the connection is closed.
         /// </summary>
-        protected RabiWSContext currentCtx;
-        public RabiWSContext Current => currentCtx;
+        protected RabiStreamingContext currentCtx;
+        public RabiStreamingContext Current => currentCtx;
 
         /// <summary>
         /// Callback when a message is received.
         /// </summary>
-        public Action<InMessage> OnReceive;
+        public Action<ClientMessageDto> OnReceive;
 
         /// <summary>
-        /// Switch to a new WS context. Old connection will be closed.
+        /// Switch to a new context. Old connection will be closed.
         /// </summary>
-        protected void SwitchWSContext(RabiWSContext newCts) {
-            Interlocked.Exchange(ref currentCtx, newCts)?.cts.Cancel();
+        protected void SwitchContext(RabiStreamingContext newCts) {
+            Interlocked.Exchange(ref currentCtx, newCts)?.Close();
         }
 
         protected readonly User user;
@@ -36,7 +38,7 @@ namespace RabiRiichi.Server.Utils {
         /// <summary>
         /// Mapping from message ID to message. Shared by all connections with the same player.
         /// </summary>
-        internal readonly ConcurrentDictionary<int, OutMessage> msgLookup = new();
+        internal readonly ConcurrentDictionary<int, ServerMessageWrapper> serverMsgs = new();
 
         /// <summary>
         /// Whether the connection is closed.<br/>
@@ -52,19 +54,22 @@ namespace RabiRiichi.Server.Utils {
         /// <summary>
         /// Create an outgoing message but do not send it.
         /// </summary>
-        public OutMessage CreateMessage<T>(string type, T msg, int? respondTo = null)
-            => new(msgId.Next, type, msg, respondTo);
+        public ServerMessageWrapper CreateMessage(ServerMessageDto msg) {
+            var ret = new ServerMessageWrapper(msg);
+            msg.Id = msgId.Next;
+            return ret;
+        }
 
         /// <summary>
         /// Add a message to queue. It will not be sent immediately.
         /// </summary>
         /// <param name="msg">Message to send</param>
         /// <returns>Whether the message was added to queue.</returns>
-        public bool Queue(OutMessage msg) {
+        public bool Queue(ServerMessageWrapper msg) {
             if (isClosed) {
                 return false;
             }
-            msgLookup.TryAdd(msg.id, msg);
+            serverMsgs.TryAdd(msg.msg.Id, msg);
             currentCtx?.Queue(msg);
             return true;
         }
@@ -72,48 +77,51 @@ namespace RabiRiichi.Server.Utils {
         /// <summary>
         /// Add a message to queue. It will not be sent immediately.
         /// </summary>
-        public OutMessage Queue<T>(string type, T msg) {
-            var ret = CreateMessage(type, msg);
+        public ServerMessageWrapper Queue(ServerMessageDto msg) {
+            var ret = CreateMessage(msg);
             return Queue(ret) ? ret : null;
         }
 
         /// <summary>
-        /// Connects to a websocket. Existing connection will be closed.
+        /// Connects to a stream. Existing connection will be closed.
         /// </summary>
-        public RabiWSContext Connect(WebSocket ws) {
+        public RabiStreamingContext Connect(
+            IAsyncStreamReader<ClientMessageDto> requestStream,
+            IServerStreamWriter<ServerMessageDto> responseStream) {
             if (isClosed) {
                 throw new InvalidOperationException("Connection is closed");
             }
 
-            var ctx = new RabiWSContext(this, ws, playerId);
+            var ctx = new RabiStreamingContext(this, requestStream, responseStream);
+
             // Start message loops before context switch
             _ = ctx.RunLoops(HeartBeatRecvLoop(ctx));
 
             // Cancel previous connection and switch context
-            SwitchWSContext(ctx);
+            SwitchContext(ctx);
 
             return ctx;
         }
 
         /// <summary>
-        /// When a heartbeat arrives, updates relevant fields and replies.
+        /// When a heartbeat arrives, reply.
         /// </summary>
-        private void OnReceiveHeartBeat(RabiWSContext ctx, InOutHeartBeat msg, int respondTo) {
-            // Update maximum client message ID
-            ctx.maxClientMsgId = msg.maxMsgId;
+        private void OnReceiveHeartBeat(RabiStreamingContext ctx, TwoWayHeartBeatMsg msg, int respondTo) {
             // Respond to the heartbeat
-            int maxReceivedMsgId = ctx.maxReceivedMsgId;
-            int count = Math.Min(16, msg.maxMsgId - maxReceivedMsgId);
-            List<int> requestingEvents = count > 0
-                ? new(Enumerable.Range(maxReceivedMsgId + 1, count)) : null;
-            ctx.Queue(new OutMessage(-1, OutMsgType.HeartBeat,
-                InOutHeartBeat.From(msgId.Value, requestingEvents), respondTo));
-            if (msg.requestingEvents == null) {
-                return;
-            }
+            var response = new TwoWayHeartBeatMsg {
+                MaxId = msgId,
+            };
+            response.RequestingIds.AddRange(ctx.GetMissingMsgIds().Take(16));
+            ctx.Queue(new ServerMessageWrapper(
+                new ServerMessageDto {
+                    Id = -1,
+                    RespondTo = respondTo,
+                    ServerMsg = ProtoUtils.CreateServerMsg(response),
+                }
+            ));
             // Client requesting events to be resent
-            foreach (var evt in msg.requestingEvents) {
-                if (msgLookup.TryGetValue(evt, out var oldMsg)) {
+            foreach (var evt in msg.RequestingIds) {
+                if (serverMsgs.TryGetValue(evt, out var oldMsg)) {
                     ctx.Queue(oldMsg);
                 }
             }
@@ -123,18 +131,19 @@ namespace RabiRiichi.Server.Utils {
         /// Receives a heartbeat package.
         /// If no response is received in 15 seconds, the connection will be closed.
         /// </summary>
-        private async Task HeartBeatRecvLoop(RabiWSContext ctx) {
+        private async Task HeartBeatRecvLoop(RabiStreamingContext ctx) {
             TaskCompletionSource received = null;
-            ctx.OnReceive += (InMessage incoming) => {
+            ctx.OnReceive += (ClientMessageDto incoming) => {
                 // Always resets heartbeat timer even if the message is not a heartbeat
                 received?.TrySetResult();
                 OnReceive?.Invoke(incoming);
                 // Check if the message is responding to a server message
-                if (msgLookup.TryGetValue(incoming.respondTo, out var msg)) {
+                if (serverMsgs.TryGetValue(incoming.RespondTo, out var msg)) {
                     msg.responseTcs.TrySetResult(incoming);
                 }
-                if (incoming.TryGetMessage<InOutHeartBeat>(out var heartBeat)) {
-                    OnReceiveHeartBeat(ctx, heartBeat, incoming.id);
+                var heartBeat = incoming.ClientMsg?.HeartBeatMsg;
+                if (heartBeat != null) {
+                    OnReceiveHeartBeat(ctx, heartBeat, incoming.Id);
                 }
             };
             while (true) {
@@ -147,7 +156,7 @@ namespace RabiRiichi.Server.Utils {
                         continue;
                     } else {
                         // No response from client, close connection
-                        ctx.cts.Cancel();
+                        ctx?.Close();
                         break;
                     }
                 } catch (OperationCanceledException) {
@@ -170,7 +179,7 @@ namespace RabiRiichi.Server.Utils {
 
         protected void Dispose(bool disposing) {
             if (disposing) {
-                SwitchWSContext(null);
+                SwitchContext(null);
             }
         }
 

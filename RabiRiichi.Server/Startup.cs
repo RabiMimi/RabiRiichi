@@ -48,6 +48,7 @@ app.UseAuthorization();
 app.MapGrpcService<InfoServiceImpl>();
 app.MapGrpcService<UserServiceImpl>();
 app.MapGrpcService<RoomServiceImpl>();
+app.MapGrpcService<GameServiceImpl>();
 
 // Run app
 app.Run();

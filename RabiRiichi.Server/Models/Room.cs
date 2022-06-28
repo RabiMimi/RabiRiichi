@@ -1,9 +1,9 @@
+using Grpc.Core;
 using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
+using RabiRiichi.Server.Connections;
 using RabiRiichi.Server.Generated.Messages;
-using RabiRiichi.Server.Messages;
-using RabiRiichi.Server.Utils;
-using System.Net.WebSockets;
+using RabiRiichi.Server.Generated.Rpc;
 
 namespace RabiRiichi.Server.Models {
     public class CreateRoomResp {
@@ -18,18 +18,18 @@ namespace RabiRiichi.Server.Models {
         public int id;
         public RoomList roomList;
         public readonly GameConfig config;
-        public readonly User[] users;
-        public readonly User[] seats;
+        private readonly List<User> players = new();
+        private readonly User[] seats;
         private bool isDestroyed = false;
         private readonly Random rand;
 
         private bool HasPlayer(User user) {
-            return users.Any(p => p == user);
+            return players.Any(p => p == user);
         }
 
         private void SetupSeat() {
             for (int i = 0; i < config.playerCount; i++) {
-                seats[i] = users[i];
+                seats[i] = players[i];
             }
             for (int i = 1; i < config.playerCount; i++) {
                 int index = rand.Next(i + 1);
@@ -38,10 +38,14 @@ namespace RabiRiichi.Server.Models {
         }
 
         public void BroadcastRoomState() {
-            lock (users) {
-                var state = OutRoomState.From(this);
-                foreach (var player in users) {
-                    player?.connection?.Queue(OutMsgType.RoomState, state);
+            lock (players) {
+                var roomState = new ServerRoomStateMsg {
+                    Config = config.ToProto(),
+                };
+                roomState.Players.AddRange(players.Select(p => p.GetState()));
+                var msg = ProtoUtils.CreateServerMsg(roomState).CreateDto();
+                foreach (var player in players) {
+                    player?.connection?.Queue(msg);
                 }
             }
         }
@@ -49,16 +53,15 @@ namespace RabiRiichi.Server.Models {
         public Room(Random rand, GameConfig config) {
             this.rand = rand;
             this.config = config;
-            users = new User[config.playerCount];
             seats = new User[config.playerCount];
         }
 
         public bool TryStartGame() {
-            lock (users) {
-                if (users.Any(p => p == null || p.status != UserStatus.Ready)) {
+            lock (players) {
+                if (players.Any(p => p == null || p.status != UserStatus.Ready)) {
                     return false;
                 }
-                foreach (var player in users) {
+                foreach (var player in players) {
                     if (!player.Transit(UserStatus.Ready, UserStatus.Playing)) {
                         throw new InvalidOperationException(
                             $"Player status transition failed, unexpected modification not guarded by lock?");
@@ -76,11 +79,11 @@ namespace RabiRiichi.Server.Models {
         }
 
         public bool TryEndGame() {
-            lock (users) {
-                if (users.Any(p => p == null || p.status != UserStatus.Playing)) {
+            lock (players) {
+                if (players.Any(p => p == null || p.status != UserStatus.Playing)) {
                     return false;
                 }
-                foreach (var player in users) {
+                foreach (var player in players) {
                     if (!player.Transit(UserStatus.Playing, UserStatus.InRoom)) {
                         throw new InvalidOperationException(
                             $"Player status transition failed, unexpected modification not guarded by lock?");
@@ -91,12 +94,14 @@ namespace RabiRiichi.Server.Models {
             }
         }
 
-        public RabiWSContext Connect(User user, WebSocket ws) {
-            lock (users) {
+        public RabiStreamingContext Connect(User user,
+            IAsyncStreamReader<ClientMessageDto> requestStream,
+            IServerStreamWriter<ServerMessageDto> responseStream) {
+            lock (players) {
                 if (!HasPlayer(user)) {
                     return null;
                 }
-                var ctx = user.connection.Connect(ws);
+                var ctx = user.connection.Connect(requestStream, responseStream);
                 if (ctx == null) {
                     return null;
                 }
@@ -108,7 +113,7 @@ namespace RabiRiichi.Server.Models {
         }
 
         public bool GetReady(User user) {
-            lock (users) {
+            lock (players) {
                 if (!HasPlayer(user)) {
                     return false;
                 }
@@ -116,7 +121,7 @@ namespace RabiRiichi.Server.Models {
                     return false;
                 }
                 BroadcastRoomState();
-                if (users.All(p => p?.status == UserStatus.Ready)) {
+                if (players.All(p => p?.status == UserStatus.Ready)) {
                     return TryStartGame();
                 }
                 return true;
@@ -124,7 +129,7 @@ namespace RabiRiichi.Server.Models {
         }
 
         public bool CancelReady(User user) {
-            lock (users) {
+            lock (players) {
                 if (!HasPlayer(user)) {
                     return false;
                 }
@@ -137,40 +142,37 @@ namespace RabiRiichi.Server.Models {
         }
 
         public bool AddPlayer(User user) {
-            lock (users)
+            lock (players)
                 lock (user) {
                     if (isDestroyed) {
                         return false;
                     }
-                    int emptyIndex = Array.IndexOf(users, null);
-                    if (emptyIndex < 0) {
+                    if (players.Count >= config.playerCount) {
                         return false;
                     }
-                    if (users.Contains(user)) {
+                    if (players.Contains(user)) {
                         return false;
                     }
                     if (!user.JoinRoom(this)) {
                         return false;
                     }
-                    users[emptyIndex] = user;
+                    players.Add(user);
                     BroadcastRoomState();
                     return true;
                 }
         }
 
         public bool RemovePlayer(User user) {
-            lock (users)
+            lock (players)
                 lock (user) {
                     if (!user.ExitRoom(this)) {
                         return false;
                     }
-                    int index = Array.IndexOf(users, user);
-                    if (index < 0) {
-                        throw new InvalidOperationException("Player not found in room");
+                    if (!players.Remove(user)) {
+                        return false;
                     }
-                    users[index] = null;
                     BroadcastRoomState();
-                    if (users.All(p => p == null)) {
+                    if (players.Count == 0) {
                         roomList.Remove(id);
                         isDestroyed = true;
                     }
@@ -179,13 +181,13 @@ namespace RabiRiichi.Server.Models {
         }
 
         public int SeatIndexOf(User user) {
-            lock (users) {
-                return Array.IndexOf(users, user);
+            lock (players) {
+                return players.IndexOf(user);
             }
         }
 
         public User GetPlayerBySeat(int seatIndex) {
-            lock (users) {
+            lock (players) {
                 return seats[seatIndex];
             }
         }

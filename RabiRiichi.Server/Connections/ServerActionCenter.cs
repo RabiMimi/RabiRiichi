@@ -1,10 +1,12 @@
 using RabiRiichi.Actions;
 using RabiRiichi.Communication;
+using RabiRiichi.Communication.Proto;
 using RabiRiichi.Events;
-using RabiRiichi.Server.Messages;
+using RabiRiichi.Server.Generated.Messages;
+using RabiRiichi.Server.Generated.Rpc;
 using RabiRiichi.Server.Models;
 
-namespace RabiRiichi.Server.Utils {
+namespace RabiRiichi.Server.Connections {
     public class ServerActionCenter : IActionCenter {
         private class InquiryContext {
             public readonly MultiPlayerInquiry inquiry;
@@ -23,8 +25,8 @@ namespace RabiRiichi.Server.Utils {
             this.room = room;
         }
 
-        private OutMessage SendMessage(int seat, string type, object msg)
-            => room.GetPlayerBySeat(seat).connection.Queue(type, msg);
+        private ServerMessageWrapper SendMessage(int seat, ServerMessageDto msg)
+            => room.GetPlayerBySeat(seat).connection.Queue(msg);
 
         private void EndInquiry(InquiryContext context) {
             var oldContext = Interlocked.CompareExchange(ref this.context, null, context);
@@ -35,33 +37,40 @@ namespace RabiRiichi.Server.Utils {
             for (int i = 0; i < oldContext.inquiry.playerInquiries.Count; i++) {
                 SendMessage(
                     oldContext.inquiry.playerInquiries[i].playerId,
-                    OutMsgType.FinishInquiry,
-                    OutFinishInquiry.From(oldContext.inquiryIds[i]));
+                    ProtoUtils.CreateServerMsg(new ServerInquiryEndMsg {
+                        EndId = oldContext.inquiryIds[i],
+                    }).CreateDto());
             }
         }
 
         public void OnEvent(int seat, EventBase ev) {
-            SendMessage(seat, OutMsgType.GameEvent, ev);
+            var proto = ProtoConverters.ToProto(ev, seat);
+            if (proto != null) {
+                SendMessage(seat, proto.CreateDto());
+            }
         }
 
-        private OutMessage SendInquiry(InquiryContext ctx, int seat) {
+        private ServerMessageWrapper SendInquiry(InquiryContext ctx, int seat) {
             var inquiry = ctx?.inquiry.GetByPlayerId(seat);
             if (inquiry == null) {
                 return null;
             }
-            var msg = SendMessage(seat, OutMsgType.Inquiry, OutInquiry.From(inquiry));
+            var inquiryMsg = new ServerInquiryMsg {
+                Inquiry = inquiry.ToProto(),
+            };
+            var msg = SendMessage(seat, inquiryMsg.CreateDto());
             if (msg != null) {
                 async Task WaitResponse() {
                     var waitAny = await Task.WhenAny(
                         ctx.inquiry.WaitForFinish,
-                        msg.WaitResponse<InInquiryResponse>(TimeSpan.FromHours(1)));
-                    if (waitAny is not Task<InInquiryResponse> responseTask) {
+                        msg.WaitResponse(TimeSpan.FromHours(1)));
+                    if (waitAny is not Task<ClientMessageDto> responseTask) {
                         // Inquiry finished, no need to wait for response.
                         return;
                     }
-                    var resp = responseTask.Result;
+                    var resp = responseTask.Result.ClientMsg?.InquiryMsg;
                     var inquiryResp = resp == null ? InquiryResponse.Default(seat)
-                        : new InquiryResponse(seat, resp.index, resp.response);
+                        : new InquiryResponse(seat, resp.Index, resp.Response);
                     if (ctx.inquiry.OnResponse(inquiryResp)) {
                         EndInquiry(ctx);
                     }
@@ -83,9 +92,7 @@ namespace RabiRiichi.Server.Utils {
             for (int i = 0; i < inquiry.playerInquiries.Count; i++) {
                 var playerInquiry = inquiry.playerInquiries[i];
                 var msg = SendInquiry(ctx, playerInquiry.playerId);
-                if (msg != null) {
-                    ctx.inquiryIds[i] = msg.id;
-                }
+                ctx.inquiryIds[i] = msg.msg.Id;
             }
             if (inquiry.IsEmpty) {
                 EndInquiry(ctx);

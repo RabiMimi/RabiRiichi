@@ -1,7 +1,8 @@
-﻿using RabiRiichi.Server.Generated.Messages;
-using RabiRiichi.Server.Utils;
+﻿using Grpc.Core;
+using RabiRiichi.Server.Connections;
+using RabiRiichi.Server.Generated.Messages;
+using RabiRiichi.Server.Generated.Rpc;
 using System.ComponentModel.DataAnnotations;
-using System.Net.WebSockets;
 
 namespace RabiRiichi.Server.Models {
     public class CreateUserReq {
@@ -35,6 +36,15 @@ namespace RabiRiichi.Server.Models {
         public Connection connection { get; protected set; }
         #endregion
 
+        public ServerPlayerStateMsg GetState() {
+            return new ServerPlayerStateMsg {
+                Id = id,
+                Nickname = nickname,
+                Status = status,
+                Seat = seat,
+            };
+        }
+
         #region Game
         public bool Transit(UserStatus expected, UserStatus next) {
             if (status != expected) {
@@ -57,8 +67,10 @@ namespace RabiRiichi.Server.Models {
             }
         }
 
-        public RabiWSContext Connect(WebSocket ws) {
-            return room?.Connect(this, ws);
+        public RabiStreamingContext Connect(
+            IAsyncStreamReader<ClientMessageDto> requestStream,
+            IServerStreamWriter<ServerMessageDto> responseStream) {
+            return room?.Connect(this, requestStream, responseStream);
         }
         #endregion
 

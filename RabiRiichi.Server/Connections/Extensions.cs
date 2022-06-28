@@ -1,10 +1,35 @@
+using RabiRiichi.Generated.Events;
 using RabiRiichi.Server.Generated.Messages;
-using RabiRiichi.Server.Messages;
+using RabiRiichi.Server.Generated.Rpc;
 using RabiRiichi.Server.Models;
+using RabiRiichi.Server.Utils;
 
-namespace RabiRiichi.Server.Utils {
+namespace RabiRiichi.Server.Connections {
     public static class ConnectionExtensions {
-        public static async Task<InMessage> WaitResponse(this OutMessage msg,
+        #region DTO
+        public static ServerMessageDto CreateDto(this ServerMsg serverMsg, int respondTo = 0) {
+            return new ServerMessageDto {
+                RespondTo = respondTo,
+                ServerMsg = serverMsg
+            };
+        }
+
+        public static ServerMessageDto CreateDto(this ServerInquiryMsg inquiry, int respondTo = 0) {
+            return new ServerMessageDto {
+                RespondTo = respondTo,
+                Inquiry = inquiry
+            };
+        }
+
+        public static ServerMessageDto CreateDto(this EventMsg ev, int respondTo = 0) {
+            return new ServerMessageDto {
+                RespondTo = respondTo,
+                Event = ev
+            };
+        }
+        #endregion
+
+        public static async Task<ClientMessageDto> WaitResponse(this ServerMessageWrapper msg,
             TimeSpan? timeout = null) {
             var task = msg.responseTcs.Task;
             if (timeout == null) {
@@ -17,37 +42,35 @@ namespace RabiRiichi.Server.Utils {
             }
         }
 
-        public static async Task<T> WaitResponse<T>(this OutMessage msg,
-            TimeSpan? timeout = null) {
-            var inMsg = await msg.WaitResponse(timeout);
-            if (inMsg == null) {
-                return default;
-            }
-            return inMsg.TryGetMessage<T>(out var ret) ? ret : default;
-        }
-
-        public static async Task<bool> HandShake(this RabiWSContext ctx) {
-            var msg = ctx.connection.Queue(OutMsgType.VersionCheck, new OutVersionCheck());
+        public static async Task<bool> HandShake(this RabiStreamingContext ctx) {
+            var msg = ctx.connection.Queue(ProtoUtils.CreateServerMsg(new ServerVersionCheckMsg {
+                Game = ServerConstants.GAME,
+                GameVersion = RabiRiichi.VERSION,
+                Server = ServerConstants.SERVER,
+                ServerVersion = ServerConstants.SERVER_VERSION,
+                MinClientVersion = ServerConstants.MIN_CLIENT_VERSION,
+            }).CreateDto());
             var inMsg = await msg.WaitResponse();
-            if (inMsg == null) {
+            var reply = inMsg.ClientMsg?.VersionCheckMsg;
+            if (reply == null) {
                 return false;
             }
-            if (!inMsg.TryGetMessage<InVersionCheck>(out var clientVersion)) {
+            if (!ServerUtils.IsClientVersionSupported(reply.ClientVersion)) {
                 return false;
             }
-            if (!ServerUtils.IsClientVersionSupported(clientVersion.clientVersion)) {
-                return false;
-            }
-            if (!ServerUtils.IsServerVersionSupported(clientVersion.minServerVersion)) {
+            if (!ServerUtils.IsServerVersionSupported(reply.MinServerVersion)) {
                 return false;
             }
             return true;
         }
 
         public static void AddRoomListeners(this User user) {
-            var onReceive = user.connection.OnReceive;
-            onReceive.AddListener((InRoomUpdate msg) => {
-                switch (msg.status) {
+            user.connection.OnReceive += (ClientMessageDto dto) => {
+                var msg = dto.ClientMsg?.RoomUpdateMsg;
+                if (msg == null) {
+                    return;
+                }
+                switch (msg.Status) {
                     case UserStatus.Ready:
                         user.room?.GetReady(user);
                         break;
@@ -59,14 +82,6 @@ namespace RabiRiichi.Server.Utils {
                         break;
                     default:
                         break;
-                }
-            });
-        }
-
-        public static void AddListener<T>(this Action<InMessage> action, Action<T> listener) {
-            action += (InMessage msg) => {
-                if (msg.TryGetMessage<T>(out var msgData)) {
-                    listener(msgData);
                 }
             };
         }
