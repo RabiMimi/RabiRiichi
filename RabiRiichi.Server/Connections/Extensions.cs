@@ -58,7 +58,7 @@ namespace RabiRiichi.Server.Connections {
                 MinClientVersion = ServerConstants.MIN_CLIENT_VERSION,
             }));
             var inMsg = await msg.WaitResponse();
-            var reply = inMsg.ClientMsg?.VersionCheckMsg;
+            var reply = inMsg?.ClientMsg?.VersionCheckMsg;
             if (reply == null) {
                 return false;
             }

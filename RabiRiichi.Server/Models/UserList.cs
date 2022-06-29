@@ -5,7 +5,7 @@ using System.Collections.Concurrent;
 namespace RabiRiichi.Server.Models {
     public class UserList : IEnumerable<User> {
         public readonly ConcurrentDictionary<int, User> users = new();
-        private readonly AutoIncrementInt idGenerator;
+        private AutoIncrementInt idGenerator = new();
 
         public UserList() { }
 

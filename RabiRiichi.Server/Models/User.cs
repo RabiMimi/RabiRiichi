@@ -33,7 +33,7 @@ namespace RabiRiichi.Server.Models {
         public UserStatus status { get; protected set; } = UserStatus.None;
         public Room room { get; protected set; }
         public int seat => room.SeatIndexOf(this);
-        public Connection connection { get; protected set; }
+        public readonly Connection connection = new();
         #endregion
 
         public ServerPlayerStateMsg GetState() {
@@ -54,23 +54,12 @@ namespace RabiRiichi.Server.Models {
             return true;
         }
 
-        protected void SetConnection(bool clear = false) {
-            if (connection != null) {
-                connection.Current?.Close();
-                connection.Dispose();
-            }
-            if (clear) {
-                connection = null;
-            } else {
-                connection = new Connection();
-                this.AddRoomListeners();
-            }
-        }
-
         public RabiStreamingContext Connect(
             IAsyncStreamReader<ClientMessageDto> requestStream,
             IServerStreamWriter<ServerMessageDto> responseStream) {
-            return room?.Connect(this, requestStream, responseStream);
+            var ret = connection.Connect(requestStream, responseStream);
+            room?.OnConnect(this);
+            return ret;
         }
         #endregion
 
@@ -80,7 +69,6 @@ namespace RabiRiichi.Server.Models {
                 return false;
             }
             this.room = room;
-            SetConnection();
             return true;
         }
 
@@ -89,7 +77,6 @@ namespace RabiRiichi.Server.Models {
                 return false;
             }
             this.room = null;
-            SetConnection(true);
             return true;
         }
         #endregion

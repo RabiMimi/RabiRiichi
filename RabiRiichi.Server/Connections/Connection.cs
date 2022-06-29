@@ -84,12 +84,13 @@ namespace RabiRiichi.Server.Connections {
             }
 
             var ctx = new RabiStreamingContext(this, requestStream, responseStream);
-
-            // Start message loops before context switch
-            _ = ctx.RunLoops(HeartBeatRecvLoop(ctx));
+            ctx.OnReceive += incoming => OnReceive?.Invoke(incoming);
 
             // Cancel previous connection and switch context
             SwitchContext(ctx);
+
+            // Start message loops before context switch
+            _ = ctx.RunLoops(HeartBeatRecvLoop(ctx));
 
             return ctx;
         }
@@ -127,7 +128,6 @@ namespace RabiRiichi.Server.Connections {
             ctx.OnReceive += (ClientMessageDto incoming) => {
                 // Always resets heartbeat timer even if the message is not a heartbeat
                 received?.TrySetResult();
-                OnReceive?.Invoke(incoming);
                 // Check if the message is responding to a server message
                 if (serverMsgs.TryGetValue(incoming.RespondTo, out var msg)) {
                     msg.responseTcs.TrySetResult(incoming);

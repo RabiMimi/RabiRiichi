@@ -36,7 +36,7 @@ namespace RabiRiichi.Server.WebSockets {
         private async Task HandlePublic(Connection connection, ClientMessageDto msg) {
             try {
                 if (msg.ClientRequest?.GetInfo != null) {
-                    connection.Queue(ProtoUtils.CreateDto(infoService.GetInfo(), msg.Id));
+                    connection.Queue(ProtoUtils.CreateDto(await infoService.GetInfo(), msg.Id));
                 } else if (msg.ClientRequest?.CreateUser != null) {
                     var req = msg.ClientRequest.CreateUser;
                     var res = await userService.CreateUser(req);
@@ -90,9 +90,9 @@ namespace RabiRiichi.Server.WebSockets {
             if (!userList.TryGet(uid, out var user)) {
                 return null;
             }
-            await adapter.WriteAsync(ProtoUtils.CreateDto(new ServerResponse {
+            await adapter.WriteAsync(new ServerResponse {
                 SignIn = new Empty()
-            }));
+            }.CreateDto());
             return user;
         }
 
@@ -105,11 +105,16 @@ namespace RabiRiichi.Server.WebSockets {
                     });
                 var adapter = new WebSocketAdapter(webSocket);
                 var connection = new Connection();
-                connection.Connect(adapter, adapter);
-                connection.OnReceive += msg => _ = HandlePublic(connection, msg);
+                void PublicListener(ClientMessageDto msg)
+                    => _ = HandlePublic(connection, msg);
+                connection.OnReceive += PublicListener;
                 try {
+                    connection.Connect(adapter, adapter);
                     await Task.Delay(TimeSpan.FromDays(7), connection.Current.cts.Token);
-                } catch (OperationCanceledException) { }
+                } catch (OperationCanceledException) { } finally {
+                    connection.Close();
+                    connection.OnReceive -= PublicListener;
+                }
             } else {
                 HttpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
             }
@@ -133,34 +138,41 @@ namespace RabiRiichi.Server.WebSockets {
                     return;
                 }
 
-                var rabiCtx = user.Connect(adapter, adapter);
-                if (rabiCtx == null) {
-                    await adapter.WriteAsync(ProtoUtils.CreateDto(new ServerErrorResponse {
-                        Status = Grpc.Core.StatusCode.Unauthenticated.ToString(),
-                        Message = "Cannot find user"
-                    }));
-                    return;
-                }
-                if (!await rabiCtx.HandShake()) {
-                    await adapter.WriteAsync(ProtoUtils.CreateDto(new ServerErrorResponse {
-                        Status = Grpc.Core.StatusCode.FailedPrecondition.ToString(),
-                        Message = "Handshake failed"
-                    }));
-                    return;
-                }
-                var connection = rabiCtx.connection;
+                void PublicListener(ClientMessageDto msg) => _ = HandlePublic(user.connection, msg);
+                void UserListener(ClientMessageDto msg) => _ = HandlePrivate(user, user.connection, msg);
 
                 // Add handlers for Server events that are supposed to be handled by gRPC
-                connection.OnReceive += msg => _ = HandlePublic(connection, msg);
-                connection.OnReceive += msg => _ = HandlePrivate(user, connection, msg);
+                user.connection.OnReceive += PublicListener;
+                user.connection.OnReceive += UserListener;
 
-                var room = user.room;
-                if (room != null) {
-                    room.BroadcastRoomState();
-                }
                 try {
+                    var rabiCtx = user.Connect(adapter, adapter);
+                    if (rabiCtx == null) {
+                        await adapter.WriteAsync(ProtoUtils.CreateDto(new ServerErrorResponse {
+                            Status = Grpc.Core.StatusCode.Unauthenticated.ToString(),
+                            Message = "Cannot find user"
+                        }));
+                        return;
+                    }
+                    if (!await rabiCtx.HandShake()) {
+                        await adapter.WriteAsync(ProtoUtils.CreateDto(new ServerErrorResponse {
+                            Status = Grpc.Core.StatusCode.FailedPrecondition.ToString(),
+                            Message = "Handshake failed"
+                        }));
+                        return;
+                    }
+                    var connection = rabiCtx.connection;
+
+                    var room = user.room;
+                    if (room != null) {
+                        room.BroadcastRoomState();
+                    }
                     await Task.Delay(TimeSpan.FromDays(7), rabiCtx.cts.Token);
-                } catch (OperationCanceledException) { }
+                } catch (OperationCanceledException) { } finally {
+                    user.connection.Close();
+                    user.connection.OnReceive -= PublicListener;
+                    user.connection.OnReceive -= UserListener;
+                }
             } else {
                 HttpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
             }

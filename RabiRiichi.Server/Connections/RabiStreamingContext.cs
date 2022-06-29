@@ -129,7 +129,7 @@ namespace RabiRiichi.Server.Connections {
                 try {
                     await Task.Delay(100, cts.Token);
                     while (msgQueue.TryTake(out var msg)) {
-                        Console.WriteLine($"Sending: {msg}");
+                        Console.WriteLine($"Sending: {msg.msg}");
                         msg.isQueued.Exchange(false);
                         await responseStream.WriteAsync(msg.msg, cts.Token);
                     }

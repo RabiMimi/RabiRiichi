@@ -68,7 +68,7 @@ namespace RabiRiichi.Server.Connections {
                         // Inquiry finished, no need to wait for response.
                         return;
                     }
-                    var resp = responseTask.Result.ClientMsg?.InquiryMsg;
+                    var resp = responseTask.Result?.ClientMsg?.InquiryMsg;
                     var inquiryResp = resp == null ? InquiryResponse.Default(seat)
                         : new InquiryResponse(seat, resp.Index, resp.Response);
                     if (ctx.inquiry.OnResponse(inquiryResp)) {

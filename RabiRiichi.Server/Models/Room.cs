@@ -94,21 +94,14 @@ namespace RabiRiichi.Server.Models {
             }
         }
 
-        public RabiStreamingContext Connect(User user,
-            IAsyncStreamReader<ClientMessageDto> requestStream,
-            IServerStreamWriter<ServerMessageDto> responseStream) {
+        public void OnConnect(User user) {
             lock (players) {
-                if (!HasPlayer(user)) {
-                    return null;
-                }
-                var ctx = user.connection.Connect(requestStream, responseStream);
-                if (ctx == null) {
-                    return null;
+                if (!HasPlayer(user) || user.seat < 0) {
+                    return;
                 }
                 if (config.actionCenter is ServerActionCenter sac) {
                     sac.SyncInquiryTo(user.seat);
                 }
-                return ctx;
             }
         }
 
