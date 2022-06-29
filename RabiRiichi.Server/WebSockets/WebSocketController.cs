@@ -1,8 +1,8 @@
+using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Microsoft.AspNetCore.Mvc;
 using RabiRiichi.Server.Auth;
 using RabiRiichi.Server.Connections;
-using RabiRiichi.Server.Generated.Messages;
 using RabiRiichi.Server.Generated.Rpc;
 using RabiRiichi.Server.Models;
 using RabiRiichi.Server.Services;
@@ -43,7 +43,7 @@ namespace RabiRiichi.Server.WebSockets {
                     connection.Queue(ProtoUtils.CreateDto(res, msg.Id));
                 }
             } catch (RpcException e) {
-                connection.Queue(ProtoUtils.CreateDto(new ServerWSErrorMsg {
+                connection.Queue(ProtoUtils.CreateDto(new ServerErrorResponse {
                     Status = e.Status.ToString(),
                     Message = e.Message,
                 }, msg.Id));
@@ -61,14 +61,39 @@ namespace RabiRiichi.Server.WebSockets {
                 } else if (msg.ClientRequest?.JoinRoom != null) {
                     var req = msg.ClientRequest.JoinRoom;
                     var res = await roomService.JoinRoom(req, user);
-                    connection.Queue(ProtoUtils.CreateDto(res, msg.Id));
+                    connection.Queue(new ServerResponse {
+                        JoinRoom = res
+                    }.CreateDto(msg.Id));
                 }
             } catch (RpcException e) {
-                connection.Queue(ProtoUtils.CreateDto(new ServerWSErrorMsg {
+                connection.Queue(ProtoUtils.CreateDto(new ServerErrorResponse {
                     Status = e.Status.ToString(),
                     Message = e.Message,
                 }, msg.Id));
             }
+        }
+
+        private async Task<User> HandleSignIn(WebSocketAdapter adapter) {
+            if (!await adapter.MoveNext()) {
+                return null;
+            }
+
+            var signIn = adapter.Current.ClientRequest?.SignIn;
+            if (signIn == null) {
+                return null;
+            }
+
+            if (!tokenService.IsTokenValid(signIn.AccessToken, out var uid)) {
+                return null;
+            }
+
+            if (!userList.TryGet(uid, out var user)) {
+                return null;
+            }
+            await adapter.WriteAsync(ProtoUtils.CreateDto(new ServerResponse {
+                SignIn = new Empty()
+            }));
+            return user;
         }
 
         [HttpGet("public")]
@@ -99,28 +124,28 @@ namespace RabiRiichi.Server.WebSockets {
                     });
                 var adapter = new WebSocketAdapter(webSocket);
 
-                if (!await adapter.MoveNext()) {
-                    return;
-                }
-
-                var signIn = adapter.Current.ClientRequest?.SignIn;
-                if (signIn == null) {
-                    return;
-                }
-
-                if (!tokenService.IsTokenValid(signIn.AccessToken, out var uid)) {
-                    return;
-                }
-
-                if (!userList.TryGet(uid, out var user)) {
+                var user = await HandleSignIn(adapter);
+                if (user == null) {
+                    await adapter.WriteAsync(ProtoUtils.CreateDto(new ServerErrorResponse {
+                        Status = Grpc.Core.StatusCode.Unauthenticated.ToString(),
+                        Message = "Invalid access token"
+                    }));
                     return;
                 }
 
                 var rabiCtx = user.Connect(adapter, adapter);
                 if (rabiCtx == null) {
+                    await adapter.WriteAsync(ProtoUtils.CreateDto(new ServerErrorResponse {
+                        Status = Grpc.Core.StatusCode.Unauthenticated.ToString(),
+                        Message = "Cannot find user"
+                    }));
                     return;
                 }
                 if (!await rabiCtx.HandShake()) {
+                    await adapter.WriteAsync(ProtoUtils.CreateDto(new ServerErrorResponse {
+                        Status = Grpc.Core.StatusCode.FailedPrecondition.ToString(),
+                        Message = "Handshake failed"
+                    }));
                     return;
                 }
                 var connection = rabiCtx.connection;

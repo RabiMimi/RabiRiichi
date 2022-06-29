@@ -27,6 +27,13 @@ namespace RabiRiichi.Server.Connections {
                 Event = ev
             };
         }
+
+        public static ServerMessageDto CreateDto(this ServerResponse resp, int respondTo = 0) {
+            return new ServerMessageDto {
+                RespondTo = respondTo,
+                ServerResp = resp,
+            };
+        }
         #endregion
 
         public static async Task<ClientMessageDto> WaitResponse(this ServerMessageWrapper msg,
