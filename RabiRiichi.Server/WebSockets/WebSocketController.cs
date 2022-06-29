@@ -1,5 +1,4 @@
 using Grpc.Core;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RabiRiichi.Server.Auth;
 using RabiRiichi.Server.Connections;
@@ -7,7 +6,6 @@ using RabiRiichi.Server.Generated.Messages;
 using RabiRiichi.Server.Generated.Rpc;
 using RabiRiichi.Server.Models;
 using RabiRiichi.Server.Services;
-using System.Net.WebSockets;
 
 namespace RabiRiichi.Server.WebSockets {
     [ApiController]
@@ -15,6 +13,7 @@ namespace RabiRiichi.Server.WebSockets {
     public class WebSocketController : ControllerBase {
         private readonly ILogger<WebSocketController> logger;
         private readonly UserList userList;
+        private readonly TokenService tokenService;
         private readonly InfoServiceImpl infoService;
         private readonly RoomServiceImpl roomService;
         private readonly UserServiceImpl userService;
@@ -22,11 +21,13 @@ namespace RabiRiichi.Server.WebSockets {
         public WebSocketController(
             ILogger<WebSocketController> logger,
             UserList userList,
+            TokenService tokenService,
             InfoServiceImpl infoService,
             RoomServiceImpl roomService,
             UserServiceImpl userService) {
             this.logger = logger;
             this.userList = userList;
+            this.tokenService = tokenService;
             this.infoService = infoService;
             this.roomService = roomService;
             this.userService = userService;
@@ -71,7 +72,7 @@ namespace RabiRiichi.Server.WebSockets {
         }
 
         [HttpGet("public")]
-        public async Task ConnectWS() {
+        public async Task ConnectPublic() {
             if (HttpContext.WebSockets.IsWebSocketRequest) {
                 using var webSocket =
                     await HttpContext.WebSockets.AcceptWebSocketAsync(new WebSocketAcceptContext {
@@ -89,19 +90,31 @@ namespace RabiRiichi.Server.WebSockets {
             }
         }
 
-        [Authorize]
         [HttpGet("connect")]
-        public async Task ConnectWS(HttpContext context) {
+        public async Task ConnectLoggedIn() {
             if (HttpContext.WebSockets.IsWebSocketRequest) {
-                if (!userList.TryFetch(context, out var user)) {
-                    return;
-                }
-
                 using var webSocket =
                     await HttpContext.WebSockets.AcceptWebSocketAsync(new WebSocketAcceptContext {
                         DangerousEnableCompression = true
                     });
                 var adapter = new WebSocketAdapter(webSocket);
+
+                if (!await adapter.MoveNext()) {
+                    return;
+                }
+
+                var signIn = adapter.Current.ClientRequest?.SignIn;
+                if (signIn == null) {
+                    return;
+                }
+
+                if (!tokenService.IsTokenValid(signIn.AccessToken, out var uid)) {
+                    return;
+                }
+
+                if (!userList.TryGet(uid, out var user)) {
+                    return;
+                }
 
                 var rabiCtx = user.Connect(adapter, adapter);
                 if (rabiCtx == null) {

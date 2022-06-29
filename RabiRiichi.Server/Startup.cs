@@ -24,31 +24,47 @@ services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 services.AddAuthorization();
 
 // gRPC
-var GrpcBuilder = services.AddGrpc();
+services.AddGrpc();
+services.AddControllers();
 
 // Objects for DI
 services.AddSingleton<RoomList>();
 services.AddSingleton<UserList>();
 services.AddSingleton<TokenService>();
+services.AddSingleton<InfoServiceImpl>();
+services.AddSingleton<UserServiceImpl>();
+services.AddSingleton<RoomServiceImpl>();
+services.AddSingleton<GameServiceImpl>();
 
 services.AddSingleton(new Random(builder.Environment.IsDevelopment()
     ? 0 : (int)(DateTimeOffset.Now.ToUnixTimeMilliseconds() & 0xffffffff)));
 
 // Build app
 var app = builder.Build();
+app.UseRouting();
 
 // Use cors
 app.UseCors("AllowAll");
 
+// WebSocket
+app.UseWebSockets(new WebSocketOptions {
+    KeepAliveInterval = TimeSpan.FromSeconds(10),
+});
+
 // Use auth
 app.UseAuthentication();
 app.UseAuthorization();
+app.MapControllers();
 
 // Map gRPC services
-app.MapGrpcService<InfoServiceImpl>();
-app.MapGrpcService<UserServiceImpl>();
-app.MapGrpcService<RoomServiceImpl>();
-app.MapGrpcService<GameServiceImpl>();
+/*
+app.UseEndpoints(endpoints => {
+    endpoints.MapGrpcService<InfoServiceImpl>();
+    endpoints.MapGrpcService<UserServiceImpl>();
+    endpoints.MapGrpcService<RoomServiceImpl>();
+    endpoints.MapGrpcService<GameServiceImpl>();
+});
+*/
 
 // Run app
 app.Run();
