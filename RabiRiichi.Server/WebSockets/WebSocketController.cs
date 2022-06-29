@@ -53,7 +53,7 @@ namespace RabiRiichi.Server.WebSockets {
         private async Task HandlePrivate(User user, Connection connection, ClientMessageDto msg) {
             try {
                 if (msg.ClientRequest?.CreateRoom != null) {
-                    connection.Queue(ProtoUtils.CreateDto(roomService.CreateRoom(user), msg.Id));
+                    connection.Queue(ProtoUtils.CreateDto(await roomService.CreateRoom(user), msg.Id));
                 } else if (msg.ClientRequest?.CreateUser != null) {
                     var req = msg.ClientRequest.CreateUser;
                     var res = await userService.CreateUser(req);
@@ -161,7 +161,6 @@ namespace RabiRiichi.Server.WebSockets {
                         }));
                         return;
                     }
-                    var connection = rabiCtx.connection;
 
                     var room = user.room;
                     if (room != null) {

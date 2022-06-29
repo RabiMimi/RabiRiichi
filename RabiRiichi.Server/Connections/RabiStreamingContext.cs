@@ -107,7 +107,7 @@ namespace RabiRiichi.Server.Connections {
         /// </summary>
         internal IEnumerable<int> GetMissingMsgIds() {
             int maxId = maxClientMsgId;
-            for (int i = lastBroadcastedMsgId; i <= maxId; i++) {
+            for (int i = lastBroadcastedMsgId + 1; i <= maxId; i++) {
                 if (!clientMsgs.ContainsKey(i)) {
                     yield return i;
                 }
@@ -155,8 +155,7 @@ namespace RabiRiichi.Server.Connections {
                     Console.WriteLine($"Received: {msg}");
                     maxClientMsgId = Math.Max(maxClientMsgId, msg.Id);
 
-                    var heartBeat = msg.ClientMsg?.HeartBeatMsg;
-                    if (heartBeat == null) {
+                    if (msg.Id > lastBroadcastedMsgId) {
                         // Regular message with positive ID.
                         clientMsgs.TryAdd(msg.Id, msg);
                         if (msg.Id == lastBroadcastedMsgId + 1) {
@@ -169,9 +168,13 @@ namespace RabiRiichi.Server.Connections {
                                 lastBroadcastedMsgId++;
                             }
                         }
-                    } else {
-                        // Handle heart beat.
-                        maxClientMsgId = Math.Max(maxClientMsgId, heartBeat.MaxId);
+                    }
+
+                    // Handle heart beat.
+                    maxClientMsgId = Math.Max(maxClientMsgId, msg.ClientMsg?.HeartBeatMsg?.MaxId ?? 0);
+
+                    // Broadcasted heartbeat / handshake events
+                    if (msg.Id <= 0) {
                         OnReceive?.Invoke(msg);
                     }
                 }
