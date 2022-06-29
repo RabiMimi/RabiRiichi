@@ -23,7 +23,7 @@ namespace RabiRiichi.Server.Connections {
             } else if (obj is UserInfoResponse getMyInfo) {
                 ret.GetMyInfo = getMyInfo;
             } else if (obj is ServerErrorResponse wsErrorMsg) {
-                ret.WsErrorMsg = wsErrorMsg;
+                ret.ServerError = wsErrorMsg;
             } else if (obj is Empty) {
                 // noop
             } else {
