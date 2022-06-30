@@ -11,8 +11,8 @@ namespace RabiRiichi.Events.InGame {
         [RabiPrivate] public GameTile incoming;
         [RabiBroadcast] public GameTile discarded;
         [RabiBroadcast] public DiscardReason reason;
-        /// <summary> 用于判定摸切还是手切 </summary>
-        [RabiBroadcast] public TileSource origin;
+        /// <summary> 摸切还是手切 </summary>
+        [RabiBroadcast] public bool fromHand;
         #endregion
 
         #region Response
@@ -24,7 +24,7 @@ namespace RabiRiichi.Events.InGame {
             this.incoming = incoming;
             this.reason = reason;
             // 此时tile还没有被加入手牌，保存当前source以判定摸切还是手切
-            origin = discarded.source;
+            fromHand = discarded != incoming;
             waitEvent = new WaitPlayerActionEvent(this);
         }
 
@@ -33,7 +33,7 @@ namespace RabiRiichi.Events.InGame {
                 PlayerId = this.playerId,
                 Discarded = discarded.ToProto(),
                 Reason = reason,
-                Origin = origin,
+                FromHand = fromHand,
             };
             if (this.playerId == playerId) {
                 ret.Incoming = incoming.ToProto();
