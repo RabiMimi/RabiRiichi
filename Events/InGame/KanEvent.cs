@@ -28,14 +28,5 @@ namespace RabiRiichi.Events.InGame {
             this.kanSource = kan.KanSource;
             this.waitEvent = new WaitPlayerActionEvent(this);
         }
-
-        public KanEventMsg ToProto() {
-            var ret = new KanEventMsg {
-                PlayerId = playerId,
-                Kan = kan.ToProto(),
-                KanSource = kanSource,
-            };
-            return ret;
-        }
     }
 }

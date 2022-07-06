@@ -11,12 +11,5 @@ namespace RabiRiichi.Actions {
         public KanAction(int playerId, List<List<GameTile>> tiles, int priorityDelta = 0) : base(playerId, tiles) {
             priority = ActionPriority.Kan + priorityDelta;
         }
-
-        public KanActionMsg ToProto() {
-            var ret = new KanActionMsg();
-            ret.TileGroups.AddRange(options.Select(o =>
-                MenLike.From(((ChooseTilesActionOption)o).tiles).ToProto()));
-            return ret;
-        }
     }
 }

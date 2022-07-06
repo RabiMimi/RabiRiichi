@@ -16,14 +16,5 @@ namespace RabiRiichi.Events.InGame {
         #endregion
 
         public NextGameEvent(ConcludeGameEvent parent) : base(parent) { }
-
-        public NextGameEventMsg ToProto() {
-            return new NextGameEventMsg {
-                NextRound = nextRound,
-                NextDealer = nextDealer,
-                NextHonba = nextHonba,
-                RiichiStick = riichiStick,
-            };
-        }
     }
 }

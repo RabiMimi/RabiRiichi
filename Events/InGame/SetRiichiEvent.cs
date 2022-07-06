@@ -15,13 +15,5 @@ namespace RabiRiichi.Events.InGame {
             this.riichiTile = riichiTile;
             this.wRiichi = wRiichi;
         }
-
-        public SetRiichiEventMsg ToProto() {
-            return new SetRiichiEventMsg {
-                PlayerId = playerId,
-                RiichiTile = riichiTile?.ToProto(),
-                WRiichi = wRiichi,
-            };
-        }
     }
 }

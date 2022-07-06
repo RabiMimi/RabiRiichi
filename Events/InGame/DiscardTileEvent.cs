@@ -27,19 +27,6 @@ namespace RabiRiichi.Events.InGame {
             fromHand = discarded != incoming;
             waitEvent = new WaitPlayerActionEvent(this);
         }
-
-        public DiscardTileEventMsg ToProto(int playerId) {
-            var ret = new DiscardTileEventMsg {
-                PlayerId = this.playerId,
-                Discarded = discarded.ToProto(),
-                Reason = reason,
-                FromHand = fromHand,
-            };
-            if (this.playerId == playerId) {
-                ret.Incoming = incoming.ToProto();
-            }
-            return ret;
-        }
     }
 
     public class RiichiEvent : DiscardTileEvent {

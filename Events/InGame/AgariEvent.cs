@@ -86,13 +86,5 @@ namespace RabiRiichi.Events.InGame {
         public AgariEvent(EventBase parent, AgariInfoList info) : base(parent) {
             agariInfos = info;
         }
-
-        public AgariEventMsg ToProto() {
-            var ret = new AgariEventMsg {
-                IsTsumo = isTsumo,
-                AgariInfos = agariInfos.ToProto(),
-            };
-            return ret;
-        }
     }
 }

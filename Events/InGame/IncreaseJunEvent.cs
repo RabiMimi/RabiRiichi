@@ -10,12 +10,5 @@ namespace RabiRiichi.Events.InGame {
         #endregion
 
         public IncreaseJunEvent(EventBase parent, int playerId) : base(parent, playerId) { }
-
-        public IncreaseJunEventMsg ToProto() {
-            return new IncreaseJunEventMsg {
-                PlayerId = playerId,
-                IncreasedJun = increasedJun,
-            };
-        }
     }
 }

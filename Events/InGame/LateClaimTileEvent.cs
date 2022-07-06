@@ -20,12 +20,5 @@ namespace RabiRiichi.Events.InGame {
             waitEvent = new WaitPlayerActionEvent(this);
             reason = parent.reason;
         }
-
-        public LateClaimTileEventMsg ToProto() {
-            return new LateClaimTileEventMsg {
-                PlayerId = playerId,
-                Reason = reason,
-            };
-        }
     }
 }

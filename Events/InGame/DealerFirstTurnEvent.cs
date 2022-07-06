@@ -18,15 +18,5 @@ namespace RabiRiichi.Events.InGame {
             this.incoming = incoming;
             waitEvent = new WaitPlayerActionEvent(this);
         }
-
-        public DealerFirstTurnEventMsg ToProto(int playerId) {
-            var ret = new DealerFirstTurnEventMsg {
-                PlayerId = this.playerId,
-            };
-            if (this.playerId == playerId) {
-                ret.Incoming = incoming.ToProto();
-            }
-            return ret;
-        }
     }
 }

@@ -13,11 +13,5 @@ namespace RabiRiichi.Events.InGame {
         public ApplyScoreEvent(EventBase parent, ScoreTransferList scoreChange) : base(parent) {
             this.scoreChange = scoreChange;
         }
-
-        public ApplyScoreEventMsg ToProto() {
-            var ret = new ApplyScoreEventMsg();
-            ret.ScoreChange.AddRange(scoreChange.Select(x => x.ToProto()));
-            return ret;
-        }
     }
 }

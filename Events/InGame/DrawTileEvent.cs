@@ -20,16 +20,5 @@ namespace RabiRiichi.Events.InGame {
             this.source = source;
             waitEvent = new WaitPlayerActionEvent(this);
         }
-
-        public DrawTileEventMsg ToProto(int playerId) {
-            var ret = new DrawTileEventMsg {
-                PlayerId = this.playerId,
-                Source = source,
-            };
-            if (this.playerId == playerId) {
-                ret.Tile = tile?.ToProto();
-            }
-            return ret;
-        }
     }
 }

@@ -57,13 +57,5 @@ namespace RabiRiichi.Events.InGame {
             this.agariInfos = agariInfos;
             scoreChange = new ScoreTransferList();
         }
-
-        public CalcScoreEventMsg ToProto() {
-            var ret = new CalcScoreEventMsg {
-                AgariInfos = agariInfos.ToProto(),
-            };
-            ret.ScoreChange.AddRange(scoreChange.Select(x => x.ToProto()));
-            return ret;
-        }
     }
 }

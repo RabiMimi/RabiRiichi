@@ -20,14 +20,5 @@ namespace RabiRiichi.Events.InGame {
             incoming = ev.incoming;
             kanSource = ev.kanSource;
         }
-
-        public AddKanEventMsg ToProto() {
-            return new AddKanEventMsg {
-                PlayerId = playerId,
-                Kan = kan.ToProto(),
-                Incoming = incoming.ToProto(),
-                KanSource = kanSource,
-            };
-        }
     }
 }

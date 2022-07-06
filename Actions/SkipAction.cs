@@ -7,9 +7,5 @@ namespace RabiRiichi.Actions {
         public SkipAction(int playerId, int priorityDelta = 0) : base(playerId) {
             priority = ActionPriority.Skip + priorityDelta;
         }
-
-        public virtual SkipActionMsg ToProto() {
-            return new SkipActionMsg();
-        }
     }
 }

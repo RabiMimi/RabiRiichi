@@ -4,9 +4,12 @@ using RabiRiichi.Communication;
 using RabiRiichi.Communication.Json;
 using RabiRiichi.Core;
 using RabiRiichi.Events;
+using RabiRiichi.Generated.Actions;
+using RabiRiichi.Generated.Events;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -249,6 +252,13 @@ namespace RabiRiichi.Tests.Scenario {
         }
 
         public void OnEvent(int playerId, EventBase ev) {
+            // Test proto graph
+            var proto = ev.game.SerializeProto<EventMsg>(ev, 0);
+            if (ev.GetType().GetCustomAttribute<RabiIgnoreAttribute>() == null) {
+                Assert.IsNotNull(proto, $"{ev.GetType().Name} not serialized");
+            } else {
+                Assert.IsNull(proto, $"{ev.GetType().Name} serialized");
+            }
             OnMessage(playerId, ev);
         }
 
@@ -257,6 +267,9 @@ namespace RabiRiichi.Tests.Scenario {
                 return;
             }
             foreach (var playerInquiry in inquiry.playerInquiries) {
+                // Test proto graph
+                Assert.IsNotNull(inquiry.game.SerializeProto<SinglePlayerInquiryMsg>(
+                    playerInquiry, playerInquiry.playerId), "Inquiry not serialized");
                 OnMessage(playerInquiry.playerId, playerInquiry);
             }
             SendImmediately();

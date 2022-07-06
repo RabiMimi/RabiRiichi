@@ -18,13 +18,5 @@ namespace RabiRiichi.Events.InGame {
         public DealHandEvent(EventBase parent, int playerId, int count) : base(parent, playerId) {
             this.count = count;
         }
-
-        public DealHandEventMsg ToProto() {
-            var ret = new DealHandEventMsg {
-                PlayerId = playerId,
-            };
-            ret.Tiles.AddRange(tiles.Select(x => x.ToProto()));
-            return ret;
-        }
     }
 }

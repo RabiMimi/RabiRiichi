@@ -20,14 +20,5 @@ namespace RabiRiichi.Events.InGame {
             this.group = group;
             this.tile = tile;
         }
-
-        public ClaimTileEventMsg ToProto() {
-            return new ClaimTileEventMsg {
-                PlayerId = playerId,
-                Tile = tile.ToProto(),
-                Group = group.ToProto(),
-                Reason = reason,
-            };
-        }
     }
 }

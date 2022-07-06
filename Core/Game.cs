@@ -2,6 +2,7 @@
 using RabiRiichi.Actions;
 using RabiRiichi.Communication;
 using RabiRiichi.Communication.Json;
+using RabiRiichi.Communication.Proto;
 using RabiRiichi.Core.Config;
 using RabiRiichi.Events;
 using RabiRiichi.Events.InGame;
@@ -26,6 +27,7 @@ namespace RabiRiichi.Core {
         public readonly Player[] players;
         public readonly InitGameEvent initialEvent;
         public readonly EventQueue mainQueue;
+        public readonly ProtoGraph protoGraph;
 
         public Game(GameConfig config) {
             if (config.actionCenter == null) {
@@ -44,6 +46,9 @@ namespace RabiRiichi.Core {
             serviceCollection.AddSingleton<EventBus>();
             serviceCollection.AddSingleton<EventListenerFactory>();
 
+            // Protobuf
+            serviceCollection.AddSingleton<ProtoGraph>();
+
             // Game related
             serviceCollection.AddSingleton<Wall>();
             serviceCollection.AddSingleton<GameInfo>();
@@ -60,6 +65,7 @@ namespace RabiRiichi.Core {
             info = Get<GameInfo>();
             wall = Get<Wall>();
             mainQueue = new EventQueue(eventBus, true);
+            protoGraph = Get<ProtoGraph>();
 
             // Init Players
             players = new Player[config.playerCount];
@@ -120,6 +126,17 @@ namespace RabiRiichi.Core {
         public void SendEvent(int playerId, EventBase ev) {
             using (messageMutex.Lock(MESSAGE_TIMEOUT)) {
                 config.actionCenter.OnEvent(playerId, ev);
+            }
+        }
+
+        public T SerializeProto<T>(object obj, int playerId) where T : class {
+            try {
+                return protoGraph.Build()
+                    .SetInput(obj)
+                    .SetInput("playerId", playerId)
+                    .Execute<T>();
+            } catch (ArgumentException) {
+                return null;
             }
         }
         #endregion

@@ -10,12 +10,5 @@ namespace RabiRiichi.Events.InGame {
         #endregion
 
         public NextPlayerEvent(EventBase parent, int playerId) : base(parent, playerId) { }
-
-        public NextPlayerEventMsg ToProto() {
-            return new NextPlayerEventMsg {
-                PlayerId = playerId,
-                NextPlayerId = nextPlayerId,
-            };
-        }
     }
 }

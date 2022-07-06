@@ -38,12 +38,5 @@ namespace RabiRiichi.Events.InGame {
             this.reason = reason;
             this.tenpaiPlayers = tenpaiPlayers;
         }
-
-        public ConcludeGameEventMsg ToProto() {
-            return new ConcludeGameEventMsg {
-                Doras = doras.ToString(),
-                Uradoras = uradoras.ToString(),
-            };
-        }
     }
 }

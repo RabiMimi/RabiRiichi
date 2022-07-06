@@ -14,18 +14,5 @@ namespace RabiRiichi.Events.InGame {
         #endregion
 
         public SyncGameStateEvent(EventBase parent, int playerId) : base(parent, playerId) { }
-
-        public SyncGameStateEventMsg ToProto(int playerId) {
-            var ret = new SyncGameStateEventMsg {
-                PlayerId = this.playerId,
-                GameState = gameState?.ToProto(playerId),
-            };
-            if (this.playerId == playerId) {
-                foreach (var (key, value) in extra) {
-                    ret.Extra.Add(key, value);
-                }
-            }
-            return ret;
-        }
     }
 }

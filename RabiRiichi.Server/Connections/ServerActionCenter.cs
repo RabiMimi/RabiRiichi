@@ -2,6 +2,8 @@ using RabiRiichi.Actions;
 using RabiRiichi.Communication;
 using RabiRiichi.Communication.Proto;
 using RabiRiichi.Events;
+using RabiRiichi.Generated.Actions;
+using RabiRiichi.Generated.Events;
 using RabiRiichi.Server.Generated.Messages;
 using RabiRiichi.Server.Generated.Rpc;
 using RabiRiichi.Server.Models;
@@ -44,7 +46,7 @@ namespace RabiRiichi.Server.Connections {
         }
 
         public void OnEvent(int seat, EventBase ev) {
-            var proto = ProtoConverters.ToProto(ev, seat);
+            var proto = ev.game.SerializeProto<EventMsg>(ev, seat);
             if (proto != null) {
                 SendMessage(seat, proto.CreateDto());
             }
@@ -56,7 +58,7 @@ namespace RabiRiichi.Server.Connections {
                 return null;
             }
             var inquiryMsg = new ServerInquiryMsg {
-                Inquiry = inquiry.ToProto(),
+                Inquiry = ctx.inquiry.game.SerializeProto<SinglePlayerInquiryMsg>(inquiry, seat)
             };
             var msg = SendMessage(seat, inquiryMsg.CreateDto());
             if (msg != null) {

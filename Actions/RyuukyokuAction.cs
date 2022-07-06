@@ -12,11 +12,5 @@ namespace RabiRiichi.Actions {
             this.ev = ev;
             this.priority = ActionPriority.Ryuukyoku + priorityDelta;
         }
-
-        public RyuukyokuActionMsg ToProto() {
-            return new RyuukyokuActionMsg {
-                Reason = reason
-            };
-        }
     }
 }

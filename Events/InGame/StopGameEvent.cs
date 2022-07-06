@@ -10,11 +10,5 @@ namespace RabiRiichi.Events.InGame {
         [RabiBroadcast] public readonly List<long> endGamePoints = new();
 
         public StopGameEvent(EventBase parent) : base(parent) { }
-
-        public StopGameEventMsg ToProto() {
-            var ret = new StopGameEventMsg();
-            ret.EndGamePoints.AddRange(endGamePoints);
-            return ret;
-        }
     }
 }

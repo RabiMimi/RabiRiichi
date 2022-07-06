@@ -19,15 +19,5 @@ namespace RabiRiichi.Events.InGame {
         public AddTileEvent(PlayerEvent ev, GameTile incoming) : base(ev, ev.playerId) {
             this.incoming = incoming;
         }
-
-        public AddTileEventMsg ToProto(int playerId) {
-            var ret = new AddTileEventMsg {
-                PlayerId = this.playerId,
-            };
-            if (this.playerId == playerId) {
-                ret.Incoming = incoming?.ToProto();
-            }
-            return ret;
-        }
     }
 }

@@ -19,13 +19,5 @@ namespace RabiRiichi.Events.InGame {
             this.dealer = dealer;
             this.honba = honba;
         }
-
-        public BeginGameEventMsg ToProto() {
-            return new BeginGameEventMsg {
-                Round = round,
-                Dealer = dealer,
-                Honba = honba,
-            };
-        }
     }
 }

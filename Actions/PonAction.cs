@@ -9,12 +9,5 @@ namespace RabiRiichi.Actions {
         public PonAction(int playerId, List<List<GameTile>> tiles, int priorityDelta = 0) : base(playerId, tiles) {
             priority = ActionPriority.Pon + priorityDelta;
         }
-
-        public PonActionMsg ToProto() {
-            var ret = new PonActionMsg();
-            ret.TileGroups.AddRange(options.Select(o =>
-                MenLike.From(((ChooseTilesActionOption)o).tiles).ToProto()));
-            return ret;
-        }
     }
 }

@@ -17,7 +17,6 @@ namespace RabiRiichi.Util.Graphs {
         public readonly MethodInfo method;
         public readonly ProducerRequirement produces;
         public readonly int cost;
-        public readonly List<ProducerRequirement> inputs = new();
         public readonly List<ProducerRequirement> requires = new();
 
         public int IndexOfRequirement(ProducerRequirement item) {
@@ -37,8 +36,6 @@ namespace RabiRiichi.Util.Graphs {
             foreach (var param in method.GetParameters()) {
                 if (param.GetCustomAttribute<ConsumesAttribute>() is ConsumesAttribute cAttr) {
                     requires.Add((cAttr.Id, param.ParameterType));
-                } else if (param.GetCustomAttribute<InputAttribute>() is InputAttribute iAttr) {
-                    inputs.Add((iAttr.Id, param.ParameterType));
                 }
             }
         }
@@ -91,7 +88,6 @@ namespace RabiRiichi.Util.Graphs {
             }
         }
 
-        private readonly Dictionary<string, List<object>> inputs = new();
         private readonly Dictionary<string, List<object>> produces = new();
         private readonly Dictionary<ProducerRequirement, List<NodeContext>> edges = new();
         private readonly List<NodeContext> nodes = new();
@@ -116,7 +112,6 @@ namespace RabiRiichi.Util.Graphs {
         private IEnumerable<NodeContext> FindRoute(Type type, string id) {
             var queue = new PriorityQueue<NodeContext, int>();
             var visited = new HashSet<NodeContext>();
-            nodes.RemoveAll(ctx => ctx.node.inputs.Any(i => !TryGetInput(i.Item2, i.Item1, out _)));
             // Init
             foreach (var node in nodes.Where(
                 n => n.node.requires.All(x => TryGetOutput(x.Item2, x.Item1, out _)))) {
@@ -124,10 +119,15 @@ namespace RabiRiichi.Util.Graphs {
                 queue.Enqueue(node, node.dist);
             }
             // Shortest path
+            NodeContext target = null;
             while (queue.Count > 0) {
                 var node = queue.Dequeue();
                 if (!visited.Add(node)) {
                     continue;
+                }
+                if (node.node.produces.Satisfies((id, type))) {
+                    target = node;
+                    break;
                 }
                 if (!edges.TryGetValue(node.node.produces, out var edgesList)) {
                     continue;
@@ -139,17 +139,12 @@ namespace RabiRiichi.Util.Graphs {
                     }
                 }
             }
-            try {
-                var target = nodes.Where(n => n.node.produces.Satisfies((id, type))).MinBy(n => n.dist);
-                visited.Clear();
-                return target?.GetRoute(visited);
-            } catch (ArgumentException) {
-                return null;
-            }
+            visited.Clear();
+            return target?.GetRoute(visited);
         }
 
         public ProducerGraphExecutionContext(ProducerGraph graph) {
-            inputs[""] = new List<object> { graph };
+            produces[""] = new List<object> { graph };
             foreach (var node in graph.nodes) {
                 nodes.Add(new NodeContext(node));
             }
@@ -164,20 +159,20 @@ namespace RabiRiichi.Util.Graphs {
             }
         }
 
-        public bool TryGetInput(Type type, string id, out object obj)
-            => TryGet(inputs, type, id, out obj);
-
         public bool TryGetOutput(Type type, string id, out object obj)
             => TryGet(produces, type, id, out obj);
 
         public ProducerGraphExecutionContext SetInput(string id, object obj) {
-            if (!inputs.TryGetValue(id, out var list)) {
+            if (!produces.TryGetValue(id, out var list)) {
                 list = new List<object>();
-                inputs[id] = list;
+                produces[id] = list;
             }
             list.Add(obj);
             return this;
         }
+
+        public ProducerGraphExecutionContext SetInput(object obj)
+            => SetInput("", obj);
 
         public T Execute<T>(string id = "") {
             try {
@@ -194,17 +189,10 @@ namespace RabiRiichi.Util.Graphs {
             }
             foreach (var node in route) {
                 var parameters = node.node.method.GetParameters().Select(p => {
-                    if (p.GetCustomAttribute<InputAttribute>() is InputAttribute iAttr) {
-                        Logger.Assert(TryGetInput(p.ParameterType, iAttr.Id, out var obj),
-                            $"No input of type {p.ParameterType} with id {iAttr.Id}");
-                        return obj;
-                    }
-                    if (p.GetCustomAttribute<ConsumesAttribute>() is ConsumesAttribute oAttr) {
-                        Logger.Assert(TryGetOutput(p.ParameterType, oAttr.Id, out var obj),
-                            $"No one produces type {p.ParameterType} with id {oAttr.Id}");
-                        return obj;
-                    }
-                    throw new ArgumentException($"No input or consumes attribute for parameter {p.Name}");
+                    Logger.Assert(TryGetOutput(p.ParameterType,
+                        p.GetCustomAttribute<ConsumesAttribute>().Id, out var obj),
+                        $"No input found for {p.Name}");
+                    return obj;
                 });
                 var ret = node.node.method.Invoke(node.node.instance, parameters.ToArray());
                 if (ret is Task task) {
@@ -227,8 +215,7 @@ namespace RabiRiichi.Util.Graphs {
                     continue;
                 }
                 var invalidParam = method.GetParameters().FirstOrDefault(
-                    p => p.GetCustomAttribute<InputAttribute>() == null
-                        == (p.GetCustomAttribute<ConsumesAttribute>() == null));
+                    p => p.GetCustomAttribute<ConsumesAttribute>() == null);
                 if (invalidParam != null) {
                     Logger.Warn($"Producer method {method.Name} has invalid parameter {invalidParam.Name}");
                     continue;

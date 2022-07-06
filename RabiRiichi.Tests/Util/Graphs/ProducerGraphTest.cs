@@ -10,19 +10,19 @@ namespace RabiRiichi.Tests.Util.Graphs {
         private class TestGraph1 {
             private readonly int two = 2;
 
-            [Produces("a")]
-            public static int Add1([Input("a")] int a) {
+            [Produces("b")]
+            public static int Add1([Consumes("a")] int a) {
                 return a + 1;
             }
 
             [Produces("b", Cost = 114514)]
-            private static int Triple([Input("a")] int a) {
+            private static int Triple([Consumes("a")] int a) {
                 Assert.Fail("Should not be called");
                 return a * 3;
             }
 
-            [Produces("b")]
-            private int Double([Consumes("a")] int a) {
+            [Produces("c")]
+            private int Double([Consumes("b")] int a) {
                 return a * two;
             }
 
@@ -46,7 +46,7 @@ namespace RabiRiichi.Tests.Util.Graphs {
                 .Register(new TestGraph1())
                 .Build()
                 .SetInput("a", 2)
-                .Execute<int>("b"));
+                .Execute<int>("c"));
         }
 
         [TestMethod]

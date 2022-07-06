@@ -15,12 +15,5 @@ namespace RabiRiichi.Actions {
                 response = index;
             }
         }
-
-        public PlayTileActionMsg ToProto() {
-            var ret = new PlayTileActionMsg();
-            ret.Tiles.AddRange(options.Select(
-                o => ((ChooseTileActionOption)o).tile.ToProto()));
-            return ret;
-        }
     }
 }
