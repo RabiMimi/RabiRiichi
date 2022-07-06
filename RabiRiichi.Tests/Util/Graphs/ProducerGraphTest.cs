@@ -50,6 +50,19 @@ namespace RabiRiichi.Tests.Util.Graphs {
         }
 
         [TestMethod]
+        public void TestCache() {
+            var graph = new ProducerGraph()
+                .Register(new TestGraph1());
+            for (int i = 0; i < 4; i++) {
+                Assert.AreEqual((i + 1) * 2, graph
+                    .Build()
+                    .SetInput("a", i)
+                    .Execute<int>("c"));
+            }
+            Assert.AreEqual(1, graph.routeCache.Count);
+        }
+
+        [TestMethod]
         public async Task TestAsync() {
             Assert.AreEqual(1, await new ProducerGraph()
                 .Register<TestGraph1>()

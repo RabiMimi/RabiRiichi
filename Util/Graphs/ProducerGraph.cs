@@ -41,8 +41,95 @@ namespace RabiRiichi.Util.Graphs {
         }
     }
 
-    public class ProducerGraphExecutionContext {
-        private class NodeContext {
+    public class ProducerGraphExecutionContext : IEquatable<ProducerGraphExecutionContext> {
+        private readonly Dictionary<string, List<object>> produces = new();
+        private readonly List<ProducerRequirement> inputs = new();
+        private readonly ProducerGraph graph;
+
+        private void AddProduces(string id, object obj) {
+            if (!produces.TryGetValue(id, out var list)) {
+                list = new List<object>();
+                produces[id] = list;
+            }
+            list.Add(obj);
+        }
+
+        public ProducerGraphExecutionContext(ProducerGraph graph) {
+            produces[""] = new List<object> { graph };
+            this.graph = graph;
+        }
+
+        public bool TryGetOutput(Type type, string id, out object obj) {
+            if (!produces.TryGetValue(id, out var list)) {
+                obj = null;
+                return false;
+            }
+            obj = list.FirstOrDefault(x => x.GetType().IsAssignableTo(type));
+            return obj != null;
+        }
+
+        public ProducerGraphExecutionContext SetInput(string id, object obj) {
+            if (!produces.TryGetValue(id, out var list)) {
+                list = new List<object>();
+                produces[id] = list;
+            }
+            list.Add(obj);
+            inputs.Add((id, obj.GetType()));
+            return this;
+        }
+
+        public ProducerGraphExecutionContext SetInput(object obj)
+            => SetInput("", obj);
+
+        public T Execute<T>(string id = "") {
+            try {
+                return ExecuteAsync<T>(id).Result;
+            } catch (AggregateException e) {
+                throw e.InnerException;
+            }
+        }
+
+        public async Task<T> ExecuteAsync<T>(string id = "") {
+            var route = graph.FindRoute(this, typeof(T), id);
+            if (route == null) {
+                throw new ArgumentException($"No route to produce {typeof(T)} with id {id}");
+            }
+            foreach (var node in route) {
+                var parameters = node.node.method.GetParameters().Select(p => {
+                    Logger.Assert(TryGetOutput(p.ParameterType,
+                        p.GetCustomAttribute<ConsumesAttribute>().Id, out var obj),
+                        $"No input found for {p.Name}");
+                    return obj;
+                });
+                var ret = node.node.method.Invoke(node.node.instance, parameters.ToArray());
+                if (ret is Task task) {
+                    await task;
+                    ret = task.GetType().GetProperty("Result").GetValue(task);
+                }
+                AddProduces(node.node.produces.Item1, ret);
+            }
+            Logger.Assert(TryGetOutput(typeof(T), id, out var obj), $"No output of type {typeof(T)} with id {id}");
+            return (T)obj;
+        }
+
+        public override int GetHashCode() {
+            return inputs.Aggregate(0, (a, b) => a ^ b.GetHashCode());
+        }
+
+        public bool Equals(ProducerGraphExecutionContext other) {
+            if (other == null) {
+                return false;
+            }
+            return inputs.SequenceEqual(other.inputs);
+        }
+
+        public override bool Equals(object obj) {
+            return Equals(obj as ProducerGraphExecutionContext);
+        }
+    }
+
+    public class ProducerGraph {
+        public class NodeContext {
             public const int INIT_COST = int.MaxValue >> 1;
             public readonly ProducerGraphNode node;
             public readonly NodeContext[] predecessors;
@@ -88,126 +175,14 @@ namespace RabiRiichi.Util.Graphs {
             }
         }
 
-        private readonly Dictionary<string, List<object>> produces = new();
-        private readonly Dictionary<ProducerRequirement, List<NodeContext>> edges = new();
-        private readonly List<NodeContext> nodes = new();
-
-        private static bool TryGet(Dictionary<string, List<object>> dict, Type type, string id, out object obj) {
-            if (!dict.TryGetValue(id, out var list)) {
-                obj = null;
-                return false;
-            }
-            obj = list.FirstOrDefault(x => x.GetType().IsAssignableTo(type));
-            return obj != null;
-        }
-
-        private void AddProduces(string id, object obj) {
-            if (!produces.TryGetValue(id, out var list)) {
-                list = new List<object>();
-                produces[id] = list;
-            }
-            list.Add(obj);
-        }
-
-        private IEnumerable<NodeContext> FindRoute(Type type, string id) {
-            var queue = new PriorityQueue<NodeContext, int>();
-            var visited = new HashSet<NodeContext>();
-            // Init
-            foreach (var node in nodes.Where(
-                n => n.node.requires.All(x => TryGetOutput(x.Item2, x.Item1, out _)))) {
-                node.dist = node.node.cost;
-                queue.Enqueue(node, node.dist);
-            }
-            // Shortest path
-            NodeContext target = null;
-            while (queue.Count > 0) {
-                var node = queue.Dequeue();
-                if (!visited.Add(node)) {
-                    continue;
-                }
-                if (node.node.produces.Satisfies((id, type))) {
-                    target = node;
-                    break;
-                }
-                if (!edges.TryGetValue(node.node.produces, out var edgesList)) {
-                    continue;
-                }
-                foreach (var next in edgesList) {
-                    int idx = next.node.IndexOfRequirement(node.node.produces);
-                    if (next.UpdatePredecessor(idx, node)) {
-                        queue.Enqueue(next, next.dist);
-                    }
-                }
-            }
-            visited.Clear();
-            return target?.GetRoute(visited);
-        }
-
-        public ProducerGraphExecutionContext(ProducerGraph graph) {
-            produces[""] = new List<object> { graph };
-            foreach (var node in graph.nodes) {
-                nodes.Add(new NodeContext(node));
-            }
-            foreach (var node in nodes) {
-                foreach (var require in node.node.requires) {
-                    if (!edges.TryGetValue(require, out var list)) {
-                        list = new List<NodeContext>();
-                        edges[require] = list;
-                    }
-                    list.Add(node);
-                }
-            }
-        }
-
-        public bool TryGetOutput(Type type, string id, out object obj)
-            => TryGet(produces, type, id, out obj);
-
-        public ProducerGraphExecutionContext SetInput(string id, object obj) {
-            if (!produces.TryGetValue(id, out var list)) {
-                list = new List<object>();
-                produces[id] = list;
-            }
-            list.Add(obj);
-            return this;
-        }
-
-        public ProducerGraphExecutionContext SetInput(object obj)
-            => SetInput("", obj);
-
-        public T Execute<T>(string id = "") {
-            try {
-                return ExecuteAsync<T>(id).Result;
-            } catch (AggregateException e) {
-                throw e.InnerException;
-            }
-        }
-
-        public async Task<T> ExecuteAsync<T>(string id = "") {
-            var route = FindRoute(typeof(T), id);
-            if (route == null) {
-                throw new ArgumentException($"No route to produce {typeof(T)} with id {id}");
-            }
-            foreach (var node in route) {
-                var parameters = node.node.method.GetParameters().Select(p => {
-                    Logger.Assert(TryGetOutput(p.ParameterType,
-                        p.GetCustomAttribute<ConsumesAttribute>().Id, out var obj),
-                        $"No input found for {p.Name}");
-                    return obj;
-                });
-                var ret = node.node.method.Invoke(node.node.instance, parameters.ToArray());
-                if (ret is Task task) {
-                    await task;
-                    ret = task.GetType().GetProperty("Result").GetValue(task);
-                }
-                AddProduces(node.node.produces.Item1, ret);
-            }
-            Logger.Assert(TryGetOutput(typeof(T), id, out var obj), $"No output of type {typeof(T)} with id {id}");
-            return (T)obj;
-        }
-    }
-
-    public class ProducerGraph {
         public readonly List<ProducerGraphNode> nodes = new();
+
+        private readonly Dictionary<ProducerRequirement, List<NodeContext>> edges = new();
+        private readonly List<NodeContext> nodeCtxs = new();
+        private bool isFinalized = false;
+        public readonly Dictionary<(ProducerGraphExecutionContext, string, Type), List<NodeContext>> routeCache = new();
+        private readonly PriorityQueue<NodeContext, int> queue = new();
+        private readonly HashSet<NodeContext> visited = new();
 
         public ProducerGraph Register(object obj, MethodInfo[] methods) {
             foreach (var method in methods) {
@@ -233,6 +208,71 @@ namespace RabiRiichi.Util.Graphs {
         public ProducerGraph Register<T>() where T : class
             => Register(null, typeof(T).GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static));
 
-        public ProducerGraphExecutionContext Build() => new(this);
+        public ProducerGraph Finalize() {
+            foreach (var node in nodes) {
+                var ctx = new NodeContext(node);
+                nodeCtxs.Add(ctx);
+                foreach (var require in node.requires) {
+                    if (!edges.TryGetValue(require, out var list)) {
+                        list = new List<NodeContext>();
+                        edges[require] = list;
+                    }
+                    list.Add(ctx);
+                }
+            }
+            return this;
+        }
+
+        public ProducerGraphExecutionContext Build() {
+            if (!isFinalized) {
+                Finalize();
+                isFinalized = true;
+            }
+            return new(this);
+        }
+
+        public List<NodeContext> FindRoute(ProducerGraphExecutionContext context, Type type, string id) {
+            var key = (context, id, type);
+            if (routeCache.TryGetValue(key, out var list)) {
+                return list;
+            }
+            // Init
+            queue.Clear();
+            visited.Clear();
+            foreach (var ctx in nodeCtxs) {
+                ctx.dist = NodeContext.INIT_COST;
+                Array.Fill(ctx.predecessors, null);
+            }
+            foreach (var ctx in nodeCtxs.Where(
+                n => n.node.requires.All(x => context.TryGetOutput(x.Item2, x.Item1, out _)))) {
+                ctx.dist = ctx.node.cost;
+                queue.Enqueue(ctx, ctx.dist);
+            }
+            // Shortest path
+            NodeContext target = null;
+            while (queue.Count > 0) {
+                var node = queue.Dequeue();
+                if (!visited.Add(node)) {
+                    continue;
+                }
+                if (node.node.produces.Satisfies((id, type))) {
+                    target = node;
+                    break;
+                }
+                if (!edges.TryGetValue(node.node.produces, out var edgesList)) {
+                    continue;
+                }
+                foreach (var next in edgesList) {
+                    int idx = next.node.IndexOfRequirement(node.node.produces);
+                    if (next.UpdatePredecessor(idx, node)) {
+                        queue.Enqueue(next, next.dist);
+                    }
+                }
+            }
+            visited.Clear();
+            var route = target?.GetRoute(visited)?.ToList();
+            routeCache[key] = route;
+            return route;
+        }
     }
 }
