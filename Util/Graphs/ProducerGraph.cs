@@ -208,7 +208,10 @@ namespace RabiRiichi.Util.Graphs {
         public ProducerGraph Register<T>() where T : class
             => Register(null, typeof(T).GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static));
 
-        public ProducerGraph Finalize() {
+        private void FinalizeNodes() {
+            if (isFinalized) {
+                return;
+            }
             foreach (var node in nodes) {
                 var ctx = new NodeContext(node);
                 nodeCtxs.Add(ctx);
@@ -220,14 +223,11 @@ namespace RabiRiichi.Util.Graphs {
                     list.Add(ctx);
                 }
             }
-            return this;
+            isFinalized = true;
         }
 
         public ProducerGraphExecutionContext Build() {
-            if (!isFinalized) {
-                Finalize();
-                isFinalized = true;
-            }
+            FinalizeNodes();
             return new(this);
         }
 
@@ -270,9 +270,9 @@ namespace RabiRiichi.Util.Graphs {
                 }
             }
             visited.Clear();
-            var route = target?.GetRoute(visited)?.ToList();
-            routeCache[key] = route;
-            return route;
+            list = target?.GetRoute(visited)?.ToList();
+            routeCache[key] = list;
+            return list;
         }
     }
 }
