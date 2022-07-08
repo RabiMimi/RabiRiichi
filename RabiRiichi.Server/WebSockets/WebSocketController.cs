@@ -67,8 +67,8 @@ namespace RabiRiichi.Server.WebSockets {
                 }
             } catch (RpcException e) {
                 connection.Queue(ProtoUtils.CreateDto(new ServerErrorResponse {
-                    Status = e.Status.ToString(),
-                    Message = e.Message,
+                    Status = e.Status.StatusCode.ToString(),
+                    Message = e.Status.Detail,
                 }, msg.Id));
             }
         }
