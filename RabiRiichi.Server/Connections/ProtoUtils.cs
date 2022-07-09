@@ -2,9 +2,11 @@ using Google.Protobuf.WellKnownTypes;
 using RabiRiichi.Server.Generated.Messages;
 using RabiRiichi.Server.Generated.Rpc;
 
+using pb = global::Google.Protobuf;
+
 namespace RabiRiichi.Server.Connections {
     public static class ProtoUtils {
-        public static ServerMessageDto CreateDto<T>(T obj, int respondTo = 0) where T : class {
+        public static ServerMessageDto CreateDto<T>(T obj, int respondTo = 0) where T : pb::IMessage {
             try {
                 return CreateServerMsg(obj).CreateDto(respondTo);
             } catch (ArgumentException) {
@@ -12,7 +14,7 @@ namespace RabiRiichi.Server.Connections {
             }
         }
 
-        public static ServerResponse CreateServerResponse<T>(T obj) where T : class {
+        public static ServerResponse CreateServerResponse<T>(T obj) where T : pb::IMessage {
             var ret = new ServerResponse();
             if (obj is GetInfoResponse getInfo) {
                 ret.GetInfo = getInfo;
@@ -32,14 +34,12 @@ namespace RabiRiichi.Server.Connections {
             return ret;
         }
 
-        public static ServerMsg CreateServerMsg<T>(T obj) where T : class {
+        public static ServerMsg CreateServerMsg<T>(T obj) where T : pb::IMessage {
             var ret = new ServerMsg();
             if (obj is TwoWayHeartBeatMsg heartBeat) {
                 ret.HeartBeatMsg = heartBeat;
             } else if (obj is ServerInquiryEndMsg inquiryEnd) {
                 ret.InquiryEndMsg = inquiryEnd;
-            } else if (obj is ServerPlayerStateMsg playerState) {
-                ret.PlayerStateMsg = playerState;
             } else if (obj is ServerRoomStateMsg roomState) {
                 ret.RoomStateMsg = roomState;
             } else if (obj is ServerVersionCheckMsg versionCheck) {
