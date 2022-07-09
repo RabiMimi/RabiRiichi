@@ -18,7 +18,7 @@ namespace RabiRiichi.Server.Models {
         public UserStatus status { get; set; }
 
         public UserInfoResp(User user) {
-            id = user.seat;
+            id = user.Seat;
             room = user.room?.id;
             nickname = user.nickname;
             status = user.status;
@@ -32,7 +32,7 @@ namespace RabiRiichi.Server.Models {
         #region Server logic data members
         public UserStatus status { get; protected set; } = UserStatus.None;
         public Room room { get; protected set; }
-        public int seat => room.SeatIndexOf(this);
+        public int Seat => room.SeatIndexOf(this);
         public readonly Connection connection = new();
         #endregion
 
@@ -41,7 +41,7 @@ namespace RabiRiichi.Server.Models {
                 Id = id,
                 Nickname = nickname,
                 Status = status,
-                Seat = seat,
+                Seat = Seat,
             };
         }
 

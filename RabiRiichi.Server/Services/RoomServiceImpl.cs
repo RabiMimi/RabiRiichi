@@ -10,34 +10,34 @@ namespace RabiRiichi.Server.Services {
     [Authorize]
     public class RoomServiceImpl : RoomService.RoomServiceBase {
         private readonly ILogger<RoomServiceImpl> logger;
-        private readonly RoomList roomList;
-        private readonly UserList userList;
+        private readonly RoomTaskQueue taskQueue;
         private readonly Random rand;
 
-        public RoomServiceImpl(ILogger<RoomServiceImpl> logger, RoomList roomList, UserList userList, Random rand) {
+        public RoomServiceImpl(ILogger<RoomServiceImpl> logger, RoomTaskQueue taskQueue, Random rand) {
             this.logger = logger;
-            this.roomList = roomList;
-            this.userList = userList;
+            this.taskQueue = taskQueue;
             this.rand = rand;
         }
 
-        public Task<JoinRoomResponse> CreateRoom(User user) {
+        public JoinRoomResponse CreateRoom(RoomList roomList, User user) {
             var room = new Room(rand, new GameConfig());
             if (roomList.Add(room) && room.AddPlayer(user)) {
-                return Task.FromResult(new JoinRoomResponse {
+                return new JoinRoomResponse {
                     RoomId = room.id,
                     RoomState = room.GetServerRoomStateMsg(),
-                });
+                };
             }
-            return Task.FromException<JoinRoomResponse>(new RpcException(new Status(StatusCode.Internal, "Cannot add room or join room")));
+            throw new RpcException(new Status(StatusCode.Internal, "Cannot add room or join room"));
         }
 
         public override Task<JoinRoomResponse> CreateRoom(Empty request, ServerCallContext context) {
-            var user = userList.Fetch(context);
-            return CreateRoom(user);
+            return taskQueue.Execute(queue => {
+                var user = queue.userList.Fetch(context);
+                return CreateRoom(queue.roomList, user);
+            });
         }
 
-        public Task<JoinRoomResponse> JoinRoom(JoinRoomRequest request, User user) {
+        public JoinRoomResponse JoinRoom(JoinRoomRequest request, RoomList roomList, User user) {
             if (!roomList.TryGet(request.RoomId, out var room)) {
                 throw new RpcException(
                     new Status(StatusCode.NotFound, "Cannot find room"));
@@ -46,15 +46,17 @@ namespace RabiRiichi.Server.Services {
                 throw new RpcException(
                     new Status(StatusCode.Unavailable, "Room is full"));
             }
-            return Task.FromResult(new JoinRoomResponse {
+            return new JoinRoomResponse {
                 RoomId = room.id,
                 RoomState = room.GetServerRoomStateMsg(),
-            });
+            };
         }
 
         public override Task<JoinRoomResponse> JoinRoom(JoinRoomRequest request, ServerCallContext context) {
-            var user = userList.Fetch(context);
-            return JoinRoom(request, user);
+            return taskQueue.Execute(queue => {
+                var user = queue.userList.Fetch(context);
+                return JoinRoom(request, queue.roomList, user);
+            });
         }
     }
 }

@@ -31,6 +31,7 @@ services.AddControllers();
 services.AddSingleton<RoomList>();
 services.AddSingleton<UserList>();
 services.AddSingleton<TokenService>();
+services.AddSingleton<RoomTaskQueue>();
 services.AddSingleton<InfoServiceImpl>();
 services.AddSingleton<UserServiceImpl>();
 services.AddSingleton<RoomServiceImpl>();

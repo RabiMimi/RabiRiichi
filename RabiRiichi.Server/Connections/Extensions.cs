@@ -64,25 +64,27 @@ namespace RabiRiichi.Server.Connections {
             return true;
         }
 
-        public static void AddRoomListeners(this User user) {
+        public static void AddRoomListeners(this User user, RoomTaskQueue taskQueue) {
             user.connection.OnReceive += (ClientMessageDto dto) => {
                 var msg = dto.ClientMsg?.RoomUpdateMsg;
                 if (msg == null) {
                     return;
                 }
-                switch (msg.Status) {
-                    case UserStatus.Ready:
-                        user.room?.GetReady(user);
-                        break;
-                    case UserStatus.InRoom:
-                        user.room?.CancelReady(user);
-                        break;
-                    case UserStatus.None:
-                        user.room?.RemovePlayer(user);
-                        break;
-                    default:
-                        break;
-                }
+                _ = taskQueue.Execute(() => {
+                    switch (msg.Status) {
+                        case UserStatus.Ready:
+                            user.room?.GetReady(user);
+                            break;
+                        case UserStatus.InRoom:
+                            user.room?.CancelReady(user);
+                            break;
+                        case UserStatus.None:
+                            user.room?.RemovePlayer(user);
+                            break;
+                        default:
+                            break;
+                    }
+                });
             };
         }
     }

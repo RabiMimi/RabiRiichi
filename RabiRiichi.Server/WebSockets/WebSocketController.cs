@@ -12,7 +12,7 @@ namespace RabiRiichi.Server.WebSockets {
     [Route("/ws")]
     public class WebSocketController : ControllerBase {
         private readonly ILogger<WebSocketController> logger;
-        private readonly UserList userList;
+        private readonly RoomTaskQueue taskQueue;
         private readonly TokenService tokenService;
         private readonly InfoServiceImpl infoService;
         private readonly RoomServiceImpl roomService;
@@ -20,77 +20,103 @@ namespace RabiRiichi.Server.WebSockets {
 
         public WebSocketController(
             ILogger<WebSocketController> logger,
-            UserList userList,
+            RoomTaskQueue taskQueue,
             TokenService tokenService,
             InfoServiceImpl infoService,
             RoomServiceImpl roomService,
             UserServiceImpl userService) {
             this.logger = logger;
-            this.userList = userList;
+            this.taskQueue = taskQueue;
             this.tokenService = tokenService;
             this.infoService = infoService;
             this.roomService = roomService;
             this.userService = userService;
         }
 
-        private async Task HandlePublic(Connection connection, ClientMessageDto msg) {
-            try {
-                if (msg.ClientRequest?.GetInfo != null) {
-                    connection.Queue(ProtoUtils.CreateDto(await infoService.GetInfo(), msg.Id));
-                } else if (msg.ClientRequest?.CreateUser != null) {
-                    var req = msg.ClientRequest.CreateUser;
-                    var res = await userService.CreateUser(req);
-                    connection.Queue(ProtoUtils.CreateDto(res, msg.Id));
+        private Task HandlePublic(Connection connection, ClientMessageDto msg) {
+            return taskQueue.Execute(queue => {
+                try {
+                    if (msg.ClientRequest?.GetInfo != null) {
+                        connection.Queue(ProtoUtils.CreateDto(infoService.GetInfo(), msg.Id));
+                    } else if (msg.ClientRequest?.CreateUser != null) {
+                        var req = msg.ClientRequest.CreateUser;
+                        var res = userService.CreateUser(req, queue.userList);
+                        connection.Queue(ProtoUtils.CreateDto(res, msg.Id));
+                    }
+                } catch (RpcException e) {
+                    connection.Queue(ProtoUtils.CreateDto(new ServerErrorResponse {
+                        Status = e.Status.ToString(),
+                        Message = e.Message,
+                    }, msg.Id));
                 }
-            } catch (RpcException e) {
-                connection.Queue(ProtoUtils.CreateDto(new ServerErrorResponse {
-                    Status = e.Status.ToString(),
-                    Message = e.Message,
-                }, msg.Id));
-            }
+            });
         }
 
-        private async Task HandlePrivate(User user, Connection connection, ClientMessageDto msg) {
-            try {
-                if (msg.ClientRequest?.CreateRoom != null) {
-                    connection.Queue(ProtoUtils.CreateDto(await roomService.CreateRoom(user), msg.Id));
-                } else if (msg.ClientRequest?.CreateUser != null) {
-                    var req = msg.ClientRequest.CreateUser;
-                    var res = await userService.CreateUser(req);
-                    connection.Queue(ProtoUtils.CreateDto(res, msg.Id));
-                } else if (msg.ClientRequest?.JoinRoom != null) {
-                    var req = msg.ClientRequest.JoinRoom;
-                    var res = await roomService.JoinRoom(req, user);
-                    connection.Queue(ProtoUtils.CreateDto(res, msg.Id));
+        private Task HandlePrivate(User user, Connection connection, ClientMessageDto msg) {
+            return taskQueue.Execute(queue => {
+                try {
+                    if (msg.ClientRequest?.CreateRoom != null) {
+                        connection.Queue(ProtoUtils.CreateDto(roomService.CreateRoom(queue.roomList, user), msg.Id));
+                    } else if (msg.ClientRequest?.CreateUser != null) {
+                        var req = msg.ClientRequest.CreateUser;
+                        var res = userService.CreateUser(req, queue.userList);
+                        connection.Queue(ProtoUtils.CreateDto(res, msg.Id));
+                    } else if (msg.ClientRequest?.JoinRoom != null) {
+                        var req = msg.ClientRequest.JoinRoom;
+                        var res = roomService.JoinRoom(req, queue.roomList, user);
+                        connection.Queue(ProtoUtils.CreateDto(res, msg.Id));
+                    } else if (msg.ClientRequest?.GetMyInfo != null) {
+                        var req = msg.ClientRequest.GetMyInfo;
+                        var res = userService.GetMyInfo(user);
+                        connection.Queue(ProtoUtils.CreateDto(res, msg.Id));
+                    }
+                } catch (RpcException e) {
+                    connection.Queue(ProtoUtils.CreateDto(new ServerErrorResponse {
+                        Status = e.Status.StatusCode.ToString(),
+                        Message = e.Status.Detail,
+                    }, msg.Id));
                 }
-            } catch (RpcException e) {
-                connection.Queue(ProtoUtils.CreateDto(new ServerErrorResponse {
-                    Status = e.Status.StatusCode.ToString(),
-                    Message = e.Status.Detail,
-                }, msg.Id));
-            }
+            });
         }
 
         private async Task<User> HandleSignIn(WebSocketAdapter adapter) {
-            if (!await adapter.MoveNext()) {
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+            try {
+                if (!await adapter.MoveNext(cts.Token)) {
+                    return null;
+                }
+            } catch (OperationCanceledException) {
                 return null;
             }
 
-            var signIn = adapter.Current.ClientRequest?.SignIn;
-            if (signIn == null) {
+            var current = adapter.Current;
+            var signIn = current?.ClientRequest?.SignIn;
+
+            async Task<User> FailSignIn() {
+                await adapter.WriteAsync(ProtoUtils.CreateDto(new ServerErrorResponse {
+                    Status = Grpc.Core.StatusCode.Unauthenticated.ToString(),
+                    Message = "Authentication failed",
+                }, current.Id));
                 return null;
+            }
+
+            if (signIn == null) {
+                return await FailSignIn();
             }
 
             if (!tokenService.IsTokenValid(signIn.AccessToken, out var uid)) {
-                return null;
+                return await FailSignIn();
             }
 
-            if (!userList.TryGet(uid, out var user)) {
-                return null;
+            var user = await taskQueue.Execute(queue => {
+                return queue.userList.Get(uid);
+            });
+            if (user == null) {
+                return await FailSignIn();
             }
             await adapter.WriteAsync(new ServerResponse {
                 SignIn = new Empty()
-            }.CreateDto());
+            }.CreateDto(current.Id));
             return user;
         }
 
@@ -129,10 +155,6 @@ namespace RabiRiichi.Server.WebSockets {
 
                 var user = await HandleSignIn(adapter);
                 if (user == null) {
-                    await adapter.WriteAsync(ProtoUtils.CreateDto(new ServerErrorResponse {
-                        Status = Grpc.Core.StatusCode.Unauthenticated.ToString(),
-                        Message = "Invalid access token"
-                    }));
                     return;
                 }
 
@@ -144,7 +166,7 @@ namespace RabiRiichi.Server.WebSockets {
                 user.connection.OnReceive += UserListener;
 
                 try {
-                    var rabiCtx = user.Connect(adapter, adapter);
+                    var rabiCtx = await taskQueue.Execute(() => user.Connect(adapter, adapter));
                     if (rabiCtx == null) {
                         await adapter.WriteAsync(ProtoUtils.CreateDto(new ServerErrorResponse {
                             Status = Grpc.Core.StatusCode.Unauthenticated.ToString(),
@@ -160,10 +182,7 @@ namespace RabiRiichi.Server.WebSockets {
                         return;
                     }
 
-                    var room = user.room;
-                    if (room != null) {
-                        room.BroadcastRoomState();
-                    }
+                    await taskQueue.Execute(() => user.room?.BroadcastRoomState());
                     await Task.Delay(TimeSpan.FromDays(7), rabiCtx.cts.Token);
                 } catch (OperationCanceledException) { } finally {
                     user.connection.Close();

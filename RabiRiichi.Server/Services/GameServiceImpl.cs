@@ -7,26 +7,27 @@ using RabiRiichi.Server.Models;
 namespace RabiRiichi.Server.Services {
     public class GameServiceImpl : GameService.GameServiceBase {
         private readonly ILogger<GameServiceImpl> logger;
-        private readonly UserList userList;
+        private readonly RoomTaskQueue taskQueue;
 
-        public GameServiceImpl(ILogger<GameServiceImpl> logger, UserList userList) {
+        public GameServiceImpl(ILogger<GameServiceImpl> logger, RoomTaskQueue taskQueue) {
             this.logger = logger;
-            this.userList = userList;
+            this.taskQueue = taskQueue;
         }
 
         public override async Task ConnectGame(IAsyncStreamReader<ClientMessageDto> requestStream, IServerStreamWriter<ServerMessageDto> responseStream, ServerCallContext context) {
-            var user = userList.Fetch(context);
-            var rabiCtx = user.Connect(requestStream, responseStream);
+            var (user, rabiCtx) = await taskQueue.Execute(queue => {
+                var user = queue.userList.Fetch(context);
+                return (user, user?.Connect(requestStream, responseStream));
+            });
             if (rabiCtx == null) {
                 return;
             }
             if (!await rabiCtx.HandShake()) {
                 return;
             }
-            var room = user.room;
-            if (room != null) {
-                room.BroadcastRoomState();
-            }
+            await taskQueue.Execute(() => {
+                user.room?.BroadcastRoomState();
+            });
             try {
                 await Task.Delay(TimeSpan.FromDays(7), rabiCtx.cts.Token);
             } catch (OperationCanceledException) { }

@@ -1,6 +1,5 @@
 using RabiRiichi.Actions;
 using RabiRiichi.Communication;
-using RabiRiichi.Communication.Proto;
 using RabiRiichi.Events;
 using RabiRiichi.Generated.Actions;
 using RabiRiichi.Generated.Events;
@@ -28,7 +27,7 @@ namespace RabiRiichi.Server.Connections {
         }
 
         private ServerMessageWrapper SendMessage(int seat, ServerMessageDto msg)
-            => room.GetPlayerBySeat(seat).connection.Queue(msg);
+            => room.GetPlayerBySeat(seat)?.connection.Queue(msg);
 
         private void EndInquiry(InquiryContext context) {
             var oldContext = Interlocked.CompareExchange(ref this.context, null, context);

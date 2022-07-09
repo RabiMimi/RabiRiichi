@@ -1,6 +1,7 @@
 using RabiRiichi.Actions;
 using RabiRiichi.Communication.Json;
 using RabiRiichi.Events;
+using System.Threading;
 
 namespace RabiRiichi.Communication {
     public class JsonStringActionCenter : IActionCenter {
@@ -22,13 +23,9 @@ namespace RabiRiichi.Communication {
         }
 
         public void OnMessage(int playerId, int actionIndex, string message) {
-            lock (this) {
-                if (current == null) {
-                    return;
-                }
-                if (current.OnResponse(new InquiryResponse(playerId, actionIndex, message))) {
-                    current = null;
-                }
+            var inq = current;
+            if (inq?.OnResponse(new InquiryResponse(playerId, actionIndex, message)) == true) {
+                Interlocked.CompareExchange(ref current, null, inq);
             }
         }
 
@@ -36,9 +33,7 @@ namespace RabiRiichi.Communication {
             if (inquiry.IsEmpty) {
                 return;
             }
-            lock (this) {
-                current = inquiry;
-            }
+            current = inquiry;
             foreach (var singlePlayerInquiry in inquiry.playerInquiries) {
                 var json = RabiJson.Stringify(singlePlayerInquiry, singlePlayerInquiry.playerId);
                 Send(singlePlayerInquiry.playerId, json);

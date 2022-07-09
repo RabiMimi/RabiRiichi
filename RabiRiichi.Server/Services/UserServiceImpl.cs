@@ -2,51 +2,57 @@ using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Microsoft.AspNetCore.Authorization;
 using RabiRiichi.Server.Auth;
+using RabiRiichi.Server.Connections;
 using RabiRiichi.Server.Generated.Rpc;
 using RabiRiichi.Server.Models;
 
 namespace RabiRiichi.Server.Services {
     public class UserServiceImpl : UserService.UserServiceBase {
         private readonly ILogger<UserServiceImpl> logger;
-        private readonly UserList userList;
+        private readonly RoomTaskQueue taskQueue;
         private readonly TokenService tokenService;
 
-        public UserServiceImpl(ILogger<UserServiceImpl> logger, UserList userList, TokenService tokenService) {
+        public UserServiceImpl(ILogger<UserServiceImpl> logger, RoomTaskQueue taskQueue, TokenService tokenService) {
             this.logger = logger;
-            this.userList = userList;
+            this.taskQueue = taskQueue;
             this.tokenService = tokenService;
         }
 
-        public Task<CreateUserResponse> CreateUser(CreateUserRequest request) {
+        public CreateUserResponse CreateUser(CreateUserRequest request, UserList userList) {
             var user = new User {
                 nickname = request.Nickname
             };
             if (!userList.Add(user)) {
                 throw new RpcException(new Status(StatusCode.Internal, "Cannot add user"));
             }
-            return Task.FromResult(new CreateUserResponse {
+            user.AddRoomListeners(taskQueue);
+            return new CreateUserResponse {
                 Id = user.id,
                 AccessToken = tokenService.BuildToken(user.id)
-            });
+            };
         }
 
         public override Task<CreateUserResponse> CreateUser(CreateUserRequest request, ServerCallContext context) {
-            return CreateUser(request);
+            return taskQueue.Execute(queue => {
+                return CreateUser(request, queue.userList);
+            });
         }
 
-        public Task<UserInfoResponse> GetMyInfo(User user) {
-            return Task.FromResult(new UserInfoResponse {
+        public UserInfoResponse GetMyInfo(User user) {
+            return new UserInfoResponse {
                 Id = user.id,
                 Nickname = user.nickname,
                 Room = user.room?.id ?? 0,
                 Status = user.status,
-            });
+            };
         }
 
         [Authorize]
         public override Task<UserInfoResponse> GetMyInfo(Empty request, ServerCallContext context) {
-            var user = userList.Fetch(context);
-            return GetMyInfo(user);
+            return taskQueue.Execute(queue => {
+                var user = queue.userList.Fetch(context);
+                return GetMyInfo(user);
+            });
         }
     }
 }

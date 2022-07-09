@@ -129,17 +129,20 @@ namespace RabiRiichi.Actions {
                 finishTcs.SetResult();
                 return;
             }
-            if (curMaxPriority == int.MinValue) {
-                // 没有用户做出有效回应
-                curMaxPriority = playerInquiries.Max(x => x.curPriority);
+
+            lock (playerInquiries) {
+                if (curMaxPriority == int.MinValue) {
+                    // 没有用户做出有效回应
+                    curMaxPriority = playerInquiries.Max(x => x.curPriority);
+                }
+                // 仅触发优先级最高的操作（可能有多个用户）
+                if (responses.Count > 0) {
+                    throw new InvalidOperationException("MultiPlayerInquiry.OnResponse: responses already populated (multithread error?)");
+                }
+                responses.AddRange(playerInquiries
+                    .Where(x => x.curPriority == curMaxPriority)
+                    .Select(x => x.Selected));
             }
-            // 仅触发优先级最高的操作（可能有多个用户）
-            if (responses.Count > 0) {
-                throw new InvalidOperationException("MultiPlayerInquiry.OnResponse: responses already populated (multithread error?)");
-            }
-            responses.AddRange(playerInquiries
-                .Where(x => x.curPriority == curMaxPriority)
-                .Select(x => x.Selected));
 
             // 处理操作
             foreach (var action in responses) {

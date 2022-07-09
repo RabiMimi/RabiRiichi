@@ -1,7 +1,30 @@
+using RabiRiichi.Server.Utils;
 using System.Collections;
 using System.Collections.Concurrent;
 
 namespace RabiRiichi.Server.Models {
+    public class RoomTaskQueue : TaskQueue {
+        public readonly RoomList roomList;
+        public readonly UserList userList;
+
+        public RoomTaskQueue(RoomList roomList, UserList userList) : base(1024) {
+            this.roomList = roomList;
+            this.userList = userList;
+        }
+
+        public Task<T> ExecuteAsync<T>(Func<RoomTaskQueue, Task<T>> worker)
+            => ExecuteAsync(() => worker(this));
+
+        public Task ExecuteAsync(Func<RoomTaskQueue, Task> worker)
+            => ExecuteAsync(() => worker(this));
+
+        public Task<T> Execute<T>(Func<RoomTaskQueue, T> worker)
+            => Execute(() => worker(this));
+
+        public Task Execute(Action<RoomTaskQueue> worker)
+            => Execute(() => worker(this));
+    }
+
     public class RoomList : IEnumerable<Room> {
         public readonly ConcurrentDictionary<int, Room> rooms = new();
         private readonly Random rand;

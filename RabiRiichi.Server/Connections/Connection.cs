@@ -37,12 +37,6 @@ namespace RabiRiichi.Server.Connections {
         internal readonly ConcurrentDictionary<int, ServerMessageWrapper> serverMsgs = new();
 
         /// <summary>
-        /// Whether the connection is closed.<br/>
-        /// If true, no more web sockets or connections are accepted.
-        /// </summary>
-        public readonly AtomicBool isClosed = new();
-
-        /// <summary>
         /// Create an outgoing message but do not send it.
         /// </summary>
         public ServerMessageWrapper CreateMessage(ServerMessageDto msg) {
@@ -57,9 +51,6 @@ namespace RabiRiichi.Server.Connections {
         /// <param name="msg">Message to send</param>
         /// <returns>Whether the message was added to queue.</returns>
         public bool Queue(ServerMessageWrapper msg) {
-            if (isClosed) {
-                return false;
-            }
             serverMsgs.TryAdd(msg.msg.Id, msg);
             currentCtx?.Queue(msg);
             return true;
@@ -79,10 +70,6 @@ namespace RabiRiichi.Server.Connections {
         public RabiStreamingContext Connect(
             IAsyncStreamReader<ClientMessageDto> requestStream,
             IServerStreamWriter<ServerMessageDto> responseStream) {
-            if (isClosed) {
-                throw new InvalidOperationException("Connection is closed");
-            }
-
             var ctx = new RabiStreamingContext(this, requestStream, responseStream);
             ctx.OnReceive += incoming => OnReceive?.Invoke(incoming);
 
@@ -162,9 +149,6 @@ namespace RabiRiichi.Server.Connections {
         /// and the queued messages will be sent before closing.
         /// </summary>
         public void Close() {
-            if (isClosed.Exchange(true)) {
-                return;
-            }
             currentCtx?.Close();
         }
 

@@ -11,18 +11,18 @@ namespace RabiRiichi.Server.Services {
             this.logger = logger;
         }
 
-        public Task<GetInfoResponse> GetInfo() {
-            return Task.FromResult(new GetInfoResponse {
+        public GetInfoResponse GetInfo() {
+            return new GetInfoResponse {
                 Game = ServerConstants.GAME,
                 GameVersion = RabiRiichi.VERSION,
                 Server = ServerConstants.SERVER,
                 ServerVersion = ServerConstants.SERVER_VERSION,
                 MinClientVersion = ServerConstants.MIN_CLIENT_VERSION,
-            });
+            };
         }
 
         public override Task<GetInfoResponse> GetInfo(Empty request, ServerCallContext context) {
-            return GetInfo();
+            return Task.FromResult(GetInfo());
         }
     }
 }
