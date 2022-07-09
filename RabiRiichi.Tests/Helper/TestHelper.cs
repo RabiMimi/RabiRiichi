@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace RabiRiichi.Tests.Helper {
-    static class TestHelper {
+    static class TestHelperExtensions {
         public static IEnumerable<GameTile> ToGameTiles(this IEnumerable<Tile> tiles) {
             return tiles.Select(t => new GameTile(t, -1));
         }
@@ -16,10 +16,17 @@ namespace RabiRiichi.Tests.Helper {
             return tiles.ToGameTiles().ToList();
         }
 
+        public static MenLike ToMenLike(this IEnumerable<Tile> tiles) {
+            return MenLike.From(tiles.ToGameTiles());
+        }
+    }
+
+    static class TestHelper {
+
         public static Hand CreateHand(string str, params string[] groups) {
             return new Hand {
                 freeTiles = new Tiles(str).ToGameTileList(),
-                called = groups.Select(gr => MenLike.From(new Tiles(gr))).ToList(),
+                called = groups.Select(gr => new Tiles(gr).ToMenLike()).ToList(),
             };
         }
 

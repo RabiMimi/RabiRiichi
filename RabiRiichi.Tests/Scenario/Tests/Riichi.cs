@@ -214,7 +214,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
                 .WithPlayer(1, playerBuilder => {
                     playerBuilder.SetFreeTiles("12366s234m34566p");
                 })
-                .WithWall(wall => wall.Reserve("777786s"))
+                .WithWall(wall => wall.Reserve("777786s").AddDoras("1z").AddUradoras("1z"))
                 .Start(1);
 
             await RiichiWith(scenario, 1, "7s");
@@ -297,7 +297,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
                         .AddCalled("888p", 0, 3, DiscardReason.Draw)
                         .SetFreeTiles("1234567z111s");
                 })
-                .WithWall(wall => wall.Reserve("6s8p").AddUradoras("1z"))
+                .WithWall(wall => wall.Reserve("6s8p").AddDoras("1z").AddUradoras("1z"))
                 .Start(1);
 
             await RiichiWith(scenario, 1, "7s");
@@ -336,7 +336,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
                 .WithPlayer(1, playerBuilder => playerBuilder
                     .SetFreeTiles("12366s234m34566p")
                 )
-                .WithWall(wall => wall.Reserve("76s6p56s"))
+                .WithWall(wall => wall.Reserve("76s6p56s").AddDoras("1z").AddUradoras("1z"))
                 .Start(1);
 
             await RiichiWith(scenario, 1, "7s");

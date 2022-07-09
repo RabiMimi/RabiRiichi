@@ -57,6 +57,9 @@ namespace RabiRiichi.Core {
         }
 
         [RabiBroadcast] public Tile tile = Tile.Empty;
+
+        /// <summary> 随机获取的牌ID，保证一局内不重复 </summary>
+        [RabiBroadcast] public readonly int id;
         /// <summary> 当前归属于哪个玩家，摸切或副露时会被设置 </summary>
         public Player player;
         [RabiBroadcast] public int playerId => player?.id ?? -1;
@@ -71,8 +74,9 @@ namespace RabiRiichi.Core {
         /// <summary> 是否是万筒索 </summary>
         public bool IsMPS => tile.IsMPS;
 
-        public GameTile(Tile tile) {
+        public GameTile(Tile tile, int id) {
             this.tile = tile;
+            this.id = id;
         }
 
         public int CompareTo(GameTile other) {
@@ -99,11 +103,12 @@ namespace RabiRiichi.Core {
 
         public GameTileMsg ToProto() {
             return new GameTileMsg {
+                Id = id,
                 Tile = tile.Val,
                 PlayerId = playerId,
-                DiscardInfo = discardInfo?.ToProto(),
                 FormTime = formTime,
                 Source = source,
+                DiscardInfo = discardInfo?.ToProto(),
             };
         }
     }

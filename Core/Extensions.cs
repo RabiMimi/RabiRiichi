@@ -11,14 +11,6 @@ namespace RabiRiichi.Core {
             return new Tiles(tiles.Select(gameTile => gameTile.tile));
         }
 
-        public static IEnumerable<GameTile> ToGameTiles(this IEnumerable<Tile> tiles) {
-            return tiles.Select(t => new GameTile(t));
-        }
-
-        public static List<GameTile> ToGameTileList(this IEnumerable<Tile> tiles) {
-            return tiles.ToGameTiles().ToList();
-        }
-
         public static TileSuit ToGroup(this char c) {
             c = char.ToLower(c);
             return c switch {

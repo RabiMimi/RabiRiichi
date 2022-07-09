@@ -71,7 +71,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
                     playerBuilder.SetFreeTiles("11223344556678s");
                 })
                 .WithWall(wallBuilder => {
-                    wallBuilder.Reserve("777888s");
+                    wallBuilder.Reserve("777888s").AddDoras("1z").AddUradoras("1z");
                 })
                 .SetFirstJun()
                 .Start(0);

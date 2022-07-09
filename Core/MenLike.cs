@@ -28,7 +28,6 @@ namespace RabiRiichi.Core {
             }
             IsClose = this.All(t => t.IsTsumo);
         }
-        public MenLike(IEnumerable<Tile> tiles) : this(tiles.ToGameTiles()) { }
 
         public abstract bool IsSame(MenLike other);
 
@@ -103,11 +102,6 @@ namespace RabiRiichi.Core {
             return From(tiles.ToList().AsReadOnly());
         }
 
-        /// <summary> 根据牌返回最适合的类 </summary>
-        public static MenLike From(IEnumerable<Tile> tiles) {
-            return From(tiles.ToGameTiles());
-        }
-
         public MenLikeMsg ToProto() {
             var msg = new MenLikeMsg();
             msg.Tiles.AddRange(this.Select(t => t.ToProto()));
@@ -117,9 +111,6 @@ namespace RabiRiichi.Core {
 
     /// <summary> 顺子 </summary>
     public class Shun : MenLike {
-        public Shun(IEnumerable<Tile> tiles) : base(tiles) {
-            Logger.Assert(IsShun(this), "顺子必须是顺子");
-        }
         public Shun(IEnumerable<GameTile> tiles) : base(tiles) {
             Logger.Assert(IsShun(this), "顺子必须是顺子");
         }
@@ -133,9 +124,6 @@ namespace RabiRiichi.Core {
 
     /// <summary> 刻子 </summary>
     public class Kou : MenLike {
-        public Kou(IEnumerable<Tile> tiles) : base(tiles) {
-            Logger.Assert(IsKou(this), "刻子必须是刻子");
-        }
         public Kou(IEnumerable<GameTile> tiles) : base(tiles) {
             Logger.Assert(IsKou(this), "刻子必须是刻子");
         }
@@ -153,10 +141,6 @@ namespace RabiRiichi.Core {
 
         /// <summary> 是暗杠/明杠/加杠 </summary>
         public TileSource KanSource { get; init; }
-        public Kan(IEnumerable<Tile> tiles, TileSource kanSource) : base(tiles) {
-            Logger.Assert(IsKan(this), "杠子必须是杠子");
-            KanSource = kanSource;
-        }
         public Kan(IEnumerable<GameTile> tiles, TileSource? kanSource = null) : base(tiles) {
             Logger.Assert(IsKan(this), "杠子必须是杠子");
             if (!kanSource.HasValue) {
@@ -182,9 +166,6 @@ namespace RabiRiichi.Core {
 
     /// <summary> 雀头 </summary>
     public class Jantou : MenLike {
-        public Jantou(IEnumerable<Tile> tiles) : base(tiles) {
-            Logger.Assert(IsJan(this), "雀头必须是雀头");
-        }
         public Jantou(IEnumerable<GameTile> tiles) : base(tiles) {
             Logger.Assert(IsJan(this), "雀头必须是雀头");
         }
@@ -198,9 +179,6 @@ namespace RabiRiichi.Core {
 
     /// <summary> 单牌，仅用于国士无双 </summary>
     public class Musou : MenLike {
-        public Musou(IEnumerable<Tile> tiles) : base(tiles) {
-            Logger.Assert(IsMusou(this), "单牌必须是单牌");
-        }
         public Musou(IEnumerable<GameTile> tiles) : base(tiles) {
             Logger.Assert(IsMusou(this), "单牌必须是单牌");
         }

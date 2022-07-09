@@ -7,6 +7,7 @@ using RabiRiichi.Generated.Core;
 using RabiRiichi.Generated.Events.InGame;
 using RabiRiichi.Generated.Patterns;
 using RabiRiichi.Patterns;
+using RabiRiichi.Tests.Helper;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,11 +34,11 @@ namespace RabiRiichi.Tests.Communication.Proto {
             var parameters = new List<object> {
                 game,
                 game.initialEvent,
-                (Kan)MenLike.From(new Tiles("1111s")),
-                (Kou)MenLike.From(new Tiles("222s")),
-                (Shun)MenLike.From(new Tiles("345s")),
-                (Jantou)MenLike.From(new Tiles("33s")),
-                (Musou)MenLike.From(new Tiles("3s")),
+                (Kan)new Tiles("1111s").ToMenLike(),
+                (Kou)new Tiles("222s").ToMenLike(),
+                (Shun)new Tiles("345s").ToMenLike(),
+                (Jantou)new Tiles("33s").ToMenLike(),
+                (Musou)new Tiles("3s").ToMenLike(),
                 true,
                 0,
                 0L,

@@ -1,10 +1,11 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Core;
+using RabiRiichi.Tests.Helper;
 
 namespace RabiRiichi.Tests.Core {
     [TestClass]
     public class PatternTest {
-        private static MenLike Create(string tiles) => MenLike.From(new Tiles(tiles));
+        private static MenLike Create(string tiles) => new Tiles(tiles).ToMenLike();
 
         [TestMethod]
         public void TestFrom() {

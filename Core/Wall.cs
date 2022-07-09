@@ -1,6 +1,5 @@
 ﻿using RabiRiichi.Core.Config;
 using RabiRiichi.Generated.Core;
-using RabiRiichi.Generated.Patterns;
 using RabiRiichi.Utils;
 using System;
 using System.Collections.Generic;
@@ -10,6 +9,8 @@ namespace RabiRiichi.Core {
     public class Wall {
         public readonly GameConfig config;
         public readonly RabiRand rand;
+
+        private readonly RandIDPool idPool;
 
         /// <summary> 宝牌数量 </summary>
         public const int NUM_DORA = 5;
@@ -41,6 +42,7 @@ namespace RabiRiichi.Core {
         public Wall(RabiRand rand, GameConfig config) {
             this.rand = rand;
             this.config = config;
+            idPool = new RandIDPool(rand);
         }
 
         /// <summary> 重置牌山 </summary>
@@ -49,7 +51,7 @@ namespace RabiRiichi.Core {
             rinshan.Clear();
             doras.Clear();
             uradoras.Clear();
-            remaining.AddRange(config.initialTiles.ToGameTiles());
+            remaining.AddRange(config.initialTiles.Select(tile => new GameTile(tile, idPool.GetID())));
             rand.Shuffle(remaining);
             rinshan.AddRange(remaining.PopMany(NUM_RINSHAN));
             doras.AddRange(remaining.PopMany(NUM_DORA));
