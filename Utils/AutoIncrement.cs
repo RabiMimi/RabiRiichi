@@ -1,6 +1,6 @@
 using System.Threading;
 
-namespace RabiRiichi.Util {
+namespace RabiRiichi.Utils {
     public struct AutoIncrementInt {
         private int value;
         public int Value => value;

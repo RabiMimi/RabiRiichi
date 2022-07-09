@@ -1,5 +1,5 @@
 ﻿using RabiRiichi.Core;
-using RabiRiichi.Util;
+using RabiRiichi.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;

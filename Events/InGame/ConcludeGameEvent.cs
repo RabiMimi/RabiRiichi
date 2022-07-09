@@ -1,7 +1,7 @@
 using RabiRiichi.Communication;
 using RabiRiichi.Core;
 using RabiRiichi.Generated.Events.InGame;
-using RabiRiichi.Util;
+using RabiRiichi.Utils;
 using System;
 
 namespace RabiRiichi.Events.InGame {

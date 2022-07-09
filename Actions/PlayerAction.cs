@@ -1,6 +1,6 @@
 using RabiRiichi.Communication;
 using RabiRiichi.Generated.Actions;
-using RabiRiichi.Util;
+using RabiRiichi.Utils;
 using System;
 using System.Text.Json;
 

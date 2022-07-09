@@ -1,7 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using RabiRiichi.Util;
+using RabiRiichi.Utils;
 
-namespace RabiRiichi.Tests.Util {
+namespace RabiRiichi.Tests.Utils {
     [TestClass]
     public class AtomicBoolTest {
 

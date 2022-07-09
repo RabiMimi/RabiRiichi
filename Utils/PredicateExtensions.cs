@@ -2,7 +2,7 @@ using RabiRiichi.Patterns;
 using System;
 using PatternPredicate = System.Predicate<System.Collections.Generic.ICollection<RabiRiichi.Patterns.StdPattern>>;
 
-namespace RabiRiichi.Util {
+namespace RabiRiichi.Utils {
     public static class PredicateExtensions {
         public static PatternPredicate GetPredicate(this StdPattern pattern) {
             return patterns => patterns.Contains(pattern);

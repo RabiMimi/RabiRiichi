@@ -1,6 +1,6 @@
 using System.Threading;
 
-namespace RabiRiichi.Util {
+namespace RabiRiichi.Utils {
     public class AtomicBool {
         private const int FALSE = 0;
         private const int TRUE = 1;

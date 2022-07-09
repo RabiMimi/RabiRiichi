@@ -2,7 +2,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Linq;
 
-namespace RabiRiichi.Tests.Util {
+namespace RabiRiichi.Tests.Utils {
     [TestClass]
     public class RabiEnumerableTest {
         public readonly int[] source = new int[] { 1, 1, 4, 5, 1, 4 };

@@ -1,6 +1,6 @@
 using RabiRiichi.Communication;
 using RabiRiichi.Generated.Events.InGame;
-using RabiRiichi.Util;
+using RabiRiichi.Utils;
 using System.Collections.Generic;
 using System.Linq;
 

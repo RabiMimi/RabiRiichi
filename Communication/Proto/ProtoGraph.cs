@@ -1,4 +1,4 @@
-using RabiRiichi.Util.Graphs;
+using RabiRiichi.Utils.Graphs;
 
 namespace RabiRiichi.Communication.Proto {
     public class ProtoGraph : ProducerGraph {

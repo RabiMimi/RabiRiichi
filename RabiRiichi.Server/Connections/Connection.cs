@@ -2,7 +2,7 @@ using Grpc.Core;
 using RabiRiichi.Server.Generated.Messages;
 using RabiRiichi.Server.Generated.Rpc;
 using RabiRiichi.Server.Utils;
-using RabiRiichi.Util;
+using RabiRiichi.Utils;
 using System.Collections.Concurrent;
 
 namespace RabiRiichi.Server.Connections {

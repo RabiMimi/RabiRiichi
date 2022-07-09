@@ -1,5 +1,5 @@
 using RabiRiichi.Server.Generated.Rpc;
-using RabiRiichi.Util;
+using RabiRiichi.Utils;
 
 namespace RabiRiichi.Server.Connections {
     /// <summary>

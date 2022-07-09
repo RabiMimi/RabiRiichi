@@ -1,7 +1,7 @@
 using System;
 using System.Threading;
 
-namespace RabiRiichi.Util {
+namespace RabiRiichi.Utils {
     internal class MutexHolder : IDisposable {
         private readonly Mutex mutex;
 

@@ -1,7 +1,7 @@
 using RabiRiichi.Communication;
 using RabiRiichi.Core.Setup;
 using RabiRiichi.Generated.Core.Config;
-using RabiRiichi.Util;
+using RabiRiichi.Utils;
 
 namespace RabiRiichi.Core.Config {
     [RabiMessage]

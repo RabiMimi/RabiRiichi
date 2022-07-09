@@ -191,7 +191,7 @@ namespace RabiRiichi.Tests.Communication.Json {
         [TestMethod]
         public void TestSuccessGameTileMessage() {
             var tiles = new Tiles("123s123m123p");
-            var message = new GameTileMessage(new GameTile(new Tile("r5s")) {
+            var message = new GameTileMessage(new GameTile(new Tile("r5s"), -1) {
                 source = TileSource.Wall,
                 discardInfo = new DiscardInfo(
                     new Player(1, TestHelper.CreateGame()), DiscardReason.Draw, 0),

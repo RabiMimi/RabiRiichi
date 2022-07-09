@@ -1,7 +1,7 @@
 using Grpc.Core;
 using RabiRiichi.Server.Generated.Rpc;
 using RabiRiichi.Server.WebSockets;
-using RabiRiichi.Util;
+using RabiRiichi.Utils;
 using System.Collections.Concurrent;
 using System.Net.WebSockets;
 

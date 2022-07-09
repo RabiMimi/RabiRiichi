@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace RabiRiichi.Util {
+namespace RabiRiichi.Utils {
     public class ListStack<T> : List<T> {
         public ListStack() { }
         public ListStack(IEnumerable<T> collection) : base(collection) { }

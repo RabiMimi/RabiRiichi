@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using ProducerRequirement = System.ValueTuple<string, System.Type>;
 
-namespace RabiRiichi.Util.Graphs {
+namespace RabiRiichi.Utils.Graphs {
     public static class ProducerGraphExtensions {
         public static bool Satisfies(this ProducerRequirement produced, ProducerRequirement required) {
             return produced.Item1 == required.Item1 && produced.Item2.IsAssignableTo(required.Item2);

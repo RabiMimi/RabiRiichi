@@ -83,7 +83,7 @@ namespace RabiRiichi.Tests.Patterns {
         /// <param name="tiles">和牌的面子/雀头</param>
         /// <param name="incoming">和了牌</param>
         public StdTestBuilder AddAgari(string tiles, string incoming, bool isTsumo = false, TileSource tileSource = TileSource.Wall, DiscardReason reason = DiscardReason.Draw) {
-            this.incoming = new GameTile(new Tile(incoming)) {
+            this.incoming = new GameTile(new Tile(incoming), -1) {
                 player = currentPlayer.Object,
                 discardInfo = isTsumo ? null
                     : new DiscardInfo(anotherPlayer.Object, reason, 0),

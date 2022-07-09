@@ -1,5 +1,5 @@
 using RabiRiichi.Core.Config;
-using RabiRiichi.Util;
+using RabiRiichi.Utils;
 using System.Linq;
 using System.Threading.Tasks;
 

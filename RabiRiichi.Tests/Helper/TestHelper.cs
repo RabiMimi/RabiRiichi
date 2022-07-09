@@ -8,6 +8,14 @@ using System.Linq;
 
 namespace RabiRiichi.Tests.Helper {
     static class TestHelper {
+        public static IEnumerable<GameTile> ToGameTiles(this IEnumerable<Tile> tiles) {
+            return tiles.Select(t => new GameTile(t, -1));
+        }
+
+        public static List<GameTile> ToGameTileList(this IEnumerable<Tile> tiles) {
+            return tiles.ToGameTiles().ToList();
+        }
+
         public static Hand CreateHand(string str, params string[] groups) {
             return new Hand {
                 freeTiles = new Tiles(str).ToGameTileList(),

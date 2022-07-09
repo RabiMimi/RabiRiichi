@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace RabiRiichi.Util {
+namespace RabiRiichi.Utils {
     public class RabiRand {
         public ulong seed;
         private const ulong MULTIPLIER = 6364136223846793005;

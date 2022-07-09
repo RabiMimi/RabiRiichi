@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace RabiRiichi.Util {
+namespace RabiRiichi.Utils {
     public static class Extensions {
         public static int ToInt(this bool val) {
             return val ? 1 : 0;

@@ -1,6 +1,6 @@
 using System;
 
-namespace RabiRiichi.Util.Graphs {
+namespace RabiRiichi.Utils.Graphs {
     [AttributeUsage(AttributeTargets.Parameter)]
     public class ConsumesAttribute : Attribute {
         public string Id = "";

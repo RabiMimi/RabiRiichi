@@ -1,10 +1,10 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using RabiRiichi.Util;
+using RabiRiichi.Utils;
 using System.Collections.Generic;
 using System.Linq;
 
 
-namespace RabiRiichi.Tests.Util {
+namespace RabiRiichi.Tests.Utils {
     [TestClass]
     public class RabiRandTest {
         private RabiRand rand;

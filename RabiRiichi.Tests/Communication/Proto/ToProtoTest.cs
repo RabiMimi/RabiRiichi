@@ -24,7 +24,7 @@ namespace RabiRiichi.Tests.Communication.Proto {
                 actionCenter = new JsonStringActionCenter(null),
             });
             var tile = new Tile("1s");
-            var gameTile = new GameTile(tile);
+            var gameTile = new GameTile(tile, -1);
             game.wall.Reset();
             foreach (var player in game.players) {
                 player.Reset();

@@ -2,7 +2,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
 using RabiRiichi.Generated.Core;
-using RabiRiichi.Util;
+using RabiRiichi.Utils;
 using System;
 using System.Linq;
 

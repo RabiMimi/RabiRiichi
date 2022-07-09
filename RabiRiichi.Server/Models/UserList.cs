@@ -1,4 +1,4 @@
-using RabiRiichi.Util;
+using RabiRiichi.Utils;
 using System.Collections;
 using System.Collections.Concurrent;
 

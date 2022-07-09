@@ -7,7 +7,7 @@ using RabiRiichi.Core.Config;
 using RabiRiichi.Events;
 using RabiRiichi.Events.InGame;
 using RabiRiichi.Patterns;
-using RabiRiichi.Util;
+using RabiRiichi.Utils;
 using System;
 using System.Linq;
 using System.Threading;

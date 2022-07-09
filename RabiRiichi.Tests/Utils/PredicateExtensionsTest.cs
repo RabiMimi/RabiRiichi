@@ -1,8 +1,8 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Patterns;
-using RabiRiichi.Util;
+using RabiRiichi.Utils;
 
-namespace RabiRiichi.Tests.Util {
+namespace RabiRiichi.Tests.Utils {
     [TestClass]
     public class PredicateExtensionsTest {
         private static readonly Tanyao tanyao = new(null);

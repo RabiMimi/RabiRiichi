@@ -1,9 +1,9 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using RabiRiichi.Util.Graphs;
+using RabiRiichi.Utils.Graphs;
 using System;
 using System.Threading.Tasks;
 
-namespace RabiRiichi.Tests.Util.Graphs {
+namespace RabiRiichi.Tests.Utils.Graphs {
 
     [TestClass]
     public class ProducerGraphTest {

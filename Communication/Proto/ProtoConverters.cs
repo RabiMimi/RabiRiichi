@@ -6,7 +6,7 @@ using RabiRiichi.Generated.Actions;
 using RabiRiichi.Generated.Core;
 using RabiRiichi.Generated.Events;
 using RabiRiichi.Generated.Events.InGame;
-using RabiRiichi.Util.Graphs;
+using RabiRiichi.Utils.Graphs;
 using System.Collections.Generic;
 using System.Linq;
 

@@ -1,7 +1,7 @@
 using RabiRiichi.Communication;
 using RabiRiichi.Core.Config;
 using RabiRiichi.Generated.Core;
-using RabiRiichi.Util;
+using RabiRiichi.Utils;
 
 namespace RabiRiichi.Core {
     public enum GamePhase {
