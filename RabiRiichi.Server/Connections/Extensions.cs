@@ -14,13 +14,6 @@ namespace RabiRiichi.Server.Connections {
             };
         }
 
-        public static ServerMessageDto CreateDto(this ServerInquiryMsg inquiry, int respondTo = 0) {
-            return new ServerMessageDto {
-                RespondTo = respondTo,
-                Inquiry = inquiry
-            };
-        }
-
         public static ServerMessageDto CreateDto(this EventMsg ev, int respondTo = 0) {
             return new ServerMessageDto {
                 RespondTo = respondTo,

@@ -37,13 +37,17 @@ namespace RabiRiichi.Server.Models {
             }
         }
 
+        public ServerRoomStateMsg GetServerRoomStateMsg() {
+            var msg = new ServerRoomStateMsg {
+                Config = config.ToProto(),
+            };
+            msg.Players.AddRange(players.Select(p => p.GetState()));
+            return msg;
+        }
+
         public void BroadcastRoomState() {
             lock (players) {
-                var roomState = new ServerRoomStateMsg {
-                    Config = config.ToProto(),
-                };
-                roomState.Players.AddRange(players.Select(p => p.GetState()));
-                var msg = ProtoUtils.CreateDto(roomState);
+                var msg = ProtoUtils.CreateDto(GetServerRoomStateMsg());
                 foreach (var player in players) {
                     player.connection?.Queue(msg);
                 }

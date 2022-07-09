@@ -61,9 +61,7 @@ namespace RabiRiichi.Server.WebSockets {
                 } else if (msg.ClientRequest?.JoinRoom != null) {
                     var req = msg.ClientRequest.JoinRoom;
                     var res = await roomService.JoinRoom(req, user);
-                    connection.Queue(new ServerResponse {
-                        JoinRoom = res
-                    }.CreateDto(msg.Id));
+                    connection.Queue(ProtoUtils.CreateDto(res, msg.Id));
                 }
             } catch (RpcException e) {
                 connection.Queue(ProtoUtils.CreateDto(new ServerErrorResponse {

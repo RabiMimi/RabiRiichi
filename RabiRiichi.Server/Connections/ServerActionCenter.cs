@@ -60,7 +60,7 @@ namespace RabiRiichi.Server.Connections {
             var inquiryMsg = new ServerInquiryMsg {
                 Inquiry = ctx.inquiry.game.SerializeProto<SinglePlayerInquiryMsg>(inquiry, seat)
             };
-            var msg = SendMessage(seat, inquiryMsg.CreateDto());
+            var msg = SendMessage(seat, ProtoUtils.CreateDto(inquiryMsg));
             if (msg != null) {
                 async Task WaitResponse() {
                     var waitAny = await Task.WhenAny(
