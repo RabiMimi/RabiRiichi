@@ -49,9 +49,13 @@ namespace RabiRiichi.Server.WebSockets {
             return WriteAsync(message, CancellationToken.None);
         }
 
-        public Task WriteAsync(ServerMessageDto message, CancellationToken cancellationToken) {
+        public async Task WriteAsync(ServerMessageDto message, CancellationToken cancellationToken) {
             var bytes = message.ToByteArray();
-            return ws.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Binary, true, cancellationToken);
+            try {
+                await ws.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Binary, true, cancellationToken);
+            } catch (WebSocketException) {
+                // Connection closed
+            }
         }
 
         public async Task Close() {

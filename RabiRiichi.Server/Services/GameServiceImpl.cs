@@ -23,6 +23,7 @@ namespace RabiRiichi.Server.Services {
                 return;
             }
             if (!await rabiCtx.HandShake()) {
+                rabiCtx.Close();
                 return;
             }
             await taskQueue.Execute(() => {

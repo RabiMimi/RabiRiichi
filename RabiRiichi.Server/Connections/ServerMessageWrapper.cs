@@ -11,7 +11,7 @@ namespace RabiRiichi.Server.Connections {
         public readonly TaskCompletionSource<ClientMessageDto> responseTcs = new();
 
         public ServerMessageWrapper(ServerMessageDto msg) {
-            this.msg = msg;
+            this.msg = msg.Clone();
         }
     }
 }

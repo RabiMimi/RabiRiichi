@@ -1,7 +1,5 @@
-﻿using Grpc.Core;
-using RabiRiichi.Server.Connections;
+﻿using RabiRiichi.Server.Connections;
 using RabiRiichi.Server.Generated.Messages;
-using RabiRiichi.Server.Generated.Rpc;
 using System.ComponentModel.DataAnnotations;
 
 namespace RabiRiichi.Server.Models {
@@ -65,7 +63,9 @@ namespace RabiRiichi.Server.Models {
         }
 
         public bool ExitRoom(Room room) {
-            if (this.room != room || !Transit(UserStatus.InRoom, UserStatus.None)) {
+            if (this.room != room || (
+                !Transit(UserStatus.InRoom, UserStatus.None)
+                && !Transit(UserStatus.Ready, UserStatus.None))) {
                 return false;
             }
             this.room = null;

@@ -41,7 +41,7 @@ namespace RabiRiichi.Server.Connections {
         /// </summary>
         public ServerMessageWrapper CreateMessage(ServerMessageDto msg) {
             var ret = new ServerMessageWrapper(msg);
-            msg.Id = msgId.Next;
+            ret.msg.Id = msgId.Next;
             return ret;
         }
 
@@ -49,11 +49,12 @@ namespace RabiRiichi.Server.Connections {
         /// Add a message to queue. It will not be sent immediately.
         /// </summary>
         /// <param name="msg">Message to send</param>
-        /// <returns>Whether the message was added to queue.</returns>
-        public bool Queue(ServerMessageWrapper msg) {
+        public void Queue(ServerMessageWrapper msg) {
             serverMsgs.TryAdd(msg.msg.Id, msg);
-            currentCtx?.Queue(msg);
-            return true;
+            if (currentCtx == null) {
+                throw new InvalidOperationException("Websocket is not connected");
+            }
+            currentCtx.Queue(msg);
         }
 
         /// <summary>
@@ -61,7 +62,8 @@ namespace RabiRiichi.Server.Connections {
         /// </summary>
         public ServerMessageWrapper Queue(ServerMessageDto msg) {
             var ret = CreateMessage(msg);
-            return Queue(ret) ? ret : null;
+            Queue(ret);
+            return ret;
         }
 
         /// <summary>

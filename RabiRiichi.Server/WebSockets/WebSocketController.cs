@@ -153,30 +153,33 @@ namespace RabiRiichi.Server.WebSockets {
 
                 var user = await HandleSignIn(adapter);
                 if (user == null) {
+                    await adapter.Close();
                     return;
                 }
 
                 void PublicListener(ClientMessageDto msg) => _ = HandlePublic(user.connection, msg);
                 void UserListener(ClientMessageDto msg) => _ = HandlePrivate(user, user.connection, msg);
 
-                // Add handlers for Server events that are supposed to be handled by gRPC
-                user.connection.OnReceive += PublicListener;
-                user.connection.OnReceive += UserListener;
+                RabiStreamingContext rabiCtx = null;
 
                 try {
-                    var rabiCtx = await taskQueue.Execute(() => user.connection.Connect(adapter, adapter));
+                    rabiCtx = await taskQueue.Execute(() => user.connection.Connect(adapter, adapter));
+
                     if (rabiCtx == null) {
                         await adapter.WriteAsync(ProtoUtils.CreateDto(new ServerErrorResponse {
                             Status = Grpc.Core.StatusCode.Unauthenticated.ToString(),
                             Message = "Cannot find user"
                         }));
+                        await adapter.Close();
                         return;
                     }
+
+                    // Add handlers for Server events that are supposed to be handled by gRPC
+                    user.connection.OnReceive += PublicListener;
+                    user.connection.OnReceive += UserListener;
+
                     if (!await rabiCtx.HandShake()) {
-                        await adapter.WriteAsync(ProtoUtils.CreateDto(new ServerErrorResponse {
-                            Status = Grpc.Core.StatusCode.FailedPrecondition.ToString(),
-                            Message = "Handshake failed"
-                        }));
+                        rabiCtx.Close();
                         return;
                     }
 
@@ -186,7 +189,7 @@ namespace RabiRiichi.Server.WebSockets {
                     });
                     await Task.Delay(TimeSpan.FromDays(7), rabiCtx.cts.Token);
                 } catch (OperationCanceledException) { } finally {
-                    user.connection.Close();
+                    rabiCtx?.Close();
                     user.connection.OnReceive -= PublicListener;
                     user.connection.OnReceive -= UserListener;
                 }

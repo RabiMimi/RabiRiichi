@@ -60,7 +60,8 @@ namespace RabiRiichi.Server.Models {
         }
 
         private bool TryStartGame() {
-            if (players.Any(p => p == null || p.status != UserStatus.Ready)) {
+            if (players.Count != config.playerCount
+                || players.Any(p => p.status != UserStatus.Ready)) {
                 return false;
             }
             foreach (var player in players) {
@@ -80,7 +81,7 @@ namespace RabiRiichi.Server.Models {
         }
 
         private bool TryEndGame() {
-            if (players.Any(p => p == null || p.status != UserStatus.Playing)) {
+            if (players.Any(p => p.status != UserStatus.Playing)) {
                 return false;
             }
             foreach (var player in players) {
