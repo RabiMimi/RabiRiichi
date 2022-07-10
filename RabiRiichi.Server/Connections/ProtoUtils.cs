@@ -17,14 +17,14 @@ namespace RabiRiichi.Server.Connections {
             var ret = new ServerResponse();
             if (obj is GetInfoResponse getInfo) {
                 ret.GetInfo = getInfo;
-            } else if (obj is JoinRoomResponse joinRoom) {
-                ret.JoinRoom = joinRoom;
             } else if (obj is CreateUserResponse createUser) {
                 ret.CreateUser = createUser;
             } else if (obj is UserInfoResponse getMyInfo) {
-                ret.GetMyInfo = getMyInfo;
+                ret.UserInfo = getMyInfo;
             } else if (obj is ServerErrorResponse wsErrorMsg) {
                 ret.ServerError = wsErrorMsg;
+            } else if (obj is ServerRoomStateResponse roomState) {
+                ret.RoomState = roomState;
             } else if (obj is Empty) {
                 // noop
             } else {

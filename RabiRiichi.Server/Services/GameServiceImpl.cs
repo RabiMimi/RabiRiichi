@@ -17,7 +17,7 @@ namespace RabiRiichi.Server.Services {
         public override async Task ConnectGame(IAsyncStreamReader<ClientMessageDto> requestStream, IServerStreamWriter<ServerMessageDto> responseStream, ServerCallContext context) {
             var (user, rabiCtx) = await taskQueue.Execute(queue => {
                 var user = queue.userList.Fetch(context);
-                return (user, user?.Connect(requestStream, responseStream));
+                return (user, user?.connection.Connect(requestStream, responseStream));
             });
             if (rabiCtx == null) {
                 return;
@@ -27,6 +27,7 @@ namespace RabiRiichi.Server.Services {
             }
             await taskQueue.Execute(() => {
                 user.room?.BroadcastRoomState();
+                user.room?.SyncInquiryTo(user);
             });
             try {
                 await Task.Delay(TimeSpan.FromDays(7), rabiCtx.cts.Token);

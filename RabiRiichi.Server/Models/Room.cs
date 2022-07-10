@@ -92,7 +92,7 @@ namespace RabiRiichi.Server.Models {
             return true;
         }
 
-        public void OnConnect(User user) {
+        public void SyncInquiryTo(User user) {
             if (!HasPlayer(user) || user.Seat < 0) {
                 return;
             }

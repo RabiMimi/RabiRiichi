@@ -53,14 +53,6 @@ namespace RabiRiichi.Server.Models {
             status = next;
             return true;
         }
-
-        public RabiStreamingContext Connect(
-            IAsyncStreamReader<ClientMessageDto> requestStream,
-            IServerStreamWriter<ServerMessageDto> responseStream) {
-            var ret = connection.Connect(requestStream, responseStream);
-            room?.OnConnect(this);
-            return ret;
-        }
         #endregion
 
         #region Room

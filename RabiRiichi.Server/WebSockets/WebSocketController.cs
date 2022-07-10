@@ -1,4 +1,3 @@
-using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Microsoft.AspNetCore.Mvc;
 using RabiRiichi.Server.Auth;
@@ -114,9 +113,8 @@ namespace RabiRiichi.Server.WebSockets {
             if (user == null) {
                 return await FailSignIn();
             }
-            await adapter.WriteAsync(new ServerResponse {
-                SignIn = new Empty()
-            }.CreateDto(current.Id));
+            await adapter.WriteAsync(ProtoUtils.CreateDto(
+                userService.GetMyInfo(user), current.Id));
             return user;
         }
 
@@ -166,7 +164,7 @@ namespace RabiRiichi.Server.WebSockets {
                 user.connection.OnReceive += UserListener;
 
                 try {
-                    var rabiCtx = await taskQueue.Execute(() => user.Connect(adapter, adapter));
+                    var rabiCtx = await taskQueue.Execute(() => user.connection.Connect(adapter, adapter));
                     if (rabiCtx == null) {
                         await adapter.WriteAsync(ProtoUtils.CreateDto(new ServerErrorResponse {
                             Status = Grpc.Core.StatusCode.Unauthenticated.ToString(),
@@ -182,7 +180,10 @@ namespace RabiRiichi.Server.WebSockets {
                         return;
                     }
 
-                    await taskQueue.Execute(() => user.room?.BroadcastRoomState());
+                    await taskQueue.Execute(() => {
+                        user.room?.BroadcastRoomState();
+                        user.room?.SyncInquiryTo(user);
+                    });
                     await Task.Delay(TimeSpan.FromDays(7), rabiCtx.cts.Token);
                 } catch (OperationCanceledException) { } finally {
                     user.connection.Close();

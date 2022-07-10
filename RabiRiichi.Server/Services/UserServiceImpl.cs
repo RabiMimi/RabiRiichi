@@ -42,7 +42,7 @@ namespace RabiRiichi.Server.Services {
             return new UserInfoResponse {
                 Id = user.id,
                 Nickname = user.nickname,
-                Room = user.room?.id ?? 0,
+                Room = user.room?.GetServerRoomStateMsg(),
                 Status = user.status,
             };
         }
