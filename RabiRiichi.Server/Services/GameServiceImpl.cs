@@ -28,7 +28,7 @@ namespace RabiRiichi.Server.Services {
             }
             await taskQueue.Execute(() => {
                 user.room?.BroadcastRoomState();
-                user.room?.SyncInquiryTo(user);
+                user.room?.SyncGameTo(user);
             });
             try {
                 await Task.Delay(TimeSpan.FromDays(7), rabiCtx.cts.Token);

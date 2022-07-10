@@ -17,6 +17,7 @@ namespace RabiRiichi.Server.Models {
     public class Room {
         public int id;
         public RoomList roomList;
+        public Game game { get; private set; }
         public readonly GameConfig config;
         private readonly List<User> players = new();
         private readonly User[] seats;
@@ -74,7 +75,9 @@ namespace RabiRiichi.Server.Models {
             ServerActionCenter actionCenter = new(this);
             config.actionCenter = actionCenter;
             BroadcastRoomState();
-            Task.Run(() => new Game(config).Start()).ContinueWith(t => {
+            game = new Game(config);
+            Task.Run(() => game.Start()).ContinueWith(t => {
+                game = null;
                 TryEndGame();
             });
             return true;
@@ -94,12 +97,16 @@ namespace RabiRiichi.Server.Models {
             return true;
         }
 
-        public void SyncInquiryTo(User user) {
+        public void SyncGameTo(User user) {
             if (!HasPlayer(user) || user.Seat < 0) {
                 return;
             }
-            if (config.actionCenter is ServerActionCenter sac) {
-                sac.SyncInquiryTo(user.Seat);
+            if (game != null) {
+                game.SyncGameStateToPlayer(user.Seat).ContinueWith(t => {
+                    if (config.actionCenter is ServerActionCenter sac) {
+                        sac.SyncInquiryTo(user.Seat);
+                    }
+                });
             }
         }
 
