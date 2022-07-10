@@ -24,7 +24,7 @@ namespace RabiRiichi.Server.Services {
             var room = new Room(rand, new GameConfig());
             if (roomList.Add(room) && room.AddPlayer(user)) {
                 return new ServerRoomStateResponse {
-                    State = room.GetServerRoomStateMsg()
+                    State = room.CreateServerRoomStateMsg()
                 };
             }
             throw new RpcException(new Status(StatusCode.Internal, "Cannot add room or join room"));
@@ -47,7 +47,7 @@ namespace RabiRiichi.Server.Services {
                     new Status(StatusCode.Unavailable, "Room is full"));
             }
             return new ServerRoomStateResponse {
-                State = room.GetServerRoomStateMsg()
+                State = room.CreateServerRoomStateMsg()
             };
         }
 

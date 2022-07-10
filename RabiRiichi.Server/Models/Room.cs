@@ -37,8 +37,9 @@ namespace RabiRiichi.Server.Models {
             }
         }
 
-        public ServerRoomStateMsg GetServerRoomStateMsg() {
+        public ServerRoomStateMsg CreateServerRoomStateMsg() {
             var msg = new ServerRoomStateMsg {
+                Id = id,
                 Config = config.ToProto(),
             };
             msg.Players.AddRange(players.Select(p => p.GetState()));
@@ -46,7 +47,7 @@ namespace RabiRiichi.Server.Models {
         }
 
         public void BroadcastRoomState() {
-            var msg = ProtoUtils.CreateDto(GetServerRoomStateMsg());
+            var msg = ProtoUtils.CreateDto(CreateServerRoomStateMsg());
             foreach (var player in players) {
                 player.connection?.Queue(msg);
             }
