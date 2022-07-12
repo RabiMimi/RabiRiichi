@@ -1,6 +1,5 @@
 using RabiRiichi.Actions;
 using RabiRiichi.Core;
-using RabiRiichi.Events;
 using RabiRiichi.Events.InGame;
 using RabiRiichi.Generated.Actions;
 using RabiRiichi.Generated.Core;

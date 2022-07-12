@@ -1,6 +1,5 @@
 
 using RabiRiichi.Communication;
-using RabiRiichi.Generated.Events.InGame;
 
 namespace RabiRiichi.Events.InGame {
     public class SetIppatsuEvent : BroadcastPlayerEvent {

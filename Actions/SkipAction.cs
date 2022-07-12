@@ -1,5 +1,3 @@
-using RabiRiichi.Generated.Actions;
-
 namespace RabiRiichi.Actions {
     public class SkipAction : ConfirmAction {
         public override string name => "skip";

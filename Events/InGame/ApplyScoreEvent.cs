@@ -1,6 +1,4 @@
 using RabiRiichi.Communication;
-using RabiRiichi.Generated.Events.InGame;
-using System.Linq;
 
 namespace RabiRiichi.Events.InGame {
     public class ApplyScoreEvent : EventBase {

@@ -2,7 +2,6 @@ using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
 using RabiRiichi.Generated.Events.InGame;
 using RabiRiichi.Utils;
-using System;
 using System.Linq;
 using System.Threading.Tasks;
 

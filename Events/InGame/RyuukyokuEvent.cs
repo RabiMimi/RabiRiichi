@@ -1,7 +1,6 @@
 using RabiRiichi.Communication;
 using RabiRiichi.Generated.Events.InGame;
 using System;
-using System.Linq;
 
 namespace RabiRiichi.Events.InGame {
     /// <summary>

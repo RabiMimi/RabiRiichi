@@ -1,8 +1,6 @@
 ﻿using RabiRiichi.Communication;
 using RabiRiichi.Core;
-using RabiRiichi.Generated.Events.InGame;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace RabiRiichi.Events.InGame {
     public class DealHandEvent : PrivatePlayerEvent {

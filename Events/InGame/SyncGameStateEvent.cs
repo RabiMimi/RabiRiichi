@@ -1,7 +1,6 @@
 using Google.Protobuf.WellKnownTypes;
 using RabiRiichi.Communication;
 using RabiRiichi.Communication.Sync;
-using RabiRiichi.Generated.Events.InGame;
 using System.Collections.Generic;
 
 namespace RabiRiichi.Events.InGame {

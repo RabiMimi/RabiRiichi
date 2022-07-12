@@ -1,7 +1,6 @@
 using RabiRiichi.Communication;
 using RabiRiichi.Core;
 using RabiRiichi.Generated.Core;
-using RabiRiichi.Generated.Events.InGame;
 
 namespace RabiRiichi.Events.InGame {
     public class DiscardTileEvent : BroadcastPlayerEvent {

@@ -1,7 +1,5 @@
 using RabiRiichi.Core;
-using RabiRiichi.Generated.Actions;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace RabiRiichi.Actions {
 

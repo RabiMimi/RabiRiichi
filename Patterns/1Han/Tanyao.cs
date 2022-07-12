@@ -1,6 +1,5 @@
 ﻿using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
-using RabiRiichi.Generated.Core;
 using RabiRiichi.Generated.Patterns;
 using RabiRiichi.Utils;
 using System.Collections.Generic;

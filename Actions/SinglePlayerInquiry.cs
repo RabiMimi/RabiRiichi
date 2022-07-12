@@ -1,9 +1,6 @@
 using RabiRiichi.Communication;
-using RabiRiichi.Communication.Proto;
-using RabiRiichi.Generated.Actions;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace RabiRiichi.Actions {
     [RabiMessage]
