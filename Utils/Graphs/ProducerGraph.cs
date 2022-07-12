@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using ProducerRequirement = System.ValueTuple<string, System.Type>;
 
@@ -85,16 +86,18 @@ namespace RabiRiichi.Utils.Graphs {
             try {
                 return ExecuteAsync<T>(id).Result;
             } catch (AggregateException e) {
-                throw e.InnerException;
+                ExceptionDispatchInfo.Capture(e.InnerException).Throw();
+                // Let compiler know that the above line always throws.
+                throw;
             }
         }
 
         public async Task<T> ExecuteAsync<T>(string id = "") {
-            var route = graph.FindRoute(this, typeof(T), id);
-            if (route == null) {
-                throw new ArgumentException($"No route to produce {typeof(T)} with id {id}");
+            var path = graph.FindPath(this, typeof(T), id);
+            if (path == null) {
+                throw new ArgumentException($"No path to produce {typeof(T)} with id {id}");
             }
-            foreach (var node in route) {
+            foreach (var node in path) {
                 var parameters = node.node.method.GetParameters().Select(p => {
                     Logger.Assert(TryGetOutput(p.ParameterType,
                         p.GetCustomAttribute<ConsumesAttribute>().Id, out var obj),
@@ -131,11 +134,26 @@ namespace RabiRiichi.Utils.Graphs {
     public class ProducerGraph {
         public class NodeContext {
             public const int INIT_COST = int.MaxValue >> 1;
+            private int visitedTimeStamp;
+            private readonly NodeContext[] predecessors;
             public readonly ProducerGraphNode node;
-            public readonly NodeContext[] predecessors;
-            public int dist = INIT_COST;
+            public int dist;
 
-            public bool UpdateDist() {
+            public bool IsVisited(int time) => visitedTimeStamp == time;
+            public bool IsInput => node == null;
+            public bool IsValid => dist < INIT_COST;
+
+            public bool TryReset(int timeStamp) {
+                if (!IsVisited(timeStamp)) {
+                    dist = node.requires.Count == 0 ? 0 : INIT_COST;
+                    Array.Fill(predecessors, null);
+                    visitedTimeStamp = timeStamp;
+                    return true;
+                }
+                return false;
+            }
+
+            private bool UpdateDist() {
                 if (predecessors.Length == 0) {
                     return false;
                 }
@@ -155,34 +173,37 @@ namespace RabiRiichi.Utils.Graphs {
                 return false;
             }
 
-            public IEnumerable<NodeContext> GetRoute(HashSet<NodeContext> visited) {
-                if (!visited.Add(this)) {
+            public IEnumerable<NodeContext> GetPath(int timeStamp) {
+                if (IsInput || IsVisited(timeStamp)) {
                     yield break;
                 }
-                foreach (var pred in predecessors) {
-                    if (pred != null) {
-                        foreach (var route in pred.GetRoute(visited)) {
-                            yield return route;
-                        }
-                    }
+                // Reuse this timestamp, but no need to reset node
+                visitedTimeStamp = timeStamp;
+                foreach (var path in predecessors.SelectMany(pred => pred.GetPath(timeStamp))) {
+                    yield return path;
                 }
                 yield return this;
             }
 
             public NodeContext(ProducerGraphNode node) {
                 this.node = node;
-                predecessors = new NodeContext[node.requires.Count];
+                if (node != null) {
+                    predecessors = new NodeContext[node.requires.Count];
+                    Logger.Assert(TryReset(-1), "Failed to reset producer graph node");
+                }
             }
         }
 
-        public readonly List<ProducerGraphNode> nodes = new();
+        /// <summary>
+        /// A dummy node that tells a requirement is fulfilled by input.<br/>
+        /// Never use its methods.
+        /// </summary>
+        private static readonly NodeContext INPUT_NODE = new(null) { dist = 0 };
 
-        private readonly Dictionary<ProducerRequirement, List<NodeContext>> edges = new();
+        private readonly Dictionary<ProducerRequirement, List<NodeContext>> producerLookup = new();
         private readonly List<NodeContext> nodeCtxs = new();
-        private bool isFinalized = false;
-        public readonly Dictionary<(ProducerGraphExecutionContext, string, Type), List<NodeContext>> routeCache = new();
-        private readonly PriorityQueue<NodeContext, int> queue = new();
-        private readonly HashSet<NodeContext> visited = new();
+        private readonly Dictionary<(ProducerGraphExecutionContext, string, Type), NodeContext[]> pathCache = new();
+        private AutoIncrementInt timeStamp = new();
 
         public ProducerGraph Register(object obj, MethodInfo[] methods) {
             foreach (var method in methods) {
@@ -195,8 +216,13 @@ namespace RabiRiichi.Utils.Graphs {
                     Logger.Warn($"Producer method {method.Name} has invalid parameter {invalidParam.Name}");
                     continue;
                 }
-                var node = new ProducerGraphNode(method.IsStatic ? null : obj, method);
-                nodes.Add(node);
+                var nodeCtx = new NodeContext(new ProducerGraphNode(method.IsStatic ? null : obj, method));
+                nodeCtxs.Add(nodeCtx);
+                if (!producerLookup.TryGetValue(nodeCtx.node.produces, out var list)) {
+                    list = new List<NodeContext>();
+                    producerLookup[nodeCtx.node.produces] = list;
+                }
+                list.Add(nodeCtx);
             }
             return this;
         }
@@ -208,70 +234,48 @@ namespace RabiRiichi.Utils.Graphs {
         public ProducerGraph Register<T>() where T : class
             => Register(null, typeof(T).GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static));
 
-        private void FinalizeNodes() {
-            if (isFinalized) {
-                return;
+        public ProducerGraphExecutionContext Build() => new(this);
+
+        private int FindPath(ProducerGraphExecutionContext context, NodeContext node) {
+            if (!node.TryReset(timeStamp)) {
+                // Memoization
+                return node.dist;
             }
-            foreach (var node in nodes) {
-                var ctx = new NodeContext(node);
-                nodeCtxs.Add(ctx);
-                foreach (var require in node.requires) {
-                    if (!edges.TryGetValue(require, out var list)) {
-                        list = new List<NodeContext>();
-                        edges[require] = list;
-                    }
-                    list.Add(ctx);
-                }
+            for (int i = 0; i < node.node.requires.Count; i++) {
+                // Find the optimal predecessor node
+                node.UpdatePredecessor(i, FindPath(context, node.node.requires[i]));
             }
-            isFinalized = true;
+            return node.dist;
         }
 
-        public ProducerGraphExecutionContext Build() {
-            FinalizeNodes();
-            return new(this);
+        private NodeContext FindPath(ProducerGraphExecutionContext context, ProducerRequirement target) {
+            if (context.TryGetOutput(target.Item2, target.Item1, out var input)) {
+                // If this requirement is fulfilled by input, return null
+                return INPUT_NODE;
+            }
+            if (!producerLookup.TryGetValue(target, out var producers)) {
+                // If we cannot find a producer for this requirement, return null
+                return null;
+            }
+            var ret = producers.MinBy(p => FindPath(context, p));
+            return ret.IsValid ? ret : null;
         }
 
-        public List<NodeContext> FindRoute(ProducerGraphExecutionContext context, Type type, string id) {
+        public IEnumerable<NodeContext> FindPath(ProducerGraphExecutionContext context, Type type, string id) {
             var key = (context, id, type);
-            if (routeCache.TryGetValue(key, out var list)) {
+            if (pathCache.TryGetValue(key, out var list)) {
+                // Cache hit
                 return list;
             }
-            // Init
-            queue.Clear();
-            visited.Clear();
-            foreach (var ctx in nodeCtxs) {
-                ctx.dist = NodeContext.INIT_COST;
-                Array.Fill(ctx.predecessors, null);
+            // Memoization search
+            var target = (id, type);
+            timeStamp.Increase();
+            var node = FindPath(context, target);
+            if (node == null) {
+                throw new ArgumentException($"Cannot find a path to produce {type.Name}#{id}");
             }
-            foreach (var ctx in nodeCtxs.Where(
-                n => n.node.requires.All(x => context.TryGetOutput(x.Item2, x.Item1, out _)))) {
-                ctx.dist = ctx.node.cost;
-                queue.Enqueue(ctx, ctx.dist);
-            }
-            // Shortest path
-            NodeContext target = null;
-            while (queue.Count > 0) {
-                var node = queue.Dequeue();
-                if (!visited.Add(node)) {
-                    continue;
-                }
-                if (node.node.produces.Satisfies((id, type))) {
-                    target = node;
-                    break;
-                }
-                if (!edges.TryGetValue(node.node.produces, out var edgesList)) {
-                    continue;
-                }
-                foreach (var next in edgesList) {
-                    int idx = next.node.IndexOfRequirement(node.node.produces);
-                    if (next.UpdatePredecessor(idx, node)) {
-                        queue.Enqueue(next, next.dist);
-                    }
-                }
-            }
-            visited.Clear();
-            list = target?.GetRoute(visited)?.ToList();
-            routeCache[key] = list;
+            list = node.GetPath(timeStamp.Next).ToArray();
+            pathCache[key] = list;
             return list;
         }
     }

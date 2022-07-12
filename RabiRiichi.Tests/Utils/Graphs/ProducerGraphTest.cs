@@ -1,12 +1,20 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Utils.Graphs;
 using System;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Tests.Utils.Graphs {
 
     [TestClass]
     public class ProducerGraphTest {
+        private static int GetCacheCount(ProducerGraph graph) {
+            var field = typeof(ProducerGraph).GetField("pathCache", BindingFlags.Instance | BindingFlags.NonPublic);
+            var cache = field.GetValue(graph);
+            var field2 = cache.GetType().GetProperty("Count");
+            return (int)field2.GetValue(cache);
+        }
+
         private class TestGraph1 {
             private readonly int two = 2;
 
@@ -59,7 +67,7 @@ namespace RabiRiichi.Tests.Utils.Graphs {
                     .SetInput("a", i)
                     .Execute<int>("c"));
             }
-            Assert.AreEqual(1, graph.routeCache.Count);
+            Assert.AreEqual(1, GetCacheCount(graph));
         }
 
         [TestMethod]
