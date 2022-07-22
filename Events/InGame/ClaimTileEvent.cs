@@ -3,7 +3,7 @@ using RabiRiichi.Core;
 using RabiRiichi.Generated.Core;
 
 namespace RabiRiichi.Events.InGame {
-    public class ClaimTileEvent : BroadcastPlayerEvent {
+    public class ClaimTileEvent : PlayerEvent {
         public override string name => "claim_tile";
 
         #region Request

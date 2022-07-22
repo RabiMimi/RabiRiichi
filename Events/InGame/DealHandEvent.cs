@@ -3,14 +3,14 @@ using RabiRiichi.Core;
 using System.Collections.Generic;
 
 namespace RabiRiichi.Events.InGame {
-    public class DealHandEvent : PrivatePlayerEvent {
+    public class DealHandEvent : PlayerEvent {
         public override string name => "deal_hand";
         #region request
-        public readonly int count;
+        [RabiBroadcast] public readonly int count;
         #endregion
 
         #region  response
-        [RabiBroadcast] public readonly List<GameTile> tiles = new();
+        [RabiPrivate] public readonly List<GameTile> tiles = new();
         #endregion
 
         public DealHandEvent(EventBase parent, int playerId, int count) : base(parent, playerId) {

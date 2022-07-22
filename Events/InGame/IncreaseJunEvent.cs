@@ -1,7 +1,7 @@
 using RabiRiichi.Communication;
 
 namespace RabiRiichi.Events.InGame {
-    public class IncreaseJunEvent : BroadcastPlayerEvent {
+    public class IncreaseJunEvent : PlayerEvent {
         public override string name => "increase_jun";
 
         #region Response

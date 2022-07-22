@@ -2,7 +2,7 @@ using RabiRiichi.Communication;
 using RabiRiichi.Core;
 
 namespace RabiRiichi.Events.InGame {
-    public class DealerFirstTurnEvent : BroadcastPlayerEvent {
+    public class DealerFirstTurnEvent : PlayerEvent {
         public override string name => "dealer_first_turn";
 
         #region request

@@ -2,7 +2,7 @@ using RabiRiichi.Communication;
 using RabiRiichi.Core;
 
 namespace RabiRiichi.Events.InGame {
-    public class SetRiichiEvent : BroadcastPlayerEvent {
+    public class SetRiichiEvent : PlayerEvent {
         public override string name => "set_riichi";
 
         #region Request

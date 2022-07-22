@@ -1,7 +1,7 @@
 using RabiRiichi.Communication;
 
 namespace RabiRiichi.Events.InGame {
-    public class NextPlayerEvent : BroadcastPlayerEvent {
+    public class NextPlayerEvent : PlayerEvent {
         public override string name => "next_player";
 
         #region Response

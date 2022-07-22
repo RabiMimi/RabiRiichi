@@ -1,7 +1,7 @@
 using RabiRiichi.Communication;
 
 namespace RabiRiichi.Events.InGame {
-    public class SetMenzenEvent : BroadcastPlayerEvent {
+    public class SetMenzenEvent : PlayerEvent {
         public override string name => "set_menzen";
 
         #region Request

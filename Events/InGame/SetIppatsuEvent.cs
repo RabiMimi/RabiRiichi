@@ -2,7 +2,7 @@
 using RabiRiichi.Communication;
 
 namespace RabiRiichi.Events.InGame {
-    public class SetIppatsuEvent : BroadcastPlayerEvent {
+    public class SetIppatsuEvent : PlayerEvent {
         public override string name => "set_ippatsu";
 
         #region Request

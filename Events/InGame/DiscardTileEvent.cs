@@ -3,7 +3,7 @@ using RabiRiichi.Core;
 using RabiRiichi.Generated.Core;
 
 namespace RabiRiichi.Events.InGame {
-    public class DiscardTileEvent : BroadcastPlayerEvent {
+    public class DiscardTileEvent : PlayerEvent {
         public override string name => "discard_tile";
 
         #region Request

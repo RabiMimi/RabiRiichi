@@ -293,6 +293,7 @@ namespace RabiRiichi.Communication.Proto {
         public static DealHandEventMsg ConvertDealHandEvent([Consumes] DealHandEvent ev) {
             var ret = new DealHandEventMsg {
                 PlayerId = ev.playerId,
+                Count = ev.count,
             };
             ret.Tiles.AddRange(ev.tiles.Select(x => x.ToProto()));
             return ret;

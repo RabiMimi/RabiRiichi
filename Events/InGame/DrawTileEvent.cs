@@ -3,7 +3,7 @@ using RabiRiichi.Core;
 using RabiRiichi.Generated.Core;
 
 namespace RabiRiichi.Events.InGame {
-    public class DrawTileEvent : BroadcastPlayerEvent {
+    public class DrawTileEvent : PlayerEvent {
         public override string name => "draw_tile";
 
         #region Request
