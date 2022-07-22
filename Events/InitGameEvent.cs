@@ -1,9 +1,11 @@
+using RabiRiichi.Communication;
 using RabiRiichi.Core;
 using RabiRiichi.Events.InGame;
 using System.Threading.Tasks;
 
 
 namespace RabiRiichi.Events {
+    [RabiIgnore]
     public class InitGameEvent : EventBase {
         public override string name => "init";
         public InitGameEvent(Game game) : base(game) { }

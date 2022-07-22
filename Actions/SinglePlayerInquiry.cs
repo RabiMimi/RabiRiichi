@@ -4,8 +4,14 @@ using System.IO;
 
 namespace RabiRiichi.Actions {
     [RabiMessage]
+    [RabiPrivate]
     public class SinglePlayerInquiry : IRabiPlayerMessage {
-        [RabiBroadcast] public readonly List<IPlayerAction> actions = new();
+        public readonly List<IPlayerAction> actions = new();
+        /// <summary>
+        /// 仅用于Json序列化，不应该被直接使用
+        /// </summary>
+        [RabiBroadcast] private List<object> acts => actions.ConvertAll(a => a as object);
+
         public int playerId { get; init; }
         /// <summary>
         /// 所有操作的最高优先级

@@ -24,11 +24,12 @@ namespace RabiRiichi.Actions {
     }
 
     /// <summary> 等待玩家做出选择 </summary>
+    [RabiMessage]
     [RabiPrivate]
     public abstract class PlayerAction<T> : IPlayerAction {
         [RabiPrivate] public abstract string name { get; }
 
-        [RabiPrivate] public int playerId { get; init; }
+        public int playerId { get; init; }
 
         public int priority { get; protected set; }
 

@@ -171,11 +171,9 @@ namespace RabiRiichi.Utils.Graphs {
             }
 
             public IEnumerable<NodeContext> GetPath(int timeStamp) {
-                if (IsInput || IsVisited(timeStamp)) {
+                if (IsInput || !SetVisited(timeStamp)) {
                     yield break;
                 }
-                // Reuse this timestamp, but no need to reset node
-                visitedTimeStamp = timeStamp;
                 foreach (var path in predecessors.SelectMany(x => x.GetPath(timeStamp))) {
                     yield return path;
                 }
