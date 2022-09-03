@@ -392,17 +392,16 @@ namespace RabiRiichi.Communication.Proto {
 
         [Produces]
         public static SetFuritenEventMsg ConvertSetFuritenEvent([Consumes] SetFuritenEvent ev) {
-            var ret = new SetFuritenEventMsg {
+            return new() {
                 PlayerId = ev.playerId,
                 Furiten = ev.furiten,
+                FuritenType = ev switch {
+                    SetTempFuritenEvent => FuritenType.Temp,
+                    SetRiichiFuritenEvent => FuritenType.Riichi,
+                    SetDiscardFuritenEvent => FuritenType.Discard,
+                    _ => FuritenType.None,
+                }
             };
-            ret.FuritenType = ev switch {
-                SetTempFuritenEvent => FuritenType.Temp,
-                SetRiichiFuritenEvent => FuritenType.Riichi,
-                SetDiscardFuritenEvent => FuritenType.Discard,
-                _ => FuritenType.None,
-            };
-            return ret;
         }
 
         [Produces]
@@ -471,7 +470,7 @@ namespace RabiRiichi.Communication.Proto {
         [Produces]
         public static GameTileMsg ConvertGameTile([Consumes] GameTile tile)
             => tile == null ? null : new() {
-                TraceId = tile.id,
+                TraceId = tile.traceId,
                 Tile = tile.tile.Val,
                 PlayerId = tile.playerId,
                 FormTime = tile.formTime,

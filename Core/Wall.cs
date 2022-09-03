@@ -51,6 +51,7 @@ namespace RabiRiichi.Core {
             rinshan.Clear();
             doras.Clear();
             uradoras.Clear();
+            idPool.Reset();
             remaining.AddRange(config.initialTiles.Select(tile => new GameTile(tile, idPool.GetID())));
             rand.Shuffle(remaining);
             rinshan.AddRange(remaining.PopMany(NUM_RINSHAN));
@@ -190,12 +191,14 @@ namespace RabiRiichi.Core {
         /// <summary> 将一张牌作为牌山第i前的牌（从0开始） </summary>
         public void Insert(int i, GameTile tile) {
             Remove(tile);
+            tile.traceId = idPool.GetID();
             remaining.Insert(remaining.Count - i, tile);
         }
 
         /// <summary> 用一张不在牌山里的牌替换牌山里第i张牌（从0开始） </summary>
         /// <returns>被替换的牌</returns>
         public GameTile Replace(int i, GameTile tile) {
+            tile.traceId = idPool.GetID();
             i = remaining.Count - i - 1;
             var ret = remaining[i];
             remaining[i] = tile;
