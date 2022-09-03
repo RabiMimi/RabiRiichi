@@ -19,14 +19,6 @@ namespace RabiRiichi.Core {
             this.reason = reason;
             this.time = time;
         }
-
-        public DiscardInfoMsg ToProto() {
-            return new DiscardInfoMsg {
-                From = from,
-                Reason = reason,
-                Time = time,
-            };
-        }
     }
 
     [RabiMessage]
@@ -99,17 +91,6 @@ namespace RabiRiichi.Core {
 
         public override string ToString() {
             return tile.ToString();
-        }
-
-        public GameTileMsg ToProto() {
-            return new GameTileMsg {
-                Id = id,
-                Tile = tile.Val,
-                PlayerId = playerId,
-                FormTime = formTime,
-                Source = source,
-                DiscardInfo = discardInfo?.ToProto(),
-            };
         }
     }
 }

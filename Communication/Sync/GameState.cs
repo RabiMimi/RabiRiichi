@@ -1,3 +1,4 @@
+using RabiRiichi.Communication.Proto;
 using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
 using RabiRiichi.Generated.Communication.Sync;
@@ -37,13 +38,13 @@ namespace RabiRiichi.Communication.Sync {
             var ret = new PlayerHandStateMsg {
                 Jun = jun,
                 RiichiStick = riichiStick,
-                AgariTile = agariTile?.ToProto(),
-                RiichiTile = riichiTile?.ToProto(),
+                AgariTile = ProtoConverters.ConvertGameTile(agariTile),
+                RiichiTile = ProtoConverters.ConvertGameTile(riichiTile),
             };
             ret.Called.AddRange(called.Select(x => x.ToProto()));
-            ret.Discarded.AddRange(discarded.Select(x => x.ToProto()));
+            ret.Discarded.AddRange(discarded.Select(ProtoConverters.ConvertGameTile));
             if (this.playerId == playerId) {
-                ret.FreeTiles.AddRange(freeTiles.Select(x => x.ToProto()));
+                ret.FreeTiles.AddRange(freeTiles.Select(ProtoConverters.ConvertGameTile));
                 ret.IsTempFuriten = isTempFuriten;
                 ret.IsRiichiFuriten = isRiichiFuriten;
                 ret.IsDiscardFuriten = isDiscardFuriten;
@@ -69,7 +70,7 @@ namespace RabiRiichi.Communication.Sync {
                 Remaining = remaining,
                 RinshanRemaining = rinshanRemaining,
             };
-            ret.Doras.AddRange(doras.Select(x => x.ToProto()));
+            ret.Doras.AddRange(doras.Select(ProtoConverters.ConvertGameTile));
             return ret;
         }
     }

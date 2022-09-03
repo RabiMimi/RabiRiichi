@@ -1,3 +1,4 @@
+using RabiRiichi.Communication.Proto;
 using RabiRiichi.Generated.Core;
 using RabiRiichi.Utils;
 using System;
@@ -104,7 +105,7 @@ namespace RabiRiichi.Core {
 
         public MenLikeMsg ToProto() {
             var msg = new MenLikeMsg();
-            msg.Tiles.AddRange(this.Select(t => t.ToProto()));
+            msg.Tiles.AddRange(this.Select(ProtoConverters.ConvertGameTile));
             return msg;
         }
     }
