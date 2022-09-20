@@ -100,6 +100,9 @@ namespace RabiRiichi.Tests.Scenario.Tests {
                 .AssertYaku<Chinitsu>(han: 6)
                 .AssertYaku<MenzenchinTsumohou>(han: 1)
             ).Resolve();
+
+            await scenario.WaitInquiry();
+            scenario.WriteGameLog("wRiichi");
         }
         #endregion
 

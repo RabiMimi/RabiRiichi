@@ -5,6 +5,7 @@ using RabiRiichi.Communication.Json;
 using RabiRiichi.Core;
 using RabiRiichi.Events;
 using RabiRiichi.Generated.Actions;
+using RabiRiichi.Generated.Core;
 using RabiRiichi.Generated.Events;
 using System;
 using System.Collections.Generic;
@@ -217,9 +218,11 @@ namespace RabiRiichi.Tests.Scenario {
         public Task<ScenarioInquiryMatcher> NextInquiry => nextInquirySource.Task;
         private TaskCompletionSource currentInquirySource = null;
         public Task CurrentInquiry => currentInquirySource.Task;
+        public readonly GameLogMsg gameLog = new();
 
         public ScenarioActionCenter(int playerCount) {
             this.playerCount = playerCount;
+            gameLog.PlayerLogs.AddRange(Enumerable.Range(0, playerCount).Select(_ => new PlayerLogMsg()));
         }
 
         ~ScenarioActionCenter() {
@@ -253,9 +256,12 @@ namespace RabiRiichi.Tests.Scenario {
 
         public void OnEvent(int playerId, EventBase ev) {
             // Test proto graph
-            var proto = ev.game.SerializeProto<EventMsg>(ev, 0);
+            var proto = ev.game.SerializeProto<EventMsg>(ev, playerId);
             if (ev.GetType().GetCustomAttribute<RabiIgnoreAttribute>() == null) {
                 Assert.IsNotNull(proto, $"{ev.GetType().Name} not serialized");
+                gameLog.PlayerLogs[playerId].Logs.Add(new SingleLogMsg {
+                    Event = proto,
+                });
             } else {
                 Assert.IsNull(proto, $"{ev.GetType().Name} serialized");
             }
@@ -268,8 +274,12 @@ namespace RabiRiichi.Tests.Scenario {
             }
             foreach (var playerInquiry in inquiry.playerInquiries) {
                 // Test proto graph
-                Assert.IsNotNull(inquiry.game.SerializeProto<SinglePlayerInquiryMsg>(
-                    playerInquiry, playerInquiry.playerId), "Inquiry not serialized");
+                var proto = inquiry.game.SerializeProto<SinglePlayerInquiryMsg>(
+                    playerInquiry, playerInquiry.playerId);
+                Assert.IsNotNull(proto, "Inquiry not serialized");
+                gameLog.PlayerLogs[playerInquiry.playerId].Logs.Add(new SingleLogMsg {
+                    Inquiry = proto,
+                });
                 OnMessage(playerInquiry.playerId, playerInquiry);
             }
             SendImmediately();

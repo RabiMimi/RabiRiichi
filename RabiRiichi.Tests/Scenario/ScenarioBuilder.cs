@@ -1,3 +1,4 @@
+using Google.Protobuf;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Actions;
 using RabiRiichi.Core;
@@ -7,6 +8,7 @@ using RabiRiichi.Events.InGame;
 using RabiRiichi.Generated.Core;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -226,6 +228,21 @@ namespace RabiRiichi.Tests.Scenario {
             }
             ResolveImmediately();
             return inquiry;
+        }
+
+        /// <summary> 将游戏log以文本形式写入文件 </summary>
+        /// <param name="path">文件路径</param>
+        /// <returns>自身</returns>
+        public Scenario WriteGameLog(string path) {
+            // Write json
+            var json = JsonFormatter.Default.Format(actionCenter.gameLog);
+            File.WriteAllText(path + ".json", json);
+
+            // Write binary
+            using (var fs = new FileStream(path + ".bin", FileMode.Create)) {
+                actionCenter.gameLog.WriteTo(fs);
+            }
+            return this;
         }
     }
 
