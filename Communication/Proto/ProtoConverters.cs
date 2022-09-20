@@ -11,6 +11,10 @@ using System.Linq;
 
 namespace RabiRiichi.Communication.Proto {
     public class ProtoConverters {
+        #region Key Constants
+        public const string PLAYER_ID = "pid";
+        #endregion
+
         #region ActionMsg
         [Produces]
         public static PlayerActionMsg ConvertAgariActionMsg([Consumes] AgariActionMsg action)
@@ -152,7 +156,7 @@ namespace RabiRiichi.Communication.Proto {
             => options.Select(o => MenLike.From(((ChooseTilesActionOption)o).tiles).ToProto());
 
         private static IEnumerable<GameTileMsg> ConvertTileOptions(IEnumerable<ActionOption> options)
-            => options.Select(o => ConvertGameTile(((ChooseTileActionOption)o).tile));
+            => options.Select(o => ConvertGameTileBroadcast(((ChooseTileActionOption)o).tile));
 
         [Produces]
         public static AgariActionMsg ConvertAgariAction([Consumes] AgariAction action) {
@@ -211,22 +215,30 @@ namespace RabiRiichi.Communication.Proto {
 
         #region Event
         [Produces]
-        public static AddKanEventMsg ConvertAddKanEvent([Consumes] AddKanEvent ev)
+        public static AddKanEventMsg ConvertAddKanEvent([Consumes] AddKanEvent ev, [Consumes(PLAYER_ID)] int playerId)
             => new() {
                 PlayerId = ev.playerId,
                 Kan = ev.kan.ToProto(),
-                Incoming = ConvertGameTile(ev.incoming),
+                Incoming = ConvertGameTile(ev.incoming, playerId),
                 KanSource = ev.kanSource,
             };
 
         [Produces]
-        public static AddTileEventMsg ConvertAddTileEvent([Consumes] AddTileEvent ev, [Consumes("playerId")] int playerId) {
+        public static AddTileEventMsg ConvertAddTileEvent([Consumes] AddTileEvent ev, [Consumes(PLAYER_ID)] int playerId) {
             var ret = new AddTileEventMsg {
                 PlayerId = ev.playerId,
             };
-            if (ev.playerId == playerId) {
-                ret.Incoming = ConvertGameTile(ev.incoming);
-            }
+            ret.Incoming = ConvertGameTile(ev.incoming, playerId);
+            return ret;
+        }
+
+        [Produces]
+        public static AgariInfoListMsg ConvertAgariInfoList([Consumes] AgariInfoList infos) {
+            var ret = new AgariInfoListMsg {
+                FromPlayer = infos.fromPlayer,
+                Incoming = ConvertGameTileBroadcast(infos.incoming),
+            };
+            ret.AgariInfos.Add(infos.Select(x => x.ToProto()));
             return ret;
         }
 
@@ -234,7 +246,7 @@ namespace RabiRiichi.Communication.Proto {
         public static AgariEventMsg ConvertAgariEvent([Consumes] AgariEvent ev)
             => new() {
                 IsTsumo = ev.isTsumo,
-                AgariInfos = ev.agariInfos.ToProto(),
+                AgariInfos = ConvertAgariInfoList(ev.agariInfos),
             };
 
         [Produces]
@@ -255,7 +267,7 @@ namespace RabiRiichi.Communication.Proto {
         [Produces]
         public static CalcScoreEventMsg ConvertCalcScoreEvent([Consumes] CalcScoreEvent ev) {
             var ret = new CalcScoreEventMsg {
-                AgariInfos = ev.agariInfos.ToProto(),
+                AgariInfos = ConvertAgariInfoList(ev.agariInfos),
             };
             ret.ScoreChange.AddRange(ev.scoreChange.Select(x => x.ToProto()));
             return ret;
@@ -265,7 +277,7 @@ namespace RabiRiichi.Communication.Proto {
         public static ClaimTileEventMsg ConvertClaimTileEvent([Consumes] ClaimTileEvent ev)
             => new() {
                 PlayerId = ev.playerId,
-                Tile = ConvertGameTile(ev.tile),
+                Tile = ConvertGameTileBroadcast(ev.tile),
                 Group = ev.group.ToProto(),
                 Reason = ev.reason,
             };
@@ -279,52 +291,46 @@ namespace RabiRiichi.Communication.Proto {
 
         [Produces]
         public static DealerFirstTurnEventMsg ConvertDealerFirstTurnEvent(
-            [Consumes] DealerFirstTurnEvent ev, [Consumes("playerId")] int playerId) {
+            [Consumes] DealerFirstTurnEvent ev, [Consumes(PLAYER_ID)] int playerId) {
             var ret = new DealerFirstTurnEventMsg {
                 PlayerId = ev.playerId,
             };
-            if (ev.playerId == playerId) {
-                ret.Incoming = ConvertGameTile(ev.incoming);
-            }
+            ret.Incoming = ConvertGameTile(ev.incoming, playerId);
             return ret;
         }
 
         [Produces]
-        public static DealHandEventMsg ConvertDealHandEvent([Consumes] DealHandEvent ev) {
+        public static DealHandEventMsg ConvertDealHandEvent([Consumes] DealHandEvent ev, [Consumes(PLAYER_ID)] int playerId) {
             var ret = new DealHandEventMsg {
                 PlayerId = ev.playerId,
                 Count = ev.count,
             };
-            ret.Tiles.AddRange(ev.tiles.Select(ConvertGameTile));
+            ret.Tiles.AddRange(ev.tiles.Select(tile => ConvertGameTile(tile, playerId)));
             return ret;
         }
 
         [Produces]
         public static DiscardTileEventMsg ConvertDiscardTileEvent(
-            [Consumes] DiscardTileEvent ev, [Consumes("playerId")] int playerId) {
+            [Consumes] DiscardTileEvent ev, [Consumes(PLAYER_ID)] int playerId) {
             var ret = new DiscardTileEventMsg {
                 PlayerId = ev.playerId,
-                Discarded = ConvertGameTile(ev.discarded),
+                Discarded = ConvertGameTileBroadcast(ev.discarded),
                 Reason = ev.reason,
                 FromHand = ev.fromHand,
             };
-            if (ev.playerId == playerId) {
-                ret.Incoming = ConvertGameTile(ev.incoming);
-            }
+            ret.Incoming = ConvertGameTile(ev.incoming, playerId);
             ret.IsRiichi = ev is RiichiEvent;
             return ret;
         }
 
         [Produces]
         public static DrawTileEventMsg ConvertDrawTileEvent(
-            [Consumes] DrawTileEvent ev, [Consumes("playerId")] int playerId) {
+            [Consumes] DrawTileEvent ev, [Consumes(PLAYER_ID)] int playerId) {
             var ret = new DrawTileEventMsg {
                 PlayerId = ev.playerId,
                 Source = ev.source,
             };
-            if (ev.playerId == playerId) {
-                ret.Tile = ConvertGameTile(ev.tile);
-            }
+            ret.Tile = ConvertGameTile(ev.tile, playerId);
             return ret;
         }
 
@@ -370,7 +376,7 @@ namespace RabiRiichi.Communication.Proto {
         public static RevealDoraEventMsg ConvertRevealDoraEvent([Consumes] RevealDoraEvent ev)
             => new() {
                 PlayerId = ev.playerId,
-                Dora = ConvertGameTile(ev.dora),
+                Dora = ConvertGameTileBroadcast(ev.dora),
             };
 
         [Produces]
@@ -422,7 +428,7 @@ namespace RabiRiichi.Communication.Proto {
         public static SetRiichiEventMsg ConvertSetRiichiEvent([Consumes] SetRiichiEvent ev)
             => new() {
                 PlayerId = ev.playerId,
-                RiichiTile = ConvertGameTile(ev.riichiTile),
+                RiichiTile = ConvertGameTileBroadcast(ev.riichiTile),
                 WRiichi = ev.wRiichi,
             };
 
@@ -434,7 +440,7 @@ namespace RabiRiichi.Communication.Proto {
         }
 
         [Produces]
-        public static SyncGameStateEventMsg ConvertSyncGameStateEvent([Consumes] SyncGameStateEvent ev, [Consumes("playerId")] int playerId) {
+        public static SyncGameStateEventMsg ConvertSyncGameStateEvent([Consumes] SyncGameStateEvent ev, [Consumes(PLAYER_ID)] int playerId) {
             var ret = new SyncGameStateEventMsg {
                 PlayerId = ev.playerId,
                 GameState = ev.gameState?.ToProto(playerId),
@@ -468,15 +474,18 @@ namespace RabiRiichi.Communication.Proto {
             };
 
         [Produces]
-        public static GameTileMsg ConvertGameTile([Consumes] GameTile tile)
+        public static GameTileMsg ConvertGameTile([Consumes] GameTile tile, [Consumes(PLAYER_ID)] int playerId)
             => tile == null ? null : new() {
                 TraceId = tile.traceId,
-                Tile = tile.tile.Val,
+                Tile = tile.playerId == playerId ? tile.tile.Val : Tile.Empty,
                 PlayerId = tile.playerId,
                 FormTime = tile.formTime,
                 Source = tile.source,
                 DiscardInfo = ConvertDiscardInfo(tile.discardInfo),
             };
+
+        public static GameTileMsg ConvertGameTileBroadcast(GameTile tile)
+            => tile == null ? null : ConvertGameTile(tile, tile.playerId);
         #endregion
     }
 }

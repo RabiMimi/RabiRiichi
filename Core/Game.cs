@@ -131,7 +131,7 @@ namespace RabiRiichi.Core {
             try {
                 return protoGraph.Build()
                     .SetInput(obj)
-                    .SetInput("playerId", playerId)
+                    .SetInput(ProtoConverters.PLAYER_ID, playerId)
                     .Execute<T>();
             } catch (ArgumentException) {
                 return null;

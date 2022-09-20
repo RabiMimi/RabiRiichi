@@ -1,5 +1,4 @@
 using RabiRiichi.Communication;
-using RabiRiichi.Communication.Proto;
 using RabiRiichi.Core;
 using RabiRiichi.Generated.Events.InGame;
 using RabiRiichi.Patterns;
@@ -47,15 +46,6 @@ namespace RabiRiichi.Events.InGame {
 
         public int Count => agariInfos.Count;
         public AgariInfo this[int index] => agariInfos[index];
-
-        public AgariInfoListMsg ToProto() {
-            var ret = new AgariInfoListMsg {
-                FromPlayer = fromPlayer,
-                Incoming = ProtoConverters.ConvertGameTile(incoming),
-            };
-            ret.AgariInfos.Add(agariInfos.Select(x => x.ToProto()));
-            return ret;
-        }
     }
 
     [RabiMessage]

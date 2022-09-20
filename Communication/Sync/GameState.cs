@@ -38,13 +38,13 @@ namespace RabiRiichi.Communication.Sync {
             var ret = new PlayerHandStateMsg {
                 Jun = jun,
                 RiichiStick = riichiStick,
-                AgariTile = ProtoConverters.ConvertGameTile(agariTile),
-                RiichiTile = ProtoConverters.ConvertGameTile(riichiTile),
+                AgariTile = ProtoConverters.ConvertGameTileBroadcast(agariTile),
+                RiichiTile = ProtoConverters.ConvertGameTileBroadcast(riichiTile),
             };
             ret.Called.AddRange(called.Select(x => x.ToProto()));
             ret.Discarded.AddRange(discarded.Select(ProtoConverters.ConvertGameTile));
+            ret.FreeTiles.AddRange(freeTiles.Select(tile => ProtoConverters.ConvertGameTile(tile, playerId)));
             if (this.playerId == playerId) {
-                ret.FreeTiles.AddRange(freeTiles.Select(ProtoConverters.ConvertGameTile));
                 ret.IsTempFuriten = isTempFuriten;
                 ret.IsRiichiFuriten = isRiichiFuriten;
                 ret.IsDiscardFuriten = isDiscardFuriten;
