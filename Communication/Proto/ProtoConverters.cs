@@ -294,8 +294,8 @@ namespace RabiRiichi.Communication.Proto {
             [Consumes] DealerFirstTurnEvent ev, [Consumes(PLAYER_ID)] int playerId) {
             var ret = new DealerFirstTurnEventMsg {
                 PlayerId = ev.playerId,
+                Incoming = ConvertGameTile(ev.incoming, playerId)
             };
-            ret.Incoming = ConvertGameTile(ev.incoming, playerId);
             return ret;
         }
 

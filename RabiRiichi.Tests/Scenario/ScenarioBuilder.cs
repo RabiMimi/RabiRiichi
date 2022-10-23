@@ -235,7 +235,7 @@ namespace RabiRiichi.Tests.Scenario {
         /// <returns>自身</returns>
         public Scenario WriteGameLog(string path) {
             // Write json
-            var json = JsonFormatter.Default.Format(actionCenter.gameLog);
+            var json = new JsonFormatter(new JsonFormatter.Settings(true)).Format(actionCenter.gameLog);
             File.WriteAllText(path + ".json", json);
 
             // Write binary
