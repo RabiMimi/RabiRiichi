@@ -5,8 +5,6 @@
   "omnisharp.organizeImportsOnFormat": true,
   "editor.formatOnType": true,
   "omnisharp.enableRoslynAnalyzers": true,
-  // TODO(KCFindstr): Remove after .NET test explorer updates to 0.7.8
-  "dotnet-test-explorer.treeMode": "flat",
   "cSpell.words": [
     "Akadora",
     "Ankan",
