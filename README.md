@@ -3,6 +3,7 @@
 [![build-test](https://github.com/RabiMimi/RabiRiichi/actions/workflows/build-test.yml/badge.svg)](https://github.com/RabiMimi/RabiRiichi/actions/workflows/build-test.yml)
 [![build-server](https://github.com/RabiMimi/RabiRiichi/actions/workflows/build-server.yml/badge.svg)](https://github.com/RabiMimi/RabiRiichi/actions/workflows/build-server.yml)
 [![codecov](https://codecov.io/gh/RabiMimi/RabiRiichi/branch/develop/graph/badge.svg?token=MKLFTP3O4C)](https://codecov.io/gh/RabiMimi/RabiRiichi)
+[![100hun](https://100hun.rabimimi.com/provider/codecov/github/RabiMimi/RabiRiichi/develop/badge.png)](https://codecov.io/gh/RabiMimi/RabiRiichi)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 ![Code Size](https://img.shields.io/github/languages/code-size/RabiMimi/RabiRiichi)
 
