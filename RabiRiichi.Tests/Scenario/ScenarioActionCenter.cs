@@ -186,13 +186,13 @@ namespace RabiRiichi.Tests.Scenario {
             => ApplyAction(playerId, true, matcher);
 
         public ScenarioInquiryMatcher AssertAutoFinish(bool autoFinish = true) {
+            onFinish();
             if (autoFinish) {
                 Assert.IsTrue(inquiry.hasExecuted, "Inquiry not executed");
             } else {
                 Assert.IsFalse(inquiry.hasExecuted, "Inquiry auto executed");
                 inquiry.Finish();
             }
-            onFinish();
             return this;
         }
 
@@ -203,8 +203,8 @@ namespace RabiRiichi.Tests.Scenario {
         }
 
         public ScenarioInquiryMatcher Finish() {
-            inquiry.Finish();
             onFinish();
+            inquiry.Finish();
             return this;
         }
     }
