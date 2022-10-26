@@ -1,7 +1,10 @@
+using Google.Protobuf;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Events.InGame;
+using RabiRiichi.Generated.Core;
 using RabiRiichi.Generated.Patterns;
 using RabiRiichi.Patterns;
+using System.IO;
 using System.Linq;
 
 
@@ -65,6 +68,18 @@ namespace RabiRiichi.Tests.Scenario {
                 Assert.AreEqual(yakuman.Value, yaku.Val, $"Yaku: {typeof(T).Name}");
             }
             return info;
+        }
+
+        /// <summary> 将游戏log以文本形式写入文件 </summary>
+        /// <param name="path">文件路径</param>
+        public static void WriteTo(this GameLogMsg gameLog, string path = "game.log") {
+            // Write json
+            var json = new JsonFormatter(new JsonFormatter.Settings(true)).Format(gameLog);
+            File.WriteAllText(path + ".json", json);
+
+            // Write binary
+            using var fs = new FileStream(path + ".bin", FileMode.Create);
+            gameLog.WriteTo(fs);
         }
     }
 }

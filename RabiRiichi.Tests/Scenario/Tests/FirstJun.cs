@@ -102,7 +102,6 @@ namespace RabiRiichi.Tests.Scenario.Tests {
             ).Resolve();
 
             await scenario.WaitInquiry();
-            scenario.WriteGameLog("wRiichi");
         }
         #endregion
 
