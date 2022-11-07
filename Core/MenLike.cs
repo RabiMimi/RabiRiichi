@@ -105,7 +105,7 @@ namespace RabiRiichi.Core {
 
         public MenLikeMsg ToProto() {
             var msg = new MenLikeMsg();
-            msg.Tiles.AddRange(this.Select(ProtoConverters.ConvertGameTile));
+            msg.Tiles.AddRange(this.Select(tile => ProtoConverters.ConvertGameTile(tile, true)));
             return msg;
         }
     }
