@@ -14,7 +14,7 @@ namespace RabiRiichi.Events.InGame {
         /// <summary>
         /// 杠里的牌，对于暗杠来说不一定是刚摸到的
         /// </summary>
-        public readonly GameTile incoming;
+        [RabiBroadcast] public readonly GameTile incoming;
         #endregion
 
         #region Response

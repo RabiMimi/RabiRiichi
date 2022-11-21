@@ -344,6 +344,7 @@ namespace RabiRiichi.Communication.Proto {
             => new() {
                 PlayerId = ev.playerId,
                 Kan = ev.kan.ToProto(),
+                Incoming = ConvertGameTile(ev.incoming, true),
                 KanSource = ev.kanSource,
             };
 
