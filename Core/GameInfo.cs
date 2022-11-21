@@ -54,7 +54,6 @@ namespace RabiRiichi.Core {
         public GameInfoMsg ToProto() {
             return new GameInfoMsg {
                 Round = round,
-                Wind = wind,
                 Dealer = dealer,
                 Honba = honba,
                 CurrentPlayer = currentPlayer,
