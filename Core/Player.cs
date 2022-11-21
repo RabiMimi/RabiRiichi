@@ -1,6 +1,8 @@
-﻿using RabiRiichi.Generated.Core;
+﻿namespace RabiRiichi.Core {
+    public enum Wind {
+        E, S, W, N
+    }
 
-namespace RabiRiichi.Core {
     public class Player {
         public int id;
         public Game game;

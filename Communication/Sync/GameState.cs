@@ -2,7 +2,6 @@ using RabiRiichi.Communication.Proto;
 using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
 using RabiRiichi.Generated.Communication.Sync;
-using RabiRiichi.Generated.Core;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -79,14 +78,12 @@ namespace RabiRiichi.Communication.Sync {
     public class PlayerState : IRabiPlayerMessage {
         public int playerId { get; init; }
         [RabiBroadcast] public readonly int id;
-        [RabiBroadcast] public readonly Wind wind;
         [RabiBroadcast] public readonly long points;
         [RabiBroadcast] public readonly PlayerHandState hand;
 
         public PlayerState(Player player, int receiverId) {
             playerId = receiverId;
             id = player.id;
-            wind = player.Wind;
             points = player.points;
             hand = new PlayerHandState(player.hand, receiverId);
         }
@@ -94,7 +91,6 @@ namespace RabiRiichi.Communication.Sync {
         public PlayerStateMsg ToProto(int playerId) {
             return new PlayerStateMsg {
                 Id = id,
-                Wind = wind,
                 Points = points,
                 Hand = hand.ToProto(playerId)
             };
