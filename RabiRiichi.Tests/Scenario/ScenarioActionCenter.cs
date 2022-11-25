@@ -7,6 +7,7 @@ using RabiRiichi.Events;
 using RabiRiichi.Generated.Actions;
 using RabiRiichi.Generated.Core;
 using RabiRiichi.Generated.Events;
+using RabiRiichi.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -62,11 +63,11 @@ namespace RabiRiichi.Tests.Scenario {
                     return true;
                 });
 
-            public ScenarioPlayerInquiryMatcher ApplyAction<T>(Predicate<T> matcher) where T : PlayerAction<bool>
-                => ApplyAction(true, matcher);
+            public ScenarioPlayerInquiryMatcher ApplyAction<T>(Predicate<T> matcher) where T : PlayerAction<Empty>
+                => ApplyAction(Empty.Instance, matcher);
 
-            public ScenarioPlayerInquiryMatcher ApplyAction<T>(Action<T> action = null) where T : PlayerAction<bool>
-                => ApplyAction(true, action);
+            public ScenarioPlayerInquiryMatcher ApplyAction<T>(Action<T> action = null) where T : PlayerAction<Empty>
+                => ApplyAction(Empty.Instance, action);
 
             public ScenarioPlayerInquiryMatcher ApplyAction<T>(int response, Predicate<T> matcher) where T : PlayerAction<int>
                 => ApplyAction<T, int>(response, matcher);
@@ -182,8 +183,8 @@ namespace RabiRiichi.Tests.Scenario {
             return this;
         }
 
-        public ScenarioInquiryMatcher ApplyAction<T>(int playerId, Predicate<T> matcher = null) where T : PlayerAction<bool>
-            => ApplyAction(playerId, true, matcher);
+        public ScenarioInquiryMatcher ApplyAction<T>(int playerId, Predicate<T> matcher = null) where T : PlayerAction<Empty>
+            => ApplyAction(playerId, Empty.Instance, matcher);
 
         public ScenarioInquiryMatcher AssertAutoFinish(bool autoFinish = true) {
             onFinish();
