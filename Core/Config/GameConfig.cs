@@ -89,6 +89,7 @@ namespace RabiRiichi.Core.Config {
                 AgariOption = (int)agariOption,
                 ScoringOption = (int)scoringOption,
                 RyuukyokuTrigger = (int)ryuukyokuTrigger,
+                Seed = seed ?? 0,
             };
         }
         #endregion

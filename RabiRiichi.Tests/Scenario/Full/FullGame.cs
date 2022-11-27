@@ -4,6 +4,7 @@ using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
 using RabiRiichi.Utils;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Tests.Scenario.Full {
@@ -60,11 +61,13 @@ namespace RabiRiichi.Tests.Scenario.Full {
                 } catch (OperationCanceledException) {
                     break;
                 }
-
             }
-            Assert.AreEqual(GamePhase.Finished, game.info.phase);
             actionCenter.gameLog.Config = config.ToProto();
             actionCenter.gameLog.WriteTo("full_game");
+            Assert.IsTrue(actionCenter.gameLog.PlayerLogs.All(
+                logs => logs.Logs.Any((log) => log.Event?.StopGameEvent != null)),
+                "Game did not stop");
+            Assert.AreEqual(GamePhase.Finished, game.info.phase);
         }
     }
 }

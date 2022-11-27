@@ -98,24 +98,8 @@ namespace RabiRiichi.Events {
         /// <summary>
         /// 在某类事件成功触发后，取消所有监听
         /// </summary>
-        public EventListener<T> CancelOn<U>(bool readd = false) where U : EventBase {
-            eventBus.Subscribe<U>(CancelHelper, EventPriority.Minimum + PRIORITY_DELTA, readd ? -1 : 1);
-            return this;
-        }
-
-        /// <summary>
-        /// 在某类事件成功触发后，重新添加监听
-        /// </summary>
-        public EventListener<T> ReAddOn<U>(bool readd = true) where U : EventBase {
-            if (!readd) {
-                return this;
-            }
-            eventBus.Subscribe<U>((_) => {
-                foreach (var listener in listeners) {
-                    listener.Subscribe(eventBus);
-                }
-                return Task.CompletedTask;
-            }, EventPriority.Minimum + PRIORITY_DELTA - 1, -1);
+        public EventListener<T> CancelOn<U>() where U : EventBase {
+            eventBus.Subscribe<U>(CancelHelper, EventPriority.Minimum + PRIORITY_DELTA, 1);
             return this;
         }
 
@@ -124,15 +108,13 @@ namespace RabiRiichi.Events {
         /// <param name="readd">重新进入监听范围后，是否再次监听</param>
         /// <returns></returns>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
-        public EventListener<T> ScopeTo(EventScope scope, bool readd = false) {
+        public EventListener<T> ScopeTo(EventScope scope) {
             switch (scope) {
                 case EventScope.Event:
-                    CancelOn<EventBase>(readd);
-                    ReAddOn<EventBase>(readd);
+                    CancelOn<EventBase>();
                     break;
                 case EventScope.Game:
-                    CancelOn<NextGameEvent>(readd);
-                    ReAddOn<BeginGameEvent>(readd);
+                    CancelOn<NextGameEvent>();
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(scope), scope, "Unknown event scope");

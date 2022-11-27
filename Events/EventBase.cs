@@ -63,7 +63,7 @@ namespace RabiRiichi.Events {
 
         /// <summary> 强制取消该事件及其后继事件 </summary>
         public void Cancel() {
-            if (IsCancelled) {
+            if (IsFinishedOrCancelled) {
                 return;
             }
             phase = EventPriority.Cancelled;

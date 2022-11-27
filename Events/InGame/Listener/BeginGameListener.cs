@@ -29,7 +29,6 @@ namespace RabiRiichi.Events.InGame.Listener {
             return Task.CompletedTask;
         }
 
-
         public static void Register(EventBus eventBus) {
             eventBus.Subscribe<BeginGameEvent>(UpdateGameInfo, EventPriority.Execute);
         }
