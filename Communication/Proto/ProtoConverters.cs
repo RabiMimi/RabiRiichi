@@ -6,6 +6,7 @@ using RabiRiichi.Generated.Core;
 using RabiRiichi.Generated.Events;
 using RabiRiichi.Generated.Events.InGame;
 using RabiRiichi.Utils.Graphs;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -159,15 +160,15 @@ namespace RabiRiichi.Communication.Proto {
             => options.Select(o => ConvertGameTile(((ChooseTileActionOption)o).tile, true));
 
         [Produces]
-        public static AgariActionMsg ConvertAgariAction([Consumes] AgariAction action) {
-            var ret = new AgariActionMsg();
-            if (action is RonAction) {
-                ret.Type = AgariType.Ron;
-            } else if (action is TsumoAction) {
-                ret.Type = AgariType.Tsumo;
+        public static AgariActionMsg ConvertAgariAction([Consumes] AgariAction action)
+        => new() {
+            Incoming = ConvertGameTile(action.incoming, true),
+            Type = action switch {
+                RonAction => AgariType.Ron,
+                TsumoAction => AgariType.Tsumo,
+                _ => throw new ArgumentException("Invalid action type", nameof(action))
             }
-            return ret;
-        }
+        };
 
         [Produces]
         public static ChiiActionMsg ConvertChiiAction([Consumes] ChiiAction action) {
