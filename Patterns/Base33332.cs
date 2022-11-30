@@ -300,28 +300,16 @@ namespace RabiRiichi.Patterns {
                                     if (prevList == null || prevList.Count == 0) {
                                         continue;
                                     }
-                                    // 枚举减少Tile还是增加Tile
-                                    for (int newJ1 = 0; newJ1 < Lj; newJ1++) {
-                                        // i-2的所有顺子必须用完
-                                        int newJ2 = j1 - j2;
-                                        for (int newK = k; newK < Lk; newK++) {
-                                            int deltaN = newJ1 + (newK - k) * 2 + j2 - N;
-                                            if (deltaN < 0) {
-                                                deltaN %= 3;
-                                            }
-                                            // deltaN < 0说明剩余牌比原先少，可能是打出去或刻子
-                                            // deltaN > 0时一定是摸牌最优，不分情况
-                                            for (int newL = l + deltaN + (deltaN < 0 ? 3 : 0);
-                                                newL >= l + deltaN; newL -= 3) {
-                                                if (newL < 0 || newL >= Ll) {
-                                                    continue;
-                                                }
-                                                DpContext.Add(ref dpCur[newJ2, newJ1, newK, newL],
-                                                    prevList.dist + (incoming == null
-                                                        ? Math.Max(0, newL - l)
-                                                        : Math.Max(0, l - newL)),
-                                                    ((byte)j2, (byte)j1, (byte)k, (byte)l));
-                                            }
+                                    // i-2的所有顺子必须用完
+                                    int newJ2 = j1 - j2;
+                                    for (int newK = k; newK < Lk; newK++) {
+                                        // 枚举新的手牌数
+                                        int minCnt = l + (newK - k) * 2 + j2 - N;
+                                        for (int newL = Math.Max(0, minCnt); newL < Ll; newL++) {
+                                            int newJ1 = (newL - minCnt) % 3;
+                                            DpContext.Add(ref dpCur[newJ2, newJ1, newK, newL],
+                                                prevList.dist + Math.Max(0, incoming == null ? (newL - l) : (l - newL)),
+                                                ((byte)j2, (byte)j1, (byte)k, (byte)l));
                                         }
                                     }
                                 }
