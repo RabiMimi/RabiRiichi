@@ -96,6 +96,9 @@ namespace RabiRiichi.Tests.Patterns {
 
             Assert.AreEqual(6, Shanten("25569m2589p5s357z", null));
             tiles.AssertEquals("123456789m1234567p34567s357z");
+
+            Assert.AreEqual(-1, Shanten("2233334444557s", "7s"));
+            tiles.AssertEquals("");
         }
 
         [TestMethod]

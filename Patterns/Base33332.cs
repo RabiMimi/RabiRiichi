@@ -260,7 +260,7 @@ namespace RabiRiichi.Patterns {
             // 动态规划，dp[i1,i2][j2,j1,k,l]表示：
             // 当前在i1组编号为i2的牌
             // 上一张有j2张未匹配
-            // 当前张有j1张未匹配
+            // 当前张有j1+j2张未匹配
             // k表示是否匹配了雀头
             // l表示牌数-4
             // dp值表示前驱
@@ -286,8 +286,7 @@ namespace RabiRiichi.Patterns {
                     bool prevValid = tile.Prev.IsValid;
                     // 枚举上一个状态
                     for (int j2 = 0; j2 < Lj; j2++) {
-                        // 至少要和j2一样多，否则无法全部用完
-                        for (int j1 = j2; j1 < Lj; j1++) {
+                        for (int j1 = 0; j1 < Lj; j1++) {
                             for (int k = 0; k < Lk; k++) {
                                 for (int l = 0; l < Ll; l++) {
                                     if (!prevValid) {
@@ -301,10 +300,10 @@ namespace RabiRiichi.Patterns {
                                         continue;
                                     }
                                     // i-2的所有顺子必须用完
-                                    int newJ2 = j1 - j2;
+                                    int newJ2 = j1;
                                     for (int newK = k; newK < Lk; newK++) {
                                         // 枚举新的手牌数
-                                        int minCnt = l + (newK - k) * 2 + j2 - N;
+                                        int minCnt = l + (newK - k) * 2 + j1 + j2 - N;
                                         for (int newL = Math.Max(0, minCnt); newL < Ll; newL++) {
                                             int newJ1 = (newL - minCnt) % 3;
                                             DpContext.Add(ref dpCur[newJ2, newJ1, newK, newL],
