@@ -1,29 +1,28 @@
 name: Tests
 
-on: 
+on:
   push:
-    branches: 
+    branches:
       - main
       - develop
     paths:
-      - '**.cs'
-      - '!RabiRiichi.Server/**'
+      - "**.cs"
+      - "!RabiRiichi.Server/**"
   pull_request:
     branches:
       - main
       - develop
     paths:
-      - '**.cs'
-      - '!RabiRiichi.Server/**'
+      - "**.cs"
+      - "!RabiRiichi.Server/**"
   workflow_dispatch:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        dotnet-version: ['6.0.x']
+        dotnet-version: ["6.0.x"]
 
     steps:
       - uses: actions/checkout@v2
@@ -53,6 +52,7 @@ jobs:
           reporter: dotnet-trx
       - name: Archive test results
         uses: actions/upload-artifact@v3
+        if: success() || failure()
         with:
           name: test-results
           path: RabiRiichi.Tests/TestResults
