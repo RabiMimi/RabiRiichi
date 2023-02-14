@@ -37,6 +37,7 @@ namespace RabiRiichi.Events.InGame.Listener {
 
         public static Task DrawTile(DrawTileEvent e) {
             e.tile = DrawFrom(e);
+            e.player.hand.pendingTile = e.tile;
             var resolvers = GetDrawTileResolvers(e.game);
             foreach (var resolver in resolvers) {
                 resolver.Resolve(e.player, e.tile, e.waitEvent.inquiry);

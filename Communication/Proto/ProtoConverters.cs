@@ -225,10 +225,9 @@ namespace RabiRiichi.Communication.Proto {
             };
 
         [Produces]
-        public static AddTileEventMsg ConvertAddTileEvent([Consumes] AddTileEvent ev, [Consumes(PLAYER_ID)] int playerId) {
+        public static AddTileEventMsg ConvertAddTileEvent([Consumes] AddTileEvent ev) {
             return new AddTileEventMsg {
                 PlayerId = ev.playerId,
-                Incoming = ConvertGameTile(ev.incoming, ev.playerId == playerId),
             };
         }
 

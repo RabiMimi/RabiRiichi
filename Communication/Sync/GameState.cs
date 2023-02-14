@@ -10,6 +10,7 @@ namespace RabiRiichi.Communication.Sync {
     public class PlayerHandState : IRabiPlayerMessage {
         public int playerId { get; init; }
         [RabiPrivate] public readonly List<GameTile> freeTiles;
+        [RabiPrivate] public readonly GameTile pendingTile;
         [RabiBroadcast] public readonly List<MenLike> called;
         [RabiBroadcast] public readonly List<GameTile> discarded;
         [RabiBroadcast] public readonly int jun;
@@ -22,6 +23,7 @@ namespace RabiRiichi.Communication.Sync {
         public PlayerHandState(Hand hand, int playerId) {
             this.playerId = playerId;
             freeTiles = hand.freeTiles.ToList();
+            pendingTile = hand.pendingTile;
             called = hand.called.ToList();
             discarded = hand.discarded.ToList();
             jun = hand.jun;
@@ -39,6 +41,7 @@ namespace RabiRiichi.Communication.Sync {
                 RiichiStick = riichiStick,
                 AgariTile = ProtoConverters.ConvertGameTile(agariTile, true),
                 RiichiTile = ProtoConverters.ConvertGameTile(riichiTile, true),
+                PendingTile = ProtoConverters.ConvertGameTile(pendingTile, this.playerId == playerId),
             };
             ret.Called.AddRange(called.Select(x => x.ToProto()));
             ret.Discarded.AddRange(discarded.Select(tile => ProtoConverters.ConvertGameTile(tile, this.playerId == playerId)));

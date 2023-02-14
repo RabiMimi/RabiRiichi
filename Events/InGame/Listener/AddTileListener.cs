@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 namespace RabiRiichi.Events.InGame.Listener {
     public static class AddTileListener {
         private static Task ExecuteAddTile(AddTileEvent ev) {
-            ev.player.hand.Add(ev.incoming);
+            ev.player.hand.AddPending();
             return Task.CompletedTask;
         }
 

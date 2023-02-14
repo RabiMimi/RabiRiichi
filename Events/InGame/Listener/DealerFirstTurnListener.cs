@@ -13,13 +13,14 @@ namespace RabiRiichi.Events.InGame.Listener {
             freeTiles.Remove(incoming);
             incoming.player = null;
             incoming.source = TileSource.Wall;
+            ev.player.hand.pendingTile = incoming;
             foreach (var resolver in GetDealerFirstTurnResolvers(ev.game)) {
                 resolver.Resolve(ev.player, incoming, ev.waitEvent.inquiry);
             }
             ev.waitEvent.inquiry.GetByPlayerId(ev.playerId).DisableSkip();
             DrawTileListener.AddActionHandler(ev.waitEvent, DiscardReason.Draw);
             ev.Q.Queue(ev.waitEvent);
-            ev.Q.Queue(new AddTileEvent(ev, incoming));
+            ev.Q.Queue(new AddTileEvent(ev));
             return Task.CompletedTask;
         }
 

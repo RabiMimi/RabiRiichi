@@ -10,6 +10,9 @@ namespace RabiRiichi.Core {
         /// <summary> 手牌（不包含副露） </summary>
         public List<GameTile> freeTiles = new();
 
+        /// <summary> 刚摸到的牌，如果有的话 </summary>
+        public GameTile pendingTile = null;
+
         /// <summary> 巡目 </summary>
         public int jun = 0;
 
@@ -85,6 +88,15 @@ namespace RabiRiichi.Core {
             tile.player = player;
             tile.source = TileSource.Hand;
             freeTiles.Add(tile);
+        }
+
+        public bool AddPending() {
+            if (pendingTile == null) {
+                return false;
+            }
+            Add(pendingTile);
+            pendingTile = null;
+            return true;
         }
 
         public void Riichi(GameTile tile, bool wRiichi) {
