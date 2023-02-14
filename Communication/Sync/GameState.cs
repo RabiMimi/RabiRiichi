@@ -108,6 +108,7 @@ namespace RabiRiichi.Communication.Sync {
         [RabiBroadcast] public readonly GameInfo info;
         [RabiBroadcast] public readonly WallState wall;
         [RabiBroadcast] public readonly PlayerState[] players;
+        [RabiBroadcast] public readonly int currentPlayer;
 
         public GameState(Game game, int playerId) {
             this.playerId = playerId;
@@ -115,6 +116,7 @@ namespace RabiRiichi.Communication.Sync {
             info = game.info;
             wall = new WallState(game.wall);
             players = game.players.Select(p => new PlayerState(p, playerId)).ToArray();
+            currentPlayer = game.info.currentPlayer;
         }
 
         public GameStateMsg ToProto(int playerId) {
@@ -122,6 +124,7 @@ namespace RabiRiichi.Communication.Sync {
                 Config = config.ToProto(),
                 Info = info.ToProto(),
                 Wall = wall.ToProto(),
+                CurrentPlayer = currentPlayer,
             };
             ret.Players.AddRange(players.Select(x => x.ToProto(playerId)));
             return ret;

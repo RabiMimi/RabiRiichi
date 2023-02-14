@@ -43,7 +43,7 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
       - name: Generate Test Report
-        uses: phoenix-actions/test-reporting@v3
+        uses: phoenix-actions/test-reporting@v8
         id: test-report
         if: success() || failure()
         with:
