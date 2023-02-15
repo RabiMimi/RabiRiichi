@@ -82,7 +82,7 @@ namespace RabiRiichi.Events.InGame.Listener {
                     return Task.CompletedTask;
                 }
             }
-            ev.Q.Queue(new BeginGameEvent(ev, ev.nextRound, ev.nextDealer, ev.nextHonba));
+            ev.Q.Queue(new BeginGameEvent(ev, ev.nextRound, ev.nextDealer, ev.nextHonba, ev.riichiStick));
             return Task.CompletedTask;
         }
 

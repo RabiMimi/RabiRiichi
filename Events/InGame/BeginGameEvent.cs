@@ -11,12 +11,15 @@ namespace RabiRiichi.Events.InGame {
         [RabiBroadcast] public int dealer;
         /// <summary> 本场 </summary>
         [RabiBroadcast] public int honba;
+        /// <summary> 立直棒数量 </summary>
+        [RabiBroadcast] public int riichiStick;
         #endregion
 
-        public BeginGameEvent(EventBase parent, int round, int dealer, int honba) : base(parent) {
+        public BeginGameEvent(EventBase parent, int round, int dealer, int honba, int riichiStick) : base(parent) {
             this.round = round;
             this.dealer = dealer;
             this.honba = honba;
+            this.riichiStick = riichiStick;
         }
     }
 }

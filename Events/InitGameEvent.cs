@@ -11,7 +11,7 @@ namespace RabiRiichi.Events {
         public InitGameEvent(Game game) : base(game) { }
 
         public static Task OnGameInit(InitGameEvent ev) {
-            ev.Q.Queue(new BeginGameEvent(ev, 0, 0, 0));
+            ev.Q.Queue(new BeginGameEvent(ev, 0, 0, 0, 0));
             return Task.CompletedTask;
         }
 
