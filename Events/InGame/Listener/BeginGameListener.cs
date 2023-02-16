@@ -11,6 +11,7 @@ namespace RabiRiichi.Events.InGame.Listener {
                 player.Reset();
             }
             ev.game.wall.Reset();
+            ev.remainingTiles = ev.game.wall.NumRemaining;
             int dealer = ev.game.info.dealer;
             int curPlayer = dealer;
             for (int r = 0; r < 4; r++) {

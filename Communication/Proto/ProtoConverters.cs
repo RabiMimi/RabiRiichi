@@ -262,6 +262,7 @@ namespace RabiRiichi.Communication.Proto {
                 Dealer = ev.dealer,
                 Honba = ev.honba,
                 RiichiStick = ev.riichiStick,
+                RemainingTiles = ev.remainingTiles,
             };
 
         [Produces]
