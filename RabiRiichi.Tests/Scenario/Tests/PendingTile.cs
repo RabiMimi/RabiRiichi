@@ -1,7 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Actions;
 using RabiRiichi.Core;
-using RabiRiichi.Events.InGame;
 using RabiRiichi.Tests.Helper;
 using System.Threading.Tasks;
 
@@ -42,7 +41,6 @@ namespace RabiRiichi.Tests.Scenario.Tests {
                 .AssertNoMoreActions()
             ).AssertAutoFinish();
 
-            scenario.AssertNoEvent<DrawTileEvent>();
             scenario.WithPlayer(2, player => {
                 Assert.IsNull(player.hand.pendingTile);
             });

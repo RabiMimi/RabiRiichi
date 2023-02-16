@@ -2,7 +2,6 @@ using RabiRiichi.Actions;
 using RabiRiichi.Communication;
 using System.Collections.Generic;
 
-
 namespace RabiRiichi.Events.InGame {
     [RabiIgnore]
     public class WaitPlayerActionEvent : EventBase {
@@ -20,5 +19,12 @@ namespace RabiRiichi.Events.InGame {
         public WaitPlayerActionEvent(EventBase parent) : base(parent) {
             this.inquiry = new MultiPlayerInquiry(game);
         }
+    }
+
+    [RabiPrivate]
+    public class EndInquiryEvent : PrivatePlayerEvent {
+        public override string name => "end_inquiry";
+
+        public EndInquiryEvent(EventBase parent, int playerId) : base(parent, playerId) { }
     }
 }

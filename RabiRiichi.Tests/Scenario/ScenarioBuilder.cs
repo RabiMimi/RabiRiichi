@@ -176,6 +176,7 @@ namespace RabiRiichi.Tests.Scenario {
             var ret = await actionCenter.NextInquiry;
             ResolveImmediately();
             GameSanityCheck(ret);
+            AssertEvent<EndInquiryEvent>();
             return ret;
         }
 

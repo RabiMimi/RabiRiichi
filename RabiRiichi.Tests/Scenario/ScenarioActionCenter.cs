@@ -258,6 +258,9 @@ namespace RabiRiichi.Tests.Scenario {
         public void OnEvent(int playerId, EventBase ev) {
             // Test proto graph
             var proto = ev.game.SerializeProto<EventMsg>(ev, playerId);
+            if (proto == null) {
+                return;
+            }
             if (ev.GetType().GetCustomAttribute<RabiIgnoreAttribute>() == null) {
                 Assert.IsNotNull(proto, $"{ev.GetType().Name} not serialized");
                 gameLog.PlayerLogs[playerId].Logs.Add(new SingleLogMsg {

@@ -11,11 +11,9 @@ namespace RabiRiichi.Server.Connections {
     public class ServerActionCenter : IActionCenter {
         private class InquiryContext {
             public readonly MultiPlayerInquiry inquiry;
-            public readonly int[] inquiryIds;
 
             public InquiryContext(MultiPlayerInquiry inquiry) {
                 this.inquiry = inquiry;
-                this.inquiryIds = new int[inquiry.playerInquiries.Count];
             }
         }
 
@@ -35,13 +33,6 @@ namespace RabiRiichi.Server.Connections {
                 return;
             }
             oldContext.inquiry.Finish();
-            for (int i = 0; i < oldContext.inquiry.playerInquiries.Count; i++) {
-                SendMessage(
-                    oldContext.inquiry.playerInquiries[i].playerId,
-                    ProtoUtils.CreateDto(new ServerInquiryEndMsg {
-                        EndId = oldContext.inquiryIds[i],
-                    }));
-            }
         }
 
         public void OnEvent(int seat, EventBase ev) {
@@ -92,8 +83,7 @@ namespace RabiRiichi.Server.Connections {
             }
             for (int i = 0; i < inquiry.playerInquiries.Count; i++) {
                 var playerInquiry = inquiry.playerInquiries[i];
-                var msg = SendInquiry(ctx, playerInquiry.playerId);
-                ctx.inquiryIds[i] = msg.msg.Id;
+                SendInquiry(ctx, playerInquiry.playerId);
             }
             if (inquiry.IsEmpty) {
                 EndInquiry(ctx);

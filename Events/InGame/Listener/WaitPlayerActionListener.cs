@@ -11,6 +11,9 @@ namespace RabiRiichi.Events.InGame.Listener {
             } finally {
                 e.bus.eventProcessingLock.Lock(EventBus.EVENT_PROCESSING_TIMEOUT);
             }
+            foreach (var playerInquiry in e.inquiry.playerInquiries) {
+                e.Q.Queue(new EndInquiryEvent(e, playerInquiry.playerId));
+            }
             if (e.eventBuilder != null) {
                 e.responseEvents.AddRange(e.eventBuilder.BuildAndQueue(e.Q));
             }

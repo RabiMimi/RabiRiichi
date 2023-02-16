@@ -150,6 +150,10 @@ namespace RabiRiichi.Communication.Proto {
         [Produces]
         public static EventMsg ConvertSyncGameStateEventMsg([Consumes] SyncGameStateEventMsg ev)
             => new() { SyncGameStateEvent = ev };
+
+        [Produces]
+        public static EventMsg ConvertEndInquiryEventMsg([Consumes] EndInquiryEventMsg ev)
+            => new() { EndInquiryEvent = ev };
         #endregion
 
         #region Action
@@ -462,6 +466,13 @@ namespace RabiRiichi.Communication.Proto {
             ret.Actions.AddRange(inq.actions.Select(
                 action => graph.Build().SetInput(action).Execute<PlayerActionMsg>()));
             return ret;
+        }
+
+        [Produces]
+        public static EndInquiryEventMsg ConvertInquiry([Consumes] EndInquiryEvent ev) {
+            return new EndInquiryEventMsg {
+                PlayerId = ev.playerId,
+            };
         }
         #endregion
 

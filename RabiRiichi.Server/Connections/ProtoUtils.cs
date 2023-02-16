@@ -37,8 +37,6 @@ namespace RabiRiichi.Server.Connections {
             var ret = new ServerMsg();
             if (obj is TwoWayHeartBeatMsg heartBeat) {
                 ret.HeartBeatMsg = heartBeat;
-            } else if (obj is ServerInquiryEndMsg inquiryEnd) {
-                ret.InquiryEndMsg = inquiryEnd;
             } else if (obj is ServerRoomStateMsg roomState) {
                 ret.RoomStateMsg = roomState;
             } else if (obj is ServerVersionCheckMsg versionCheck) {
