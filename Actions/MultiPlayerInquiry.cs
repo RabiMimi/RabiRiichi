@@ -16,7 +16,7 @@ namespace RabiRiichi.Actions {
             this.response = response;
         }
         public static InquiryResponse Default(int playerId) {
-            return new InquiryResponse(playerId, -1, "");
+            return new InquiryResponse(playerId, -1, string.Empty);
         }
     }
 

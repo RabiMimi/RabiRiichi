@@ -121,14 +121,14 @@ namespace RabiRiichi.Core {
             return builder.ToString();
         }
 
-        public override bool Equals(object obj) {
+        public override readonly bool Equals(object obj) {
             if (obj is Tile rhs) {
                 return this == rhs;
             }
             return false;
         }
 
-        public override int GetHashCode() {
+        public override readonly int GetHashCode() {
             return Val;
         }
 

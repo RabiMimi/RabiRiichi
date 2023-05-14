@@ -11,7 +11,7 @@ namespace RabiRiichi.Actions {
         }
     }
 
-    public abstract class ChooseTilesAction : SingleChoiceAction {
+    public abstract class ChooseTilesAction : SingleChoiceAction<ChooseTilesActionOption> {
         public ChooseTilesAction(int playerId, List<List<GameTile>> tiles, int priorityDelta = 0) : base(playerId) {
             priority = ActionPriority.ChooseTile + priorityDelta;
             foreach (var gr in tiles) {

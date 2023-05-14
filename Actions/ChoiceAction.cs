@@ -6,18 +6,23 @@ namespace RabiRiichi.Actions {
     [RabiMessage]
     public abstract class ActionOption { }
 
-    public abstract class ChoiceAction<T> : PlayerAction<T> {
-        [RabiBroadcast] public List<ActionOption> options = new();
+    public interface IChoiceAction {
+        public int OptionCount { get; }
+    }
+
+    public abstract class ChoiceAction<T, U> : PlayerAction<T>, IChoiceAction where U : ActionOption {
+        [RabiBroadcast] public List<U> options = new();
+        public int OptionCount => options.Count;
 
         public ChoiceAction(int playerId) : base(playerId) { }
 
-        public void AddOption(ActionOption option) {
+        public void AddOption(U option) {
             options.Add(option);
         }
     }
 
-    public abstract class MultiChoiceAction : ChoiceAction<List<int>> {
-        public IEnumerable<ActionOption> chosen => response.Select(r => options[r]);
+    public abstract class MultiChoiceAction<T> : ChoiceAction<List<int>, T> where T : ActionOption {
+        public IEnumerable<T> chosen => response.Select(r => options[r]);
         public MultiChoiceAction(int playerId) : base(playerId) {
             response = new List<int>();
         }
@@ -35,8 +40,8 @@ namespace RabiRiichi.Actions {
         }
     }
 
-    public abstract class SingleChoiceAction : ChoiceAction<int> {
-        public ActionOption chosen => options[response];
+    public abstract class SingleChoiceAction<T> : ChoiceAction<int, T> where T : ActionOption {
+        public T chosen => options[response];
         public SingleChoiceAction(int playerId) : base(playerId) {
             response = 0;
         }

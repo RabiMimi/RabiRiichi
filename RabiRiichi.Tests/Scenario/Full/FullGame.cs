@@ -2,6 +2,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Actions;
 using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
+using RabiRiichi.Patterns;
 using RabiRiichi.Utils;
 using System;
 using System.Linq;
@@ -10,7 +11,15 @@ using System.Threading.Tasks;
 namespace RabiRiichi.Tests.Scenario.Full {
     [TestClass]
     public class FullGame {
-        private static T Execute<T>(Func<T> func) => func();
+        private static int SmartPlayTile(Hand hand, PlayTileAction action) {
+            var resolver = hand.game.Get<PatternResolver>();
+            var incoming = action.options.Select(op => op.tile)
+                .FirstOrDefault(t => !hand.freeTiles.Any(ft => ft.traceId == t.traceId));
+            resolver.ResolveShanten(hand, incoming, out var tiles);
+            var selected = action.options.FindIndex(op => tiles.Contains(op.tile.tile));
+            return selected < 0 ? action.response : selected;
+
+        }
 
         [TestMethod]
         public async Task RunFullGame() {
@@ -40,21 +49,24 @@ namespace RabiRiichi.Tests.Scenario.Full {
                         if (playerInquiry.actions.Count == 0) {
                             continue;
                         }
-                        int choice = random.Next(playerInquiry.actions.Count);
+                        int choice = playerInquiry.actions.FindIndex(a => a is AgariAction);
+                        if (choice == -1) {
+                            choice = random.Next(playerInquiry.actions.Count);
+                        }
                         var action = playerInquiry.actions[choice];
-                        bool ret = action switch {
-                            ChoiceAction<int> choiceAction =>
-                                inquiry.inquiry.OnResponse(new InquiryResponse(
-                                    playerInquiry.playerId, choice, random.Next(choiceAction.options.Count).ToString())),
-                            PlayerAction<Empty> confirmAction => inquiry.inquiry.OnResponse(
-                                new InquiryResponse(playerInquiry.playerId, choice, Empty.Json)),
-                            _ => Execute(() => {
-                                Assert.Fail("Unknown action type: " + action.GetType());
-                                return false;
-                            }),
-                        };
-                        if (ret) {
-                            break;
+                        bool ret;
+                        if (action is PlayTileAction playTileAction) {
+                            var hand = game.GetPlayer(playerInquiry.playerId).hand;
+                            ret = inquiry.inquiry.OnResponse(new InquiryResponse(
+                                    playerInquiry.playerId, choice, SmartPlayTile(hand, playTileAction).ToString()));
+                        } else if (action is IChoiceAction choiceAction) {
+                            ret = inquiry.inquiry.OnResponse(new InquiryResponse(
+                                    playerInquiry.playerId, choice, random.Next(choiceAction.OptionCount).ToString()));
+                        } else if (action is PlayerAction<Empty> playerAction) {
+                            ret = inquiry.inquiry.OnResponse(new InquiryResponse(playerInquiry.playerId, choice, Empty.Json));
+                        } else {
+                            ret = false;
+                            Assert.Fail("Unknown action type: " + action.GetType());
                         }
                     }
                     inquiry.AssertAutoFinish();
