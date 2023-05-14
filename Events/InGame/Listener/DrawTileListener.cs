@@ -4,6 +4,7 @@ using RabiRiichi.Core;
 using RabiRiichi.Generated.Core;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Events.InGame.Listener {
@@ -46,7 +47,13 @@ namespace RabiRiichi.Events.InGame.Listener {
             AddActionHandler(e.waitEvent, e.source == TileSource.Wanpai
                 ? DiscardReason.DrawRinshan : DiscardReason.Draw);
             e.Q.Queue(e.waitEvent);
-            e.Q.Queue(new AddTileEvent(e));
+            var addTileEvent = new AddTileEvent(e);
+            e.Q.Queue(addTileEvent);
+            e.waitEvent.OnFinish += () => {
+                if (e.waitEvent.responseEvents.Any(e => e is AgariEvent)) {
+                    addTileEvent.Cancel();
+                }
+            };
             return Task.CompletedTask;
         }
 
@@ -56,7 +63,7 @@ namespace RabiRiichi.Events.InGame.Listener {
                 eventBuilder.AddAgari(ev, action.playerId, action.incoming, action.agariInfo);
             });
             ev.inquiry.AddHandler<PlayTileAction>((action) => {
-                var option = action.chosen as ChooseTileActionOption;
+                var option = action.chosen;
                 if (action is RiichiAction) {
                     eventBuilder.AddEvent(
                         new RiichiEvent(ev, action.playerId, option.tile, action.defaultTile, reason));
@@ -66,7 +73,7 @@ namespace RabiRiichi.Events.InGame.Listener {
                 }
             });
             ev.inquiry.AddHandler<KanAction>((action) => {
-                var option = action.chosen as ChooseTilesActionOption;
+                var option = action.chosen;
                 var kan = new Kan(option.tiles);
                 eventBuilder.AddEvent(new KanEvent(ev, action.playerId, kan, option.tiles[^1]));
             });

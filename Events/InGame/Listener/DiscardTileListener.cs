@@ -21,15 +21,15 @@ namespace RabiRiichi.Events.InGame.Listener {
             var eventBuilder = discardEv.waitEvent.eventBuilder;
             var ev = discardEv.waitEvent;
             ev.inquiry.AddHandler<ChiiAction>((action) => {
-                var option = (ChooseTilesActionOption)action.chosen;
+                var option = action.chosen;
                 eventBuilder.AddEvent(new ClaimTileEvent(ev, action.playerId, new Shun(option.tiles), discardEv.discarded));
             });
             ev.inquiry.AddHandler<PonAction>((action) => {
-                var option = (ChooseTilesActionOption)action.chosen;
+                var option = action.chosen;
                 eventBuilder.AddEvent(new ClaimTileEvent(ev, action.playerId, new Kou(option.tiles), discardEv.discarded));
             });
             ev.inquiry.AddHandler<KanAction>((action) => {
-                var option = (ChooseTilesActionOption)action.chosen;
+                var option = action.chosen;
                 eventBuilder.AddEvent(new ClaimTileEvent(ev, action.playerId, new Kan(option.tiles), discardEv.discarded));
             });
             ev.inquiry.AddHandler<RonAction>((action) => {
