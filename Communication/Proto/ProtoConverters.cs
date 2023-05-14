@@ -72,10 +72,6 @@ namespace RabiRiichi.Communication.Proto {
             => new() { BeginGameEvent = ev };
 
         [Produces]
-        public static EventMsg ConvertCalcScoreEventMsg([Consumes] CalcScoreEventMsg ev)
-            => new() { CalcScoreEvent = ev };
-
-        [Produces]
         public static EventMsg ConvertClaimTileEventMsg([Consumes] ClaimTileEventMsg ev)
             => new() { ClaimTileEvent = ev };
 
@@ -235,22 +231,25 @@ namespace RabiRiichi.Communication.Proto {
             };
         }
 
-        [Produces]
-        public static AgariInfoListMsg ConvertAgariInfoList([Consumes] AgariInfoList infos) {
-            var ret = new AgariInfoListMsg {
-                FromPlayer = infos.fromPlayer,
-                Incoming = ConvertGameTile(infos.incoming, true),
+        public static AgariInfoMsg ConvertAgariInfo(Hand hand, AgariInfo agariInfo) {
+            var ret = new AgariInfoMsg {
+                PlayerId = agariInfo.playerId,
+                Scores = agariInfo.scores.ToProto(),
             };
-            ret.AgariInfos.Add(infos.Select(x => x.ToProto()));
+            ret.FreeTiles.AddRange(hand.freeTiles.Select(
+                tile => ConvertGameTile(tile, true)));
             return ret;
         }
 
         [Produces]
-        public static AgariEventMsg ConvertAgariEvent([Consumes] AgariEvent ev)
-            => new() {
-                IsTsumo = ev.isTsumo,
-                AgariInfos = ConvertAgariInfoList(ev.agariInfos),
+        public static AgariEventMsg ConvertAgariEvent([Consumes] AgariEvent ev) {
+            var ret = new AgariEventMsg {
+                Incoming = ConvertGameTile(ev.agariInfos.incoming, true),
             };
+            ret.AgariInfos.AddRange(ev.agariInfos.Select(
+                x => ConvertAgariInfo(ev.game.GetPlayer(x.playerId).hand, x)));
+            return ret;
+        }
 
         [Produces]
         public static ApplyScoreEventMsg ConvertApplyScoreEvent([Consumes] ApplyScoreEvent ev) {
@@ -268,15 +267,6 @@ namespace RabiRiichi.Communication.Proto {
                 RiichiStick = ev.riichiStick,
                 RemainingTiles = ev.remainingTiles,
             };
-
-        [Produces]
-        public static CalcScoreEventMsg ConvertCalcScoreEvent([Consumes] CalcScoreEvent ev) {
-            var ret = new CalcScoreEventMsg {
-                AgariInfos = ConvertAgariInfoList(ev.agariInfos),
-            };
-            ret.ScoreChange.AddRange(ev.scoreChange.Select(x => x.ToProto()));
-            return ret;
-        }
 
         [Produces]
         public static ClaimTileEventMsg ConvertClaimTileEvent([Consumes] ClaimTileEvent ev)

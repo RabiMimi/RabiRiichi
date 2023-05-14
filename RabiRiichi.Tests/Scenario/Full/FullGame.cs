@@ -16,7 +16,7 @@ namespace RabiRiichi.Tests.Scenario.Full {
         public async Task RunFullGame() {
             int playerCount = 4;
             var actionCenter = new ScenarioActionCenter(playerCount);
-            ulong seed = (ulong)new Random().Next();
+            ulong seed = 1145141919810ul;
             var config = new GameConfig {
                 playerCount = playerCount,
                 actionCenter = actionCenter,

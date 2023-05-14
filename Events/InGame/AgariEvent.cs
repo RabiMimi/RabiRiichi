@@ -1,5 +1,6 @@
 using RabiRiichi.Communication;
 using RabiRiichi.Core;
+using RabiRiichi.Generated.Core;
 using RabiRiichi.Generated.Events.InGame;
 using RabiRiichi.Patterns;
 using System.Collections;
@@ -17,11 +18,13 @@ namespace RabiRiichi.Events.InGame {
             this.scores = scores;
         }
 
-        public AgariInfoMsg ToProto() {
-            return new AgariInfoMsg {
+        public AgariInfoMsg ToProto(IEnumerable<GameTileMsg> freeTiles) {
+            var ret = new AgariInfoMsg {
                 PlayerId = playerId,
                 Scores = scores.ToProto(),
             };
+            ret.FreeTiles.AddRange(freeTiles);
+            return ret;
         }
     }
 
@@ -70,7 +73,7 @@ namespace RabiRiichi.Events.InGame {
         }
         public override string name => "agari";
         #region Request
-        [RabiBroadcast] public bool isTsumo => agariInfos.incoming.IsTsumo;
+        public bool isTsumo => agariInfos.incoming.IsTsumo;
         [RabiBroadcast] public readonly AgariInfoList agariInfos;
         #endregion
 

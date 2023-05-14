@@ -59,6 +59,7 @@ namespace RabiRiichi.Tests.Communication.Proto {
                 new ScoreTransferList(),
                 new List<GameTile>(),
                 new List<List<GameTile>>(),
+                new List<GameTileMsg>(),
             };
             while (types.Count > 0) {
                 bool hasProgress = false;
@@ -81,11 +82,14 @@ namespace RabiRiichi.Tests.Communication.Proto {
                     hasProgress = true;
 
                     var method = type.GetMethod("ToProto");
-                    if (method.GetParameters().Length == 0) {
+                    var toProtoParams = method.GetParameters();
+                    if (toProtoParams.Length == 0) {
                         var proto = method.Invoke(instance, null);
                         Assert.IsNotNull(proto, $"{type.Name} has a ToProto method that returns null");
                     } else {
-                        var proto = method.Invoke(instance, new object[] { 0 });
+                        var args = toProtoParams.Select(p =>
+                            parameters.FirstOrDefault(pa => pa.GetType().IsAssignableTo(p.ParameterType))).ToArray();
+                        var proto = method.Invoke(instance, args);
                         Assert.IsNotNull(proto, $"{type.Name} has a ToProto method that returns null.");
                     }
 

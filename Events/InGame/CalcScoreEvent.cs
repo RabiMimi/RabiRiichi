@@ -46,11 +46,11 @@ namespace RabiRiichi.Events.InGame {
         public override string name => "calc_score";
 
         #region Request
-        [RabiBroadcast] public readonly AgariInfoList agariInfos;
+        public readonly AgariInfoList agariInfos;
         #endregion
 
         #region Response
-        [RabiBroadcast] public readonly ScoreTransferList scoreChange;
+        public readonly ScoreTransferList scoreChange;
         #endregion
 
         public CalcScoreEvent(EventBase parent, AgariInfoList agariInfos) : base(parent) {
