@@ -60,9 +60,15 @@ namespace RabiRiichi.Tests.Helper {
             Assert.AreEqual(tile.ToString(), str);
         }
 
+        public static void AssertEquals(this GameTile tile, string str)
+            => tile.tile.AssertEquals(str);
+
         public static void AssertEquals(this IEnumerable<Tile> tiles, string str) {
             new Tiles(tiles).AssertEquals(str);
         }
+
+        public static void AssertEquals(this IEnumerable<GameTile> tiles, string str)
+            => tiles.Select(t => t.tile).AssertEquals(str);
 
         public static void AssertEquals(this Tiles tiles, string str) {
             var newTiles = new Tiles(str);

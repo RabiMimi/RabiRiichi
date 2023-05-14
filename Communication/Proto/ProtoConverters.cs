@@ -278,11 +278,12 @@ namespace RabiRiichi.Communication.Proto {
             };
 
         [Produces]
-        public static ConcludeGameEventMsg ConvertConcludeGameEvent([Consumes] ConcludeGameEvent ev)
-            => new() {
-                Doras = ev.doras.ToString(),
-                Uradoras = ev.uradoras.ToString(),
-            };
+        public static ConcludeGameEventMsg ConvertConcludeGameEvent([Consumes] ConcludeGameEvent ev) {
+            var ret = new ConcludeGameEventMsg();
+            ret.Doras.AddRange(ev.doras.Select(tile => ConvertGameTile(tile, true)));
+            ret.Uradoras.AddRange(ev.uradoras.Select(tile => ConvertGameTile(tile, true)));
+            return ret;
+        }
 
         [Produces]
         public static DealerFirstTurnEventMsg ConvertDealerFirstTurnEvent(

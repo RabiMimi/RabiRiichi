@@ -2,6 +2,7 @@ using RabiRiichi.Communication;
 using RabiRiichi.Core;
 using RabiRiichi.Utils;
 using System;
+using System.Collections.Generic;
 
 namespace RabiRiichi.Events.InGame {
     [Flags]
@@ -29,8 +30,8 @@ namespace RabiRiichi.Events.InGame {
         #endregion
 
         #region Response
-        [RabiBroadcast] public readonly Tiles doras = new();
-        [RabiBroadcast] public readonly Tiles uradoras = new();
+        [RabiBroadcast] public readonly List<GameTile> doras = new();
+        [RabiBroadcast] public readonly List<GameTile> uradoras = new();
         #endregion
 
         public ConcludeGameEvent(EventBase parent, ConcludeGameReason reason, int[] tenpaiPlayers = null) : base(parent) {
