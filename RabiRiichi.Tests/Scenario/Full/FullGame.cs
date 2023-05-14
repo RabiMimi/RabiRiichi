@@ -21,7 +21,7 @@ namespace RabiRiichi.Tests.Scenario.Full {
 
         }
 
-        [TestMethod]
+        [TestMethod, Timeout(60 * 1000)]
         public async Task RunFullGame() {
             int playerCount = 4;
             var actionCenter = new ScenarioActionCenter(playerCount);
