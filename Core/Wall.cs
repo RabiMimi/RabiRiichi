@@ -52,6 +52,8 @@ namespace RabiRiichi.Core {
             doras.Clear();
             uradoras.Clear();
             idPool.Reset();
+            revealedDoraCount = 0;
+            revealedUradoraCount = 0;
             remaining.AddRange(config.initialTiles.Select(tile => new GameTile(tile, idPool.GetID())));
             rand.Shuffle(remaining);
             rinshan.AddRange(remaining.PopMany(NUM_RINSHAN));
