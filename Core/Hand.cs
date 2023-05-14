@@ -54,7 +54,8 @@ namespace RabiRiichi.Core {
         /// <summary> 听牌列表，无赤宝牌。不听牌时返回空List </summary>
         public Tiles Tenpai {
             get {
-                if (game.Get<PatternResolver>().ResolveShanten(this, null, out var tiles, 0) == 0) {
+                if (Count == Game.HAND_SIZE &&
+                    game.Get<PatternResolver>().ResolveShanten(this, null, out var tiles, 0) == 0) {
                     return tiles;
                 }
                 return Tiles.Empty;

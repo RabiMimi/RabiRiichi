@@ -144,6 +144,10 @@ namespace RabiRiichi.Tests.Patterns {
             Assert.AreEqual(0, Shanten("45s", null, 8,
                 "222s", "345s", "111p", "11z"));
             tiles.AssertEquals("36s");
+
+            Assert.AreEqual(0, Shanten("2s", "4s", 8,
+                "111s", "222p", "333p", "444p"));
+            tiles.AssertEquals("24s");
         }
 
         [TestMethod]
@@ -179,6 +183,21 @@ namespace RabiRiichi.Tests.Patterns {
             tiles.AssertEquals("12456789p");
 
             Assert.AreEqual(6, Shanten("348m247p159s1234z", "5z"));
+            tiles.AssertEquals("12345z159s8m7p");
+        }
+
+        [TestMethod]
+        public void TestShanten14Tiles() {
+            Assert.AreEqual(-1, Shanten("11133355577799s", null));
+            tiles.AssertEquals("");
+
+            Assert.AreEqual(5, Shanten("12246m1p2688s1257z", null));
+            tiles.AssertEquals("126m268s1p1257z");
+
+            Assert.AreEqual(1, Shanten("1224r5p566678889p", null));
+            tiles.AssertEquals("12456789p");
+
+            Assert.AreEqual(6, Shanten("348m247p159s12345z", null));
             tiles.AssertEquals("12345z159s8m7p");
         }
         #endregion
