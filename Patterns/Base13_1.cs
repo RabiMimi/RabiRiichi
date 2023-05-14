@@ -2,6 +2,7 @@
 using RabiRiichi.Utils;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace RabiRiichi.Patterns {
@@ -9,6 +10,7 @@ namespace RabiRiichi.Patterns {
     public class Base13_1 : BasePattern {
         private static readonly Tiles T19Z = Tiles.T19Z;
 
+        /// <inheritdoc/>
         public override bool Resolve(Hand hand, GameTile incoming, out List<List<MenLike>> output) {
             output = null;
             // Check tile count
@@ -35,6 +37,7 @@ namespace RabiRiichi.Patterns {
             return true;
         }
 
+        /// <inheritdoc/>
         public override int Shanten(Hand hand, GameTile incoming, out Tiles output, int maxShanten = 13) {
             if (hand.called.Count > 1 ||
                 hand.called.Any(gr => gr is not Jantou || !gr.All(t => t.tile.Is19Z))) {
@@ -55,8 +58,14 @@ namespace RabiRiichi.Patterns {
             if (ret > maxShanten) {
                 return Reject(out output);
             }
-            if (incoming == null) {
-                // 13张，计算有效进张
+            if (ShouldComputeDiscard(hand, incoming)) {
+                // 计算切牌
+                var tiles = GetHand(hand.freeTiles, incoming);
+                output = new Tiles(tiles
+                    .Where(t => !t.Is19Z || buckets.GetBucket(t).Count > (multiCnt > 1 ? 1 : 2))
+                    .Distinct());
+            } else {
+                // 计算有效进张
                 if (multiCnt > 0) {
                     output = new Tiles(T19Z);
                     foreach (var t in existing) {
@@ -65,12 +74,6 @@ namespace RabiRiichi.Patterns {
                 } else {
                     output = new Tiles(T19Z);
                 }
-            } else {
-                // 14张，计算切牌
-                var tiles = GetHand(hand.freeTiles, incoming);
-                output = new Tiles(tiles
-                    .Where(t => !t.Is19Z || buckets.GetBucket(t).Count > (multiCnt > 1 ? 1 : 2))
-                    .Distinct());
             }
             return ret;
         }

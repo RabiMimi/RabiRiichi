@@ -107,6 +107,7 @@ namespace RabiRiichi.Patterns {
         /// <param name="hand">手牌</param>
         /// <param name="incoming">进张，若为null则计算听牌，否则计算切牌</param>
         /// <param name="maxShanten">不计算超过该向听数的结果以加速</param>
+        /// <returns>向听数。-1 表示已经和牌。</returns>
         public int ResolveShanten(Hand hand, GameTile incoming, out Tiles tiles, int maxShanten = int.MaxValue) {
             int retShanten = int.MaxValue;
             tiles = new Tiles();

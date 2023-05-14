@@ -144,6 +144,7 @@ namespace RabiRiichi.Patterns {
             }
         }
 
+        /// <inheritdoc/>
         public override bool Resolve(Hand hand, GameTile incoming, out List<List<MenLike>> output) {
             output = null;
             // Check tile count
@@ -201,9 +202,7 @@ namespace RabiRiichi.Patterns {
             public readonly Dictionary<DpLoc, int>[,] visitedDp = new Dictionary<DpLoc, int>[5, 10];
 
             public static void Add(ref DpVal list, int dist, DpLoc loc) {
-                if (list == null) {
-                    list = new DpVal();
-                }
+                list ??= new DpVal();
                 list.Update(dist, loc);
             }
         }
@@ -239,6 +238,7 @@ namespace RabiRiichi.Patterns {
             return dist;
         }
 
+        /// <inheritdoc/>
         public override int Shanten(Hand hand, GameTile incoming, out Tiles output, int maxShanten = 8) {
             int maxDist = Math.Min(Game.HAND_SIZE, maxShanten) + 1; // 最大修改距离为向听数+1
             if (maxDist < 0) {
@@ -274,6 +274,7 @@ namespace RabiRiichi.Patterns {
             int Lj = dpPre.GetLength(0);
             int Lk = dpPre.GetLength(2);
             int Ll = dpPre.GetLength(3);
+            bool computeDiscard = ShouldComputeDiscard(hand, incoming);
 
             // 计算dp
             for (TileSuit i1 = TileSuit.M; i1 <= TileSuit.Z; i1++) {
@@ -307,7 +308,7 @@ namespace RabiRiichi.Patterns {
                                         for (int newL = Math.Max(0, minCnt); newL < Ll; newL++) {
                                             int newJ1 = (newL - minCnt) % 3;
                                             DpContext.Add(ref dpCur[newJ2, newJ1, newK, newL],
-                                                prevList.dist + Math.Max(0, incoming == null ? (newL - l) : (l - newL)),
+                                                prevList.dist + Math.Max(0, computeDiscard ? (l - newL) : (newL - l)),
                                                 ((byte)j2, (byte)j1, (byte)k, (byte)l));
                                         }
                                     }
@@ -321,7 +322,7 @@ namespace RabiRiichi.Patterns {
             }
 
             // 检查非法输入
-            DpLoc destLoc = (0, 0, 1, (byte)(incoming == null ? maxDist + 1 : maxDist));
+            DpLoc destLoc = (0, 0, 1, (byte)(computeDiscard ? maxDist : maxDist + 1));
             var dest = dpPre[destLoc.Item1, destLoc.Item2, destLoc.Item3, destLoc.Item4];
             if (dest == null || dest.dist > maxDist) {
                 return Reject(out output);

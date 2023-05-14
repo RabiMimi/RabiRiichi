@@ -239,6 +239,10 @@ namespace RabiRiichi.Core {
             }
         }
 
+        public bool ContainsIgnoreDora(Tile tile) {
+            return this.Any(t => t.IsSame(tile));
+        }
+
         public override string ToString() {
             var builder = new StringBuilder();
             char group = '\0';

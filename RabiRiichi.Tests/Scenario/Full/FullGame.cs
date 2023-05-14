@@ -15,10 +15,15 @@ namespace RabiRiichi.Tests.Scenario.Full {
             var resolver = hand.game.Get<PatternResolver>();
             var incoming = action.options.Select(op => op.tile)
                 .FirstOrDefault(t => !hand.freeTiles.Any(ft => ft.traceId == t.traceId));
-            resolver.ResolveShanten(hand, incoming, out var tiles);
-            var selected = action.options.FindIndex(op => tiles.Contains(op.tile.tile));
-            return selected < 0 ? action.response : selected;
-
+            int shanten = resolver.ResolveShanten(hand, incoming, out var tiles);
+            var selected = action.options.FindIndex(op => tiles.ContainsIgnoreDora(op.tile.tile));
+            if (selected < 0) {
+                if (shanten >= 0) {
+                    Logger.Log($"SmartPlayTile: no tile found from {tiles}");
+                }
+                return action.response;
+            }
+            return selected;
         }
 
         [TestMethod, Timeout(60 * 1000)]

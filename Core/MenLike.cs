@@ -33,7 +33,7 @@ namespace RabiRiichi.Core {
         public abstract bool IsSame(MenLike other);
 
         /// <summary> 判定是否有给出的牌，赤宝牌视为相同牌 </summary>
-        public bool Contains(Tile tile) {
+        public bool ContainsIgnoreDora(Tile tile) {
             return this.Any(t => t.tile.IsSame(tile));
         }
 

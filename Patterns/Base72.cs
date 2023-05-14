@@ -6,6 +6,7 @@ using System.Linq;
 namespace RabiRiichi.Patterns {
 
     public class Base72 : BasePattern {
+        /// <inheritdoc/>
         public override bool Resolve(Hand hand, GameTile incoming, out List<List<MenLike>> output) {
             output = null;
             // Check tile count
@@ -29,6 +30,7 @@ namespace RabiRiichi.Patterns {
             return true;
         }
 
+        /// <inheritdoc/>
         public override int Shanten(Hand hand, GameTile incoming, out Tiles output, int maxShanten = 13) {
             if (hand.called.Any(gr => gr is not Jantou)) {
                 return Reject(out output);
@@ -48,17 +50,7 @@ namespace RabiRiichi.Patterns {
             if (ret > maxShanten) {
                 return Reject(out output);
             }
-            if (incoming == null) {
-                // 13张，计算进张
-                if (singleTiles.Length >= requiredSingle) {
-                    output = new Tiles(singleTiles);
-                } else {
-                    output = Tiles.AllDistinct;
-                    foreach (var pair in existingPairs) {
-                        output.Remove(pair[0].tile.WithoutDora);
-                    }
-                }
-            } else {
+            if (ShouldComputeDiscard(hand, incoming)) {
                 // 14张，计算切牌
                 var tiles = GetHand(hand.freeTiles, incoming);
                 output = new Tiles(tiles.Where(tile => {
@@ -69,6 +61,16 @@ namespace RabiRiichi.Patterns {
                         return cnt > 2;
                     }
                 }).Distinct());
+            } else {
+                // 13张，计算进张
+                if (singleTiles.Length >= requiredSingle) {
+                    output = new Tiles(singleTiles);
+                } else {
+                    output = Tiles.AllDistinct;
+                    foreach (var pair in existingPairs) {
+                        output.Remove(pair[0].tile.WithoutDora);
+                    }
+                }
             }
             return ret;
         }
