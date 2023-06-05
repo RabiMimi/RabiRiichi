@@ -9,6 +9,7 @@ namespace RabiRiichi.Events.InGame.Listener {
     public static class KanListener {
         public static Task ExecuteKan(KanEvent ev) {
             // Pretend that kan tile is discarded to resolve chankan, and recover state later
+            using var _ = ev.incoming.Freeze();
             ev.player.hand.Play(ev.incoming, DiscardReason.Chankan);
 
             // Resolve chankan
@@ -24,7 +25,7 @@ namespace RabiRiichi.Events.InGame.Listener {
                 // 若有人抢杠，杠在荣和后成立
                 var addKanEvent = new AddKanEvent(ev);
                 ev.Q.Queue(addKanEvent);
-                // 若游戏进入下一局，不要执行抢杠事件
+                // 若游戏进入下一局，不要执行添加杠事件
                 ev.bus.Subscribe<NextGameEvent>((e) => {
                     addKanEvent.Cancel();
                     return Task.CompletedTask;
