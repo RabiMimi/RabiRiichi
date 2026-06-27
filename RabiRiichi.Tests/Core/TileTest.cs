@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Core;
 using RabiRiichi.Tests.Helper;
 using System;
@@ -28,7 +28,7 @@ namespace RabiRiichi.Tests.Core {
 
         [TestMethod]
         public void TestEquality() {
-            Assert.AreNotEqual(new Tile("3s"), "3s");
+            Assert.AreNotEqual<object>(new Tile("3s"), "3s");
             Assert.IsTrue(new Tile("3s") != new Tile("r3s"));
         }
     }
