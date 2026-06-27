@@ -33,6 +33,18 @@ namespace RabiRiichi.Core.Config {
         Default = SufficientPoints | SufficientTiles,
     }
 
+    /// <summary> 点数扣减策略 </summary>
+    public enum PointsDeductionPolicy {
+        /// <summary> 总是允许扣减 </summary>
+        AlwaysAllow,
+        /// <summary> 扣减后玩家点数不小于有效点数下限（通常是不被飞） </summary>
+        SufficientPoints,
+        /// <summary> 扣减前玩家点数在有效点数范围内（通常是未被飞） </summary>
+        ValidPoints,
+        /// <summary> 总是禁止扣减 </summary>
+        AlwaysBlock,
+    }
+
     /// <summary> 流局方式 </summary>
     [Flags]
     public enum RyuukyokuTrigger {

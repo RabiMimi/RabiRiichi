@@ -45,7 +45,11 @@ namespace RabiRiichi.Core.Config {
 
         /// <summary> 中途流局 </summary>
         [RabiBroadcast] public RyuukyokuTrigger ryuukyokuTrigger = RyuukyokuTrigger.Default;
+
+        /// <summary> 技能点数扣减策略 </summary>
+        [RabiBroadcast] public PointsDeductionPolicy pointsDeductionPolicy = PointsDeductionPolicy.SufficientPoints;
         #endregion
+
 
         #region Helper methods
         public long HonbaPointsForOnePlayer(int honba) {
@@ -90,8 +94,10 @@ namespace RabiRiichi.Core.Config {
                 ScoringOption = (int)scoringOption,
                 RyuukyokuTrigger = (int)ryuukyokuTrigger,
                 Seed = seed ?? 0,
+                PointsDeductionPolicy = (int)pointsDeductionPolicy,
             };
         }
+
         #endregion
     }
 }

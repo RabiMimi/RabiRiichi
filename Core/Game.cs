@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using RabiRiichi.Actions;
 using RabiRiichi.Communication.Proto;
 using RabiRiichi.Core.Config;
@@ -51,6 +51,8 @@ namespace RabiRiichi.Core {
             serviceCollection.AddSingleton<Wall>();
             serviceCollection.AddSingleton<GameInfo>();
             serviceCollection.AddSingleton<PatternResolver>();
+            serviceCollection.AddSingleton<SkillPointsUpdater>();
+
 
             // Custom setup
             config.setup.Inject(this, serviceCollection);
