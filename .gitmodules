@@ -1,3 +1,3 @@
 [submodule "Protos"]
 	path = Protos
-	url = git@github.com:RabiMimi/RabiRiichi-Proto.git
+	url = https://github.com/RabiMimi/RabiRiichi-Proto.git
