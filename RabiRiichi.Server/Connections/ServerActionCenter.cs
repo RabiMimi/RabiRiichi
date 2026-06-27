@@ -40,8 +40,13 @@ namespace RabiRiichi.Server.Connections {
       if (inquiry == null) {
         return null;
       }
+      var singlePlayerInquiryMsg = ctx.inquiry.game.SerializeProto<SinglePlayerInquiryMsg>(inquiry, seat);
+      if (singlePlayerInquiryMsg != null && ctx.inquiry.timeout > TimeSpan.Zero) {
+        double clientTimeout = Math.Max(0.0, ctx.inquiry.timeout.TotalSeconds - 3.0);
+        singlePlayerInquiryMsg.TimeoutSeconds = clientTimeout;
+      }
       var inquiryMsg = new ServerInquiryMsg {
-        Inquiry = ctx.inquiry.game.SerializeProto<SinglePlayerInquiryMsg>(inquiry, seat)
+        Inquiry = singlePlayerInquiryMsg
       };
       var msg = SendMessage(seat, ProtoUtils.CreateDto(inquiryMsg));
       if (msg != null) {

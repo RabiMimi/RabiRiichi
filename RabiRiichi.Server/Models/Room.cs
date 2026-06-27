@@ -90,10 +90,10 @@ namespace RabiRiichi.Server.Models {
         return;
       }
       game?.SyncGameStateToPlayer(user.Seat).ContinueWith(t => {
-          if (config.actionCenter is ServerActionCenter sac) {
-            sac.SyncInquiryTo(user.Seat);
-          }
-        });
+        if (config.actionCenter is ServerActionCenter sac) {
+          sac.SyncInquiryTo(user.Seat);
+        }
+      });
     }
 
     public bool GetReady(User user) {
@@ -152,6 +152,9 @@ namespace RabiRiichi.Server.Models {
     }
 
     public int SeatIndexOf(User user) {
+      if (seats.Contains(user)) {
+        return Array.IndexOf(seats, user);
+      }
       return players.IndexOf(user);
     }
 

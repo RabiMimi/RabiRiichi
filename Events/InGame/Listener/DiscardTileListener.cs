@@ -12,6 +12,7 @@ namespace RabiRiichi.Events.InGame.Listener {
       foreach (var resolver in resolvers) {
         resolver.Resolve(ev.player, ev.discarded, ev.waitEvent.inquiry);
       }
+      ev.waitEvent.timeout = System.TimeSpan.FromSeconds(ev.game.config.gameplayActionTimeout);
       AddPlayerAction(ev);
       ev.Q.Queue(ev.waitEvent);
       return Task.CompletedTask;

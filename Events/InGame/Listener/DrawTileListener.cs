@@ -1,4 +1,4 @@
-﻿using RabiRiichi.Actions;
+using RabiRiichi.Actions;
 using RabiRiichi.Actions.Resolver;
 using RabiRiichi.Core;
 using RabiRiichi.Generated.Core;
@@ -44,6 +44,7 @@ namespace RabiRiichi.Events.InGame.Listener {
         resolver.Resolve(e.player, e.tile, e.waitEvent.inquiry);
       }
       e.waitEvent.inquiry.GetByPlayerId(e.playerId).DisableSkip();
+      e.waitEvent.timeout = TimeSpan.FromSeconds(e.game.config.gameplayActionTimeout);
       AddActionHandler(e.waitEvent, e.source == TileSource.Wanpai
           ? DiscardReason.DrawRinshan : DiscardReason.Draw);
       e.Q.Queue(e.waitEvent);

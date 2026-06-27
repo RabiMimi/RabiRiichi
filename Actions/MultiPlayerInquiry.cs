@@ -37,6 +37,7 @@ namespace RabiRiichi.Actions {
     private readonly TaskCompletionSource finishTcs = new();
     public readonly List<IPlayerAction> responses = [];
     public readonly List<IResponseHandler> responseHandlers = [];
+    public TimeSpan timeout = TimeSpan.Zero;
     /// <summary> 当前已回应的用户的最高优先级 </summary>
     private int curMaxPriority = int.MinValue;
     public AtomicBool hasExecuted { get; private set; } = new();

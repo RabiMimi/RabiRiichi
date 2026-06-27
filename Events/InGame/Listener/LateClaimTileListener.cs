@@ -40,6 +40,7 @@ namespace RabiRiichi.Events.InGame.Listener {
         PlayTileResolver.ResolveAction(ev.player, null, ev.waitEvent.inquiry, null);
       }
       ev.waitEvent.inquiry.GetByPlayerId(ev.playerId).DisableSkip();
+      ev.waitEvent.timeout = System.TimeSpan.FromSeconds(ev.game.config.gameplayActionTimeout);
       DrawTileListener.AddActionHandler(ev.waitEvent, ev.reason);
       ev.Q.Queue(ev.waitEvent);
       return Task.CompletedTask;

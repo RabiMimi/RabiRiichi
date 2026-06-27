@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 namespace RabiRiichi.Events.InGame.Listener {
   public static class WaitPlayerActionListener {
     public static async Task ExecuteWaitPlayer(WaitPlayerActionEvent e) {
+      e.inquiry.timeout = e.timeout;
       e.game.SendInquiry(e.inquiry);
       CancellationTokenSource cts = null;
       if (e.timeout > TimeSpan.Zero) {

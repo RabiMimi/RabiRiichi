@@ -17,6 +17,7 @@ namespace RabiRiichi.Events.InGame.Listener {
       foreach (var resolver in resolvers) {
         resolver.Resolve(ev.player, ev.incoming, ev.waitEvent.inquiry);
       }
+      ev.waitEvent.timeout = System.TimeSpan.FromSeconds(ev.game.config.gameplayActionTimeout);
       ev.waitEvent.inquiry.AddHandler<RonAction>((action) => {
         ev.waitEvent.eventBuilder.AddAgari(ev.waitEvent, ev.playerId, ev.incoming, action.agariInfo);
       });
