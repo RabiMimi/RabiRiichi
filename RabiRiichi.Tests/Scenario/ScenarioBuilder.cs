@@ -81,7 +81,9 @@ namespace RabiRiichi.Tests.Scenario {
       // Clear events, so that the initial event will not be processed
       game.mainQueue.ClearEvents();
       game.eventBus.Subscribe<EventBase>((ev) => {
-        events.Add(ev);
+        lock (events) {
+          events.Add(ev);
+        }
         return Task.CompletedTask;
       }, EventPriority.Broadcast);
       if (game.IsFirstJun && game.Dealer.id == startPlayerId) {
@@ -145,23 +147,25 @@ namespace RabiRiichi.Tests.Scenario {
 
     /// <summary> 立即测试现有事件是否匹配 </summary>
     public Scenario ResolveImmediately() {
-      int eventI = 0;
-      foreach (var matcher in eventMatchers) {
-        while (eventI < events.Count && !matcher(events[eventI])) {
-          eventI++;
+      lock (events) {
+        int eventI = 0;
+        foreach (var matcher in eventMatchers) {
+          while (eventI < events.Count && !matcher(events[eventI])) {
+            eventI++;
+          }
+          if (eventI >= events.Count) {
+            Assert.Fail($"No event matched: {string.Join(", ", events.Select(ev => ev.GetType().Name))}");
+          }
         }
-        if (eventI >= events.Count) {
-          Assert.Fail($"No event matched: {string.Join(", ", events.Select(ev => ev.GetType().Name))}");
+        foreach (var matcher in noEventMatchers) {
+          if (events.Any((e) => matcher(e))) {
+            Assert.Fail($"Event matched: {string.Join(", ", events.Select(ev => ev.GetType().Name))}");
+          }
         }
+        eventMatchers.Clear();
+        noEventMatchers.Clear();
+        events.Clear();
       }
-      foreach (var matcher in noEventMatchers) {
-        if (events.Any((e) => matcher(e))) {
-          Assert.Fail($"Event matched: {string.Join(", ", events.Select(ev => ev.GetType().Name))}");
-        }
-      }
-      eventMatchers.Clear();
-      noEventMatchers.Clear();
-      events.Clear();
       return this;
     }
 
@@ -353,6 +357,12 @@ namespace RabiRiichi.Tests.Scenario {
       /// <summary> 设置计分选项 </summary>
       public GameConfigBuilder SetScoringOption(ScoringOption option) {
         config.scoringOption = option;
+        return this;
+      }
+
+      /// <summary> 设置下一局确认超时时间（秒） </summary>
+      public GameConfigBuilder SetNextRoundAckTimeout(double timeout) {
+        config.nextRoundAckTimeout = timeout;
         return this;
       }
 

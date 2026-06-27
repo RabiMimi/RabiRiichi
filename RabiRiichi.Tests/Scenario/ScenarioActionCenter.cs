@@ -218,6 +218,7 @@ namespace RabiRiichi.Tests.Scenario {
     private TaskCompletionSource currentInquirySource = null;
     public Task CurrentInquiry => currentInquirySource.Task;
     public readonly GameLogMsg gameLog = new();
+    public bool autoAckNextRound = true;
 
     public ScenarioActionCenter(int playerCount) {
       this.playerCount = playerCount;
@@ -285,11 +286,24 @@ namespace RabiRiichi.Tests.Scenario {
         OnMessage(playerInquiry.playerId, playerInquiry);
       }
       SendImmediately();
+      if (autoAckNextRound && inquiry.playerInquiries.Count > 0 && inquiry.playerInquiries.All(p => p.actions.All(a => a is NextRoundAction))) {
+        inquiry.Finish();
+        return;
+      }
       currentInquirySource = new();
-      nextInquirySource.SetResult(new ScenarioInquiryMatcher(inquiry, () => {
+      var hasFinished = new AtomicBool();
+      Action onFinish = () => {
+        if (hasFinished.Exchange(true)) {
+          return;
+        }
         nextInquirySource = new();
         currentInquirySource.SetResult();
-      }));
+      };
+      var matcher = new ScenarioInquiryMatcher(inquiry, onFinish);
+      _ = inquiry.WaitForFinish.ContinueWith(_ => {
+        onFinish();
+      }, System.Threading.CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+      nextInquirySource.SetResult(matcher);
     }
 
     private void OnMessage(int playerId, object msg) {

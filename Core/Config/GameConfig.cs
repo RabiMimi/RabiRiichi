@@ -48,6 +48,9 @@ namespace RabiRiichi.Core.Config {
 
     /// <summary> 技能点数扣减策略 </summary>
     [RabiBroadcast] public PointsDeductionPolicy pointsDeductionPolicy = PointsDeductionPolicy.SufficientPoints;
+
+    /// <summary> 下一局确认超时时间（秒） </summary>
+    [RabiBroadcast] public double nextRoundAckTimeout = 15.0;
     #endregion
 
 
@@ -92,6 +95,7 @@ namespace RabiRiichi.Core.Config {
         RyuukyokuTrigger = (int)ryuukyokuTrigger,
         Seed = seed ?? 0,
         PointsDeductionPolicy = (int)pointsDeductionPolicy,
+        NextRoundAckTimeout = nextRoundAckTimeout,
       };
     }
 

@@ -56,6 +56,11 @@ namespace RabiRiichi.Communication.Proto {
     public static PlayerActionMsg ConvertSkipActionMsg([Consumes] SkipActionMsg action) {
       return new() { SkipAction = action };
     }
+
+    [Produces]
+    public static PlayerActionMsg ConvertNextRoundActionMsg([Consumes] NextRoundActionMsg action) {
+      return new() { NextRoundAction = action };
+    }
     #endregion
 
     #region EventMsg
@@ -275,6 +280,11 @@ namespace RabiRiichi.Communication.Proto {
 
     [Produces]
     public static SkipActionMsg ConvertSkipAction([Consumes] SkipAction _) {
+      return new();
+    }
+
+    [Produces]
+    public static NextRoundActionMsg ConvertNextRoundAction([Consumes] NextRoundAction _) {
       return new();
     }
     #endregion

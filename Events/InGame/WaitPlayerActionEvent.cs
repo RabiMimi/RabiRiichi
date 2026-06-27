@@ -1,5 +1,6 @@
 using RabiRiichi.Actions;
 using RabiRiichi.Communication;
+using System;
 using System.Collections.Generic;
 
 namespace RabiRiichi.Events.InGame {
@@ -10,6 +11,7 @@ namespace RabiRiichi.Events.InGame {
     #region Request
     public readonly MultiPlayerInquiry inquiry;
     public readonly MultiEventBuilder eventBuilder = new();
+    public TimeSpan timeout = TimeSpan.Zero;
     #endregion
 
     #region Response

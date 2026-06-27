@@ -1,5 +1,7 @@
+using RabiRiichi.Actions;
 using RabiRiichi.Core.Config;
 using RabiRiichi.Utils;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -78,7 +80,18 @@ namespace RabiRiichi.Events.InGame.Listener {
           return Task.CompletedTask;
         }
       }
-      ev.Q.Queue(new BeginGameEvent(ev, ev.nextRound, ev.nextDealer, ev.nextHonba, ev.riichiStick));
+
+      var ackWait = new WaitPlayerActionEvent(ev) {
+        timeout = TimeSpan.FromSeconds(ev.game.config.nextRoundAckTimeout)
+      };
+      foreach (var player in players) {
+        ackWait.inquiry.Add(new NextRoundAction(player.id));
+        ackWait.inquiry.GetByPlayerId(player.id).DisableSkip();
+      }
+      ackWait.OnFinish += () => {
+        ev.Q.Queue(new BeginGameEvent(ev, ev.nextRound, ev.nextDealer, ev.nextHonba, ev.riichiStick));
+      };
+      ev.Q.Queue(ackWait);
       return Task.CompletedTask;
     }
 
