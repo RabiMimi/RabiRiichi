@@ -1,4 +1,4 @@
-﻿using RabiRiichi.Core;
+using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
 using RabiRiichi.Patterns;
 using RabiRiichi.Utils;
@@ -41,7 +41,7 @@ namespace RabiRiichi.Actions.Resolver {
       }
       var handRiichiTiles = hand.freeTiles.Append(incoming).Where(t => riichiTiles.Contains(t.tile.WithoutDora)).ToList();
       if (handRiichiTiles.Count > 0) {
-        output.Add(new RiichiAction(player.id, handRiichiTiles, incoming));
+        output.Add(new RiichiAction(player, handRiichiTiles, incoming));
         return true;
       }
       return false;

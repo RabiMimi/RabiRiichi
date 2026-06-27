@@ -191,10 +191,34 @@ namespace RabiRiichi.Communication.Proto {
       return ret;
     }
 
+    private static TenpaiInfoMsg ConvertTenpaiInfo(TenpaiInfo info) {
+      return new TenpaiInfoMsg {
+        WinningTile = info.winningTile.Val,
+        RemainingCount = info.remainingCount,
+        Han = info.han,
+        Fu = info.fu,
+        Yakuman = info.yakuman,
+        Points = info.points,
+      };
+    }
+
+    private static DiscardCandidateMsg ConvertDiscardCandidate(DiscardCandidate candidate) {
+      var msg = new DiscardCandidateMsg {
+        Tile = ConvertGameTile(candidate.tile, true),
+      };
+      if (candidate.tenpaiInfos != null) {
+        msg.TenpaiInfos.AddRange(candidate.tenpaiInfos.Select(ConvertTenpaiInfo));
+      }
+      return msg;
+    }
+
     [Produces]
     public static RiichiActionMsg ConvertRiichiAction([Consumes] RiichiAction action) {
       var ret = new RiichiActionMsg();
       ret.Tiles.AddRange(ConvertTileOptions(action.options));
+      if (action.candidates != null) {
+        ret.Candidates.AddRange(action.candidates.Select(ConvertDiscardCandidate));
+      }
       return ret;
     }
 
@@ -206,6 +230,9 @@ namespace RabiRiichi.Communication.Proto {
     public static PlayTileActionMsg ConvertSkipAction([Consumes] PlayTileAction action) {
       var ret = new PlayTileActionMsg();
       ret.Tiles.AddRange(ConvertTileOptions(action.options));
+      if (action.candidates != null) {
+        ret.Candidates.AddRange(action.candidates.Select(ConvertDiscardCandidate));
+      }
       return ret;
     }
 

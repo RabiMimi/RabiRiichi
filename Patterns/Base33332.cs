@@ -1,4 +1,4 @@
-﻿using RabiRiichi.Core;
+using RabiRiichi.Core;
 using RabiRiichi.Utils;
 using System;
 using System.Collections.Generic;
@@ -122,7 +122,7 @@ namespace RabiRiichi.Patterns {
         bucket2 = context.tileBucket.GetBucket(nxt2.Suit, nxt2.Num);
       }
       // 枚举刻子数量
-      var save = context.Save();
+      using var save = context.Save();
       while (true) {
         // 检查顺子
         if (bucket.Count == 0) {

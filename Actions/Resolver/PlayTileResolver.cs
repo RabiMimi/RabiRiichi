@@ -1,4 +1,4 @@
-﻿using RabiRiichi.Core;
+using RabiRiichi.Core;
 using System.Collections.Generic;
 
 namespace RabiRiichi.Actions.Resolver {
@@ -28,7 +28,7 @@ namespace RabiRiichi.Actions.Resolver {
         return false;
       }
       tiles.Sort();
-      output.Add(new PlayTileAction(player.id, tiles, incoming));
+      output.Add(new PlayTileAction(player, tiles, incoming));
       return true;
     }
   }
