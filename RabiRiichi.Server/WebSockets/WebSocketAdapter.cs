@@ -54,7 +54,15 @@ namespace RabiRiichi.Server.WebSockets {
     }
 
     public async Task Close() {
-      await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+      if (ws.State == WebSocketState.Open || ws.State == WebSocketState.CloseReceived || ws.State == WebSocketState.CloseSent) {
+        try {
+          await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+        } catch (WebSocketException) {
+          // Gracefully ignore since it's already closing or closed
+        } catch (ObjectDisposedException) {
+          // Gracefully ignore
+        }
+      }
     }
   }
 }
