@@ -6,11 +6,14 @@ using System.Collections.Concurrent;
 using System.Net.WebSockets;
 
 namespace RabiRiichi.Server.Connections {
-  public class RabiStreamingContext {
+  public class RabiStreamingContext(
+      Connection connection,
+      IAsyncStreamReader<ClientMessageDto> requestStream,
+      IServerStreamWriter<ServerMessageDto> responseStream) {
     /// <summary>
     /// Parent connection.
     /// </summary>
-    public readonly Connection connection;
+    public readonly Connection connection = connection;
 
     /// <summary>
     /// Cancellation token source for all event loops related to this stream.
@@ -30,17 +33,17 @@ namespace RabiRiichi.Server.Connections {
     /// <summary>
     /// Incoming message stream.
     /// </summary>
-    private readonly IAsyncStreamReader<ClientMessageDto> requestStream;
+    private readonly IAsyncStreamReader<ClientMessageDto> requestStream = requestStream;
 
     /// <summary>
     /// Outgoing message stream.
     /// </summary>
-    private readonly IServerStreamWriter<ServerMessageDto> responseStream;
+    private readonly IServerStreamWriter<ServerMessageDto> responseStream = responseStream;
 
     /// <summary>
     /// Message queue
     /// </summary>
-    private readonly ConcurrentBag<ServerMessageWrapper> msgQueue = new();
+    private readonly ConcurrentBag<ServerMessageWrapper> msgQueue = [];
 
     /// <summary>
     /// Whether the connection is closing and no more messages can be queued.
@@ -62,25 +65,14 @@ namespace RabiRiichi.Server.Connections {
     /// </summary>
     private int lastBroadcastedMsgId = 0;
 
-    public RabiStreamingContext(
-        Connection connection,
-        IAsyncStreamReader<ClientMessageDto> requestStream,
-        IServerStreamWriter<ServerMessageDto> responseStream) {
-      this.connection = connection;
-      this.requestStream = requestStream;
-      this.responseStream = responseStream;
-    }
-
     /// <summary>
     /// Run all loops related to this connection.<br/>
     /// Must call this method before using any callbacks.
     /// </summary>
     public async Task RunLoops(params Task[] extraTasks) {
       await Task.WhenAll(
-          extraTasks
-              .Append(SendMsgLoop())
-              .Append(ReceiveMsgLoop())
-              .ToArray()
+          [.. extraTasks
+, SendMsgLoop(), ReceiveMsgLoop()]
       );
       // Close connection for websocket compatibility.
       if (requestStream is WebSocketAdapter adapter) {

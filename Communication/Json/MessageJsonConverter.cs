@@ -6,12 +6,8 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace RabiRiichi.Communication.Json {
-  public class MessageJsonConverter : JsonConverterFactory {
-    public readonly int playerId;
-
-    public MessageJsonConverter(int playerId) {
-      this.playerId = playerId;
-    }
+  public class MessageJsonConverter(int playerId) : JsonConverterFactory {
+    public readonly int playerId = playerId;
 
     public override bool CanConvert(Type typeToConvert) {
       return typeToConvert.Has<RabiMessageAttribute>();
@@ -22,7 +18,7 @@ namespace RabiRiichi.Communication.Json {
           typeof(RabiMessageConverter<>).MakeGenericType(typeToConvert),
           BindingFlags.Instance | BindingFlags.Public,
           binder: null,
-          args: new object[] { playerId },
+          args: [playerId],
           culture: null
       );
     }
@@ -30,10 +26,7 @@ namespace RabiRiichi.Communication.Json {
     private class RabiMessageReflectionData {
       private static readonly ConcurrentDictionary<Type, RabiMessageReflectionData> reflectionDataDict = new();
       public static RabiMessageReflectionData Of(Type type) {
-        if (type.Has<RabiIgnoreAttribute>()) {
-          return null;
-        }
-        return reflectionDataDict.GetOrAdd(type, _ => new RabiMessageReflectionData(type));
+        return type.Has<RabiIgnoreAttribute>() ? null : reflectionDataDict.GetOrAdd(type, _ => new RabiMessageReflectionData(type));
       }
 
       public readonly MemberInfo[] AllMembers;
@@ -56,8 +49,8 @@ namespace RabiRiichi.Communication.Json {
 
         var BroadCastProperties = AllProperties.Where(p => p.Has<RabiBroadcastAttribute>());
         var BroadCastFields = AllFields.Where(f => f.Has<RabiBroadcastAttribute>());
-        AllMembers = AllProperties.Cast<MemberInfo>().Concat(AllFields).ToArray();
-        BroadCastMembers = BroadCastProperties.Cast<MemberInfo>().Concat(BroadCastFields).ToArray();
+        AllMembers = [.. AllProperties.Cast<MemberInfo>(), .. AllFields];
+        BroadCastMembers = [.. BroadCastProperties.Cast<MemberInfo>(), .. BroadCastFields];
 
         if (!type.IsAssignableTo(typeof(IRabiPlayerMessage))) {
           if (AllMembers.Length != BroadCastMembers.Length) {
@@ -70,7 +63,7 @@ namespace RabiRiichi.Communication.Json {
       }
     }
 
-    private class RabiMessageConverter<T> : JsonConverter<T> {
+    private class RabiMessageConverter<T>(int playerId) : JsonConverter<T> {
       private static object GetValue(MemberInfo info, object obj) {
         return info.MemberType switch {
           MemberTypes.Property => ((PropertyInfo)info).GetValue(obj),
@@ -79,11 +72,7 @@ namespace RabiRiichi.Communication.Json {
         };
       }
 
-      private readonly int playerId;
-
-      public RabiMessageConverter(int playerId) {
-        this.playerId = playerId;
-      }
+      private readonly int playerId = playerId;
 
       public override T Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
         var newOptions = new JsonSerializerOptions(options);

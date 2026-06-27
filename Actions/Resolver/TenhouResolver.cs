@@ -6,12 +6,8 @@ namespace RabiRiichi.Actions.Resolver {
   /// <summary>
   /// 判定是否可以天和
   /// </summary>
-  public class TenhouResolver : ResolverBase {
-    protected readonly PatternResolver patternResolver;
-
-    public TenhouResolver(PatternResolver patternResolver) {
-      this.patternResolver = patternResolver;
-    }
+  public class TenhouResolver(PatternResolver patternResolver) : ResolverBase {
+    protected readonly PatternResolver patternResolver = patternResolver;
 
     protected override IEnumerable<Player> ResolvePlayers(Player player, GameTile incoming) {
       yield return player;

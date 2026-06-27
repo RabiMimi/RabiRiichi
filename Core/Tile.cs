@@ -1,5 +1,4 @@
-﻿using RabiRiichi.Generated.Core;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -20,48 +19,51 @@ namespace RabiRiichi.Core {
     public byte Val { get; private set; }
 
     /// <summary> 不考虑赤宝的值。值一样说明是相同牌 </summary>
-    public byte NoDoraVal => (byte)(Val & 0x7f);
+    public readonly byte NoDoraVal => (byte)(Val & 0x7f);
     /// <summary> 去掉赤宝标记后的牌 </summary>
     public Tile WithoutDora => new(NoDoraVal);
 
     /// <summary> 点数 </summary>
     public byte Num {
-      get => (byte)(Val & 0x0f);
+      readonly get => (byte)(Val & 0x0f);
       set => Val = (byte)((Val & ~0x0f) | value);
     }
 
     /// <summary> 种类 </summary>
     public TileSuit Suit {
-      get => (TileSuit)((Val >> 4) & 0x07);
+      readonly get => (TileSuit)((Val >> 4) & 0x07);
       set => Val = (byte)((Val & ~0x70) | ((byte)value << 4));
     }
 
     /// <summary> 是否是赤宝牌 </summary>
     public bool Akadora {
-      get => (Val & 0x80) != 0;
+      readonly get => (Val & 0x80) != 0;
       set {
-        if (value)
+        if (value) {
           Val |= 0x80;
-        else
+        } else {
           Val &= 0x7f;
+        }
       }
     }
 
     /// <summary> 是否是合法牌 </summary>
     public bool IsValid {
       get {
-        if (Suit == TileSuit.Invalid || Suit > TileSuit.Z)
+        if (Suit is TileSuit.Invalid or > TileSuit.Z) {
           return false;
-        if (Num < 1 || Num > 9)
+        }
+
+        if (Num is < 1 or > 9) {
           return false;
-        if (IsZ && Num > 7)
-          return false;
-        return true;
+        }
+
+        return !IsZ || Num <= 7;
       }
     }
 
     /// <summary> 是否是空牌（最常见的非法牌，一般用于表示牌背） </summary>
-    public bool IsEmpty => this == Empty;
+    public readonly bool IsEmpty => this == Empty;
 
     /// <summary> 是否是19牌或字牌 </summary>
     public bool Is19Z => (IsMPS && (Num == 1 || Num == 9)) || IsZ;
@@ -70,7 +72,7 @@ namespace RabiRiichi.Core {
     public bool IsZ => Suit == TileSuit.Z;
 
     /// <summary> 是否是万筒索 </summary>
-    public bool IsMPS => Suit == TileSuit.M || Suit == TileSuit.P || Suit == TileSuit.S;
+    public bool IsMPS => Suit is TileSuit.M or TileSuit.P or TileSuit.S;
 
     /// <summary> 是否是三元牌 </summary>
     public bool IsSangen => IsZ && Num >= 5 && Num <= 7;
@@ -85,7 +87,9 @@ namespace RabiRiichi.Core {
       Num = (byte)num;
       Akadora = isAkadora;
     }
-    public static Tile From(Wind wind) => new(TileSuit.Z, (int)wind + 1);
+    public static Tile From(Wind wind) {
+      return new(TileSuit.Z, (int)wind + 1);
+    }
 
     public Tile(string str) {
       Val = 0;
@@ -98,7 +102,7 @@ namespace RabiRiichi.Core {
         throw new ArgumentException("Invalid cast to tile: " + original);
       }
       char num = str[0];
-      if (num < '0' || num > '9') {
+      if (num is < '0' or > '9') {
         throw new ArgumentException("Invalid cast to tile: " + original);
       }
       Num = (byte)(num - '0');
@@ -114,18 +118,17 @@ namespace RabiRiichi.Core {
 
     public override string ToString() {
       var builder = new StringBuilder();
-      if (Akadora)
+      if (Akadora) {
         builder.Append('r');
+      }
+
       builder.Append(Num);
       builder.Append(Suit.ToChar());
       return builder.ToString();
     }
 
     public override readonly bool Equals(object obj) {
-      if (obj is Tile rhs) {
-        return this == rhs;
-      }
-      return false;
+      return obj is Tile rhs ? this == rhs : false;
     }
 
     public override readonly int GetHashCode() {
@@ -134,20 +137,29 @@ namespace RabiRiichi.Core {
 
     public int CompareTo(Tile other) {
       int result = Suit.CompareTo(other.Suit);
-      if (result != 0)
+      if (result != 0) {
         return result;
+      }
+
       result = Num.CompareTo(other.Num);
-      if (result != 0)
-        return result;
-      return Akadora.CompareTo(other.Akadora);
+      return result != 0 ? result : Akadora.CompareTo(other.Akadora);
     }
 
     /// <summary> 是否是相同的牌，赤dora视为相同 </summary>
-    public bool IsSame(Tile other) => Suit == other.Suit && Num == other.Num;
+    public bool IsSame(Tile other) {
+      return Suit == other.Suit && Num == other.Num;
+    }
+
     /// <summary> 是否是下一张牌，用于顺子计算 </summary>
-    public bool IsNext(Tile other) => IsMPS && Suit == other.Suit && other.Num == Num + 1;
+    public bool IsNext(Tile other) {
+      return IsMPS && Suit == other.Suit && other.Num == Num + 1;
+    }
+
     /// <summary> 是否是上一张牌，用于顺子计算 </summary>
-    public bool IsPrev(Tile other) => IsMPS && Suit == other.Suit && other.Num == Num - 1;
+    public bool IsPrev(Tile other) {
+      return IsMPS && Suit == other.Suit && other.Num == Num - 1;
+    }
+
     /// <summary> 上一张牌，用于顺子计算 </summary>
     public Tile Prev => IsMPS ? new Tile {
       Num = (byte)(Num - 1),
@@ -164,11 +176,15 @@ namespace RabiRiichi.Core {
     /// <summary> 下一张牌，用于宝牌指示牌计算 </summary>
     public Tile NextDora {
       get {
-        if (IsMPS)
-          return new Tile { Num = (byte)(Num % 9 + 1), Suit = Suit };
+        if (IsMPS) {
+          return new Tile { Num = (byte)((Num % 9) + 1), Suit = Suit };
+        }
+
         if (IsZ) {
-          if (Num <= 4)
-            return new Tile { Num = (byte)(Num % 4 + 1), Suit = Suit };
+          if (Num <= 4) {
+            return new Tile { Num = (byte)((Num % 4) + 1), Suit = Suit };
+          }
+
           byte newNum = (byte)(Num == 7 ? 5 : Num + 1);
           return new Tile { Num = newNum, Suit = Suit };
         }
@@ -176,7 +192,9 @@ namespace RabiRiichi.Core {
       }
     }
 
-    public static implicit operator byte(Tile t) => t.Val;
+    public static implicit operator byte(Tile t) {
+      return t.Val;
+    }
 
     public static bool operator ==(Tile lhs, Tile rhs) {
       return lhs.Val == rhs.Val;
@@ -190,12 +208,12 @@ namespace RabiRiichi.Core {
   /// 一堆牌。
   /// </summary>
   public class Tiles : List<Tile> {
-    public static readonly Tiles Empty = new();
+    public static readonly Tiles Empty = [];
     public Tiles(IEnumerable<Tile> tiles) : base(tiles) { }
     public Tiles(string tiles = "") : base() {
       bool isDora = false;
       foreach (char c in tiles) {
-        if (c >= '0' && c <= '9') {
+        if (c is >= '0' and <= '9') {
           byte num = (byte)(c - '0');
           if (num == 0) {
             num = 5;
@@ -266,19 +284,24 @@ namespace RabiRiichi.Core {
         && this[0].IsSame(this[1]) && this[1].IsSame(this[2]);
     public bool IsKan {
       get {
-        if (Count != 4)
+        if (Count != 4) {
           return false;
+        }
+
         for (int i = 1; i < Count; i++) {
-          if (!this[i - 1].IsSame(this[i]))
+          if (!this[i - 1].IsSame(this[i])) {
             return false;
+          }
         }
         return true;
       }
     }
     public bool IsShun {
       get {
-        if (Count != 3)
+        if (Count != 3) {
           return false;
+        }
+
         var list = this.ToList();
         list.Sort();
         return list[0].IsNext(list[1]) && list[1].IsNext(list[2]);

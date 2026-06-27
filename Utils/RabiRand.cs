@@ -3,24 +3,22 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace RabiRiichi.Utils {
-  public class RabiRand {
-    public ulong seed;
+  public class RabiRand(ulong seed) {
+    public ulong seed = seed;
     private const ulong MULTIPLIER = 6364136223846793005;
     private const ulong INCREMENT = 1442695040888963407;
 
-    public RabiRand(ulong seed) {
-      this.seed = seed;
-    }
-
     public ulong Next() {
-      return seed = seed * MULTIPLIER + INCREMENT;
+      return seed = (seed * MULTIPLIER) + INCREMENT;
     }
 
-    public int Next(int minValue, int maxValue)
-        => minValue + Next(maxValue - minValue);
+    public int Next(int minValue, int maxValue) {
+      return minValue + Next(maxValue - minValue);
+    }
 
-    public int Next(int maxValue)
-        => (int)(Next() % (ulong)maxValue);
+    public int Next(int maxValue) {
+      return (int)(Next() % (ulong)maxValue);
+    }
 
     public void Shuffle<T>(IList<T> list) {
       for (int i = 1; i < list.Count; i++) {
@@ -35,7 +33,7 @@ namespace RabiRiichi.Utils {
 
     public IEnumerable<T> Choice<T>(IList<T> list, int count) {
       count = Math.Min(count, list.Count);
-      List<int> helper = Enumerable.Range(0, list.Count).ToList();
+      List<int> helper = [.. Enumerable.Range(0, list.Count)];
       Shuffle(helper);
       helper.RemoveRange(count, helper.Count - count);
       return helper.Select(index => list[index]);

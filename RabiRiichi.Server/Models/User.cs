@@ -9,18 +9,11 @@ namespace RabiRiichi.Server.Models {
     public string nickname { get; set; }
   }
 
-  public class UserInfoResp {
-    public int id { get; set; }
-    public int? room { get; set; }
-    public string nickname { get; set; }
-    public UserStatus status { get; set; }
-
-    public UserInfoResp(User user) {
-      id = user.Seat;
-      room = user.room?.id;
-      nickname = user.nickname;
-      status = user.status;
-    }
+  public class UserInfoResp(User user) {
+    public int id { get; set; } = user.Seat;
+    public int? room { get; set; } = user.room?.id;
+    public string nickname { get; set; } = user.nickname;
+    public UserStatus status { get; set; } = user.status;
   }
 
   public class User {

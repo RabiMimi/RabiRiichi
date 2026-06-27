@@ -3,21 +3,17 @@ using RabiRiichi.Core;
 using RabiRiichi.Generated.Core;
 
 namespace RabiRiichi.Events.InGame {
-  public class ClaimTileEvent : PlayerEvent {
+  public class ClaimTileEvent(EventBase parent, int playerId, MenLike group, GameTile tile) : PlayerEvent(parent, playerId) {
     public override string name => "claim_tile";
 
     #region Request
-    [RabiBroadcast] public GameTile tile;
-    [RabiBroadcast] public MenLike group;
+    [RabiBroadcast] public GameTile tile = tile;
+    [RabiBroadcast] public MenLike group = group;
     #endregion
 
     #region Response
     [RabiBroadcast] public DiscardReason reason = DiscardReason.None;
-    #endregion
 
-    public ClaimTileEvent(EventBase parent, int playerId, MenLike group, GameTile tile) : base(parent, playerId) {
-      this.group = group;
-      this.tile = tile;
-    }
+    #endregion
   }
 }

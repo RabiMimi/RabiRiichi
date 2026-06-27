@@ -74,17 +74,11 @@ namespace RabiRiichi.Patterns {
   }
 
   [RabiMessage]
-  public class Scoring {
-    [RabiBroadcast] public ScoringType Type;
-    [RabiBroadcast] public int Val;
-    public StdPattern Source;
+  public class Scoring(ScoringType type, int val, StdPattern source) {
+    [RabiBroadcast] public ScoringType Type = type;
+    [RabiBroadcast] public int Val = val;
+    public StdPattern Source = source;
     [RabiBroadcast] public string Src => Source.name;
-
-    public Scoring(ScoringType type, int val, StdPattern source) {
-      Type = type;
-      Val = val;
-      Source = source;
-    }
 
     public ScoringMsg ToProto() {
       return new ScoringMsg {
@@ -101,17 +95,17 @@ namespace RabiRiichi.Patterns {
     public virtual PatternMask type => PatternMask.Regular;
 
     /// <summary> 可以触发该役种的底和 </summary>
-    public BasePattern[] basePatterns { get; private set; } = Array.Empty<BasePattern>();
+    public BasePattern[] basePatterns { get; private set; } = [];
 
     /// <summary> 检查该pattern的依赖 </summary>
     public Predicate<ICollection<StdPattern>> predicate { get; private set; } = _ => true;
 
     /// <summary> 计算这些pattern后，才会计算该pattern。不保证这些pattern一定被满足 </summary>
-    public readonly List<StdPattern> afterPatterns = new();
+    public readonly List<StdPattern> afterPatterns = [];
 
     protected StdPattern BaseOn(IEnumerable<BasePattern> basePatterns) {
       if (basePatterns != null) {
-        this.basePatterns = basePatterns.ToArray();
+        this.basePatterns = [.. basePatterns];
       }
       return this;
     }
@@ -148,10 +142,14 @@ namespace RabiRiichi.Patterns {
     /// 一般用于包牌计算
     /// </summary>
     /// <returns>是否影响分数计算</returns>
-    public virtual bool OnScoreTransfer(Player player, ScoreTransferList scoreTransfers) => false;
-    protected virtual bool ApplyPao(Player toPlayer, int paoPlayer, int ronPaoPoints, ScoreTransferList scoreTransfers)
-        => PaoUtil.ApplyPao(toPlayer, paoPlayer,
-            toPlayer.IsDealer ? (ronPaoPoints * 3 / 2).CeilTo100() : ronPaoPoints,
-            scoreTransfers);
+    public virtual bool OnScoreTransfer(Player player, ScoreTransferList scoreTransfers) {
+      return false;
+    }
+
+    protected virtual bool ApplyPao(Player toPlayer, int paoPlayer, int ronPaoPoints, ScoreTransferList scoreTransfers) {
+      return PaoUtil.ApplyPao(toPlayer, paoPlayer,
+                                                                                                                                    toPlayer.IsDealer ? (ronPaoPoints * 3 / 2).CeilTo100() : ronPaoPoints,
+                                                                                                                                    scoreTransfers);
+    }
   }
 }

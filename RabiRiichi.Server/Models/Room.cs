@@ -1,28 +1,22 @@
-using Grpc.Core;
 using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
 using RabiRiichi.Server.Connections;
 using RabiRiichi.Server.Generated.Messages;
-using RabiRiichi.Server.Generated.Rpc;
 
 namespace RabiRiichi.Server.Models {
-  public class CreateRoomResp {
-    public int id { get; set; }
-
-    public CreateRoomResp(int id) {
-      this.id = id;
-    }
+  public class CreateRoomResp(int id) {
+    public int id { get; set; } = id;
   }
 
-  public class Room {
+  public class Room(Random rand, GameConfig config) {
     public int id;
     public RoomList roomList;
     public Game game { get; private set; }
-    public readonly GameConfig config;
-    private readonly List<User> players = new();
-    private readonly User[] seats;
+    public readonly GameConfig config = config;
+    private readonly List<User> players = [];
+    private readonly User[] seats = new User[config.playerCount];
     private bool isDestroyed = false;
-    private readonly Random rand;
+    private readonly Random rand = rand;
 
     private bool HasPlayer(User user) {
       return players.Any(p => p == user);
@@ -52,12 +46,6 @@ namespace RabiRiichi.Server.Models {
       foreach (var player in players) {
         player.connection?.Queue(msg);
       }
-    }
-
-    public Room(Random rand, GameConfig config) {
-      this.rand = rand;
-      this.config = config;
-      seats = new User[config.playerCount];
     }
 
     private bool TryStartGame() {
@@ -101,13 +89,11 @@ namespace RabiRiichi.Server.Models {
       if (!HasPlayer(user) || user.Seat < 0) {
         return;
       }
-      if (game != null) {
-        game.SyncGameStateToPlayer(user.Seat).ContinueWith(t => {
+      game?.SyncGameStateToPlayer(user.Seat).ContinueWith(t => {
           if (config.actionCenter is ServerActionCenter sac) {
             sac.SyncInquiryTo(user.Seat);
           }
         });
-      }
     }
 
     public bool GetReady(User user) {
@@ -118,10 +104,7 @@ namespace RabiRiichi.Server.Models {
         return false;
       }
       BroadcastRoomState();
-      if (players.All(p => p?.status == UserStatus.Ready)) {
-        return TryStartGame();
-      }
-      return true;
+      return players.All(p => p?.status == UserStatus.Ready) ? TryStartGame() : true;
     }
 
     public bool CancelReady(User user) {

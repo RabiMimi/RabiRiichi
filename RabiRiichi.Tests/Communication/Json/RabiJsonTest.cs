@@ -15,31 +15,21 @@ namespace RabiRiichi.Tests.Communication.Json {
     [RabiMessage]
     private abstract class BaseRabiMessage { }
 
-    private class RabiTestNestedMessage : BaseRabiMessage, IRabiPlayerMessage {
-      public int playerId { get; init; }
+    private class RabiTestNestedMessage(int playerId) : BaseRabiMessage, IRabiPlayerMessage {
+      public int playerId { get; init; } = playerId;
       [RabiBroadcast] public string broadcastMessage = "nested broadcast";
       [RabiPrivate] public string privateMessage = "nest private";
 
       public int notIncluded = 233;
-
-      public RabiTestNestedMessage(int playerId) {
-        this.playerId = playerId;
-      }
     }
 
-    private class RabiTestMessage : BaseRabiMessage, IRabiPlayerMessage {
-      public int playerId { get; init; }
+    private class RabiTestMessage(int playerId) : BaseRabiMessage, IRabiPlayerMessage {
+      public int playerId { get; init; } = playerId;
       [RabiBroadcast] public string broadcastMessage { get; set; } = "broadcast";
       [RabiPrivate] public readonly string privateMessage = "private";
-      [RabiBroadcast] public RabiTestNestedMessage broadcastNested;
-      [RabiPrivate] public RabiTestNestedMessage privateNested;
+      [RabiBroadcast] public RabiTestNestedMessage broadcastNested = new RabiTestNestedMessage(playerId);
+      [RabiPrivate] public RabiTestNestedMessage privateNested = new RabiTestNestedMessage(playerId);
       [RabiPrivate] public RabiTestNestedMessage nullNested = null;
-
-      public RabiTestMessage(int playerId) {
-        this.playerId = playerId;
-        broadcastNested = new RabiTestNestedMessage(playerId);
-        privateNested = new RabiTestNestedMessage(playerId);
-      }
     }
 
     private class NotRabiMessage {
@@ -69,14 +59,10 @@ namespace RabiRiichi.Tests.Communication.Json {
     }
 
     [RabiPrivate]
-    private class RabiPrivateWithPlayer : BaseRabiMessage, IRabiPlayerMessage {
-      public int playerId { get; init; }
+    private class RabiPrivateWithPlayer(int playerId) : BaseRabiMessage, IRabiPlayerMessage {
+      public int playerId { get; init; } = playerId;
       [RabiBroadcast]
       public string message { get; set; } = "rabi private message with player";
-
-      public RabiPrivateWithPlayer(int playerId) {
-        this.playerId = playerId;
-      }
     }
 
     private class InheritedMessage : ValidMessageNonPublicSet {
@@ -84,14 +70,9 @@ namespace RabiRiichi.Tests.Communication.Json {
       [RabiBroadcast] public string newMessage = "new inherited message";
     }
 
-    private class GameTileMessage : BaseRabiMessage {
-      [RabiBroadcast] public readonly GameTile tile;
-      [RabiBroadcast] public readonly Tiles tiles;
-
-      public GameTileMessage(GameTile tile, Tiles tiles) {
-        this.tile = tile;
-        this.tiles = tiles;
-      }
+    private class GameTileMessage(GameTile tile, Tiles tiles) : BaseRabiMessage {
+      [RabiBroadcast] public readonly GameTile tile = tile;
+      [RabiBroadcast] public readonly Tiles tiles = tiles;
     }
 
     [RabiIgnore]

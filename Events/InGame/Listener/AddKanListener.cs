@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace RabiRiichi.Events.InGame.Listener {
   public static class AddKanListener {
     private static Task ExecuteAddKan(AddKanEvent ev) {
-      if (ev.kanSource == TileSource.Ankan || ev.kanSource == TileSource.Daiminkan) {
+      if (ev.kanSource is TileSource.Ankan or TileSource.Daiminkan) {
         ev.player.hand.AddKan(ev.kan);
       } else if (ev.kanSource == TileSource.Kakan) {
         ev.player.hand.Kakan(ev.kan);

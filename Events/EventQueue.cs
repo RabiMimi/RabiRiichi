@@ -6,15 +6,10 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Events {
-  public class EventQueue : IEnumerable<EventBase> {
+  public class EventQueue(EventBus bus, bool shouldLock = false) : IEnumerable<EventBase> {
     private readonly Queue<EventBase> queue = new();
-    public readonly EventBus bus;
-    public readonly bool shouldLock;
-
-    public EventQueue(EventBus bus, bool shouldLock = false) {
-      this.bus = bus;
-      this.shouldLock = shouldLock;
-    }
+    public readonly EventBus bus = bus;
+    public readonly bool shouldLock = shouldLock;
 
     public void Queue(EventBase ev) {
       lock (queue) {

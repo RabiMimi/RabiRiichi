@@ -3,12 +3,8 @@ using RabiRiichi.Core;
 using System.Collections.Generic;
 
 namespace RabiRiichi.Actions {
-  public class ChooseTilesActionOption : ActionOption {
-    [RabiBroadcast] public readonly List<GameTile> tiles;
-
-    public ChooseTilesActionOption(List<GameTile> tiles) {
-      this.tiles = tiles;
-    }
+  public class ChooseTilesActionOption(List<GameTile> tiles) : ActionOption {
+    [RabiBroadcast] public readonly List<GameTile> tiles = tiles;
   }
 
   public abstract class ChooseTilesAction : SingleChoiceAction<ChooseTilesActionOption> {

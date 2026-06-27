@@ -69,7 +69,7 @@ namespace RabiRiichi.Actions {
 
         var candidate = new DiscardCandidate {
           tile = optionTile,
-          tenpaiInfos = new List<TenpaiInfo>()
+          tenpaiInfos = []
         };
 
         if (shanten == 0) {

@@ -19,24 +19,20 @@ namespace RabiRiichi.Events.InGame {
     Ryuukyoku = MidGameRyuukyoku | EndGameRyuukyoku,
   }
 
-  public class ConcludeGameEvent : EventBase {
+  public class ConcludeGameEvent(EventBase parent, ConcludeGameReason reason, int[] tenpaiPlayers = null) : EventBase(parent) {
     public override string name => "conclude_game";
 
     #region Request
     /// <summary> 流局听牌玩家。没有终局流局则为null </summary>
-    public int[] tenpaiPlayers;
-    public ConcludeGameReason reason;
+    public int[] tenpaiPlayers = tenpaiPlayers;
+    public ConcludeGameReason reason = reason;
     public bool IsRyuukyoku => reason.HasAnyFlag(ConcludeGameReason.Ryuukyoku);
     #endregion
 
     #region Response
-    [RabiBroadcast] public readonly List<GameTile> doras = new();
-    [RabiBroadcast] public readonly List<GameTile> uradoras = new();
-    #endregion
+    [RabiBroadcast] public readonly List<GameTile> doras = [];
+    [RabiBroadcast] public readonly List<GameTile> uradoras = [];
 
-    public ConcludeGameEvent(EventBase parent, ConcludeGameReason reason, int[] tenpaiPlayers = null) : base(parent) {
-      this.reason = reason;
-      this.tenpaiPlayers = tenpaiPlayers;
-    }
+    #endregion
   }
 }

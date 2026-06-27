@@ -6,7 +6,7 @@ namespace RabiRiichi.Core {
     public GameTileBucket() {
       for (int i = 1; i < 5; i++) {
         for (int j = 1; j < 10; j++) {
-          buckets[i, j] = new List<GameTile>();
+          buckets[i, j] = [];
         }
       }
     }
@@ -45,8 +45,10 @@ namespace RabiRiichi.Core {
     public IEnumerable<List<GameTile>> GetAllBuckets(bool skipEmpty = true) {
       foreach (var (group, gr) in GetAll()) {
         foreach (var (bucket, _) in group) {
-          if (skipEmpty && bucket.Count == 0)
+          if (skipEmpty && bucket.Count == 0) {
             continue;
+          }
+
           yield return bucket;
         }
       }

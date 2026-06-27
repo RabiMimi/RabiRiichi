@@ -61,10 +61,7 @@ namespace RabiRiichi.Core.Config {
         if (riichiPolicy.HasFlag(RiichiPolicy.SufficientPoints)) {
           return pointThreshold.validPointsRange[0] + pointThreshold.riichiPoints;
         }
-        if (riichiPolicy.HasFlag(RiichiPolicy.ValidPoints)) {
-          return pointThreshold.validPointsRange[0];
-        }
-        return long.MinValue;
+        return riichiPolicy.HasFlag(RiichiPolicy.ValidPoints) ? pointThreshold.validPointsRange[0] : long.MinValue;
       }
     }
     #endregion

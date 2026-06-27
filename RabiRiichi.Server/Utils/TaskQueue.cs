@@ -2,12 +2,12 @@ using Grpc.Core;
 using System.Threading.Channels;
 
 namespace RabiRiichi.Server.Utils {
-  abstract class WorkerItem {
+  internal abstract class WorkerItem {
     public abstract Task Run();
   }
 
-  class WorkerItem<T> : WorkerItem {
-    public readonly Func<Task<T>> worker;
+  internal class WorkerItem<T>(Func<Task<T>> worker) : WorkerItem {
+    public readonly Func<Task<T>> worker = worker;
 
     public readonly TaskCompletionSource<T> tcs = new();
 
@@ -19,10 +19,6 @@ namespace RabiRiichi.Server.Utils {
       } catch (Exception e) {
         tcs.SetException(e);
       }
-    }
-
-    public WorkerItem(Func<Task<T>> worker) {
-      this.worker = worker;
     }
   }
 
@@ -50,10 +46,9 @@ namespace RabiRiichi.Server.Utils {
 
     public Task<T> ExecuteAsync<T>(Func<Task<T>> worker) {
       var item = new WorkerItem<T>(worker);
-      if (!channel.Writer.TryWrite(item)) {
-        throw new RpcException(new Status(StatusCode.ResourceExhausted, "Server is busy"));
-      }
-      return item.WaitTask;
+      return !channel.Writer.TryWrite(item)
+        ? throw new RpcException(new Status(StatusCode.ResourceExhausted, "Server is busy"))
+        : item.WaitTask;
     }
 
     public Task ExecuteAsync(Func<Task> worker) {
@@ -61,20 +56,21 @@ namespace RabiRiichi.Server.Utils {
         await worker();
         return true;
       });
-      if (!channel.Writer.TryWrite(item)) {
-        throw new RpcException(new Status(StatusCode.ResourceExhausted, "Server is busy"));
-      }
-      return item.WaitTask;
+      return !channel.Writer.TryWrite(item)
+        ? throw new RpcException(new Status(StatusCode.ResourceExhausted, "Server is busy"))
+        : (Task)item.WaitTask;
     }
 
-    public Task<T> Execute<T>(Func<T> worker)
-        => ExecuteAsync(() => Task.FromResult(worker()));
+    public Task<T> Execute<T>(Func<T> worker) {
+      return ExecuteAsync(() => Task.FromResult(worker()));
+    }
 
-    public Task Execute(Action worker)
-        => ExecuteAsync(() => {
-          worker();
-          return Task.FromResult(true);
-        });
+    public Task Execute(Action worker) {
+      return ExecuteAsync(() => {
+        worker();
+        return Task.FromResult(true);
+      });
+    }
 
     public void Close() {
       cts.Cancel();

@@ -5,14 +5,9 @@ using RabiRiichi.Server.Generated.Rpc;
 using RabiRiichi.Server.Models;
 
 namespace RabiRiichi.Server.Services {
-  public class GameServiceImpl : GameService.GameServiceBase {
-    private readonly ILogger<GameServiceImpl> logger;
-    private readonly RoomTaskQueue taskQueue;
-
-    public GameServiceImpl(ILogger<GameServiceImpl> logger, RoomTaskQueue taskQueue) {
-      this.logger = logger;
-      this.taskQueue = taskQueue;
-    }
+  public class GameServiceImpl(ILogger<GameServiceImpl> logger, RoomTaskQueue taskQueue) : GameService.GameServiceBase {
+    private readonly ILogger<GameServiceImpl> logger = logger;
+    private readonly RoomTaskQueue taskQueue = taskQueue;
 
     public override async Task ConnectGame(IAsyncStreamReader<ClientMessageDto> requestStream, IServerStreamWriter<ServerMessageDto> responseStream, ServerCallContext context) {
       var (user, rabiCtx) = await taskQueue.Execute(queue => {

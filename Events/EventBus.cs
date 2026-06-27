@@ -18,17 +18,11 @@ namespace RabiRiichi.Events {
       List<IEventTrigger> ParentList { get; }
     }
 
-    private class EventTrigger<T> : IEventTrigger where T : EventBase {
-      public int Priority { get; init; }
-      public int Times { get; private set; }
-      public List<IEventTrigger> ParentList { get; init; }
-      public Func<T, Task> trigger { get; init; }
-      public EventTrigger(Func<T, Task> handler, int priority, int times, List<IEventTrigger> fromList) {
-        Priority = priority;
-        trigger = handler;
-        Times = times;
-        ParentList = fromList;
-      }
+    private class EventTrigger<T>(Func<T, Task> handler, int priority, int times, List<EventBus.IEventTrigger> fromList) : IEventTrigger where T : EventBase {
+      public int Priority { get; init; } = priority;
+      public int Times { get; private set; } = times;
+      public List<IEventTrigger> ParentList { get; init; } = fromList;
+      public Func<T, Task> trigger { get; init; } = handler;
 
       public Task Trigger(EventBase ev) {
         if (Times > 0) {
@@ -53,7 +47,7 @@ namespace RabiRiichi.Events {
     public void Subscribe<T>(Func<T, Task> listener, int priority, int times = -1)
         where T : EventBase {
       var type = typeof(T);
-      var list = listeners.GetOrAdd(type, _ => new List<IEventTrigger>());
+      var list = listeners.GetOrAdd(type, _ => []);
       lock (list) {
         list.Add(new EventTrigger<T>(listener, priority, times, list));
       }

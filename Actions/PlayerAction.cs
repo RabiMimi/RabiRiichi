@@ -26,10 +26,10 @@ namespace RabiRiichi.Actions {
   /// <summary> 等待玩家做出选择 </summary>
   [RabiMessage]
   [RabiPrivate]
-  public abstract class PlayerAction<T> : IPlayerAction {
+  public abstract class PlayerAction<T>(int playerId) : IPlayerAction {
     [RabiPrivate] public abstract string name { get; }
 
-    public int playerId { get; init; }
+    public int playerId { get; init; } = playerId;
 
     public int priority { get; protected set; }
 
@@ -38,10 +38,6 @@ namespace RabiRiichi.Actions {
     /// 初始值必须是一个有效的回应，用于用户超时跳过的情况
     /// </summary>
     public T response;
-
-    public PlayerAction(int playerId) {
-      this.playerId = playerId;
-    }
 
     public bool OnResponse(string response) {
       T resp;

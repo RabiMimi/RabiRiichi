@@ -29,11 +29,7 @@ namespace RabiRiichi.Events.InGame.Listener {
         ev.nextHonba = info.honba + 1;
         return Task.CompletedTask;
       }
-      if (cEv.IsRyuukyoku) {
-        ev.nextHonba = info.honba + 1;
-      } else {
-        ev.nextHonba = 0;
-      }
+      ev.nextHonba = cEv.IsRyuukyoku ? info.honba + 1 : 0;
       ev.nextDealer = ev.game.NextPlayerId(info.dealer);
       ev.nextRound = ev.nextDealer == 0 ? info.round + 1 : info.round;
       return Task.CompletedTask;

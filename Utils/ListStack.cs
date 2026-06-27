@@ -16,7 +16,9 @@ namespace RabiRiichi.Utils {
       return item;
     }
 
-    public T Peek() => this[Count - 1];
+    public T Peek() {
+      return this[Count - 1];
+    }
 
     public IEnumerable<T> PopMany(int count) {
       for (var i = 0; i < count; i++) {

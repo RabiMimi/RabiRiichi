@@ -64,9 +64,9 @@ namespace System.Linq {
     private static void InitSubsetIndices() {
       subsetIndices = new List<int[]>[MAX_SUBSET_SIZE + 1];
       for (int i = 0; i <= MAX_SUBSET_SIZE; i++) {
-        subsetIndices[i] = new List<int[]>();
+        subsetIndices[i] = [];
       }
-      List<int> indices = new();
+      List<int> indices = [];
       for (uint i = 0, ed = 1 << MAX_SUBSET_SIZE; i < ed; i++) {
         indices.Clear();
         int bitCount = 0;
@@ -76,7 +76,7 @@ namespace System.Linq {
             bitCount++;
           }
         }
-        subsetIndices[bitCount].Add(indices.ToArray());
+        subsetIndices[bitCount].Add([.. indices]);
       }
     }
 
@@ -111,7 +111,7 @@ namespace System.Linq {
     /// </summary>
     public static IEnumerable<IEnumerable<TSource>> Subset<TSource>(this IEnumerable<TSource> source, int size) {
       if (source is not List<TSource> list) {
-        list = source.ToList();
+        list = [.. source];
       }
       return SubsetHelper(list, 0, size);
     }

@@ -6,24 +6,24 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace RabiRiichi.Core {
-  public class Wall {
-    public readonly GameConfig config;
-    public readonly RabiRand rand;
+  public class Wall(RabiRand rand, GameConfig config) {
+    public readonly GameConfig config = config;
+    public readonly RabiRand rand = rand;
 
-    private readonly RandIDPool idPool;
+    private readonly RandIDPool idPool = new RandIDPool(rand);
 
     /// <summary> 宝牌数量 </summary>
     public const int NUM_DORA = 5;
     /// <summary> 岭上牌数量 </summary>
     public const int NUM_RINSHAN = 4;
     /// <summary> 牌山剩下的牌 </summary>
-    public readonly ListStack<GameTile> remaining = new();
+    public readonly ListStack<GameTile> remaining = [];
     /// <summary> 岭上牌 </summary>
-    public readonly ListStack<GameTile> rinshan = new();
+    public readonly ListStack<GameTile> rinshan = [];
     /// <summary> 宝牌 </summary>
-    public readonly ListStack<GameTile> doras = new();
+    public readonly ListStack<GameTile> doras = [];
     /// <summary> 里宝牌 </summary>
-    public readonly ListStack<GameTile> uradoras = new();
+    public readonly ListStack<GameTile> uradoras = [];
     /// <summary> 已翻的Dora数量 </summary>
     public int revealedDoraCount = 0;
     /// <summary> 已翻的里Dora数量 </summary>
@@ -38,12 +38,6 @@ namespace RabiRiichi.Core {
     public int NumRemaining => remaining.Count - (NUM_RINSHAN - rinshan.Count);
     /// <summary> 是否到了海底 </summary>
     public bool IsHaitei => NumRemaining <= 0;
-
-    public Wall(RabiRand rand, GameConfig config) {
-      this.rand = rand;
-      this.config = config;
-      idPool = new RandIDPool(rand);
-    }
 
     /// <summary> 重置牌山 </summary>
     public void Reset() {
@@ -101,12 +95,14 @@ namespace RabiRiichi.Core {
     }
 
     /// <summary> 计算tile算几番宝牌（不考虑里宝牌/红宝牌）。非宝牌返回0 </summary>
-    public int CountDora(Tile tile)
-        => doras.Take(revealedDoraCount).Count(dora => dora.tile.NextDora.IsSame(tile));
+    public int CountDora(Tile tile) {
+      return doras.Take(revealedDoraCount).Count(dora => dora.tile.NextDora.IsSame(tile));
+    }
 
     /// <summary> 计算tile中几番里宝牌。非里宝牌返回0 </summary>
-    public int CountUradora(Tile tile)
-        => uradoras.Take(revealedUradoraCount).Count(uradora => uradora.tile.NextDora.IsSame(tile));
+    public int CountUradora(Tile tile) {
+      return uradoras.Take(revealedUradoraCount).Count(uradora => uradora.tile.NextDora.IsSame(tile));
+    }
 
     /// <summary> 抽一张岭上牌 </summary>
     public GameTile DrawRinshan() {
@@ -120,10 +116,14 @@ namespace RabiRiichi.Core {
     /// 若该牌在王牌里，则牌山最后一张牌会补充王牌
     /// </summary>
     public bool Remove(GameTile tile) {
-      if (remaining.Remove(tile))
+      if (remaining.Remove(tile)) {
         return true;
-      if (IsHaitei)
+      }
+
+      if (IsHaitei) {
         return false;
+      }
+
       var newTile = remaining[0];
       int index;
       if ((index = rinshan.IndexOf(tile)) >= 0) {
@@ -149,8 +149,10 @@ namespace RabiRiichi.Core {
     /// </summary>
     private static bool Swap(ListStack<GameTile> target, int targetIndex, ListStack<GameTile> searchFrom, GameTile tile) {
       int index = searchFrom.IndexOf(tile);
-      if (index < 0)
+      if (index < 0) {
         return false;
+      }
+
       (target[targetIndex], searchFrom[index]) = (searchFrom[index], target[targetIndex]);
       return true;
     }
@@ -159,12 +161,18 @@ namespace RabiRiichi.Core {
     /// 将tile与target的targetIndex位置的tile进行交换
     /// </summary>
     private void Swap(ListStack<GameTile> target, int targetIndex, GameTile tile) {
-      if (Swap(target, targetIndex, remaining, tile))
+      if (Swap(target, targetIndex, remaining, tile)) {
         return;
-      if (Swap(target, targetIndex, rinshan, tile))
+      }
+
+      if (Swap(target, targetIndex, rinshan, tile)) {
         return;
-      if (Swap(target, targetIndex, uradoras, tile))
+      }
+
+      if (Swap(target, targetIndex, uradoras, tile)) {
         return;
+      }
+
       int index = doras.IndexOf(tile);
       if (index >= revealedDoraCount) {
         (doras[index], target[targetIndex]) = (target[targetIndex], doras[index]);

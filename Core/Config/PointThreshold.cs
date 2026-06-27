@@ -17,14 +17,15 @@ namespace RabiRiichi.Core.Config {
     [RabiBroadcast] public long finishPoints = 30000;
 
     /// <summary> 不听罚符（单人/多人） </summary>
-    [RabiBroadcast] public long[] ryuukyokuPoints = new long[] { 1000, 1500 };
+    [RabiBroadcast] public long[] ryuukyokuPoints = [1000, 1500];
 
     /// <summary> 天边 </summary>
-    [RabiBroadcast] public long[] validPointsRange = new long[] { 0, 1000000 };
+    [RabiBroadcast] public long[] validPointsRange = [0, 1000000];
 
     #region Helper methods
-    public bool ArePointsValid(long points)
-        => points >= validPointsRange[0] && points <= validPointsRange[1];
+    public bool ArePointsValid(long points) {
+      return points >= validPointsRange[0] && points <= validPointsRange[1];
+    }
     #endregion
 
     public PointThresholdMsg ToProto() {

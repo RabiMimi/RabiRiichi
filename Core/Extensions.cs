@@ -1,4 +1,4 @@
-﻿using RabiRiichi.Utils;
+using RabiRiichi.Utils;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -8,7 +8,7 @@ namespace RabiRiichi.Core {
   public static class Extensions {
     #region Tiles
     public static Tiles ToTiles(this IEnumerable<GameTile> tiles) {
-      return new Tiles(tiles.Select(gameTile => gameTile.tile));
+      return [.. tiles.Select(gameTile => gameTile.tile)];
     }
 
     public static TileSuit ToGroup(this char c) {
@@ -33,8 +33,10 @@ namespace RabiRiichi.Core {
     }
 
     private static int GetZUnicode(int num) {
-      if (num > 4)
+      if (num > 4) {
         num = 12 - num;
+      }
+
       return 0x1EFFF + num;
     }
 
@@ -51,7 +53,7 @@ namespace RabiRiichi.Core {
     }
 
     public static string ToUnicode(this Tiles tiles) {
-      return string.Concat(tiles.Select(tile => ToUnicode(tile)));
+      return string.Concat(tiles.Select(ToUnicode));
     }
     #endregion
 

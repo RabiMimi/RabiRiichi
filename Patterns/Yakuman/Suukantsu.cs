@@ -30,10 +30,7 @@ namespace RabiRiichi.Patterns {
       if (lastGroup.KanSource != TileSource.Daiminkan) {
         return false;
       }
-      if (PaoUtil.TryGetPaoPlayer(lastGroup, out int paoPlayer)) {
-        return ApplyPao(player, paoPlayer, 32000, scoreTransfers);
-      }
-      return false;
+      return PaoUtil.TryGetPaoPlayer(lastGroup, out int paoPlayer) ? ApplyPao(player, paoPlayer, 32000, scoreTransfers) : false;
     }
   }
 }

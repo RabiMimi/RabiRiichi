@@ -1,12 +1,8 @@
 using RabiRiichi.Core.Config;
 
 namespace RabiRiichi.Core {
-  public class SkillPointsUpdater {
-    private readonly GameConfig _config;
-
-    public SkillPointsUpdater(GameConfig config) {
-      _config = config;
-    }
+  public class SkillPointsUpdater(GameConfig config) {
+    private readonly GameConfig _config = config;
 
     /// <summary>
     /// 检查玩家是否有足够的分数支付
@@ -24,11 +20,7 @@ namespace RabiRiichi.Core {
       if (policy == PointsDeductionPolicy.SufficientPoints) {
         return threshold.ArePointsValid(player.points - cost);
       }
-      if (policy == PointsDeductionPolicy.ValidPoints) {
-        return threshold.ArePointsValid(player.points);
-      }
-
-      return false;
+      return policy == PointsDeductionPolicy.ValidPoints ? threshold.ArePointsValid(player.points) : false;
     }
 
     /// <summary>

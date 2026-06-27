@@ -7,13 +7,9 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Tests.Scenario {
-  public class ScenarioSetup : RiichiSetup {
-    public readonly ScenarioActionCenter actionCenter;
-    private readonly List<Type> extraStdPatterns = new();
-
-    public ScenarioSetup(ScenarioActionCenter actionCenter) {
-      this.actionCenter = actionCenter;
-    }
+  public class ScenarioSetup(ScenarioActionCenter actionCenter) : RiichiSetup {
+    public readonly ScenarioActionCenter actionCenter = actionCenter;
+    private readonly List<Type> extraStdPatterns = [];
 
     private Task DelayFinishPlayerAction(WaitPlayerActionEvent ev) {
       return actionCenter.CurrentInquiry;

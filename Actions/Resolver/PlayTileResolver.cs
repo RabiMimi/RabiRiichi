@@ -10,7 +10,9 @@ namespace RabiRiichi.Actions.Resolver {
       yield return player;
     }
 
-    protected override bool ResolveAction(Player player, GameTile incoming, MultiPlayerInquiry output) => ResolveAction(player, incoming, output, null);
+    protected override bool ResolveAction(Player player, GameTile incoming, MultiPlayerInquiry output) {
+      return ResolveAction(player, incoming, output, null);
+    }
 
     public static bool ResolveAction(Player player, GameTile incoming, MultiPlayerInquiry output, Tiles forbidden) {
       var tiles = new List<GameTile>();

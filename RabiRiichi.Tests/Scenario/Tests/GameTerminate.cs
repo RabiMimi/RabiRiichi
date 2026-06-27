@@ -9,7 +9,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
   [TestClass]
   public class ScenarioGameTerminate {
     #region Low Score
-    private static readonly long[] POINTS_RANGE = new long[] { 10000, 50000 };
+    private static readonly long[] POINTS_RANGE = [10000, 50000];
     private static async Task<Scenario> BuildLowScoreTest(EndGamePolicy policy, long initialPoints) {
       var scenario = new ScenarioBuilder()
           .WithConfig(config => config

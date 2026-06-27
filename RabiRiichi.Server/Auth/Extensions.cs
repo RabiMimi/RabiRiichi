@@ -5,10 +5,9 @@ using System.Security.Claims;
 namespace RabiRiichi.Server.Auth {
   public static class AuthExtensions {
     public static User Fetch(this UserList userList, HttpContext context) {
-      if (!userList.TryFetch(context, out var user)) {
-        throw new RpcException(new Status(StatusCode.Unauthenticated, "User does not exist"));
-      }
-      return user;
+      return !userList.TryFetch(context, out var user)
+        ? throw new RpcException(new Status(StatusCode.Unauthenticated, "User does not exist"))
+        : user;
     }
 
     public static User Fetch(this UserList userList, ServerCallContext context) {

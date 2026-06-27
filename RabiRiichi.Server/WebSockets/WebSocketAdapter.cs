@@ -4,16 +4,11 @@ using RabiRiichi.Server.Generated.Rpc;
 using System.Net.WebSockets;
 
 namespace RabiRiichi.Server.WebSockets {
-  public class WebSocketAdapter : IAsyncStreamReader<ClientMessageDto>, IServerStreamWriter<ServerMessageDto> {
-    private readonly WebSocket ws;
-    private ClientMessageDto current;
+  public class WebSocketAdapter(WebSocket ws) : IAsyncStreamReader<ClientMessageDto>, IServerStreamWriter<ServerMessageDto> {
+    private readonly WebSocket ws = ws;
     private readonly ArraySegment<byte> byteArr = new(new byte[4 * 1024]);
 
-    public WebSocketAdapter(WebSocket ws) {
-      this.ws = ws;
-    }
-
-    public ClientMessageDto Current => current;
+    public ClientMessageDto Current { get; private set; }
 
     /// <summary>
     /// Not used
@@ -33,7 +28,7 @@ namespace RabiRiichi.Server.WebSockets {
           return false;
         } else if (msg.MessageType == WebSocketMessageType.Binary) {
           // Success
-          current = ClientMessageDto.Parser.ParseFrom(byteArr.Array, byteArr.Offset, msg.Count);
+          Current = ClientMessageDto.Parser.ParseFrom(byteArr.Array, byteArr.Offset, msg.Count);
           return true;
         } else {
           // Invalid message type

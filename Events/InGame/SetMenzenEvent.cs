@@ -1,15 +1,12 @@
 using RabiRiichi.Communication;
 
 namespace RabiRiichi.Events.InGame {
-  public class SetMenzenEvent : PlayerEvent {
+  public class SetMenzenEvent(EventBase parent, int playerId, bool menzen) : PlayerEvent(parent, playerId) {
     public override string name => "set_menzen";
 
     #region Request
-    [RabiBroadcast] public bool menzen;
-    #endregion
+    [RabiBroadcast] public bool menzen = menzen;
 
-    public SetMenzenEvent(EventBase parent, int playerId, bool menzen) : base(parent, playerId) {
-      this.menzen = menzen;
-    }
+    #endregion
   }
 }

@@ -9,8 +9,8 @@ namespace RabiRiichi.Core {
   }
 
   [RabiMessage]
-  public class GameInfo {
-    public readonly GameConfig config;
+  public class GameInfo(GameConfig config) {
+    public readonly GameConfig config = config;
     /// <summary> 游戏状态 </summary>
     public GamePhase phase = GamePhase.Pending;
     /// <summary> 第几轮 </summary>
@@ -26,10 +26,7 @@ namespace RabiRiichi.Core {
     /// <summary> 是否是All Last </summary>
     public bool IsAllLast {
       get {
-        if (round == config.totalRound - 1) {
-          return dealer == config.playerCount - 1;
-        }
-        return round >= config.totalRound;
+        return round == config.totalRound - 1 ? dealer == config.playerCount - 1 : round >= config.totalRound;
       }
     }
     /// <summary> 立直棒数量 </summary>
@@ -40,10 +37,6 @@ namespace RabiRiichi.Core {
 
     /// <summary> 事件ID </summary>
     public AutoIncrementInt eventId;
-
-    public GameInfo(GameConfig config) {
-      this.config = config;
-    }
 
     /// <summary> 清空本局数据以开始下一局 </summary>
     public void Reset() {

@@ -35,7 +35,7 @@ namespace RabiRiichi.Tests.Utils {
     [TestMethod]
     public void TestRabiRandPeriod() {
       int randCount = 1000000;
-      HashSet<ulong> seedSet = new() { rand.seed };
+      HashSet<ulong> seedSet = [rand.seed];
       for (var i = 0; i < randCount; i++) {
         var seed = rand.Next();
         Assert.IsFalse(seedSet.Contains(seed), $"seed {seed} is duplicated");
@@ -49,7 +49,7 @@ namespace RabiRiichi.Tests.Utils {
       for (int i = 0; i < randCount; i++) {
         Assert.AreEqual(i, rand.Next(i, i + 1));
         var next3 = rand.Next(3);
-        Assert.IsTrue(next3 >= 0 && next3 < 3);
+        Assert.IsTrue(next3 is >= 0 and < 3);
         next3 = rand.Next(i, i + 3);
         Assert.IsTrue(next3 >= i && next3 < i + 3);
       }
@@ -73,7 +73,7 @@ namespace RabiRiichi.Tests.Utils {
         CollectionAssert.Contains(list, choice);
       }
       Assert.AreEqual(3, choices.Length);
-      choices = rand.Choice(list, list.Count).ToArray();
+      choices = [.. rand.Choice(list, list.Count)];
       CollectionAssert.AreNotEqual(list, choices);
       CollectionAssert.AreEquivalent(list, choices);
     }

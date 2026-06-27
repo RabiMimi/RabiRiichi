@@ -58,14 +58,11 @@ namespace RabiRiichi.Server.Connections {
       if (!ServerUtils.IsClientVersionSupported(reply.ClientVersion)) {
         return false;
       }
-      if (!ServerUtils.IsServerVersionSupported(reply.MinServerVersion)) {
-        return false;
-      }
-      return true;
+      return ServerUtils.IsServerVersionSupported(reply.MinServerVersion);
     }
 
     public static void AddRoomListeners(this User user, RoomTaskQueue taskQueue) {
-      user.connection.OnReceive += (ClientMessageDto dto) => {
+      user.connection.OnReceive += dto => {
         var msg = dto.ClientMsg?.RoomUpdateMsg;
         if (msg == null) {
           return;

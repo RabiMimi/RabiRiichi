@@ -38,7 +38,7 @@ namespace RabiRiichi.Tests.Scenario {
     public static AgariInfo AssertScore(this AgariInfo info, int? han = null, int? fu = null, int yakuman = 0) {
       if (han != null) {
         Assert.AreEqual(han, info.scores.result.han
-            + info.scores.result.yakuman * ScoreCalcResult.KAZOE_YAKUMAN_HAN, $"Got {string.Join(", ", info.scores.Select(score => score.Source.name))}");
+            + (info.scores.result.yakuman * ScoreCalcResult.KAZOE_YAKUMAN_HAN), $"Got {string.Join(", ", info.scores.Select(score => score.Source.name))}");
       }
       if (fu != null) {
         Assert.AreEqual(fu, info.scores.result.fu);
@@ -56,7 +56,7 @@ namespace RabiRiichi.Tests.Scenario {
       var yaku = info.scores.Find((score) => score.Source is T);
       Assert.IsNotNull(yaku, $"yaku {typeof(T).Name} not found");
       if (han != null) {
-        Assert.IsTrue(yaku.Type == ScoringType.Han || yaku.Type == ScoringType.BonusHan);
+        Assert.IsTrue(yaku.Type is ScoringType.Han or ScoringType.BonusHan);
         Assert.AreEqual(han.Value, yaku.Val, $"Yaku: {typeof(T).Name}");
       }
       if (fu != null) {

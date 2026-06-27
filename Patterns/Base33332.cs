@@ -8,15 +8,11 @@ using DpLoc = System.ValueTuple<byte, byte, byte, byte>;
 namespace RabiRiichi.Patterns {
   public class Base33332 : BasePattern {
     #region Resolve
-    private class ResolutionContext {
-      internal class Refrigerator : IDisposable {
-        private readonly ResolutionContext context;
+    private class ResolutionContext(GameTileBucket tileBucket, List<List<MenLike>> output) {
+      internal class Refrigerator(Base33332.ResolutionContext context) : IDisposable {
+        private readonly ResolutionContext context = context;
         private readonly Stack<GameTile> removed = new();
         private int groupNum = 0;
-
-        public Refrigerator(ResolutionContext context) {
-          this.context = context;
-        }
 
         public GameTile Remove(Tile tile) {
           var bucket = context.tileBucket.GetBucket(tile);
@@ -28,7 +24,7 @@ namespace RabiRiichi.Patterns {
         }
 
         public MenLike Remove(params Tile[] indexes) {
-          var gr = MenLike.From(indexes.Select(index => Remove(index)));
+          var gr = MenLike.From(indexes.Select(Remove));
           context.current.Add(gr);
           groupNum++;
           return gr;
@@ -42,17 +38,17 @@ namespace RabiRiichi.Patterns {
         }
       }
 
-      public readonly List<MenLike> current = new();
-      public readonly GameTileBucket tileBucket;
-      public readonly List<List<MenLike>> output;
+      public readonly List<MenLike> current = [];
+      public readonly GameTileBucket tileBucket = tileBucket;
+      public readonly List<List<MenLike>> output = output;
 
-      public ResolutionContext(GameTileBucket tileBucket, List<List<MenLike>> output) {
-        this.tileBucket = tileBucket;
-        this.output = output;
+      public Refrigerator Save() {
+        return new(this);
       }
 
-      public Refrigerator Save() => new(this);
-      public void AddCurrentToOutput() => output.Add(current.ToList());
+      public void AddCurrentToOutput() {
+        output.Add([.. current]);
+      }
     }
 
     /// <summary> 和了牌算进哪一组会影响符数计算，因此需要生成不同组合 </summary>
@@ -76,11 +72,8 @@ namespace RabiRiichi.Patterns {
               if (t == toExchange) {
                 return incoming;
               }
-              if (t == incoming) {
-                return toExchange;
-              }
-              return t;
-            }).ToList())
+              return t == incoming ? toExchange : t;
+            }))
         ).ToList();
         output.Add(newGroup);
       }
@@ -137,8 +130,9 @@ namespace RabiRiichi.Patterns {
             DFSPattern(nextTile, janCnt, context);
           }
         }
-        if (bucket.Count < 3)
+        if (bucket.Count < 3) {
           break;
+        }
         // 移除刻子
         save.Remove(curTile, curTile, curTile);
       }
@@ -158,12 +152,12 @@ namespace RabiRiichi.Patterns {
           if (++janCnt > 1) {
             return false;
           }
-        } else if (!(group is Kan || group is Kou || group is Shun)) {
+        } else if (group is not (Kan or Kou or Shun)) {
           return false;
         }
       }
       // DFS output
-      output = new List<List<MenLike>>();
+      output = [];
       var extraOutput = new List<List<MenLike>>();
       var context = new ResolutionContext(GetTileGroups(hand, incoming, false), output);
       DFSPattern(new Tile(TileSuit.M, 1), janCnt, context);
@@ -179,12 +173,8 @@ namespace RabiRiichi.Patterns {
     #endregion Resolve
 
     #region Shanten
-    private class DpVal : List<DpLoc> {
-      public int dist;
-
-      public DpVal(int dist = int.MaxValue) {
-        this.dist = dist;
-      }
+    private class DpVal(int dist = int.MaxValue) : List<DpLoc> {
+      public int dist = dist;
 
       public void Update(int val, DpLoc loc) {
         if (val == dist) {
@@ -250,7 +240,9 @@ namespace RabiRiichi.Patterns {
       var tileBucket = GetTileGroups(hand, incoming, false);
       maxDist = Math.Min(9, maxDist);
 
-      DpVal[,,,] NewDpSubArray() => new DpVal[3, 3, 2, maxDist * 2 + 1];
+      DpVal[,,,] NewDpSubArray() {
+        return new DpVal[3, 3, 2, (maxDist * 2) + 1];
+      }
 
       // 是否有雀头
       int janCnt = hand.called.Count(gr => gr is Jantou);
@@ -282,7 +274,7 @@ namespace RabiRiichi.Patterns {
           var tile = new Tile(i1, i2);
           var dpCur = NewDpSubArray();
           dp[(int)i1, i2] = dpCur;
-          visitedDp[(int)i1, i2] = new Dictionary<DpLoc, int>();
+          visitedDp[(int)i1, i2] = [];
           int N = tileBucket.GetBucket(tile).Count;
           bool prevValid = tile.Prev.IsValid;
           // 枚举上一个状态
@@ -304,7 +296,7 @@ namespace RabiRiichi.Patterns {
                   int newJ2 = j1;
                   for (int newK = k; newK < Lk; newK++) {
                     // 枚举新的手牌数
-                    int minCnt = l + (newK - k) * 2 + j1 + j2 - N;
+                    int minCnt = l + ((newK - k) * 2) + j1 + j2 - N;
                     for (int newL = Math.Max(0, minCnt); newL < Ll; newL++) {
                       int newJ1 = (newL - minCnt) % 3;
                       DpContext.Add(ref dpCur[newJ2, newJ1, newK, newL],
@@ -329,7 +321,7 @@ namespace RabiRiichi.Patterns {
       }
 
       // 反向寻路
-      output = new Tiles();
+      output = [];
       ShantenDfs(new Tile("7z"), destLoc, output, ctx);
       output.Sort();
       return dest.dist - 1;

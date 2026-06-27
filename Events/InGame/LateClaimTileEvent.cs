@@ -11,7 +11,7 @@ namespace RabiRiichi.Events.InGame {
     #endregion
 
     #region Response
-    public readonly Tiles forbidden = new();
+    public readonly Tiles forbidden = [];
     public readonly WaitPlayerActionEvent waitEvent;
     #endregion
 

@@ -7,13 +7,13 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace RabiRiichi.Tests.Helper {
-  static class TestHelperExtensions {
+  internal static class TestHelperExtensions {
     public static IEnumerable<GameTile> ToGameTiles(this IEnumerable<Tile> tiles) {
       return tiles.Select(t => new GameTile(t, -1));
     }
 
     public static List<GameTile> ToGameTileList(this IEnumerable<Tile> tiles) {
-      return tiles.ToGameTiles().ToList();
+      return [.. tiles.ToGameTiles()];
     }
 
     public static MenLike ToMenLike(this IEnumerable<Tile> tiles) {
@@ -21,18 +21,20 @@ namespace RabiRiichi.Tests.Helper {
     }
   }
 
-  static class TestHelper {
+  internal static class TestHelper {
 
     public static Hand CreateHand(string str, params string[] groups) {
       return new Hand {
         freeTiles = new Tiles(str).ToGameTileList(),
-        called = groups.Select(gr => new Tiles(gr).ToMenLike()).ToList(),
+        called = [.. groups.Select(gr => new Tiles(gr).ToMenLike())],
       };
     }
 
-    public static Game CreateGame() => new(new GameConfig {
-      actionCenter = new JsonStringActionCenter(null)
-    });
+    public static Game CreateGame() {
+      return new(new GameConfig {
+        actionCenter = new JsonStringActionCenter(null)
+      });
+    }
 
     public static IEnumerable<Tile> ToTiles(this IEnumerable<ActionOption> options) {
       return options.Select(option => ((ChooseTileActionOption)option).tile.tile);
@@ -60,15 +62,17 @@ namespace RabiRiichi.Tests.Helper {
       Assert.AreEqual(tile.ToString(), str);
     }
 
-    public static void AssertEquals(this GameTile tile, string str)
-        => tile.tile.AssertEquals(str);
+    public static void AssertEquals(this GameTile tile, string str) {
+      tile.tile.AssertEquals(str);
+    }
 
     public static void AssertEquals(this IEnumerable<Tile> tiles, string str) {
       new Tiles(tiles).AssertEquals(str);
     }
 
-    public static void AssertEquals(this IEnumerable<GameTile> tiles, string str)
-        => tiles.Select(t => t.tile).AssertEquals(str);
+    public static void AssertEquals(this IEnumerable<GameTile> tiles, string str) {
+      tiles.Select(t => t.tile).AssertEquals(str);
+    }
 
     public static void AssertEquals(this Tiles tiles, string str) {
       var newTiles = new Tiles(str);
@@ -82,7 +86,8 @@ namespace RabiRiichi.Tests.Helper {
       Assert.IsTrue(tiles.Any(t => t.SequenceEqualAfterSort(newTiles)));
     }
 
-    public static void AssertContains(this IEnumerable<IEnumerable<GameTile>> tiles, string str)
-        => tiles.Select(t => t.ToTiles()).AssertContains(str);
+    public static void AssertContains(this IEnumerable<IEnumerable<GameTile>> tiles, string str) {
+      tiles.Select(t => t.ToTiles()).AssertContains(str);
+    }
   }
 }

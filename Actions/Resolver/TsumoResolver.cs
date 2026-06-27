@@ -6,13 +6,9 @@ namespace RabiRiichi.Actions.Resolver {
   /// <summary>
   /// 判定是否可以自摸
   /// </summary>
-  public class TsumoResolver : ResolverBase {
+  public class TsumoResolver(PatternResolver patternResolver) : ResolverBase {
 
-    private readonly PatternResolver patternResolver;
-
-    public TsumoResolver(PatternResolver patternResolver) {
-      this.patternResolver = patternResolver;
-    }
+    private readonly PatternResolver patternResolver = patternResolver;
 
     protected override IEnumerable<Player> ResolvePlayers(Player player, GameTile incoming) {
       yield return player;

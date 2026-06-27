@@ -10,8 +10,9 @@ namespace RabiRiichi.Patterns {
     }
 
     public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
-      if (!hand.menzen)
+      if (!hand.menzen) {
         return false;
+      }
 
       bool isValid = groups
           .OfType<Shun>()

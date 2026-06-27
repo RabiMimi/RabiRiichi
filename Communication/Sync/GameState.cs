@@ -7,33 +7,19 @@ using System.Linq;
 
 namespace RabiRiichi.Communication.Sync {
   [RabiMessage]
-  public class PlayerHandState : IRabiPlayerMessage {
-    public int playerId { get; init; }
-    [RabiPrivate] public readonly List<GameTile> freeTiles;
-    [RabiPrivate] public readonly GameTile pendingTile;
-    [RabiBroadcast] public readonly List<MenLike> called;
-    [RabiBroadcast] public readonly List<GameTile> discarded;
-    [RabiBroadcast] public readonly int jun;
-    [RabiBroadcast] public readonly int riichiStick;
-    [RabiBroadcast] public readonly GameTile agariTile;
-    [RabiBroadcast] public readonly GameTile riichiTile;
-    [RabiPrivate] public readonly bool isTempFuriten;
-    [RabiPrivate] public readonly bool isRiichiFuriten;
-    [RabiPrivate] public readonly bool isDiscardFuriten;
-    public PlayerHandState(Hand hand, int playerId) {
-      this.playerId = playerId;
-      freeTiles = hand.freeTiles.ToList();
-      pendingTile = hand.pendingTile;
-      called = hand.called.ToList();
-      discarded = hand.discarded.ToList();
-      jun = hand.jun;
-      riichiStick = hand.riichiStick;
-      agariTile = hand.agariTile;
-      riichiTile = hand.riichiTile;
-      isTempFuriten = hand.isTempFuriten;
-      isRiichiFuriten = hand.isRiichiFuriten;
-      isDiscardFuriten = hand.isDiscardFuriten;
-    }
+  public class PlayerHandState(Hand hand, int playerId) : IRabiPlayerMessage {
+    public int playerId { get; init; } = playerId;
+    [RabiPrivate] public readonly List<GameTile> freeTiles = [.. hand.freeTiles];
+    [RabiPrivate] public readonly GameTile pendingTile = hand.pendingTile;
+    [RabiBroadcast] public readonly List<MenLike> called = [.. hand.called];
+    [RabiBroadcast] public readonly List<GameTile> discarded = [.. hand.discarded];
+    [RabiBroadcast] public readonly int jun = hand.jun;
+    [RabiBroadcast] public readonly int riichiStick = hand.riichiStick;
+    [RabiBroadcast] public readonly GameTile agariTile = hand.agariTile;
+    [RabiBroadcast] public readonly GameTile riichiTile = hand.riichiTile;
+    [RabiPrivate] public readonly bool isTempFuriten = hand.isTempFuriten;
+    [RabiPrivate] public readonly bool isRiichiFuriten = hand.isRiichiFuriten;
+    [RabiPrivate] public readonly bool isDiscardFuriten = hand.isDiscardFuriten;
 
     public PlayerHandStateMsg ToProto(int playerId) {
       var ret = new PlayerHandStateMsg {
@@ -56,16 +42,10 @@ namespace RabiRiichi.Communication.Sync {
   }
 
   [RabiMessage]
-  public class WallState {
-    [RabiBroadcast] public readonly List<GameTile> doras;
-    [RabiBroadcast] public readonly int remaining;
-    [RabiBroadcast] public readonly int rinshanRemaining;
-
-    public WallState(Wall wall) {
-      doras = wall.doras.Take(wall.revealedDoraCount).ToList();
-      remaining = wall.NumRemaining;
-      rinshanRemaining = wall.rinshan.Count;
-    }
+  public class WallState(Wall wall) {
+    [RabiBroadcast] public readonly List<GameTile> doras = [.. wall.doras.Take(wall.revealedDoraCount)];
+    [RabiBroadcast] public readonly int remaining = wall.NumRemaining;
+    [RabiBroadcast] public readonly int rinshanRemaining = wall.rinshan.Count;
 
     public WallStateMsg ToProto() {
       var ret = new WallStateMsg {
@@ -78,18 +58,11 @@ namespace RabiRiichi.Communication.Sync {
   }
 
   [RabiMessage]
-  public class PlayerState : IRabiPlayerMessage {
-    public int playerId { get; init; }
-    [RabiBroadcast] public readonly int id;
-    [RabiBroadcast] public readonly long points;
-    [RabiBroadcast] public readonly PlayerHandState hand;
-
-    public PlayerState(Player player, int receiverId) {
-      playerId = receiverId;
-      id = player.id;
-      points = player.points;
-      hand = new PlayerHandState(player.hand, receiverId);
-    }
+  public class PlayerState(Player player, int receiverId) : IRabiPlayerMessage {
+    public int playerId { get; init; } = receiverId;
+    [RabiBroadcast] public readonly int id = player.id;
+    [RabiBroadcast] public readonly long points = player.points;
+    [RabiBroadcast] public readonly PlayerHandState hand = new PlayerHandState(player.hand, receiverId);
 
     public PlayerStateMsg ToProto(int playerId) {
       return new PlayerStateMsg {
@@ -101,23 +74,14 @@ namespace RabiRiichi.Communication.Sync {
   }
 
   [RabiMessage]
-  public class GameState : IRabiPlayerMessage {
-    public int playerId { get; init; }
+  public class GameState(Game game, int playerId) : IRabiPlayerMessage {
+    public int playerId { get; init; } = playerId;
 
-    [RabiBroadcast] public readonly GameConfig config;
-    [RabiBroadcast] public readonly GameInfo info;
-    [RabiBroadcast] public readonly WallState wall;
-    [RabiBroadcast] public readonly PlayerState[] players;
-    [RabiBroadcast] public readonly int currentPlayer;
-
-    public GameState(Game game, int playerId) {
-      this.playerId = playerId;
-      config = game.config;
-      info = game.info;
-      wall = new WallState(game.wall);
-      players = game.players.Select(p => new PlayerState(p, playerId)).ToArray();
-      currentPlayer = game.info.currentPlayer;
-    }
+    [RabiBroadcast] public readonly GameConfig config = game.config;
+    [RabiBroadcast] public readonly GameInfo info = game.info;
+    [RabiBroadcast] public readonly WallState wall = new WallState(game.wall);
+    [RabiBroadcast] public readonly PlayerState[] players = [.. game.players.Select(p => new PlayerState(p, playerId))];
+    [RabiBroadcast] public readonly int currentPlayer = game.info.currentPlayer;
 
     public GameStateMsg ToProto(int playerId) {
       var ret = new GameStateMsg {

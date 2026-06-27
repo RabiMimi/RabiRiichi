@@ -1,15 +1,10 @@
 using System.Collections.Generic;
 
 namespace RabiRiichi.Utils {
-  public class RandIDPool {
-    private readonly RabiRand rand;
-    private readonly int maxId;
-    private readonly HashSet<int> usedIds = new();
-
-    public RandIDPool(RabiRand rand, int maxId = int.MaxValue) {
-      this.rand = rand;
-      this.maxId = maxId;
-    }
+  public class RandIDPool(RabiRand rand, int maxId = int.MaxValue) {
+    private readonly RabiRand rand = rand;
+    private readonly int maxId = maxId;
+    private readonly HashSet<int> usedIds = [];
 
     public void Reset() {
       usedIds.Clear();

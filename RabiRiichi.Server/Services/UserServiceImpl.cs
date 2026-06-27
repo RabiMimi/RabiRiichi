@@ -7,16 +7,10 @@ using RabiRiichi.Server.Generated.Rpc;
 using RabiRiichi.Server.Models;
 
 namespace RabiRiichi.Server.Services {
-  public class UserServiceImpl : UserService.UserServiceBase {
-    private readonly ILogger<UserServiceImpl> logger;
-    private readonly RoomTaskQueue taskQueue;
-    private readonly TokenService tokenService;
-
-    public UserServiceImpl(ILogger<UserServiceImpl> logger, RoomTaskQueue taskQueue, TokenService tokenService) {
-      this.logger = logger;
-      this.taskQueue = taskQueue;
-      this.tokenService = tokenService;
-    }
+  public class UserServiceImpl(ILogger<UserServiceImpl> logger, RoomTaskQueue taskQueue, TokenService tokenService) : UserService.UserServiceBase {
+    private readonly ILogger<UserServiceImpl> logger = logger;
+    private readonly RoomTaskQueue taskQueue = taskQueue;
+    private readonly TokenService tokenService = tokenService;
 
     public CreateUserResponse CreateUser(CreateUserRequest request, UserList userList) {
       var user = new User {

@@ -6,63 +6,49 @@ namespace RabiRiichi.Events.InGame {
   /// <summary>
   /// 所有流局事件继承该类
   /// </summary>
-  public abstract class RyuukyokuEvent : EventBase {
+  public abstract class RyuukyokuEvent(EventBase parent) : EventBase(parent) {
 
     #region Request
-    [RabiBroadcast] public readonly ScoreTransferList scoreChange;
+    [RabiBroadcast] public readonly ScoreTransferList scoreChange = [];
+
     #endregion
 
-    public RyuukyokuEvent(EventBase parent) : base(parent) {
-      scoreChange = new ScoreTransferList();
+    public void AddScoreTransfer(int from, int to, long points, ScoreTransferReason reason) {
+      scoreChange.Add(new ScoreTransfer(from, to, points, reason));
     }
-
-    public void AddScoreTransfer(int from, int to, long points, ScoreTransferReason reason)
-        => scoreChange.Add(new ScoreTransfer(from, to, points, reason));
   }
 
-  public class EndGameRyuukyokuEvent : RyuukyokuEvent {
+  public class EndGameRyuukyokuEvent(EventBase parent) : RyuukyokuEvent(parent) {
     public override string name => "end_game_ryuukyoku";
 
     #region Response
-    [RabiBroadcast] public int[] remainingPlayers = Array.Empty<int>();
-    [RabiBroadcast] public int[] nagashiManganPlayers = Array.Empty<int>();
-    [RabiBroadcast] public int[] tenpaiPlayers = Array.Empty<int>();
+    [RabiBroadcast] public int[] remainingPlayers = [];
+    [RabiBroadcast] public int[] nagashiManganPlayers = [];
+    [RabiBroadcast] public int[] tenpaiPlayers = [];
+
     #endregion
-
-    public EndGameRyuukyokuEvent(EventBase parent) : base(parent) { }
   }
 
-  public abstract class MidGameRyuukyokuEvent : RyuukyokuEvent {
-    public MidGameRyuukyokuEvent(EventBase parent) : base(parent) { }
+  public abstract class MidGameRyuukyokuEvent(EventBase parent) : RyuukyokuEvent(parent) {
   }
 
-  public class SuufonRenda : MidGameRyuukyokuEvent {
+  public class SuufonRenda(EventBase parent) : MidGameRyuukyokuEvent(parent) {
     public override string name => "suufon_renda";
-
-    public SuufonRenda(EventBase parent) : base(parent) { }
   }
 
-  public class KyuushuKyuuhai : MidGameRyuukyokuEvent {
+  public class KyuushuKyuuhai(EventBase parent) : MidGameRyuukyokuEvent(parent) {
     public override string name => "kyuushu_kyuuhai";
-
-    public KyuushuKyuuhai(EventBase parent) : base(parent) { }
   }
 
-  public class SuuchaRiichi : MidGameRyuukyokuEvent {
+  public class SuuchaRiichi(EventBase parent) : MidGameRyuukyokuEvent(parent) {
     public override string name => "suucha_riichi";
-
-    public SuuchaRiichi(EventBase parent) : base(parent) { }
   }
 
-  public class Sanchahou : MidGameRyuukyokuEvent {
+  public class Sanchahou(EventBase parent) : MidGameRyuukyokuEvent(parent) {
     public override string name => "triple_ron";
-
-    public Sanchahou(EventBase parent) : base(parent) { }
   }
 
-  public class SuukanSanra : MidGameRyuukyokuEvent {
+  public class SuukanSanra(EventBase parent) : MidGameRyuukyokuEvent(parent) {
     public override string name => "suukan_sanra";
-
-    public SuukanSanra(EventBase parent) : base(parent) { }
   }
 }

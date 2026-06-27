@@ -11,19 +11,27 @@ namespace RabiRiichi.Patterns {
     }
 
     public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
-      if (!hand.menzen || groups.Any(gr => gr is not (Jantou or Shun)))
+      if (!hand.menzen || groups.Any(gr => gr is not (Jantou or Shun))) {
         return false;
+      }
+
       var gr = groups.Find(gr => gr.Contains(incoming));
-      if (gr is not Shun)
+      if (gr is not Shun) {
         return false;
+      }
       // 确认两面听
-      if (gr.Any(tile => tile.tile.Is19Z && tile != incoming))
+      if (gr.Any(tile => tile.tile.Is19Z && tile != incoming)) {
         return false;
-      if (incoming == gr[1])
+      }
+
+      if (incoming == gr[1]) {
         return false;
+      }
+
       var jantou = groups.Find(gr => gr is Jantou);
-      if (hand.player.IsYaku(jantou.First.tile))
+      if (hand.player.IsYaku(jantou.First.tile)) {
         return false;
+      }
 
       scores.Add(new Scoring(ScoringType.Han, 1, this));
       scores.Remove(afterPatterns);

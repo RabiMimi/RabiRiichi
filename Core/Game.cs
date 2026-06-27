@@ -81,18 +81,26 @@ namespace RabiRiichi.Core {
     }
 
     #region Internal
-    public T Get<T>() => diContainer.GetService<T>();
-    public bool TryGet<T>(out T service) => (service = Get<T>()) != null;
+    public T Get<T>() {
+      return diContainer.GetService<T>();
+    }
+
+    public bool TryGet<T>(out T service) {
+      return (service = Get<T>()) != null;
+    }
     #endregion
 
     #region GameUtil
     public bool IsYaku(Tile tile) {
       return tile.IsSangen || tile.IsSame(Tile.From(info.wind));
     }
-    public Player GetPlayer(int index) => players[index];
+    public Player GetPlayer(int index) {
+      return players[index];
+    }
+
     public Player Dealer => GetPlayer(info.dealer);
     public Player[] PlayersByRank =>
-        players.OrderBy(p => -p.points * players.Length + p.id).ToArray();
+        [.. players.OrderBy(p => (-p.points * players.Length) + p.id)];
     public int Time => info.timeStamp;
     #endregion
 
@@ -142,13 +150,21 @@ namespace RabiRiichi.Core {
     #endregion
 
     #region Player
-    public int NextPlayerId(int id) => id == players.Length - 1 ? 0 : id + 1;
+    public int NextPlayerId(int id) {
+      return id == players.Length - 1 ? 0 : id + 1;
+    }
 
-    public int PrevPlayerId(int id) => id == 0 ? players.Length - 1 : id - 1;
+    public int PrevPlayerId(int id) {
+      return id == 0 ? players.Length - 1 : id - 1;
+    }
 
-    public Player NextPlayer(int id) => players[NextPlayerId(id)];
+    public Player NextPlayer(int id) {
+      return players[NextPlayerId(id)];
+    }
 
-    public Player PrevPlayer(int id) => players[PrevPlayerId(id)];
+    public Player PrevPlayer(int id) {
+      return players[PrevPlayerId(id)];
+    }
 
     /// <summary> 计算rhs玩家是lhs玩家后的第几个 </summary>
     public int Dist(int lhsId, int rhsId) {

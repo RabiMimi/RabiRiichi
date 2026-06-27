@@ -1,5 +1,4 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using RabiRiichi.Core;
 using RabiRiichi.Generated.Patterns;
 using RabiRiichi.Patterns;
 

@@ -22,7 +22,7 @@ namespace RabiRiichi.Core {
     /// <summary> 第一张牌 </summary>
     public GameTile First => this[0];
 
-    public MenLike(IEnumerable<GameTile> tiles) : base(tiles.OrderBy(t => t.tile).ToList()) {
+    public MenLike(IEnumerable<GameTile> tiles) : base([.. tiles.OrderBy(t => t.tile)]) {
       Value = 0;
       foreach (var tile in this) {
         Value = (Value << 8) | tile.tile.NoDoraVal;
@@ -42,18 +42,20 @@ namespace RabiRiichi.Core {
     }
 
     public Tiles ToTiles() {
-      return new Tiles(this.Select(gameTile => gameTile.tile));
+      return [.. this.Select(gameTile => gameTile.tile)];
     }
 
     public static bool IsShun(ReadOnlyCollection<GameTile> tiles) {
-      if (tiles.Count != 3)
+      if (tiles.Count != 3) {
         return false;
+      }
+
       var sorted = tiles.OrderBy(t => t.tile).ToList();
       return sorted[0].NextIs(sorted[1]) && sorted[1].NextIs(sorted[2]);
     }
 
     public static bool IsKou(ReadOnlyCollection<GameTile> tiles, bool allowKan = false) {
-      if (tiles.Count != 3 && tiles.Count != 4) {
+      if (tiles.Count is not 3 and not 4) {
         return false;
       }
       if (!allowKan && tiles.Count == 4) {
@@ -72,9 +74,7 @@ namespace RabiRiichi.Core {
     }
 
     public static bool IsKan(ReadOnlyCollection<GameTile> tiles) {
-      if (tiles.Count != 4)
-        return false;
-      return IsKou(tiles, true);
+      return tiles.Count != 4 ? false : IsKou(tiles, true);
     }
 
     public static bool IsMusou(ReadOnlyCollection<GameTile> tiles) {
@@ -91,10 +91,8 @@ namespace RabiRiichi.Core {
         return new Kou(tiles);
       } else if (IsShun(tiles)) {
         return new Shun(tiles);
-      } else if (IsMusou(tiles)) {
-        return new Musou(tiles);
       } else {
-        throw new ArgumentException("不是合法的面子或雀头");
+        return IsMusou(tiles) ? (MenLike)new Musou(tiles) : throw new ArgumentException("不是合法的面子或雀头");
       }
     }
 
@@ -117,9 +115,7 @@ namespace RabiRiichi.Core {
     }
 
     public override bool IsSame(MenLike other) {
-      if (other is not Shun shun)
-        return false;
-      return First.IsSame(shun.First);
+      return other is not Shun shun ? false : First.IsSame(shun.First);
     }
   }
 
@@ -131,9 +127,7 @@ namespace RabiRiichi.Core {
 
     /// <summary> 判定是否相同，赤宝牌视为相同牌，杠和刻视为相同 </summary>
     public override bool IsSame(MenLike other) {
-      if (other is not (Kou or Kan))
-        return false;
-      return First.IsSame(other.First);
+      return other is not (Kou or Kan) ? false : First.IsSame(other.First);
     }
   }
 
@@ -148,10 +142,8 @@ namespace RabiRiichi.Core {
         // 检查是哪种杠
         if (IsClose) {
           kanSource = TileSource.Ankan;
-        } else if (tiles.Any(t => t.formTime != tiles.First().formTime)) {
-          kanSource = TileSource.Kakan;
         } else {
-          kanSource = TileSource.Daiminkan;
+          kanSource = tiles.Any(t => t.formTime != tiles.First().formTime) ? TileSource.Kakan : TileSource.Daiminkan;
         }
       }
       KanSource = kanSource.Value;
@@ -159,9 +151,7 @@ namespace RabiRiichi.Core {
 
     /// <summary> 判定是否相同，赤宝牌视为相同牌，杠和刻视为相同 </summary>
     public override bool IsSame(MenLike other) {
-      if (other is not (Kou or Kan))
-        return false;
-      return First.IsSame(other.First);
+      return other is not (Kou or Kan) ? false : First.IsSame(other.First);
     }
   }
 
@@ -172,9 +162,7 @@ namespace RabiRiichi.Core {
     }
 
     public override bool IsSame(MenLike other) {
-      if (other is not Jantou jantou)
-        return false;
-      return First.IsSame(jantou.First);
+      return other is not Jantou jantou ? false : First.IsSame(jantou.First);
     }
   }
 
@@ -185,9 +173,7 @@ namespace RabiRiichi.Core {
     }
 
     public override bool IsSame(MenLike other) {
-      if (other is not Musou musou)
-        return false;
-      return First.IsSame(musou.First);
+      return other is not Musou musou ? false : First.IsSame(musou.First);
     }
   }
 }

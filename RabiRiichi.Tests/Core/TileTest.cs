@@ -2,7 +2,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Core;
 using RabiRiichi.Tests.Helper;
 using System;
-using System.Linq;
 
 namespace RabiRiichi.Tests.Core {
   [TestClass]

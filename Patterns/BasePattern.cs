@@ -11,7 +11,7 @@ namespace RabiRiichi.Patterns {
     /// <returns>是否应当计算舍牌。若为 false，则应计算进张。</returns>
     public static bool ShouldComputeDiscard(Hand hand, GameTile incoming) {
       if (incoming == null) {
-        Logger.Assert(hand.Count == Game.HAND_SIZE || hand.Count == Game.HAND_SIZE + 1,
+        Logger.Assert(hand.Count is Game.HAND_SIZE or (Game.HAND_SIZE + 1),
             $"Invalid: {hand.Count} tiles in hand and incoming is null");
         return hand.Count == Game.HAND_SIZE + 1;
       } else {

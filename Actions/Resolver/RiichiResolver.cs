@@ -9,11 +9,8 @@ namespace RabiRiichi.Actions.Resolver {
   /// <summary>
   /// 判定是否可以立直
   /// </summary>
-  public class RiichiResolver : ResolverBase {
-    private readonly PatternResolver patternResolver;
-    public RiichiResolver(PatternResolver patternResolver) {
-      this.patternResolver = patternResolver;
-    }
+  public class RiichiResolver(PatternResolver patternResolver) : ResolverBase {
+    private readonly PatternResolver patternResolver = patternResolver;
 
     protected override IEnumerable<Player> ResolvePlayers(Player player, GameTile incoming) {
       yield return player;

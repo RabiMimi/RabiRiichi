@@ -15,18 +15,12 @@ namespace RabiRiichi.Events {
   /// <summary>
   /// 自定义事件监听器，一般临时使用
   /// </summary>
-  public class EventListener<T> where T : EventBase {
-    private class ListenerData {
-      public readonly Func<T, Task> listener;
-      public readonly int priority;
-      public readonly int times;
+  public class EventListener<T>(EventBus eventBus) where T : EventBase {
+    private class ListenerData(Func<T, Task> listener, int priority, int times) {
+      public readonly Func<T, Task> listener = listener;
+      public readonly int priority = priority;
+      public readonly int times = times;
       public bool isListening;
-
-      public ListenerData(Func<T, Task> listener, int priority, int times) {
-        this.listener = listener;
-        this.priority = priority;
-        this.times = times;
-      }
 
       public void Subscribe(EventBus bus) {
         bus.Subscribe(listener, priority, times);
@@ -38,13 +32,9 @@ namespace RabiRiichi.Events {
         isListening = false;
       }
     }
-    private readonly EventBus eventBus;
-    private readonly List<ListenerData> listeners = new();
+    private readonly EventBus eventBus = eventBus;
+    private readonly List<ListenerData> listeners = [];
     private const int PRIORITY_DELTA = EventPriority.STEP;
-
-    public EventListener(EventBus eventBus) {
-      this.eventBus = eventBus;
-    }
 
     public EventListener<T> ListenTo(Func<T, Task> handler, int priority, int times = -1) {
       var data = new ListenerData(handler, priority, times);
@@ -54,32 +44,39 @@ namespace RabiRiichi.Events {
     }
 
     /// <summary> 事件开始前，事件信息可能未准备好 </summary>
-    public EventListener<T> EarlyPrepare(Func<T, Task> handler, int times = -1)
-        => ListenTo(handler, EventPriority.Prepare + PRIORITY_DELTA, times);
+    public EventListener<T> EarlyPrepare(Func<T, Task> handler, int times = -1) {
+      return ListenTo(handler, EventPriority.Prepare + PRIORITY_DELTA, times);
+    }
 
     /// <summary> 事件开始时，事件信息已处理完毕 </summary>
-    public EventListener<T> LatePrepare(Func<T, Task> handler, int times = -1)
-        => ListenTo(handler, EventPriority.Prepare - PRIORITY_DELTA, times);
+    public EventListener<T> LatePrepare(Func<T, Task> handler, int times = -1) {
+      return ListenTo(handler, EventPriority.Prepare - PRIORITY_DELTA, times);
+    }
 
     /// <summary> 处理事件前，可以修改事件信息 </summary>
-    public EventListener<T> EarlyExec(Func<T, Task> handler, int times = -1)
-        => ListenTo(handler, EventPriority.Execute + PRIORITY_DELTA, times);
+    public EventListener<T> EarlyExec(Func<T, Task> handler, int times = -1) {
+      return ListenTo(handler, EventPriority.Execute + PRIORITY_DELTA, times);
+    }
 
     /// <summary> 处理事件后，一般不要在此取消事件，否则事件不会被广播 </summary>
-    public EventListener<T> LateExec(Func<T, Task> handler, int times = -1)
-        => ListenTo(handler, EventPriority.Execute - PRIORITY_DELTA, times);
+    public EventListener<T> LateExec(Func<T, Task> handler, int times = -1) {
+      return ListenTo(handler, EventPriority.Execute - PRIORITY_DELTA, times);
+    }
 
     /// <summary> 广播消息后 </summary>
-    public EventListener<T> AfterBroadcast(Func<T, Task> handler, int times = -1)
-        => ListenTo(handler, EventPriority.Broadcast - PRIORITY_DELTA, times);
+    public EventListener<T> AfterBroadcast(Func<T, Task> handler, int times = -1) {
+      return ListenTo(handler, EventPriority.Broadcast - PRIORITY_DELTA, times);
+    }
 
     /// <summary> 事件结束时 </summary>
-    public EventListener<T> EarlyAfter(Func<T, Task> handler, int times = -1)
-        => ListenTo(handler, EventPriority.After + PRIORITY_DELTA, times);
+    public EventListener<T> EarlyAfter(Func<T, Task> handler, int times = -1) {
+      return ListenTo(handler, EventPriority.After + PRIORITY_DELTA, times);
+    }
 
     /// <summary> 最晚的时间点 </summary>
-    public EventListener<T> LateAfter(Func<T, Task> handler, int times = -1)
-        => ListenTo(handler, EventPriority.After - PRIORITY_DELTA, times);
+    public EventListener<T> LateAfter(Func<T, Task> handler, int times = -1) {
+      return ListenTo(handler, EventPriority.After - PRIORITY_DELTA, times);
+    }
 
     /// <summary>
     /// 取消所有监听
@@ -126,12 +123,8 @@ namespace RabiRiichi.Events {
   /// <summary>
   /// 用于创建临时使用的自定义事件监听器
   /// </summary>
-  public class EventListenerFactory {
-    private readonly EventBus eventBus;
-
-    public EventListenerFactory(EventBus eventBus) {
-      this.eventBus = eventBus;
-    }
+  public class EventListenerFactory(EventBus eventBus) {
+    private readonly EventBus eventBus = eventBus;
 
     public EventListener<T> Create<T>() where T : EventBase {
       return new EventListener<T>(eventBus);

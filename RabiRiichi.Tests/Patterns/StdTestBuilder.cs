@@ -13,11 +13,11 @@ using System.Linq;
 namespace RabiRiichi.Tests.Patterns {
   public class StdTestBuilder {
     protected virtual StdPattern V { get; set; }
-    protected List<MenLike> groups = new();
-    protected List<MenLike> fuuro = new();
-    protected List<GameTile> freeTiles = new();
+    protected List<MenLike> groups = [];
+    protected List<MenLike> fuuro = [];
+    protected List<GameTile> freeTiles = [];
     protected GameTile incoming;
-    protected ScoreStorage scores = new();
+    protected ScoreStorage scores = [];
     protected bool? forceMenzen = null;
     protected readonly RabiMockGame mockGame = new();
     public readonly Mock<Player> currentPlayer;
@@ -91,7 +91,7 @@ namespace RabiRiichi.Tests.Patterns {
       };
       var group = new Tiles(tiles).ToGameTileList();
       group.ForEach(g => g.player = currentPlayer.Object);
-      freeTiles.AddRange(group.ToList());
+      freeTiles.AddRange(group);
       group.Add(this.incoming);
       groups.Add(MenLike.From(group));
       return this;
@@ -123,9 +123,7 @@ namespace RabiRiichi.Tests.Patterns {
     /// <param name="value">期望的值</param>
     /// <param name="source">期望的来源，默认为传入的resolver</param>
     public StdTestBuilder ExpectScoring(ScoringType type, int value, StdPattern source = null) {
-      if (source == null) {
-        source = V;
-      }
+      source ??= V;
       var s = scores.Find(s => s.Type == type && s.Val == value && s.Source == source);
       Assert.IsNotNull(s, $"Expect scoring {type} {value} but not found");
       scores.Remove(s);

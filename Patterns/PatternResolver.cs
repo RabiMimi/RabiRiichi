@@ -5,8 +5,8 @@ using System.Linq;
 
 namespace RabiRiichi.Patterns {
   public class PatternResolver {
-    public readonly HashSet<BasePattern> basePatterns = new();
-    public readonly HashSet<StdPattern> stdPatterns = new();
+    public readonly HashSet<BasePattern> basePatterns = [];
+    public readonly HashSet<StdPattern> stdPatterns = [];
 
     public void RegisterBasePatterns(params BasePattern[] patterns) {
       foreach (var pattern in patterns) {
@@ -25,8 +25,8 @@ namespace RabiRiichi.Patterns {
       public Hand hand;
       public GameTile incoming;
       public BasePattern basePattern;
-      public readonly HashSet<StdPattern> stdSuccess = new();
-      public readonly HashSet<StdPattern> stdFailure = new();
+      public readonly HashSet<StdPattern> stdSuccess = [];
+      public readonly HashSet<StdPattern> stdFailure = [];
     }
 
     private bool ResolveStdPattern(ResolutionContext context, StdPattern pattern, ScoreStorage scores) {
@@ -110,7 +110,7 @@ namespace RabiRiichi.Patterns {
     /// <returns>向听数。-1 表示已经和牌。</returns>
     public int ResolveShanten(Hand hand, GameTile incoming, out Tiles tiles, int maxShanten = int.MaxValue) {
       int retShanten = int.MaxValue;
-      tiles = new Tiles();
+      tiles = [];
       foreach (var pattern in basePatterns) {
         int shanten = pattern.Shanten(hand, incoming, out var curTiles, maxShanten);
         if (shanten > retShanten || shanten == int.MaxValue) {
@@ -123,7 +123,7 @@ namespace RabiRiichi.Patterns {
         retShanten = shanten;
         tiles = curTiles;
       }
-      tiles = new Tiles(tiles.Distinct().ToList());
+      tiles = [.. tiles.Distinct()];
       tiles.Sort();
       return retShanten;
     }

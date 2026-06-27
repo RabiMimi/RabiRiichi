@@ -4,15 +4,11 @@ using RabiRiichi.Events;
 using System.Threading;
 
 namespace RabiRiichi.Communication {
-  public class JsonStringActionCenter : IActionCenter {
+  public class JsonStringActionCenter(JsonStringActionCenter.MessageSender sender) : IActionCenter {
     public delegate void MessageSender(int playerId, string message);
 
-    private readonly MessageSender sender;
+    private readonly MessageSender sender = sender;
     private MultiPlayerInquiry current;
-
-    public JsonStringActionCenter(MessageSender sender) {
-      this.sender = sender;
-    }
 
     private void Send(int playerId, string json) {
       if (string.IsNullOrWhiteSpace(json) || !json.StartsWith('{')) {

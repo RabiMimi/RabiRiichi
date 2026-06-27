@@ -1,4 +1,4 @@
-﻿using RabiRiichi.Core;
+using RabiRiichi.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,7 +26,7 @@ namespace RabiRiichi.Patterns {
         }
         ret.Add(MenLike.From(gr));
       }
-      output = new List<List<MenLike>> { ret };
+      output = [ret];
       return true;
     }
 
@@ -45,7 +45,7 @@ namespace RabiRiichi.Patterns {
           .ToArray();
       int requiredSingle = 7 - existingPairs.Length;
       int ret = Game.HAND_SIZE
-          - existingPairs.Length * 2
+          - (existingPairs.Length * 2)
           - Math.Min(requiredSingle, singleTiles.Length);
       if (ret > maxShanten) {
         return Reject(out output);
@@ -53,18 +53,14 @@ namespace RabiRiichi.Patterns {
       if (ShouldComputeDiscard(hand, incoming)) {
         // 14张，计算切牌
         var tiles = GetHand(hand.freeTiles, incoming);
-        output = new Tiles(tiles.Where(tile => {
+        output = [.. tiles.Where(tile => {
           int cnt = buckets.GetBucket(tile).Count;
-          if (singleTiles.Length > requiredSingle) {
-            return cnt > 2 || cnt == 1;
-          } else {
-            return cnt > 2;
-          }
-        }).Distinct());
+          return singleTiles.Length > requiredSingle ? cnt is > 2 or 1 : cnt > 2;
+        }).Distinct()];
       } else {
         // 13张，计算进张
         if (singleTiles.Length >= requiredSingle) {
-          output = new Tiles(singleTiles);
+          output = [.. singleTiles];
         } else {
           output = Tiles.AllDistinct;
           foreach (var pair in existingPairs) {

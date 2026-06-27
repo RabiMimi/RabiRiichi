@@ -13,18 +13,16 @@ namespace RabiRiichi.Events.InGame {
     #endregion
 
     #region Response
-    public readonly List<EventBase> responseEvents = new();
+    public readonly List<EventBase> responseEvents = [];
     #endregion
 
     public WaitPlayerActionEvent(EventBase parent) : base(parent) {
-      this.inquiry = new MultiPlayerInquiry(game);
+      inquiry = new MultiPlayerInquiry(game);
     }
   }
 
   [RabiPrivate]
-  public class EndInquiryEvent : PrivatePlayerEvent {
+  public class EndInquiryEvent(EventBase parent, int playerId) : PrivatePlayerEvent(parent, playerId) {
     public override string name => "end_inquiry";
-
-    public EndInquiryEvent(EventBase parent, int playerId) : base(parent, playerId) { }
   }
 }

@@ -28,9 +28,7 @@ namespace RabiRiichi.Events.InGame {
     }
   }
 
-  public class RiichiEvent : DiscardTileEvent {
+  public class RiichiEvent(EventBase parent, int playerId, GameTile tile, GameTile incoming, DiscardReason reason) : DiscardTileEvent(parent, playerId, tile, incoming, reason) {
     public override string name => "riichi";
-
-    public RiichiEvent(EventBase parent, int playerId, GameTile tile, GameTile incoming, DiscardReason reason) : base(parent, playerId, tile, incoming, reason) { }
   }
 }

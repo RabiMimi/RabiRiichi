@@ -21,10 +21,9 @@ namespace RabiRiichi.Actions {
         : base(playerId, new AgariInfo(playerId, scores), incoming, priorityDelta) { }
   }
 
-  public class TsumoAction : AgariAction {
+  public class TsumoAction(AgariInfo agariInfo, GameTile incoming, int priorityDelta = 0) : AgariAction(agariInfo.playerId, agariInfo, incoming, priorityDelta) {
     public override string name => "tsumo";
-    public TsumoAction(AgariInfo agariInfo, GameTile incoming, int priorityDelta = 0)
-        : base(agariInfo.playerId, agariInfo, incoming, priorityDelta) { }
+
     public TsumoAction(int playerId, ScoreStorage scores, GameTile incoming, int priorityDelta = 0)
         : this(new AgariInfo(playerId, scores), incoming, priorityDelta) { }
   }

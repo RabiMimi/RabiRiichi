@@ -9,8 +9,8 @@ namespace RabiRiichi.Events {
     EventBase Build();
   }
   public class MultiEventBuilder {
-    public readonly List<EventBase> events = new();
-    public readonly List<IEventBuilder> builders = new();
+    public readonly List<EventBase> events = [];
+    public readonly List<IEventBuilder> builders = [];
 
     public MultiEventBuilder AddEvent(EventBase e) {
       events.Add(e);

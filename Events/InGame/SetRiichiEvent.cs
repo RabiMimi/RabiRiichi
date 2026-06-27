@@ -2,17 +2,13 @@ using RabiRiichi.Communication;
 using RabiRiichi.Core;
 
 namespace RabiRiichi.Events.InGame {
-  public class SetRiichiEvent : PlayerEvent {
+  public class SetRiichiEvent(EventBase parent, int playerId, GameTile riichiTile, bool wRiichi) : PlayerEvent(parent, playerId) {
     public override string name => "set_riichi";
 
     #region Request
-    [RabiBroadcast] public GameTile riichiTile;
-    [RabiBroadcast] public bool wRiichi;
-    #endregion
+    [RabiBroadcast] public GameTile riichiTile = riichiTile;
+    [RabiBroadcast] public bool wRiichi = wRiichi;
 
-    public SetRiichiEvent(EventBase parent, int playerId, GameTile riichiTile, bool wRiichi) : base(parent, playerId) {
-      this.riichiTile = riichiTile;
-      this.wRiichi = wRiichi;
-    }
+    #endregion
   }
 }

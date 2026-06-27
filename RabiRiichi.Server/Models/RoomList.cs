@@ -3,35 +3,30 @@ using System.Collections;
 using System.Collections.Concurrent;
 
 namespace RabiRiichi.Server.Models {
-  public class RoomTaskQueue : TaskQueue {
-    public readonly RoomList roomList;
-    public readonly UserList userList;
+  public class RoomTaskQueue(RoomList roomList, UserList userList) : TaskQueue(1024) {
+    public readonly RoomList roomList = roomList;
+    public readonly UserList userList = userList;
 
-    public RoomTaskQueue(RoomList roomList, UserList userList) : base(1024) {
-      this.roomList = roomList;
-      this.userList = userList;
+    public Task<T> ExecuteAsync<T>(Func<RoomTaskQueue, Task<T>> worker) {
+      return ExecuteAsync(() => worker(this));
     }
 
-    public Task<T> ExecuteAsync<T>(Func<RoomTaskQueue, Task<T>> worker)
-        => ExecuteAsync(() => worker(this));
+    public Task ExecuteAsync(Func<RoomTaskQueue, Task> worker) {
+      return ExecuteAsync(() => worker(this));
+    }
 
-    public Task ExecuteAsync(Func<RoomTaskQueue, Task> worker)
-        => ExecuteAsync(() => worker(this));
+    public Task<T> Execute<T>(Func<RoomTaskQueue, T> worker) {
+      return Execute(() => worker(this));
+    }
 
-    public Task<T> Execute<T>(Func<RoomTaskQueue, T> worker)
-        => Execute(() => worker(this));
-
-    public Task Execute(Action<RoomTaskQueue> worker)
-        => Execute(() => worker(this));
+    public Task Execute(Action<RoomTaskQueue> worker) {
+      return Execute(() => worker(this));
+    }
   }
 
-  public class RoomList : IEnumerable<Room> {
+  public class RoomList(Random rand) : IEnumerable<Room> {
     public readonly ConcurrentDictionary<int, Room> rooms = new();
-    private readonly Random rand;
-
-    public RoomList(Random rand) {
-      this.rand = rand;
-    }
+    private readonly Random rand = rand;
 
     public bool Add(Room room) {
       room.roomList = this;

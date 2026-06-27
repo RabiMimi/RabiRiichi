@@ -1,8 +1,7 @@
-﻿using RabiRiichi.Core;
+using RabiRiichi.Core;
 using RabiRiichi.Utils;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 
 namespace RabiRiichi.Patterns {
@@ -19,7 +18,7 @@ namespace RabiRiichi.Patterns {
       }
       // Check hand & groups valid
       var buckets = GetTileGroups(hand, incoming, true).GetAllBuckets();
-      List<MenLike> ret = new();
+      List<MenLike> ret = [];
       bool has2 = false;
       foreach (var gr in buckets) {
         if (gr.Count > 2 || !gr[0].tile.Is19Z) {
@@ -33,7 +32,7 @@ namespace RabiRiichi.Patterns {
         }
         ret.Add(MenLike.From(gr));
       }
-      output = new List<List<MenLike>>() { ret };
+      output = [ret];
       return true;
     }
 
@@ -61,18 +60,18 @@ namespace RabiRiichi.Patterns {
       if (ShouldComputeDiscard(hand, incoming)) {
         // 计算切牌
         var tiles = GetHand(hand.freeTiles, incoming);
-        output = new Tiles(tiles
+        output = [.. tiles
             .Where(t => !t.Is19Z || buckets.GetBucket(t).Count > (multiCnt > 1 ? 1 : 2))
-            .Distinct());
+            .Distinct()];
       } else {
         // 计算有效进张
         if (multiCnt > 0) {
-          output = new Tiles(T19Z);
+          output = [.. T19Z];
           foreach (var t in existing) {
             output.Remove(t);
           }
         } else {
-          output = new Tiles(T19Z);
+          output = [.. T19Z];
         }
       }
       return ret;

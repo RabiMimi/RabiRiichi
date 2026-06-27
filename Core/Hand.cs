@@ -1,4 +1,4 @@
-﻿using RabiRiichi.Generated.Core;
+using RabiRiichi.Generated.Core;
 using RabiRiichi.Patterns;
 using System;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ using System.Linq;
 namespace RabiRiichi.Core {
   public class Hand {
     /// <summary> 手牌（不包含副露） </summary>
-    public List<GameTile> freeTiles = new();
+    public List<GameTile> freeTiles = [];
 
     /// <summary> 刚摸到的牌，如果有的话 </summary>
     public GameTile pendingTile = null;
@@ -17,10 +17,10 @@ namespace RabiRiichi.Core {
     public int jun = 0;
 
     /// <summary> 鸣牌的面子 </summary>
-    public List<MenLike> called = new();
+    public List<MenLike> called = [];
 
     /// <summary> 牌河 </summary>
-    public List<GameTile> discarded = new();
+    public List<GameTile> discarded = [];
 
     /// <summary> 当前玩家 </summary>
     public Player player;
@@ -54,11 +54,10 @@ namespace RabiRiichi.Core {
     /// <summary> 听牌列表，无赤宝牌。不听牌时返回空List </summary>
     public Tiles Tenpai {
       get {
-        if (Count == Game.HAND_SIZE &&
-            game.Get<PatternResolver>().ResolveShanten(this, null, out var tiles, 0) == 0) {
-          return tiles;
-        }
-        return Tiles.Empty;
+        return Count == Game.HAND_SIZE &&
+            game.Get<PatternResolver>().ResolveShanten(this, null, out var tiles, 0) == 0
+          ? tiles
+          : Tiles.Empty;
       }
     }
 
@@ -72,14 +71,16 @@ namespace RabiRiichi.Core {
     public bool isFuriten => isTempFuriten || isRiichiFuriten || isDiscardFuriten;
 
     /// <summary> 牌的总数，注意：杠会被算作3张牌 </summary>
-    public int Count => called.Select(gr => Math.Min(3, gr.Count)).Sum() + freeTiles.Count;
+    public int Count => called.Sum(gr => Math.Min(3, gr.Count)) + freeTiles.Count;
 
-    public GameTile FindTile(Tile tile) => freeTiles.Find(t => t.tile == tile);
+    public GameTile FindTile(Tile tile) {
+      return freeTiles.Find(t => t.tile == tile);
+    }
+
     public IEnumerable<GameTile> FindTiles(Tiles tiles) {
       var tmp = new Tiles(tiles);
       foreach (var tile in freeTiles) {
-        if (tmp.Contains(tile.tile)) {
-          tmp.Remove(tile.tile);
+        if (tmp.Remove(tile.tile)) {
           yield return tile;
         }
       }
@@ -112,16 +113,14 @@ namespace RabiRiichi.Core {
       tile.discardInfo = new DiscardInfo(player, reason, game.info.timeStamp.Next);
       tile.source = TileSource.Discard;
       freeTiles.Remove(tile);
-      if (reason != DiscardReason.Chankan && reason != DiscardReason.Pretend) {
+      if (reason is not DiscardReason.Chankan and not DiscardReason.Pretend) {
         // Do not consider kan tile to be discarded
         discarded.Add(tile);
       }
     }
 
     public void Remove(GameTile tile) {
-      if (freeTiles.Contains(tile)) {
-        freeTiles.Remove(tile);
-      }
+      freeTiles.Remove(tile);
     }
 
     public void AddGroup(MenLike tiles, TileSource source) {

@@ -1,4 +1,3 @@
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Events.InGame.Listener {

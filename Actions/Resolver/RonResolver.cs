@@ -9,12 +9,8 @@ namespace RabiRiichi.Actions.Resolver {
   /// <summary>
   /// 判定是否可以和牌
   /// </summary>
-  public class RonResolver : ResolverBase {
-    protected readonly PatternResolver patternResolver;
-
-    public RonResolver(PatternResolver patternResolver) {
-      this.patternResolver = patternResolver;
-    }
+  public class RonResolver(PatternResolver patternResolver) : ResolverBase {
+    protected readonly PatternResolver patternResolver = patternResolver;
 
     protected override IEnumerable<Player> ResolvePlayers(Player player, GameTile incoming) {
       return player.game.players.Where(p => !p.SamePlayer(player));

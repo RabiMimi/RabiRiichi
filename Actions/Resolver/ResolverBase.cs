@@ -29,7 +29,7 @@ namespace RabiRiichi.Actions.Resolver {
         List<Tile> tiles, int tileIndex) {
       if (tileIndex >= tiles.Count) {
         if (output.All(t => !t.SequenceEqual(current))) {
-          output.Add(current.ToList());
+          output.Add([.. current]);
           return true;
         }
         return false;

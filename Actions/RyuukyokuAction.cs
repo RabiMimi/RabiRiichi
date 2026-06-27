@@ -9,7 +9,7 @@ namespace RabiRiichi.Actions {
     [RabiBroadcast] public string reason => ev.name;
     public RyuukyokuAction(int playerId, RyuukyokuEvent ev, int priorityDelta = 0) : base(playerId) {
       this.ev = ev;
-      this.priority = ActionPriority.Ryuukyoku + priorityDelta;
+      priority = ActionPriority.Ryuukyoku + priorityDelta;
     }
   }
 }

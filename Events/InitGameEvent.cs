@@ -6,9 +6,8 @@ using System.Threading.Tasks;
 
 namespace RabiRiichi.Events {
   [RabiIgnore]
-  public class InitGameEvent : EventBase {
+  public class InitGameEvent(Game game) : EventBase(game) {
     public override string name => "init";
-    public InitGameEvent(Game game) : base(game) { }
 
     public static Task OnGameInit(InitGameEvent ev) {
       ev.Q.Queue(new BeginGameEvent(ev, 0, 0, 0, 0));

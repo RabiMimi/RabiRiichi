@@ -1,7 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Actions;
 using RabiRiichi.Core;
-using RabiRiichi.Generated.Core;
 using RabiRiichi.Tests.Scenario;
 using System.Linq;
 using System.Threading.Tasks;
@@ -46,7 +45,7 @@ namespace RabiRiichi.Tests.Actions {
       var candidate6s = playTileAction.candidates.FirstOrDefault(c => c.tile.tile.ToString() == "6s");
       Assert.IsNotNull(candidate6s);
       Assert.IsTrue(candidate6s.tenpaiInfos.Count > 0, "6s discard should lead to tenpai");
-      
+
       var win5s = candidate6s.tenpaiInfos.FirstOrDefault(t => t.winningTile.ToString() == "5s");
       Assert.IsNotNull(win5s);
       Assert.AreEqual(4, win5s.remainingCount);

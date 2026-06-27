@@ -6,15 +6,11 @@ using System.Linq;
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Actions {
-  public class InquiryResponse {
-    public readonly int playerId;
-    public readonly int index;
-    public readonly string response;
-    public InquiryResponse(int playerId, int index, string response) {
-      this.playerId = playerId;
-      this.index = index;
-      this.response = response;
-    }
+  public class InquiryResponse(int playerId, int index, string response) {
+    public readonly int playerId = playerId;
+    public readonly int index = index;
+    public readonly string response = response;
+
     public static InquiryResponse Default(int playerId) {
       return new InquiryResponse(playerId, -1, string.Empty);
     }
@@ -24,11 +20,9 @@ namespace RabiRiichi.Actions {
     bool Handle(IPlayerAction option);
   }
 
-  public class ResponseHandler<T> : IResponseHandler where T : IPlayerAction {
-    public readonly Action<T> handler;
-    public ResponseHandler(Action<T> handler) {
-      this.handler = handler;
-    }
+  public class ResponseHandler<T>(Action<T> handler) : IResponseHandler where T : IPlayerAction {
+    public readonly Action<T> handler = handler;
+
     public bool Handle(IPlayerAction action) {
       if (action is T t) {
         handler(t);
@@ -38,11 +32,11 @@ namespace RabiRiichi.Actions {
     }
   }
 
-  public class MultiPlayerInquiry {
-    public readonly List<SinglePlayerInquiry> playerInquiries = new();
+  public class MultiPlayerInquiry(Game game) {
+    public readonly List<SinglePlayerInquiry> playerInquiries = [];
     private readonly TaskCompletionSource finishTcs = new();
-    public readonly List<IPlayerAction> responses = new();
-    public readonly List<IResponseHandler> responseHandlers = new();
+    public readonly List<IPlayerAction> responses = [];
+    public readonly List<IResponseHandler> responseHandlers = [];
     /// <summary> 当前已回应的用户的最高优先级 </summary>
     private int curMaxPriority = int.MinValue;
     public AtomicBool hasExecuted { get; private set; } = new();
@@ -60,14 +54,11 @@ namespace RabiRiichi.Actions {
       }
     }
     public bool IsEmpty => playerInquiries.Count == 0;
-    public readonly Game game;
+    public readonly Game game = game;
 
-    public MultiPlayerInquiry(Game game) {
-      this.game = game;
+    public SinglePlayerInquiry GetByPlayerId(int playerId) {
+      return playerInquiries.Find(inquiry => inquiry.playerId == playerId);
     }
-
-    public SinglePlayerInquiry GetByPlayerId(int playerId)
-        => playerInquiries.Find(inquiry => inquiry.playerId == playerId);
 
     /// <summary> 添加一个PlayerAction，仅在构建inquiry被调用，非线程安全 </summary>
     public MultiPlayerInquiry Add(IPlayerAction action, bool isDefault = false) {

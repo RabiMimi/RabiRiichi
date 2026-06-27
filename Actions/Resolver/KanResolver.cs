@@ -14,8 +14,9 @@ namespace RabiRiichi.Actions.Resolver {
         yield return player;
       } else {
         // 来自别的玩家的牌，大明杠
-        foreach (var p in player.game.players.Where(p => !p.SamePlayer(player)))
+        foreach (var p in player.game.players.Where(p => !p.SamePlayer(player))) {
           yield return p;
+        }
       }
     }
 
@@ -32,7 +33,7 @@ namespace RabiRiichi.Actions.Resolver {
       var result = new List<List<GameTile>>();
 
       // 大明杠或暗杠
-      CheckCombo(hand.freeTiles, result, new List<GameTile> { incoming }, tile, tile, tile);
+      CheckCombo(hand.freeTiles, result, [incoming], tile, tile, tile);
       if (hand.riichi) {
         var tenpai = hand.Tenpai;
         // 立直时，检查暗杠不会影响听牌
@@ -56,10 +57,10 @@ namespace RabiRiichi.Actions.Resolver {
         foreach (var group in groups) {
           var groupKey = group.First.tile;
           if (incoming.tile.IsSame(groupKey)) {
-            result.Add(group.Append(incoming).ToList());
+            result.Add([.. group, incoming]);
           }
           foreach (var handTile in hand.freeTiles.Where(t => t.tile.IsSame(groupKey))) {
-            result.Add(group.Append(handTile).ToList());
+            result.Add([.. group, handTile]);
           }
         }
         // 暗杠
@@ -68,7 +69,7 @@ namespace RabiRiichi.Actions.Resolver {
           if (gr.Count() >= 4) {
             var list = gr.ToList();
             var key = gr.Key;
-            CheckCombo(list, result, new List<GameTile>(), key, key, key, key);
+            CheckCombo(list, result, [], key, key, key, key);
           }
         }
       }

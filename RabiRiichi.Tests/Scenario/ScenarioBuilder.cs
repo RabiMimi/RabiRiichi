@@ -1,4 +1,3 @@
-using Google.Protobuf;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Actions;
 using RabiRiichi.Core;
@@ -13,14 +12,14 @@ using System.Threading.Tasks;
 
 
 namespace RabiRiichi.Tests.Scenario {
-  public class Scenario {
+  public class Scenario(Game game, int startPlayerId) {
     private Task runToEnd;
-    private readonly Game game;
-    private readonly int startPlayerId;
-    private readonly ScenarioActionCenter actionCenter;
-    private readonly List<Predicate<EventBase>> eventMatchers = new();
-    private readonly List<Predicate<EventBase>> noEventMatchers = new();
-    private readonly List<EventBase> events = new();
+    private readonly Game game = game;
+    private readonly int startPlayerId = startPlayerId;
+    private readonly ScenarioActionCenter actionCenter = (ScenarioActionCenter)game.config.actionCenter;
+    private readonly List<Predicate<EventBase>> eventMatchers = [];
+    private readonly List<Predicate<EventBase>> noEventMatchers = [];
+    private readonly List<EventBase> events = [];
     private bool sanityCheckOnInquiry = true;
 
     /// <summary> 检查当前游戏状态是否合法 </summary>
@@ -32,7 +31,7 @@ namespace RabiRiichi.Tests.Scenario {
       foreach (var player in game.players) {
         int expectedCount = Game.HAND_SIZE;
         var action = (PlayTileAction)inquiry.inquiry.GetByPlayerId(player.id)?.actions.Find(action => action is PlayTileAction);
-        if (action?.options.All(x => player.hand.freeTiles.Contains((x as ChooseTileActionOption).tile)) == true) {
+        if (action?.options.All(x => player.hand.freeTiles.Contains(x.tile)) == true) {
           expectedCount++;
         }
         Assert.AreEqual(expectedCount, player.hand.Count, $"Player {player.id} hand count is not {Game.HAND_SIZE}");
@@ -45,12 +44,6 @@ namespace RabiRiichi.Tests.Scenario {
       Assert.AreEqual(Wall.NUM_DORA, game.wall.uradoras.Count, $"Wall uradoras count is {game.wall.uradoras.Count} != {Wall.NUM_DORA}");
       Assert.AreEqual(Wall.NUM_DORA, game.wall.doras.Count, $"Wall doras count is {game.wall.doras.Count} != {Wall.NUM_DORA}");
       Assert.IsTrue(game.wall.rinshan.Count <= Wall.NUM_RINSHAN, $"Wall rinshan count is {game.wall.rinshan.Count} > {Wall.NUM_RINSHAN}");
-    }
-
-    public Scenario(Game game, int startPlayerId) {
-      this.game = game;
-      this.startPlayerId = startPlayerId;
-      actionCenter = (ScenarioActionCenter)game.config.actionCenter;
     }
 
     /// <summary> 启用或禁用游戏询问玩家时的状态检查。默认启用 </summary>
@@ -120,34 +113,35 @@ namespace RabiRiichi.Tests.Scenario {
     }
 
     /// <summary> 测试事件发生（若存在多个，仅判定首个） </summary>
-    public Scenario AssertEvent<T>(Action<T> action = null) where T : EventBase
-        => AssertEvent<T>(ev => {
-          action?.Invoke(ev);
-          return true;
-        });
+    public Scenario AssertEvent<T>(Action<T> action = null) where T : EventBase {
+      return AssertEvent<T>(ev => {
+        action?.Invoke(ev);
+        return true;
+      });
+    }
 
     /// <summary> 测试没有对应的事件发生 </summary>
     public Scenario AssertNoEvent<T>(Predicate<T> predicate = null) where T : EventBase {
       noEventMatchers.Add((ev) => {
-        if (ev is T tEv) {
-          return predicate?.Invoke(tEv) ?? true;
-        }
-        return false;
+        return ev is T tEv ? predicate?.Invoke(tEv) ?? true : false;
       });
       return this;
     }
 
     /// <summary> 测试流局事件发生 </summary>
-    public Scenario AssertRyuukyoku<T>(Predicate<T> predicate) where T : RyuukyokuEvent
-        => AssertEvent(predicate);
+    public Scenario AssertRyuukyoku<T>(Predicate<T> predicate) where T : RyuukyokuEvent {
+      return AssertEvent(predicate);
+    }
 
     /// <summary> 测试流局事件发生（若存在多个，仅判定首个） </summary>
-    public Scenario AssertRyuukyoku<T>(Action<T> action = null) where T : RyuukyokuEvent
-        => AssertEvent(action);
+    public Scenario AssertRyuukyoku<T>(Action<T> action = null) where T : RyuukyokuEvent {
+      return AssertEvent(action);
+    }
 
     /// <summary> 测试没有流局事件发生 </summary>
-    public Scenario AssertNoRyuukyoku<T>(Predicate<T> predicate = null) where T : RyuukyokuEvent
-        => AssertNoEvent(predicate);
+    public Scenario AssertNoRyuukyoku<T>(Predicate<T> predicate = null) where T : RyuukyokuEvent {
+      return AssertNoEvent(predicate);
+    }
 
     /// <summary> 立即测试现有事件是否匹配 </summary>
     public Scenario ResolveImmediately() {
@@ -388,7 +382,7 @@ namespace RabiRiichi.Tests.Scenario {
 
       /// <summary> 设置场风，局数，和本场数。默认为东1局0本场。 </summary>
       public GameStateBuilder SetRound(Wind bakaze, int dealer, int honba = 0) {
-        this.round = (int)bakaze;
+        round = (int)bakaze;
         this.dealer = dealer;
         this.honba = honba;
         return this;
@@ -417,19 +411,12 @@ namespace RabiRiichi.Tests.Scenario {
 
     #region Player
     public class PlayerHandBuilder {
-      public class MenInfo {
-        public readonly Tiles tiles;
-        public readonly int fuuroIndex;
-        public readonly int fromPlayer;
+      public class MenInfo(Tiles tiles, int fuuroIndex, int fromPlayer, DiscardReason reason) {
+        public readonly Tiles tiles = tiles;
+        public readonly int fuuroIndex = fuuroIndex;
+        public readonly int fromPlayer = fromPlayer;
         public bool IsClosed => fuuroIndex == -1;
-        public readonly DiscardReason reason;
-
-        public MenInfo(Tiles tiles, int fuuroIndex, int fromPlayer, DiscardReason reason) {
-          this.tiles = tiles;
-          this.fuuroIndex = fuuroIndex;
-          this.fromPlayer = fromPlayer;
-          this.reason = reason;
-        }
+        public readonly DiscardReason reason = reason;
 
         public MenLike Create(List<GameTile> tiles, Player[] players) {
           if (!IsClosed) {
@@ -442,10 +429,10 @@ namespace RabiRiichi.Tests.Scenario {
       private bool? menzen;
       public Tile? riichiTile;
       private bool? wRiichi;
-      public Tiles freeTiles = new();
-      public Tiles discarded = new();
+      public Tiles freeTiles = [];
+      public Tiles discarded = [];
       public int discardedNum = 5;
-      public List<MenInfo> called = new();
+      public List<MenInfo> called = [];
       public Player player;
       private bool? isTempFuriten;
       private bool? isRiichiFuriten;
@@ -468,25 +455,25 @@ namespace RabiRiichi.Tests.Scenario {
 
       /// <summary> 设置是否立直振听，默认没有 </summary>
       public PlayerHandBuilder SetRiichiFuriten(bool isFuriten) {
-        this.isRiichiFuriten = isFuriten;
+        isRiichiFuriten = isFuriten;
         return this;
       }
 
       /// <summary> 设置是否同巡振听，默认没有 </summary>
       public PlayerHandBuilder SetTempFuriten(bool isFuriten) {
-        this.isTempFuriten = isFuriten;
+        isTempFuriten = isFuriten;
         return this;
       }
 
       /// <summary> 设置是否舍牌振听，默认没有 </summary>
       public PlayerHandBuilder SetDiscardFuriten(bool isFuriten) {
-        this.isDiscardFuriten = isFuriten;
+        isDiscardFuriten = isFuriten;
         return this;
       }
 
       /// <summary> 设置是否是一发，默认不是 </summary>
       public PlayerHandBuilder SetIppatsu(bool isIppatsu) {
-        this.ippatsu = isIppatsu;
+        ippatsu = isIppatsu;
         return this;
       }
 
@@ -498,8 +485,9 @@ namespace RabiRiichi.Tests.Scenario {
         }
         return this;
       }
-      public PlayerHandBuilder SetRiichiTile(string riichiTile, bool? wRiichi = null)
-          => SetRiichiTile(new Tile(riichiTile), wRiichi);
+      public PlayerHandBuilder SetRiichiTile(string riichiTile, bool? wRiichi = null) {
+        return SetRiichiTile(new Tile(riichiTile), wRiichi);
+      }
 
       /// <summary>
       /// 设置舍牌，默认为5张
@@ -512,7 +500,7 @@ namespace RabiRiichi.Tests.Scenario {
         if (discarded != null) {
           this.discarded = discarded;
         }
-        this.discardedNum = count;
+        discardedNum = count;
         return this;
       }
 
@@ -523,9 +511,10 @@ namespace RabiRiichi.Tests.Scenario {
       /// <param name="count">舍牌数量</param>
       /// <param name="discarded">舍牌，若不设置，则为空</param>
       /// <param name="reservedDiscarded">自动填充时，禁止出现在舍牌里的牌</param>
-      public PlayerHandBuilder SetDiscarded(int count, string discarded = null)
-          => SetDiscarded(count,
-              discarded == null ? null : new Tiles(discarded));
+      public PlayerHandBuilder SetDiscarded(int count, string discarded = null) {
+        return SetDiscarded(count,
+                                                                                              discarded == null ? null : new Tiles(discarded));
+      }
 
       /// <summary> 设置手牌 </summary>
       public PlayerHandBuilder SetFreeTiles(Tiles freeTiles) {
@@ -533,8 +522,9 @@ namespace RabiRiichi.Tests.Scenario {
         return this;
       }
       /// <summary> 设置手牌 </summary>
-      public PlayerHandBuilder SetFreeTiles(string freeTiles)
-          => SetFreeTiles(new Tiles(freeTiles));
+      public PlayerHandBuilder SetFreeTiles(string freeTiles) {
+        return SetFreeTiles(new Tiles(freeTiles));
+      }
 
       /// <summary> 添加一个面子 </summary>
       public PlayerHandBuilder AddCalled(string called, int fuuroIndex = -1, int fromPlayer = -1, DiscardReason reason = DiscardReason.None) {
@@ -573,11 +563,7 @@ namespace RabiRiichi.Tests.Scenario {
         if (points.HasValue) {
           player.points = points.Value;
         }
-        if (menzen.HasValue) {
-          player.hand.menzen = menzen.Value;
-        } else {
-          player.hand.menzen = called?.All(x => x.IsClosed) ?? true;
-        }
+        player.hand.menzen = menzen.HasValue ? menzen.Value : called?.All(x => x.IsClosed) ?? true;
         if (isTempFuriten.HasValue) {
           player.hand.isTempFuriten = isTempFuriten.Value;
         }
@@ -607,18 +593,14 @@ namespace RabiRiichi.Tests.Scenario {
     #endregion
 
     #region Wall
-    public class WallBuilder {
-      private readonly Tiles reserved = new();
-      private readonly Tiles doras = new();
-      private readonly Tiles uradoras = new();
-      private readonly Tiles rinshan = new();
-      private readonly List<PlayerHandBuilder> playerBuilders;
+    public class WallBuilder(IEnumerable<ScenarioBuilder.PlayerHandBuilder> players) {
+      private readonly Tiles reserved = [];
+      private readonly Tiles doras = [];
+      private readonly Tiles uradoras = [];
+      private readonly Tiles rinshan = [];
+      private readonly List<PlayerHandBuilder> playerBuilders = [.. players];
       private int revealedDoraCount = 1;
       private int revealedUradoraCount = 1;
-
-      public WallBuilder(IEnumerable<PlayerHandBuilder> players) {
-        playerBuilders = players.ToList();
-      }
 
       /// <summary>
       /// 保留一些牌。
@@ -633,13 +615,17 @@ namespace RabiRiichi.Tests.Scenario {
       /// 保留一些牌。
       /// 这些牌会被放在牌山最前，下标为0的是第一张牌。
       /// </summary>
-      public WallBuilder Reserve(string tiles) => Reserve(new Tiles(tiles));
+      public WallBuilder Reserve(string tiles) {
+        return Reserve(new Tiles(tiles));
+      }
 
       /// <summary>
       /// 保留一张牌。
       /// 这张牌会被放在牌山最前。
       /// </summary>
-      public WallBuilder Reserve(Tile tile) => Reserve(Enumerable.Repeat(tile, 1));
+      public WallBuilder Reserve(Tile tile) {
+        return Reserve(Enumerable.Repeat(tile, 1));
+      }
 
       /// <summary> 添加宝牌。第一个宝牌的下标为0。 </summary>
       public WallBuilder AddDoras(IEnumerable<Tile> tiles) {
@@ -647,9 +633,14 @@ namespace RabiRiichi.Tests.Scenario {
         return this;
       }
       /// <summary> 添加宝牌。第一个宝牌的下标为0。 </summary>
-      public WallBuilder AddDoras(string tiles) => AddDoras(new Tiles(tiles));
+      public WallBuilder AddDoras(string tiles) {
+        return AddDoras(new Tiles(tiles));
+      }
+
       /// <summary> 添加宝牌。第一个宝牌的下标为0。 </summary>
-      public WallBuilder AddDoras(Tile tile) => AddDoras(Enumerable.Repeat(tile, 1));
+      public WallBuilder AddDoras(Tile tile) {
+        return AddDoras(Enumerable.Repeat(tile, 1));
+      }
 
       /// <summary> 添加里宝牌。第一个里宝牌的下标为0。 </summary>
       public WallBuilder AddUradoras(IEnumerable<Tile> tiles) {
@@ -657,9 +648,14 @@ namespace RabiRiichi.Tests.Scenario {
         return this;
       }
       /// <summary> 添加里宝牌。第一个里宝牌的下标为0。 </summary>
-      public WallBuilder AddUradoras(string tiles) => AddUradoras(new Tiles(tiles));
+      public WallBuilder AddUradoras(string tiles) {
+        return AddUradoras(new Tiles(tiles));
+      }
+
       /// <summary> 添加里宝牌。第一个里宝牌的下标为0。 </summary>
-      public WallBuilder AddUradoras(Tile tile) => AddUradoras(Enumerable.Repeat(tile, 1));
+      public WallBuilder AddUradoras(Tile tile) {
+        return AddUradoras(Enumerable.Repeat(tile, 1));
+      }
 
       /// <summary> 添加岭上牌。第一张岭上牌的下标为0。 </summary>
       public WallBuilder AddRinshan(IEnumerable<Tile> tiles) {
@@ -667,9 +663,14 @@ namespace RabiRiichi.Tests.Scenario {
         return this;
       }
       /// <summary> 添加岭上牌。第一张岭上牌的下标为0。 </summary>
-      public WallBuilder AddRinshan(string tiles) => AddRinshan(new Tiles(tiles));
+      public WallBuilder AddRinshan(string tiles) {
+        return AddRinshan(new Tiles(tiles));
+      }
+
       /// <summary> 添加岭上牌。第一张岭上牌的下标为0。 </summary>
-      public WallBuilder AddRinshan(Tile tile) => AddRinshan(Enumerable.Repeat(tile, 1));
+      public WallBuilder AddRinshan(Tile tile) {
+        return AddRinshan(Enumerable.Repeat(tile, 1));
+      }
 
       /// <summary> 设置有多少Dora已经翻开了，默认为1。 </summary>
       public WallBuilder SetRevealedDoraCount(int count) {

@@ -24,8 +24,8 @@ namespace RabiRiichi.Events.InGame {
     public KanEvent(EventBase parent, int playerId, Kan kan, GameTile incoming) : base(parent, playerId) {
       this.kan = kan;
       this.incoming = incoming;
-      this.kanSource = kan.KanSource;
-      this.waitEvent = new WaitPlayerActionEvent(this);
+      kanSource = kan.KanSource;
+      waitEvent = new WaitPlayerActionEvent(this);
     }
   }
 }

@@ -10,28 +10,32 @@ using System.Linq;
 namespace RabiRiichi.Core.Setup {
   public class BaseSetup {
     /// <summary> 底和 </summary>
-    protected readonly List<Type> basePatterns = new();
+    protected readonly List<Type> basePatterns = [];
 
     /// <summary> 役种 </summary>
-    protected readonly List<Type> stdPatterns = new();
+    protected readonly List<Type> stdPatterns = [];
 
     #region Inject
 
     /// <summary> 注册Base Pattern </summary>
-    protected void AddBasePattern<T>() where T : BasePattern
-        => basePatterns.Add(typeof(T));
+    protected void AddBasePattern<T>() where T : BasePattern {
+      basePatterns.Add(typeof(T));
+    }
 
     /// <summary> 注册Std Pattern </summary>
-    protected void AddStdPattern<T>() where T : StdPattern
-        => stdPatterns.Add(typeof(T));
+    protected void AddStdPattern<T>() where T : StdPattern {
+      stdPatterns.Add(typeof(T));
+    }
 
     /// <summary> 移除Base Pattern </summary>
-    protected bool RemoveBasePattern<T>() where T : BasePattern
-        => basePatterns.Remove(typeof(T));
+    protected bool RemoveBasePattern<T>() where T : BasePattern {
+      return basePatterns.Remove(typeof(T));
+    }
 
     /// <summary> 移除Std Pattern </summary>
-    protected bool RemoveStdPattern<T>() where T : StdPattern
-        => stdPatterns.Remove(typeof(T));
+    protected bool RemoveStdPattern<T>() where T : StdPattern {
+      return stdPatterns.Remove(typeof(T));
+    }
 
     /// <summary>
     /// 初始化<see cref="basePatterns"/>，<see cref="stdPatterns"/>
@@ -44,8 +48,10 @@ namespace RabiRiichi.Core.Setup {
         IServiceCollection collection,
         Type pattern,
         HashSet<Type> injectedPatterns) {
-      if (injectedPatterns.Contains(pattern))
+      if (injectedPatterns.Contains(pattern)) {
         return;
+      }
+
       collection.TryAddSingleton(pattern);
       injectedPatterns.Add(pattern);
       // Try add dependencies
@@ -88,8 +94,8 @@ namespace RabiRiichi.Core.Setup {
     /// <summary> 配置牌型解析 </summary>
     private void RegisterPatterns(IServiceProvider services) {
       var resolver = services.GetService<PatternResolver>();
-      resolver.RegisterBasePatterns(basePatterns.Select(t => (BasePattern)services.GetService(t)).ToArray());
-      resolver.RegisterStdPatterns(stdPatterns.Select(t => (StdPattern)services.GetService(t)).ToArray());
+      resolver.RegisterBasePatterns([.. basePatterns.Select(t => (BasePattern)services.GetService(t))]);
+      resolver.RegisterStdPatterns([.. stdPatterns.Select(t => (StdPattern)services.GetService(t))]);
     }
 
     /// <summary> 配置事件监听 </summary>

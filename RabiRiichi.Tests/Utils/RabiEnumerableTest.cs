@@ -5,7 +5,7 @@ using System.Linq;
 namespace RabiRiichi.Tests.Utils {
   [TestClass]
   public class RabiEnumerableTest {
-    public readonly int[] source = new int[] { 1, 1, 4, 5, 1, 4 };
+    public readonly int[] source = [1, 1, 4, 5, 1, 4];
 
     [TestMethod]
     public void TestMaxBy() {
@@ -43,7 +43,7 @@ namespace RabiRiichi.Tests.Utils {
     [TestMethod]
     public void TestLargeSubset() {
       var groups = source.Concat(source).Subset(2).ToArray();
-      Assert.AreEqual(source.Length * (source.Length * 2 - 1), groups.Length);
+      Assert.AreEqual(source.Length * ((source.Length * 2) - 1), groups.Length);
       CollectionAssert.AreEqual(new int[] { 1, 1 }, groups[0].ToArray());
     }
 

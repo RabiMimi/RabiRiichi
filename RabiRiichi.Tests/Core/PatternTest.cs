@@ -5,7 +5,9 @@ using RabiRiichi.Tests.Helper;
 namespace RabiRiichi.Tests.Core {
   [TestClass]
   public class PatternTest {
-    private static MenLike Create(string tiles) => new Tiles(tiles).ToMenLike();
+    private static MenLike Create(string tiles) {
+      return new Tiles(tiles).ToMenLike();
+    }
 
     [TestMethod]
     public void TestFrom() {

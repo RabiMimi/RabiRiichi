@@ -9,28 +9,19 @@ using RabiRiichi.Server.Services;
 namespace RabiRiichi.Server.WebSockets {
   [ApiController]
   [Route("/ws")]
-  public class WebSocketController : ControllerBase {
-    private readonly ILogger<WebSocketController> logger;
-    private readonly RoomTaskQueue taskQueue;
-    private readonly TokenService tokenService;
-    private readonly InfoServiceImpl infoService;
-    private readonly RoomServiceImpl roomService;
-    private readonly UserServiceImpl userService;
-
-    public WebSocketController(
-        ILogger<WebSocketController> logger,
-        RoomTaskQueue taskQueue,
-        TokenService tokenService,
-        InfoServiceImpl infoService,
-        RoomServiceImpl roomService,
-        UserServiceImpl userService) {
-      this.logger = logger;
-      this.taskQueue = taskQueue;
-      this.tokenService = tokenService;
-      this.infoService = infoService;
-      this.roomService = roomService;
-      this.userService = userService;
-    }
+  public class WebSocketController(
+      ILogger<WebSocketController> logger,
+      RoomTaskQueue taskQueue,
+      TokenService tokenService,
+      InfoServiceImpl infoService,
+      RoomServiceImpl roomService,
+      UserServiceImpl userService) : ControllerBase {
+    private readonly ILogger<WebSocketController> logger = logger;
+    private readonly RoomTaskQueue taskQueue = taskQueue;
+    private readonly TokenService tokenService = tokenService;
+    private readonly InfoServiceImpl infoService = infoService;
+    private readonly RoomServiceImpl roomService = roomService;
+    private readonly UserServiceImpl userService = userService;
 
     private Task HandlePublic(Connection connection, ClientMessageDto msg) {
       return taskQueue.Execute(queue => {
@@ -127,8 +118,10 @@ namespace RabiRiichi.Server.WebSockets {
             });
         var adapter = new WebSocketAdapter(webSocket);
         var connection = new Connection();
-        void PublicListener(ClientMessageDto msg)
-            => _ = HandlePublic(connection, msg);
+        void PublicListener(ClientMessageDto msg) {
+          _ = HandlePublic(connection, msg);
+        }
+
         connection.OnReceive += PublicListener;
         try {
           connection.Connect(adapter, adapter);
@@ -157,8 +150,13 @@ namespace RabiRiichi.Server.WebSockets {
           return;
         }
 
-        void PublicListener(ClientMessageDto msg) => _ = HandlePublic(user.connection, msg);
-        void UserListener(ClientMessageDto msg) => _ = HandlePrivate(user, user.connection, msg);
+        void PublicListener(ClientMessageDto msg) {
+          _ = HandlePublic(user.connection, msg);
+        }
+
+        void UserListener(ClientMessageDto msg) {
+          _ = HandlePrivate(user, user.connection, msg);
+        }
 
         RabiStreamingContext rabiCtx = null;
 

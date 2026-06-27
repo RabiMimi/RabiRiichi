@@ -73,10 +73,9 @@ namespace RabiRiichi.Tests.Communication.Proto {
               continue;
             }
             instance = validConstructor.Invoke(
-                validConstructor.GetParameters()
+                [.. validConstructor.GetParameters()
                     .Select(p => parameters
-                        .First(pa => pa.GetType().IsAssignableTo(p.ParameterType)))
-                            .ToArray());
+                        .First(pa => pa.GetType().IsAssignableTo(p.ParameterType)))]);
           }
 
           hasProgress = true;

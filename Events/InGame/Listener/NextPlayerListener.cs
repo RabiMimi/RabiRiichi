@@ -4,11 +4,7 @@ using System.Threading.Tasks;
 namespace RabiRiichi.Events.InGame.Listener {
   public static class NextPlayerListener {
     public static Task PreparePlayer(NextPlayerEvent ev) {
-      if (ev.game.wall.IsHaitei) {
-        ev.nextPlayerId = -1;
-      } else {
-        ev.nextPlayerId = ev.player.NextPlayerId;
-      }
+      ev.nextPlayerId = ev.game.wall.IsHaitei ? -1 : ev.player.NextPlayerId;
       return Task.CompletedTask;
     }
 

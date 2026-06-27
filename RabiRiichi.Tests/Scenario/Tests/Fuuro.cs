@@ -70,7 +70,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
           .AssertSkip()
           .ChooseTiles<ChiiAction>("4r56m", action => {
             action.options.ToStrings().SequenceEqualAfterSort(
-                      new string[] { "456m", "4r56m", "567m", "r567m", "678m" }
+                      ["456m", "4r56m", "567m", "r567m", "678m"]
                   );
           })
           .AssertNoMoreActions()
@@ -201,7 +201,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
           .AssertAction<KanAction>()
           .ChooseTiles<PonAction>("555m", action => {
             action.options.ToStrings().SequenceEqualAfterSort(
-                      new string[] { "555m", "55r5m" }
+                      ["555m", "55r5m"]
                   );
           })
           .AssertNoMoreActions()

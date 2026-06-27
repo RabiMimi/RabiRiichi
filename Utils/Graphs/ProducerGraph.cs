@@ -18,9 +18,11 @@ namespace RabiRiichi.Utils.Graphs {
     public readonly MethodInfo method;
     public readonly ProducerRequirement produces;
     public readonly int cost;
-    public readonly List<ProducerRequirement> requires = new();
+    public readonly List<ProducerRequirement> requires = [];
 
-    public int IndexOf(ProducerRequirement requirement) => requires.IndexOf(requirement);
+    public int IndexOf(ProducerRequirement requirement) {
+      return requires.IndexOf(requirement);
+    }
 
     public ProducerGraphNode(object instance, MethodInfo method) {
       this.instance = instance;
@@ -41,20 +43,20 @@ namespace RabiRiichi.Utils.Graphs {
   }
 
   public class ProducerGraphExecutionContext : IEquatable<ProducerGraphExecutionContext> {
-    private readonly Dictionary<string, List<object>> produces = new();
-    private readonly List<ProducerRequirement> inputs = new();
+    private readonly Dictionary<string, List<object>> produces = [];
+    private readonly List<ProducerRequirement> inputs = [];
     private readonly ProducerGraph graph;
 
     private void AddProduces(string id, object obj) {
       if (!produces.TryGetValue(id, out var list)) {
-        list = new List<object>();
+        list = [];
         produces[id] = list;
       }
       list.Add(obj);
     }
 
     public ProducerGraphExecutionContext(ProducerGraph graph) {
-      produces[""] = new List<object> { graph };
+      produces[""] = [graph];
       this.graph = graph;
     }
 
@@ -69,7 +71,7 @@ namespace RabiRiichi.Utils.Graphs {
 
     public ProducerGraphExecutionContext SetInput(string id, object obj) {
       if (!produces.TryGetValue(id, out var list)) {
-        list = new List<object>();
+        list = [];
         produces[id] = list;
       }
       list.Add(obj);
@@ -77,8 +79,9 @@ namespace RabiRiichi.Utils.Graphs {
       return this;
     }
 
-    public ProducerGraphExecutionContext SetInput(object obj)
-        => SetInput("", obj);
+    public ProducerGraphExecutionContext SetInput(object obj) {
+      return SetInput("", obj);
+    }
 
     public T Execute<T>(string id = "") {
       try {
@@ -91,10 +94,7 @@ namespace RabiRiichi.Utils.Graphs {
     }
 
     public async Task<T> ExecuteAsync<T>(string id = "") {
-      var path = graph.FindPath(this, typeof(T), id);
-      if (path == null) {
-        throw new ArgumentException($"No path to produce {typeof(T)} with id {id}");
-      }
+      var path = graph.FindPath(this, typeof(T), id) ?? throw new ArgumentException($"No path to produce {typeof(T)} with id {id}");
       foreach (var node in path) {
         var parameters = node.node.method.GetParameters().Select(p => {
           Logger.Assert(TryGetOutput(p.ParameterType,
@@ -102,7 +102,7 @@ namespace RabiRiichi.Utils.Graphs {
               $"No input found for {p.Name}");
           return obj;
         });
-        var ret = node.node.method.Invoke(node.node.instance, parameters.ToArray());
+        var ret = node.node.method.Invoke(node.node.instance, [.. parameters]);
         if (ret is Task task) {
           await task;
           ret = task.GetType().GetProperty("Result").GetValue(task);
@@ -118,10 +118,7 @@ namespace RabiRiichi.Utils.Graphs {
     }
 
     public bool Equals(ProducerGraphExecutionContext other) {
-      if (other == null) {
-        return false;
-      }
-      return inputs.SequenceEqual(other.inputs);
+      return other == null ? false : inputs.SequenceEqual(other.inputs);
     }
 
     public override bool Equals(object obj) {
@@ -138,7 +135,10 @@ namespace RabiRiichi.Utils.Graphs {
       public readonly ProducerGraphNode node;
       public int dist;
 
-      public bool IsVisited(int time) => visitedTimeStamp == time;
+      public bool IsVisited(int time) {
+        return visitedTimeStamp == time;
+      }
+
       /// <summary> Set the node as visited. </summary>
       /// <param name="time">Current timestamp.</param>
       /// <returns>True if the node has not been visited before.</returns>
@@ -196,15 +196,15 @@ namespace RabiRiichi.Utils.Graphs {
     private static readonly NodeContext INPUT_NODE = new(null, null) { dist = 0 };
     private static readonly NodeContext INVALID_NODE = new(null, null) { dist = NodeContext.INIT_COST };
 
-    private readonly Dictionary<ProducerRequirement, List<NodeContext>> consumerLookup = new();
-    private readonly List<NodeContext> nodeCtxs = new();
-    private readonly Dictionary<(ProducerGraphExecutionContext, string, Type), NodeContext[]> pathCache = new();
+    private readonly Dictionary<ProducerRequirement, List<NodeContext>> consumerLookup = [];
+    private readonly List<NodeContext> nodeCtxs = [];
+    private readonly Dictionary<(ProducerGraphExecutionContext, string, Type), NodeContext[]> pathCache = [];
     private AutoIncrementInt timeStamp = new();
     private readonly PriorityQueue<NodeContext, int> queue = new();
 
     private List<NodeContext> GetOrCreateConsumers(ProducerRequirement requires) {
       if (!consumerLookup.TryGetValue(requires, out var list)) {
-        list = new List<NodeContext>();
+        list = [];
         consumerLookup[requires] = list;
       }
       return list;
@@ -231,14 +231,18 @@ namespace RabiRiichi.Utils.Graphs {
       return this;
     }
 
-    public ProducerGraph Register(object obj)
-        => Register(obj, obj.GetType().GetMethods(
-            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static));
+    public ProducerGraph Register(object obj) {
+      return Register(obj, obj.GetType().GetMethods(
+                                                          BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static));
+    }
 
-    public ProducerGraph Register<T>() where T : class
-        => Register(null, typeof(T).GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static));
+    public ProducerGraph Register<T>() where T : class {
+      return Register(null, typeof(T).GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static));
+    }
 
-    public ProducerGraphExecutionContext Build() => new(this);
+    public ProducerGraphExecutionContext Build() {
+      return new(this);
+    }
 
     public IEnumerable<NodeContext> FindPath(ProducerGraphExecutionContext context, Type type, string id) {
       var key = (context, id, type);
@@ -288,7 +292,7 @@ namespace RabiRiichi.Utils.Graphs {
       if (target == null) {
         throw new ArgumentException($"Cannot find a path to produce {type.Name}#{id}");
       }
-      list = target.GetPath(timeStamp.Next).ToArray();
+      list = [.. target.GetPath(timeStamp.Next)];
       pathCache[key] = list;
       return list;
     }

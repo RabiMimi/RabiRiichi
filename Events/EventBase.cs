@@ -38,22 +38,22 @@ namespace RabiRiichi.Events {
     /// <summary> 是否被取消 </summary>
     public bool IsCancelled => phase == EventPriority.Cancelled;
     /// <summary> 事件处理过程中可能会用到的额外信息 </summary>
-    public readonly Dictionary<string, object> extraData = new();
+    public readonly Dictionary<string, object> extraData = [];
 
     /// <summary> 该事件的父事件 </summary>
     public readonly EventBase parent;
 
     /// <summary> 该事件的子事件 </summary>
-    public readonly List<EventBase> children = new();
+    public readonly List<EventBase> children = [];
     /// <summary> 在事件成功处理后执行回调 </summary>
     public Action OnFinish;
 
     public EventBase(EventBase parent) {
       if (parent != null) {
         this.parent = parent;
-        this.game = parent.game;
+        game = parent.game;
         this.parent.children.Add(this);
-        this.Q = parent.Q;
+        Q = parent.Q;
       }
     }
 
@@ -74,10 +74,7 @@ namespace RabiRiichi.Events {
 
     /// <summary> 按事件类型获取父事件（包含本事件） </summary>
     public T GetInParent<T>() where T : EventBase {
-      if (this is T target) {
-        return target;
-      }
-      return parent?.GetInParent<T>();
+      return this is T target ? target : (parent?.GetInParent<T>());
     }
 
     /// <summary> 跳过Execute阶段 </summary>

@@ -6,7 +6,7 @@ using System;
 
 namespace RabiRiichi.Patterns {
   [RabiMessage]
-  public class ScoreCalcResult : IComparable<ScoreCalcResult> {
+  public class ScoreCalcResult(ScoringOption option) : IComparable<ScoreCalcResult> {
     public const int KAZOE_YAKUMAN_HAN = 13;
     /// <summary> 番 </summary>
     [RabiBroadcast] public int han;
@@ -17,34 +17,42 @@ namespace RabiRiichi.Patterns {
     /// <summary> 役满数，不包含累计役满 </summary>
     [RabiBroadcast] public int yakuman;
     /// <summary> 计分选项 </summary>
-    public ScoringOption scoringOption;
-
-    public ScoreCalcResult(ScoringOption option) {
-      scoringOption = option;
-    }
+    public ScoringOption scoringOption = option;
 
     /// <summary> 基本点 </summary>
     public long BaseScore {
       get {
         if (!scoringOption.HasAnyFlag(ScoringOption.Yakuman)) {
           // 青天井
-          return fu * (1L << (han + yakuman * KAZOE_YAKUMAN_HAN + 2));
+          return fu * (1L << (han + (yakuman * KAZOE_YAKUMAN_HAN) + 2));
         }
         int finalYakuman = FinalYakuman;
         if (finalYakuman > 0) {
           return finalYakuman * 8000L;
         }
         if (han >= 11) // 三倍满
+{
           return 6000;
+        }
+
         if (han >= 8) // 倍满
+{
           return 4000;
+        }
+
         if (han >= 6) // 跳满
+{
           return 3000;
+        }
+
         if (han >= 5) // 满贯
+{
           return 2000;
+        }
+
         long score = fu * (1L << (han + 2));
         if (scoringOption.HasAnyFlag(ScoringOption.KiriageMangan)) {
-          if (score > 1900 && score < 2000) {
+          if (score is > 1900 and < 2000) {
             score = 2000;
           }
         }
@@ -55,10 +63,7 @@ namespace RabiRiichi.Patterns {
     [RabiBroadcast]
     public int KazoeYakuman {
       get {
-        if (!scoringOption.HasAllFlags(ScoringOption.Yakuman | ScoringOption.KazoeYakuman)) {
-          return 0;
-        }
-        return han >= KAZOE_YAKUMAN_HAN ? 1 : 0;
+        return !scoringOption.HasAllFlags(ScoringOption.Yakuman | ScoringOption.KazoeYakuman) ? 0 : han >= KAZOE_YAKUMAN_HAN ? 1 : 0;
       }
     }
 
@@ -71,16 +76,15 @@ namespace RabiRiichi.Patterns {
             scoringOption.HasAnyFlag(ScoringOption.MultipleYakuman) ? yakuman : Math.Min(1, yakuman),
             KazoeYakuman) : 0;
 
-    public bool IsValid(int minHan) => yaku + yakuman * KAZOE_YAKUMAN_HAN >= minHan;
+    public bool IsValid(int minHan) {
+      return yaku + (yakuman * KAZOE_YAKUMAN_HAN) >= minHan;
+    }
 
     public int CompareTo(ScoreCalcResult other) {
       if (BaseScore != other.BaseScore) {
         return BaseScore.CompareTo(other.BaseScore);
       }
-      if (han != other.han) {
-        return han.CompareTo(other.han);
-      }
-      return fu.CompareTo(other.fu);
+      return han != other.han ? han.CompareTo(other.han) : fu.CompareTo(other.fu);
     }
 
     public static bool operator <(ScoreCalcResult lhs, ScoreCalcResult rhs) {

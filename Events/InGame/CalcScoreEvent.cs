@@ -15,11 +15,7 @@ namespace RabiRiichi.Events.InGame {
       this.from = from;
       this.to = to;
       this.reason = reason;
-      if (ceilTo100) {
-        this.points = points.CeilTo100();
-      } else {
-        this.points = points;
-      }
+      this.points = ceilTo100 ? points.CeilTo100() : points;
     }
 
     public ScoreTransferMsg ToProto() {
@@ -33,29 +29,27 @@ namespace RabiRiichi.Events.InGame {
   }
 
   public class ScoreTransferList : List<ScoreTransfer> {
-    public long DeltaScore(int playerId)
-        => this.Where(x => x.to == playerId).Sum(x => x.points)
-            - this.Where(x => x.from == playerId).Sum(x => x.points);
+    public long DeltaScore(int playerId) {
+      return this.Where(x => x.to == playerId).Sum(x => x.points)
+                                                     - this.Where(x => x.from == playerId).Sum(x => x.points);
+    }
 
-    public long ExtraScoreChange(int playerId)
-        => this.Where(x => x.from < 0 && x.to == playerId).Sum(x => x.points)
-            - this.Where(x => x.from == playerId && x.to < 0).Sum(x => x.points);
+    public long ExtraScoreChange(int playerId) {
+      return this.Where(x => x.from < 0 && x.to == playerId).Sum(x => x.points)
+                                                           - this.Where(x => x.from == playerId && x.to < 0).Sum(x => x.points);
+    }
   }
 
-  public class CalcScoreEvent : EventBase {
+  public class CalcScoreEvent(EventBase parent, AgariInfoList agariInfos) : EventBase(parent) {
     public override string name => "calc_score";
 
     #region Request
-    public readonly AgariInfoList agariInfos;
+    public readonly AgariInfoList agariInfos = agariInfos;
     #endregion
 
     #region Response
-    public readonly ScoreTransferList scoreChange;
-    #endregion
+    public readonly ScoreTransferList scoreChange = [];
 
-    public CalcScoreEvent(EventBase parent, AgariInfoList agariInfos) : base(parent) {
-      this.agariInfos = agariInfos;
-      scoreChange = new ScoreTransferList();
-    }
+    #endregion
   }
 }

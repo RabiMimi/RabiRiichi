@@ -23,7 +23,7 @@ namespace RabiRiichi.Patterns {
       }
     }
 
-    [RabiBroadcast] private readonly List<Scoring> items = new();
+    [RabiBroadcast] private readonly List<Scoring> items = [];
 
     /// <summary> 累计役满需要番数 </summary>
     public const int KAZOE_YAKUMAN = 13;
@@ -70,15 +70,14 @@ namespace RabiRiichi.Patterns {
 
     /// <summary> 冻结当前的Scoring（临时变为只读） </summary>
     internal Refrigerator Freeze(bool shouldFreeze = true) {
-      if (isFrozen == shouldFreeze) {
-        return null;
-      }
-      return new Refrigerator(this, shouldFreeze);
+      return isFrozen == shouldFreeze ? null : new Refrigerator(this, shouldFreeze);
     }
 
     public void Add(Scoring scoring) {
-      if (isFrozen)
+      if (isFrozen) {
         return;
+      }
+
       items.Add(scoring);
     }
 
@@ -88,20 +87,26 @@ namespace RabiRiichi.Patterns {
     }
 
     public void Remove(StdPattern pattern) {
-      if (isFrozen)
+      if (isFrozen) {
         return;
+      }
+
       items.RemoveAll(s => s.Source == pattern);
     }
 
     public void Remove(Scoring s) {
-      if (isFrozen)
+      if (isFrozen) {
         return;
+      }
+
       items.Remove(s);
     }
 
     public void Remove(IEnumerable<StdPattern> patterns) {
-      if (isFrozen)
+      if (isFrozen) {
         return;
+      }
+
       foreach (var pattern in patterns) {
         Remove(pattern);
       }

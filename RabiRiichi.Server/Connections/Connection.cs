@@ -114,7 +114,7 @@ namespace RabiRiichi.Server.Connections {
     /// </summary>
     private async Task HeartBeatRecvLoop(RabiStreamingContext ctx) {
       TaskCompletionSource received = null;
-      ctx.OnReceive += (ClientMessageDto incoming) => {
+      ctx.OnReceive += incoming => {
         // Always resets heartbeat timer even if the message is not a heartbeat
         received?.TrySetResult();
         // Check if the message is responding to a server message

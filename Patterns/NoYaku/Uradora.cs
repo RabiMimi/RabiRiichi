@@ -12,8 +12,9 @@ namespace RabiRiichi.Patterns {
     }
 
     public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
-      if (!hand.riichi)
+      if (!hand.riichi) {
         return false;
+      }
 
       var tiles = groups.SelectMany(tile => tile.ToTiles());
       int han = 0;

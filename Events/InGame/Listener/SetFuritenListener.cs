@@ -25,7 +25,7 @@ namespace RabiRiichi.Events.InGame.Listener {
     }
 
     public static void OnDiscardOrKan(PlayerEvent ev, Tile incoming, Func<Hand, Tiles> resolveTenpai) {
-      List<SetFuritenEvent> furitenEvs = new();
+      List<SetFuritenEvent> furitenEvs = [];
       foreach (var player in ev.game.players) {
         var hand = player.hand;
         var tenpai = resolveTenpai(hand);
@@ -68,10 +68,7 @@ namespace RabiRiichi.Events.InGame.Listener {
         if (ev.kanSource != TileSource.Ankan || base13_1 == null) {
           return Tiles.Empty;
         }
-        if (base13_1.Shanten(hand, ev.incoming, out var tiles, -1) == -1) {
-          return tiles;
-        }
-        return Tiles.Empty;
+        return base13_1.Shanten(hand, ev.incoming, out var tiles, -1) == -1 ? tiles : Tiles.Empty;
       });
       return Task.CompletedTask;
     }

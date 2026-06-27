@@ -22,7 +22,9 @@ namespace RabiRiichi.Tests.Helper {
       return mock.Setup(expression);
     }
 
-    public static implicit operator T(RabiMock<T> mock) => mock.Object;
+    public static implicit operator T(RabiMock<T> mock) {
+      return mock.Object;
+    }
   }
 
   public class RabiMockWall : RabiMock<Wall> {

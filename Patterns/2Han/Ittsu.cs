@@ -17,7 +17,7 @@ namespace RabiRiichi.Patterns {
           .Any(grs => grs.All((gr, index)
               => gr is Shun
               && gr.Suit == grs.First().Suit
-              && gr.First.tile.Num == index * 3 + 1));
+              && gr.First.tile.Num == (index * 3) + 1));
 
       if (isIttsu) {
         scores.Add(new Scoring(ScoringType.Han, hand.menzen ? 2 : 1, this));

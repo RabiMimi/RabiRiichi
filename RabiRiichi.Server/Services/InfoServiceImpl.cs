@@ -4,12 +4,8 @@ using RabiRiichi.Server.Generated.Rpc;
 using RabiRiichi.Server.Utils;
 
 namespace RabiRiichi.Server.Services {
-  public class InfoServiceImpl : InfoService.InfoServiceBase {
-    private readonly ILogger<InfoServiceImpl> logger;
-
-    public InfoServiceImpl(ILogger<InfoServiceImpl> logger) {
-      this.logger = logger;
-    }
+  public class InfoServiceImpl(ILogger<InfoServiceImpl> logger) : InfoService.InfoServiceBase {
+    private readonly ILogger<InfoServiceImpl> logger = logger;
 
     public GetInfoResponse GetInfo() {
       return new GetInfoResponse {

@@ -6,7 +6,7 @@ namespace RabiRiichi.Actions {
   [RabiMessage]
   [RabiPrivate]
   public class SinglePlayerInquiry : IRabiPlayerMessage {
-    public readonly List<IPlayerAction> actions = new();
+    public readonly List<IPlayerAction> actions = [];
     /// <summary>
     /// 仅用于Json序列化，不应该被直接使用
     /// </summary>

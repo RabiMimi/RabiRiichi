@@ -8,24 +8,17 @@ using RabiRiichi.Server.Generated.Rpc;
 using RabiRiichi.Server.Models;
 
 namespace RabiRiichi.Server.Connections {
-  public class ServerActionCenter : IActionCenter {
-    private class InquiryContext {
-      public readonly MultiPlayerInquiry inquiry;
-
-      public InquiryContext(MultiPlayerInquiry inquiry) {
-        this.inquiry = inquiry;
-      }
+  public class ServerActionCenter(Room room) : IActionCenter {
+    private class InquiryContext(MultiPlayerInquiry inquiry) {
+      public readonly MultiPlayerInquiry inquiry = inquiry;
     }
 
-    private readonly Room room;
+    private readonly Room room = room;
     private InquiryContext context;
 
-    public ServerActionCenter(Room room) {
-      this.room = room;
+    private ServerMessageWrapper SendMessage(int seat, ServerMessageDto msg) {
+      return room.GetPlayerBySeat(seat)?.connection.Queue(msg);
     }
-
-    private ServerMessageWrapper SendMessage(int seat, ServerMessageDto msg)
-        => room.GetPlayerBySeat(seat)?.connection.Queue(msg);
 
     private void EndInquiry(InquiryContext context) {
       var oldContext = Interlocked.CompareExchange(ref this.context, null, context);
