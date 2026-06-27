@@ -8,18 +8,18 @@ var services = builder.Services;
 
 // Cors
 services.AddCors(options => {
-    options.AddPolicy("AllowAll",
-        builder => {
-            builder.AllowAnyOrigin()
-                   .AllowAnyHeader()
-                   .AllowAnyMethod();
-        });
+  options.AddPolicy("AllowAll",
+      builder => {
+        builder.AllowAnyOrigin()
+                 .AllowAnyHeader()
+                 .AllowAnyMethod();
+      });
 });
 
 // Auth
 services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options => {
-        options.TokenValidationParameters = TokenService.ValidationParameters;
+      options.TokenValidationParameters = TokenService.ValidationParameters;
     });
 services.AddAuthorization();
 
@@ -49,7 +49,7 @@ app.UseCors("AllowAll");
 
 // WebSocket
 app.UseWebSockets(new WebSocketOptions {
-    KeepAliveInterval = TimeSpan.FromSeconds(10),
+  KeepAliveInterval = TimeSpan.FromSeconds(10),
 });
 
 // Use auth

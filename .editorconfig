@@ -7,9 +7,9 @@ root = true
 #### Core EditorConfig Options ####
 
 # Indentation and spacing
-indent_size = 4
+indent_size = 2
 indent_style = space
-tab_width = 4
+tab_width = 2
 
 # New line preferences
 end_of_line = lf
@@ -220,8 +220,8 @@ csharp_style_prefer_method_group_conversion = true:silent
 
 [*.{cs,vb}]
 dotnet_style_operator_placement_when_wrapping = beginning_of_line
-tab_width = 4
-indent_size = 4
+tab_width = 2
+indent_size = 2
 end_of_line = lf
 dotnet_style_coalesce_expression = true:suggestion
 dotnet_style_allow_multiple_blank_lines_experimental = true:silent

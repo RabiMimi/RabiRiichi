@@ -6,63 +6,63 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Events {
-    public class EventQueue : IEnumerable<EventBase> {
-        private readonly Queue<EventBase> queue = new();
-        public readonly EventBus bus;
-        public readonly bool shouldLock;
+  public class EventQueue : IEnumerable<EventBase> {
+    private readonly Queue<EventBase> queue = new();
+    public readonly EventBus bus;
+    public readonly bool shouldLock;
 
-        public EventQueue(EventBus bus, bool shouldLock = false) {
-            this.bus = bus;
-            this.shouldLock = shouldLock;
-        }
-
-        public void Queue(EventBase ev) {
-            lock (queue) {
-                queue.Enqueue(ev);
-            }
-            ev.Q = this;
-        }
-
-        public void QueueIfNotExist<T>(T ev) where T : EventBase {
-            lock (queue) {
-                if (!queue.Any(e => e is T)) {
-                    queue.Enqueue(ev);
-                    ev.Q = this;
-                }
-            }
-        }
-
-        public void ClearEvents() {
-            lock (queue) {
-                queue.Clear();
-            }
-        }
-
-        /// <summary> 开始处理事件队列 </summary>
-        public async Task ProcessQueue(CancellationToken? token) {
-            while (true) {
-                await Task.Yield();
-                token?.ThrowIfCancellationRequested();
-                EventBase ev;
-                lock (queue) {
-                    if (!queue.TryDequeue(out ev)) {
-                        break;
-                    }
-                }
-                if (await bus.Process(ev, shouldLock)) {
-                    if (ev is TerminateEvent) {
-                        break;
-                    }
-                }
-            }
-        }
-
-        public IEnumerator<EventBase> GetEnumerator() {
-            return queue.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator() {
-            return queue.GetEnumerator();
-        }
+    public EventQueue(EventBus bus, bool shouldLock = false) {
+      this.bus = bus;
+      this.shouldLock = shouldLock;
     }
+
+    public void Queue(EventBase ev) {
+      lock (queue) {
+        queue.Enqueue(ev);
+      }
+      ev.Q = this;
+    }
+
+    public void QueueIfNotExist<T>(T ev) where T : EventBase {
+      lock (queue) {
+        if (!queue.Any(e => e is T)) {
+          queue.Enqueue(ev);
+          ev.Q = this;
+        }
+      }
+    }
+
+    public void ClearEvents() {
+      lock (queue) {
+        queue.Clear();
+      }
+    }
+
+    /// <summary> 开始处理事件队列 </summary>
+    public async Task ProcessQueue(CancellationToken? token) {
+      while (true) {
+        await Task.Yield();
+        token?.ThrowIfCancellationRequested();
+        EventBase ev;
+        lock (queue) {
+          if (!queue.TryDequeue(out ev)) {
+            break;
+          }
+        }
+        if (await bus.Process(ev, shouldLock)) {
+          if (ev is TerminateEvent) {
+            break;
+          }
+        }
+      }
+    }
+
+    public IEnumerator<EventBase> GetEnumerator() {
+      return queue.GetEnumerator();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator() {
+      return queue.GetEnumerator();
+    }
+  }
 }

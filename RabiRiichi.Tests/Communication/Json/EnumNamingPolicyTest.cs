@@ -4,21 +4,21 @@ using RabiRiichi.Communication.Json;
 
 
 namespace RabiRiichi.Tests.Communication.Json {
-    [TestClass]
-    public class EnumNamingPolicyTest {
-        private static readonly EnumNamingPolicy V = new();
+  [TestClass]
+  public class EnumNamingPolicyTest {
+    private static readonly EnumNamingPolicy V = new();
 
-        [TestMethod]
-        public void TestRegular() {
-            Assert.AreEqual("regular", V.ConvertName("regular"));
-            Assert.AreEqual("regular", V.ConvertName("Regular"));
-            Assert.AreEqual("regular_message", V.ConvertName("RegularMessage"));
-            Assert.AreEqual("regular_message", V.ConvertName("regular_message"));
-        }
-
-        [TestMethod]
-        public void TestEmpty() {
-            Assert.AreEqual("", V.ConvertName(""));
-        }
+    [TestMethod]
+    public void TestRegular() {
+      Assert.AreEqual("regular", V.ConvertName("regular"));
+      Assert.AreEqual("regular", V.ConvertName("Regular"));
+      Assert.AreEqual("regular_message", V.ConvertName("RegularMessage"));
+      Assert.AreEqual("regular_message", V.ConvertName("regular_message"));
     }
+
+    [TestMethod]
+    public void TestEmpty() {
+      Assert.AreEqual("", V.ConvertName(""));
+    }
+  }
 }

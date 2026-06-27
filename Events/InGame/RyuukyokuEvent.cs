@@ -3,66 +3,66 @@ using RabiRiichi.Generated.Events.InGame;
 using System;
 
 namespace RabiRiichi.Events.InGame {
-    /// <summary>
-    /// 所有流局事件继承该类
-    /// </summary>
-    public abstract class RyuukyokuEvent : EventBase {
+  /// <summary>
+  /// 所有流局事件继承该类
+  /// </summary>
+  public abstract class RyuukyokuEvent : EventBase {
 
-        #region Request
-        [RabiBroadcast] public readonly ScoreTransferList scoreChange;
-        #endregion
+    #region Request
+    [RabiBroadcast] public readonly ScoreTransferList scoreChange;
+    #endregion
 
-        public RyuukyokuEvent(EventBase parent) : base(parent) {
-            scoreChange = new ScoreTransferList();
-        }
-
-        public void AddScoreTransfer(int from, int to, long points, ScoreTransferReason reason)
-            => scoreChange.Add(new ScoreTransfer(from, to, points, reason));
+    public RyuukyokuEvent(EventBase parent) : base(parent) {
+      scoreChange = new ScoreTransferList();
     }
 
-    public class EndGameRyuukyokuEvent : RyuukyokuEvent {
-        public override string name => "end_game_ryuukyoku";
+    public void AddScoreTransfer(int from, int to, long points, ScoreTransferReason reason)
+        => scoreChange.Add(new ScoreTransfer(from, to, points, reason));
+  }
 
-        #region Response
-        [RabiBroadcast] public int[] remainingPlayers = Array.Empty<int>();
-        [RabiBroadcast] public int[] nagashiManganPlayers = Array.Empty<int>();
-        [RabiBroadcast] public int[] tenpaiPlayers = Array.Empty<int>();
-        #endregion
+  public class EndGameRyuukyokuEvent : RyuukyokuEvent {
+    public override string name => "end_game_ryuukyoku";
 
-        public EndGameRyuukyokuEvent(EventBase parent) : base(parent) { }
-    }
+    #region Response
+    [RabiBroadcast] public int[] remainingPlayers = Array.Empty<int>();
+    [RabiBroadcast] public int[] nagashiManganPlayers = Array.Empty<int>();
+    [RabiBroadcast] public int[] tenpaiPlayers = Array.Empty<int>();
+    #endregion
 
-    public abstract class MidGameRyuukyokuEvent : RyuukyokuEvent {
-        public MidGameRyuukyokuEvent(EventBase parent) : base(parent) { }
-    }
+    public EndGameRyuukyokuEvent(EventBase parent) : base(parent) { }
+  }
 
-    public class SuufonRenda : MidGameRyuukyokuEvent {
-        public override string name => "suufon_renda";
+  public abstract class MidGameRyuukyokuEvent : RyuukyokuEvent {
+    public MidGameRyuukyokuEvent(EventBase parent) : base(parent) { }
+  }
 
-        public SuufonRenda(EventBase parent) : base(parent) { }
-    }
+  public class SuufonRenda : MidGameRyuukyokuEvent {
+    public override string name => "suufon_renda";
 
-    public class KyuushuKyuuhai : MidGameRyuukyokuEvent {
-        public override string name => "kyuushu_kyuuhai";
+    public SuufonRenda(EventBase parent) : base(parent) { }
+  }
 
-        public KyuushuKyuuhai(EventBase parent) : base(parent) { }
-    }
+  public class KyuushuKyuuhai : MidGameRyuukyokuEvent {
+    public override string name => "kyuushu_kyuuhai";
 
-    public class SuuchaRiichi : MidGameRyuukyokuEvent {
-        public override string name => "suucha_riichi";
+    public KyuushuKyuuhai(EventBase parent) : base(parent) { }
+  }
 
-        public SuuchaRiichi(EventBase parent) : base(parent) { }
-    }
+  public class SuuchaRiichi : MidGameRyuukyokuEvent {
+    public override string name => "suucha_riichi";
 
-    public class Sanchahou : MidGameRyuukyokuEvent {
-        public override string name => "triple_ron";
+    public SuuchaRiichi(EventBase parent) : base(parent) { }
+  }
 
-        public Sanchahou(EventBase parent) : base(parent) { }
-    }
+  public class Sanchahou : MidGameRyuukyokuEvent {
+    public override string name => "triple_ron";
 
-    public class SuukanSanra : MidGameRyuukyokuEvent {
-        public override string name => "suukan_sanra";
+    public Sanchahou(EventBase parent) : base(parent) { }
+  }
 
-        public SuukanSanra(EventBase parent) : base(parent) { }
-    }
+  public class SuukanSanra : MidGameRyuukyokuEvent {
+    public override string name => "suukan_sanra";
+
+    public SuukanSanra(EventBase parent) : base(parent) { }
+  }
 }

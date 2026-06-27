@@ -3,11 +3,11 @@ using System.Collections.Generic;
 
 
 namespace RabiRiichi.Events.InGame {
-    public class StopGameEvent : EventBase {
-        public override string name => "stop_game";
+  public class StopGameEvent : EventBase {
+    public override string name => "stop_game";
 
-        [RabiBroadcast] public readonly List<long> endGamePoints = new();
+    [RabiBroadcast] public readonly List<long> endGamePoints = new();
 
-        public StopGameEvent(EventBase parent) : base(parent) { }
-    }
+    public StopGameEvent(EventBase parent) : base(parent) { }
+  }
 }

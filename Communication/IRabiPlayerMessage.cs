@@ -1,5 +1,5 @@
 namespace RabiRiichi.Communication {
-    public interface IRabiPlayerMessage {
-        int playerId { get; }
-    }
+  public interface IRabiPlayerMessage {
+    int playerId { get; }
+  }
 }

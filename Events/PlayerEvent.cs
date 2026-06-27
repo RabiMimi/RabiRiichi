@@ -2,17 +2,17 @@ using RabiRiichi.Communication;
 using RabiRiichi.Core;
 
 namespace RabiRiichi.Events {
-    public abstract class PlayerEvent : EventBase, IRabiPlayerMessage {
-        public Player player => game.GetPlayer(playerId);
-        [RabiBroadcast] public int playerId { get; init; }
+  public abstract class PlayerEvent : EventBase, IRabiPlayerMessage {
+    public Player player => game.GetPlayer(playerId);
+    [RabiBroadcast] public int playerId { get; init; }
 
-        public PlayerEvent(EventBase parent, int playerId) : base(parent) {
-            this.playerId = playerId;
-        }
+    public PlayerEvent(EventBase parent, int playerId) : base(parent) {
+      this.playerId = playerId;
     }
+  }
 
-    [RabiPrivate]
-    public abstract class PrivatePlayerEvent : PlayerEvent {
-        public PrivatePlayerEvent(EventBase parent, int playerId) : base(parent, playerId) { }
-    }
+  [RabiPrivate]
+  public abstract class PrivatePlayerEvent : PlayerEvent {
+    public PrivatePlayerEvent(EventBase parent, int playerId) : base(parent, playerId) { }
+  }
 }
