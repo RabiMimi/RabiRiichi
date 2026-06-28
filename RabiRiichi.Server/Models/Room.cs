@@ -17,6 +17,7 @@ namespace RabiRiichi.Server.Models {
     private readonly User[] seats = new User[config.playerCount];
     private bool isDestroyed = false;
     private readonly Random rand = rand;
+    private CancellationTokenSource gameCts;
 
     private bool HasPlayer(User user) {
       return players.Any(p => p == user);
@@ -63,10 +64,13 @@ namespace RabiRiichi.Server.Models {
       ServerActionCenter actionCenter = new(this);
       config.actionCenter = actionCenter;
       BroadcastRoomState();
+      gameCts = new CancellationTokenSource();
       game = new Game(config);
-      Task.Run(() => game.Start()).ContinueWith(t => {
+      Task.Run(() => game.Start(gameCts.Token)).ContinueWith(t => {
         game = null;
         TryEndGame();
+        gameCts?.Dispose();
+        gameCts = null;
       });
       return true;
     }
@@ -104,7 +108,7 @@ namespace RabiRiichi.Server.Models {
         return false;
       }
       BroadcastRoomState();
-      return players.All(p => p?.status == UserStatus.Ready) ? TryStartGame() : true;
+      return !players.All(p => p?.status == UserStatus.Ready) || TryStartGame();
     }
 
     public bool CancelReady(User user) {
@@ -142,6 +146,9 @@ namespace RabiRiichi.Server.Models {
       }
       if (!players.Remove(user)) {
         return false;
+      }
+      if (game != null) {
+        gameCts?.Cancel();
       }
       BroadcastRoomState();
       if (players.Count == 0) {

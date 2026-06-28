@@ -113,9 +113,7 @@ namespace RabiRiichi.Server.WebSockets {
     public async Task ConnectPublic() {
       if (HttpContext.WebSockets.IsWebSocketRequest) {
         using var webSocket =
-            await HttpContext.WebSockets.AcceptWebSocketAsync(new WebSocketAcceptContext {
-              DangerousEnableCompression = true
-            });
+            await HttpContext.WebSockets.AcceptWebSocketAsync();
         var adapter = new WebSocketAdapter(webSocket);
         var connection = new Connection();
         void PublicListener(ClientMessageDto msg) {

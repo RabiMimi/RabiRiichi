@@ -4,6 +4,10 @@ using RabiRiichi.Server.Models;
 using RabiRiichi.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.ConfigureKestrel(options => {
+  options.Limits.Http2.KeepAlivePingDelay = TimeSpan.FromSeconds(10);
+  options.Limits.Http2.KeepAlivePingTimeout = TimeSpan.FromMinutes(5);
+});
 var services = builder.Services;
 
 // Cors

@@ -83,6 +83,17 @@ namespace RabiRiichi.Server.Connections {
           }
         });
       };
+
+      user.connection.OnDisconnectContext += rabiCtx => {
+        _ = Task.Run(async () => {
+          await Task.Delay(ServerConstants.RECONNECT_GRACE_PERIOD);
+          _ = taskQueue.Execute(() => {
+            if (user.connection.Current == rabiCtx) {
+              user.room?.RemovePlayer(user);
+            }
+          });
+        });
+      };
     }
   }
 }
