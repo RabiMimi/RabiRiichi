@@ -12,7 +12,7 @@ namespace RabiRiichi.Events.InGame.Listener {
       if (e.timeout > TimeSpan.Zero) {
         cts = new CancellationTokenSource();
         var token = cts.Token;
-        _ = Task.Delay(e.timeout, token).ContinueWith(t => {
+         _ = Task.Delay(e.timeout + TimeSpan.FromSeconds(3.0), token).ContinueWith(t => {
           if (t.IsCompletedSuccessfully) {
             e.inquiry.Finish();
           }

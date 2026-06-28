@@ -42,7 +42,7 @@ namespace RabiRiichi.Server.Connections {
       }
       var singlePlayerInquiryMsg = ctx.inquiry.game.SerializeProto<SinglePlayerInquiryMsg>(inquiry, seat);
       if (singlePlayerInquiryMsg != null && ctx.inquiry.timeout > TimeSpan.Zero) {
-        double clientTimeout = Math.Max(0.0, ctx.inquiry.timeout.TotalSeconds - 3.0);
+        double clientTimeout = ctx.inquiry.timeout.TotalSeconds;
         singlePlayerInquiryMsg.TimeoutSeconds = clientTimeout;
       }
       var inquiryMsg = new ServerInquiryMsg {

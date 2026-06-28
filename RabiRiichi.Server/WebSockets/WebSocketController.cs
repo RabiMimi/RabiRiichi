@@ -46,7 +46,7 @@ namespace RabiRiichi.Server.WebSockets {
       return taskQueue.Execute(queue => {
         try {
           if (msg.ClientRequest?.CreateRoom != null) {
-            connection.Queue(ProtoUtils.CreateDto(roomService.CreateRoom(queue.roomList, user), msg.Id));
+            connection.Queue(ProtoUtils.CreateDto(roomService.CreateRoom(msg.ClientRequest.CreateRoom, queue.roomList, user), msg.Id));
           } else if (msg.ClientRequest?.CreateUser != null) {
             var req = msg.ClientRequest.CreateUser;
             var res = userService.CreateUser(req, queue.userList);

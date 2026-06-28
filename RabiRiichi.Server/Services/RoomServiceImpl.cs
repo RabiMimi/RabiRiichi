@@ -13,8 +13,9 @@ namespace RabiRiichi.Server.Services {
     private readonly RoomTaskQueue taskQueue = taskQueue;
     private readonly Random rand = rand;
 
-    public ServerRoomStateResponse CreateRoom(RoomList roomList, User user) {
-      var room = new Room(rand, new GameConfig());
+    public ServerRoomStateResponse CreateRoom(CreateRoomRequest request, RoomList roomList, User user) {
+      var config = GameConfig.FromProto(request?.Config);
+      var room = new Room(rand, config);
       return roomList.Add(room) && room.AddPlayer(user)
         ? new ServerRoomStateResponse {
           State = room.CreateServerRoomStateMsg()
@@ -22,10 +23,10 @@ namespace RabiRiichi.Server.Services {
         : throw new RpcException(new Status(StatusCode.Internal, "Cannot add room or join room"));
     }
 
-    public override Task<ServerRoomStateResponse> CreateRoom(Empty request, ServerCallContext context) {
+    public override Task<ServerRoomStateResponse> CreateRoom(CreateRoomRequest request, ServerCallContext context) {
       return taskQueue.Execute(queue => {
         var user = queue.userList.Fetch(context);
-        return CreateRoom(queue.roomList, user);
+        return CreateRoom(request, queue.roomList, user);
       });
     }
 

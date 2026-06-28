@@ -2,6 +2,7 @@ using RabiRiichi.Communication;
 using RabiRiichi.Core.Setup;
 using RabiRiichi.Generated.Core.Config;
 using RabiRiichi.Utils;
+using System.Linq;
 
 namespace RabiRiichi.Core.Config {
   [RabiMessage]
@@ -52,7 +53,7 @@ namespace RabiRiichi.Core.Config {
     [RabiBroadcast] public double nextRoundAckTimeout = 15.0;
 
     /// <summary> 摸打/鸣牌动作超时时间（秒） </summary>
-    [RabiBroadcast] public double gameplayActionTimeout = 18.0;
+    [RabiBroadcast] public double gameplayActionTimeout = 20.0;
     #endregion
 
 
@@ -100,6 +101,57 @@ namespace RabiRiichi.Core.Config {
         NextRoundAckTimeout = nextRoundAckTimeout,
         GameplayActionTimeout = gameplayActionTimeout,
       };
+    }
+
+    public static GameConfig FromProto(GameConfigMsg msg) {
+      if (msg == null)
+        return new GameConfig();
+      var config = new GameConfig();
+      if (msg.PlayerCount > 0)
+        config.playerCount = msg.PlayerCount;
+      if (msg.TotalRound > 0)
+        config.totalRound = msg.TotalRound;
+      if (msg.MinHan > 0)
+        config.minHan = msg.MinHan;
+      if (msg.PointThreshold != null) {
+        config.pointThreshold = new PointThreshold {
+          initialPoints = msg.PointThreshold.InitialPoints,
+          riichiPoints = msg.PointThreshold.RiichiPoints,
+          honbaPoints = msg.PointThreshold.HonbaPoints,
+          finishPoints = msg.PointThreshold.FinishPoints,
+        };
+        if (msg.PointThreshold.RyuukyokuPoints.Count > 0) {
+          config.pointThreshold.ryuukyokuPoints = msg.PointThreshold.RyuukyokuPoints.ToArray();
+        }
+        if (msg.PointThreshold.ValidPointsRange.Count > 0) {
+          config.pointThreshold.validPointsRange = msg.PointThreshold.ValidPointsRange.ToArray();
+        }
+      }
+      if (msg.RenchanPolicy != 0)
+        config.renchanPolicy = (RenchanPolicy)msg.RenchanPolicy;
+      if (msg.EndGamePolicy != 0)
+        config.endGamePolicy = (EndGamePolicy)msg.EndGamePolicy;
+      if (msg.KuikaePolicy != 0)
+        config.kuikaePolicy = (KuikaePolicy)msg.KuikaePolicy;
+      if (msg.RiichiPolicy != 0)
+        config.riichiPolicy = (RiichiPolicy)msg.RiichiPolicy;
+      if (msg.DoraOption != 0)
+        config.doraOption = (DoraOption)msg.DoraOption;
+      if (msg.AgariOption != 0)
+        config.agariOption = (AgariOption)msg.AgariOption;
+      if (msg.ScoringOption != 0)
+        config.scoringOption = (ScoringOption)msg.ScoringOption;
+      if (msg.RyuukyokuTrigger != 0)
+        config.ryuukyokuTrigger = (RyuukyokuTrigger)msg.RyuukyokuTrigger;
+      if (msg.Seed != 0)
+        config.seed = msg.Seed;
+      if (msg.PointsDeductionPolicy != 0)
+        config.pointsDeductionPolicy = (PointsDeductionPolicy)msg.PointsDeductionPolicy;
+      if (msg.NextRoundAckTimeout > 0)
+        config.nextRoundAckTimeout = msg.NextRoundAckTimeout;
+      if (msg.GameplayActionTimeout > 0)
+        config.gameplayActionTimeout = msg.GameplayActionTimeout;
+      return config;
     }
 
     #endregion
