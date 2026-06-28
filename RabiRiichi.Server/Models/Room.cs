@@ -66,7 +66,14 @@ namespace RabiRiichi.Server.Models {
       BroadcastRoomState();
       gameCts = new CancellationTokenSource();
       game = new Game(config);
+      // Start the game in a background task and log any exception that bubbles up.
       Task.Run(() => game.Start(gameCts.Token)).ContinueWith(t => {
+        if (t.IsFaulted) {
+          global::RabiRiichi.Utils.Logger.Warn("[Room] Game task faulted:");
+          foreach (var ex in t.Exception!.InnerExceptions) {
+            global::RabiRiichi.Utils.Logger.Warn(ex);
+          }
+        }
         game = null;
         TryEndGame();
         gameCts?.Dispose();
