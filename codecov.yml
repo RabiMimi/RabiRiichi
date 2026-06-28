@@ -1,0 +1,15 @@
+ignore:
+  - "Generated"
+  - "RabiRiichi.Server/Generated"
+coverage:
+  round: up
+  range: 60..90
+  status:
+    project:
+      default:
+        threshold: 1%
+        informational: false
+        only_pulls: false
+    patch:
+      default:
+        threshold: 10%

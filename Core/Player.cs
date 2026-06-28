@@ -1,0 +1,51 @@
+﻿namespace RabiRiichi.Core {
+  public enum Wind {
+    E, S, W, N
+  }
+
+  public class Player(int id, Game game) {
+    public int id = id;
+    public Game game = game;
+    /// <summary> 本局游戏中该玩家的自风 </summary>
+    public Wind Wind => (Wind)game.Dist(game.info.dealer, id);
+    /// <summary> 手牌 </summary>
+    public Hand hand;
+    /// <summary> 点数 </summary>
+    public long points = game.config.pointThreshold.initialPoints;
+
+    public int NextPlayerId => game.NextPlayerId(id);
+    public int PrevPlayerId => game.PrevPlayerId(id);
+    public Player NextPlayer => game.GetPlayer(NextPlayerId);
+    public Player PrevPlayer => game.GetPlayer(PrevPlayerId);
+
+    /// <summary> 是否是同一个玩家 </summary>
+    public bool SamePlayer(Player rhs) {
+      return rhs != null && id == rhs.id;
+    }
+
+    /// <summary> 是否是庄家 </summary>
+    public bool IsDealer => id == game.info.dealer;
+
+    /// <summary> 是否是役牌 </summary>
+    public virtual bool IsYaku(Tile tile) {
+      return game.IsYaku(tile) || tile.IsSame(Tile.From(Wind));
+    }
+
+    /// <summary> 计算rhs是该玩家后的第几个 </summary>
+    public int Dist(int rhsId) {
+      return game.Dist(id, rhsId);
+    }
+
+    /// <summary> 计算rhs是该玩家后的第几个 </summary>
+    public int Dist(Player rhs) {
+      return game.Dist(id, rhs.id);
+    }
+
+    /// <summary> 开局时重置玩家手牌状态 </summary>
+    public void Reset() {
+      hand = new Hand() {
+        player = this
+      };
+    }
+  }
+}

@@ -1,29 +1,58 @@
-name: build-test
+name: Tests
 
-on: 
+on:
   push:
-    branches: [ master ]
+    branches:
+      - main
+      - develop
+    paths:
+      - "**.cs"
+      - "!RabiRiichi.Server/**"
   pull_request:
-    branches: [ master ]
+    branches:
+      - main
+      - develop
+    paths:
+      - "**.cs"
+      - "!RabiRiichi.Server/**"
   workflow_dispatch:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        dotnet-version: ['5.0.x']
+        dotnet-version: ["9.0.x"]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
       - name: Setup .NET Core SDK ${{ matrix.dotnet-version }}
-        uses: actions/setup-dotnet@v1.7.2
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ matrix.dotnet-version }}
       - name: Install dependencies
-        run: dotnet restore ./RabiRiichiTests/RabiRiichiTests.csproj
+        run: dotnet restore ./RabiRiichi.Tests/RabiRiichi.Tests.csproj
       - name: Build
-        run: dotnet build --configuration Release --no-restore ./RabiRiichiTests/RabiRiichiTests.csproj
+        run: dotnet build --configuration Release --no-restore ./RabiRiichi.Tests/RabiRiichi.Tests.csproj
       - name: Test
-        run: dotnet test --no-restore --verbosity normal ./RabiRiichiTests/RabiRiichiTests.csproj
+        run: dotnet test --no-restore --verbosity normal --collect:"XPlat Code Coverage" ./RabiRiichi.Tests/RabiRiichi.Tests.csproj
+      - name: Upload to CodeCov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+      - name: Generate Test Report
+        uses: phoenix-actions/test-reporting@v10
+        id: test-report
+        if: success() || failure()
+        with:
+          name: RabiRiichi Tests
+          path: RabiRiichi.Tests/TestResults/*.trx
+          reporter: dotnet-trx
+      - name: Archive test results
+        uses: actions/upload-artifact@v4
+        if: success() || failure()
+        with:
+          name: test-results
+          path: RabiRiichi.Tests/TestResults

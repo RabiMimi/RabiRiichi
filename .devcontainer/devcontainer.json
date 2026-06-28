@@ -1,0 +1,15 @@
+{
+    "image": "mcr.microsoft.com/devcontainers/universal:2",
+    "customizations": {
+        "codespaces": {
+            "repositories": {
+                "RabiMimi/RabiRiichi": {
+                    "permissions": "write-all"
+                },
+                "RabiMimi/RabiRiichi-Proto": {
+                    "permissions": "write-all"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,20 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": ".NET Core Launch (web)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/RabiRiichi.Server/bin/Debug/net6.0/RabiRiichi.Server.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/RabiRiichi.Server",
+      "stopAtEntry": false,
+    },
+    {
+      "name": ".NET Core Attach",
+      "type": "coreclr",
+      "request": "attach"
+    }
+  ]
+}

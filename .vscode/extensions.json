@@ -1,0 +1,11 @@
+{
+    "recommendations": [
+        "formulahendry.dotnet-test-explorer",
+        "streetsidesoftware.code-spell-checker",
+        "ms-dotnettools.csharp",
+        "donjayamanne.githistory",
+        "eamodio.gitlens",
+        "gruntfuggly.todo-tree",
+        "jmrog.vscode-nuget-package-manager"
+    ]
+}
