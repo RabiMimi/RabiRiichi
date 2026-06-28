@@ -76,6 +76,13 @@ namespace RabiRiichi.Server.Connections {
 
     public void OnInquiry(MultiPlayerInquiry inquiry) {
       var ctx = new InquiryContext(inquiry);
+      // If a previous inquiry has already finished (hasExecuted), clear the stale context
+      // before trying to register the new one. This prevents the “Inquiry already in progress”
+      // race condition.
+      var currentContext = context;
+      if (currentContext != null && currentContext.inquiry.hasExecuted) {
+        Interlocked.CompareExchange(ref context, null, currentContext);
+      }
       if (Interlocked.CompareExchange(ref context, ctx, null) != null) {
         throw new InvalidOperationException("Inquiry already in progress");
       }

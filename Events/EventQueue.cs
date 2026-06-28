@@ -1,4 +1,5 @@
 using RabiRiichi.Events.InGame;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -44,10 +45,18 @@ namespace RabiRiichi.Events {
             break;
           }
         }
-        if (await bus.Process(ev, shouldLock)) {
-          if (ev is TerminateEvent) {
-            break;
+        try {
+          if (await bus.Process(ev, shouldLock)) {
+            if (ev is TerminateEvent) {
+              break;
+            }
           }
+        } catch (Exception ex) {
+          // Log the exception – the previous version silently dropped it.
+          Utils.Logger.Warn("[EventQueue] Unhandled exception in event:");
+          Utils.Logger.Warn(ex);
+          // Re‑throw to surface the issue to the host.
+          throw;
         }
       }
     }

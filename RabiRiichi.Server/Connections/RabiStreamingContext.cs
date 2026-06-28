@@ -43,7 +43,9 @@ namespace RabiRiichi.Server.Connections {
     /// <summary>
     /// Message queue
     /// </summary>
-    private readonly ConcurrentBag<ServerMessageWrapper> msgQueue = [];
+    // Use a FIFO queue so messages are sent in the order they were enqueued.
+    // A ConcurrentBag does not guarantee ordering, which caused packet re‑ordering bugs.
+    private readonly ConcurrentQueue<ServerMessageWrapper> msgQueue = [];
 
     /// <summary>
     /// Whether the connection is closing and no more messages can be queued.
@@ -91,7 +93,7 @@ namespace RabiRiichi.Server.Connections {
       if (IsClosing || msg.isQueued.Exchange(true)) {
         return;
       }
-      msgQueue.Add(msg);
+      msgQueue.Enqueue(msg);
     }
 
     /// <summary>
@@ -120,8 +122,8 @@ namespace RabiRiichi.Server.Connections {
       while (true) {
         try {
           await Task.Delay(100, cts.Token);
-          while (msgQueue.TryTake(out var msg)) {
-            Console.WriteLine($"Sending: {msg.msg}");
+          while (msgQueue.TryDequeue(out var msg)) {
+            Logger.Log($"Sending: {msg.msg}");
             msg.isQueued.Exchange(false);
             await responseStream.WriteAsync(msg.msg, cts.Token);
           }
@@ -144,7 +146,7 @@ namespace RabiRiichi.Server.Connections {
           if (msg == null) {
             continue;
           }
-          Console.WriteLine($"Received: {msg}");
+          Logger.Log($"Received: {msg}");
           maxClientMsgId = Math.Max(maxClientMsgId, msg.Id);
 
           if (msg.Id > lastBroadcastedMsgId) {
