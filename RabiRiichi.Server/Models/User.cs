@@ -1,4 +1,4 @@
-﻿using RabiRiichi.Server.Connections;
+using RabiRiichi.Server.Connections;
 using RabiRiichi.Server.Generated.Messages;
 using System.ComponentModel.DataAnnotations;
 
@@ -58,7 +58,8 @@ namespace RabiRiichi.Server.Models {
     public bool ExitRoom(Room room) {
       if (this.room != room || (
           !Transit(UserStatus.InRoom, UserStatus.None)
-          && !Transit(UserStatus.Ready, UserStatus.None))) {
+          && !Transit(UserStatus.Ready, UserStatus.None)
+          && !Transit(UserStatus.Playing, UserStatus.None))) {
         return false;
       }
       this.room = null;

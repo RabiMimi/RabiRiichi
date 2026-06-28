@@ -20,6 +20,11 @@ namespace RabiRiichi.Server.Connections {
     public Action<ClientMessageDto> OnReceive;
 
     /// <summary>
+    /// Callback when a streaming context is disconnected.
+    /// </summary>
+    public Action<RabiStreamingContext> OnDisconnectContext;
+
+    /// <summary>
     /// Switch to a new context. Old connection will be closed.
     /// </summary>
     protected void SwitchContext(RabiStreamingContext newCts) {
@@ -51,10 +56,9 @@ namespace RabiRiichi.Server.Connections {
     /// <param name="msg">Message to send</param>
     public void Queue(ServerMessageWrapper msg) {
       serverMsgs.TryAdd(msg.msg.Id, msg);
-      if (currentCtx == null) {
-        throw new InvalidOperationException("Websocket is not connected");
+      if (currentCtx != null) {
+        currentCtx.Queue(msg);
       }
-      currentCtx.Queue(msg);
     }
 
     /// <summary>
@@ -74,6 +78,7 @@ namespace RabiRiichi.Server.Connections {
         IServerStreamWriter<ServerMessageDto> responseStream) {
       var ctx = new RabiStreamingContext(this, requestStream, responseStream);
       ctx.OnReceive += incoming => OnReceive?.Invoke(incoming);
+      ctx.OnDisconnect += () => OnDisconnectContext?.Invoke(ctx);
 
       // Cancel previous connection and switch context
       SwitchContext(ctx);
