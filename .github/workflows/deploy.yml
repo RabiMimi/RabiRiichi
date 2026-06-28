@@ -1,0 +1,57 @@
+name: Deploy
+
+# Triggers on push to main when server-related files change.
+# Runs on the self-hosted runner registered on the production server as user 'riichi'.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**.cs'
+      - '**.csproj'
+      - '**.sln'
+      - '**.json'
+      - '**.proto'
+      - '.github/workflows/cd.yml'
+  workflow_dispatch: # allow manual triggers from the Actions tab
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false # never cancel a running deploy mid-swap
+
+jobs:
+  deploy:
+    name: Build & Deploy
+    runs-on: [self-hosted, linux, production]
+    environment: production # protects with required reviewers if configured
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true # required for Protos submodule
+          fetch-depth: 1
+
+      - name: Verify .NET SDK
+        run: dotnet --version
+
+      - name: Restore dependencies
+        run: >
+          dotnet restore
+          RabiRiichi.Server/RabiRiichi.Server.csproj
+
+      - name: Run deploy script
+        run: bash /home/riichi/scripts/deploy.sh
+        # deploy.sh uses GITHUB_WORKSPACE (set automatically by runner),
+        # builds the project, and does an atomic swap of the current/backup dirs.
+
+      - name: Verify service health
+        run: |
+          # Give the server a moment to be ready
+          sleep 5
+          # Check service is active
+          sudo systemctl is-active rabirichi
+          echo "Service is running."
+          # Optional: hit the health/info endpoint if one exists
+          # curl -sf http://127.0.0.1:5150/health || echo "No health endpoint."
