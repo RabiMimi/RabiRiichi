@@ -8,12 +8,12 @@ on:
     branches:
       - main
     paths:
-      - '**.cs'
-      - '**.csproj'
-      - '**.sln'
-      - '**.json'
-      - '**.proto'
-      - '.github/workflows/cd.yml'
+      - "**.cs"
+      - "**.csproj"
+      - "**.sln"
+      - "**.json"
+      - "**.proto"
+      - ".github/workflows/cd.yml"
   workflow_dispatch: # allow manual triggers from the Actions tab
 
 concurrency:
@@ -48,10 +48,6 @@ jobs:
 
       - name: Verify service health
         run: |
-          # Give the server a moment to be ready
           sleep 5
-          # Check service is active
-          sudo systemctl is-active rabirichi
+          systemctl is-active rabirichi
           echo "Service is running."
-          # Optional: hit the health/info endpoint if one exists
-          # curl -sf http://127.0.0.1:5150/health || echo "No health endpoint."
