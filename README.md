@@ -1,6 +1,7 @@
 # RabiRiichi (拉比立直)
 
 [![100hun](https://100hun.rabimimi.com/provider/codecov/github/RabiMimi/RabiRiichi/develop/badge.png?size=128)](https://github.com/KCFindstr/100hun)
+
 [![build-test](https://github.com/RabiMimi/RabiRiichi/actions/workflows/build-test.yml/badge.svg)](https://github.com/RabiMimi/RabiRiichi/actions/workflows/build-test.yml)
 [![build-server](https://github.com/RabiMimi/RabiRiichi/actions/workflows/build-server.yml/badge.svg)](https://github.com/RabiMimi/RabiRiichi/actions/workflows/build-server.yml)
 [![deploy](https://github.com/RabiMimi/RabiRiichi/actions/workflows/deploy.yml/badge.svg)](https://github.com/RabiMimi/RabiRiichi/actions/workflows/deploy.yml)

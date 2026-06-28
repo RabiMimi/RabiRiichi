@@ -1,0 +1,67 @@
+name: Release Server
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Extract version from csproj
+        id: get_version
+        run: |
+          VERSION=$(grep -oPm1 '(?<=<Version>)[^<]+' RabiRiichi.Server/RabiRiichi.Server.csproj)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Extracted version: $VERSION"
+
+      - name: Check if release exists
+        id: check_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view "v${{ steps.get_version.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Release v${{ steps.get_version.outputs.version }} already exists. Skipping release creation."
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Release v${{ steps.get_version.outputs.version }} does not exist. Proceeding."
+          fi
+
+      - name: Publish Server
+        if: steps.check_release.outputs.exists == 'false'
+        run: |
+          dotnet publish ./RabiRiichi.Server/RabiRiichi.Server.csproj -c Release -o ./publish
+
+      - name: Package Release
+        if: steps.check_release.outputs.exists == 'false'
+        run: |
+          cd publish
+          zip -r ../RabiRiichi.Server-v${{ steps.get_version.outputs.version }}.zip .
+          cd ..
+
+      - name: Create GitHub Release
+        if: steps.check_release.outputs.exists == 'false'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "v${{ steps.get_version.outputs.version }}" \
+            RabiRiichi.Server-v${{ steps.get_version.outputs.version }}.zip \
+            --title "Release v${{ steps.get_version.outputs.version }}" \
+            --generate-notes
