@@ -111,6 +111,38 @@ namespace RabiRiichi.Tests.Scenario.Tests {
     }
 
     [TestMethod]
+    public async Task FailChii_ThreePlayers() {
+      // Chii is not allowed in 3-player (sanma) games. Same hand/discard as
+      // SimpleChii_CannotRiichi, but with playerCount = 3: no claim is offered,
+      // so play advances straight to the next player's turn.
+      var scenario = new ScenarioBuilder(3)
+          .WithPlayer(2, playerBuilder => playerBuilder
+              .SetFreeTiles("78m11122357999p"))
+          .WithWall(wall => wall.Reserve("9m"))
+          .Start(1);
+
+      (await scenario.WaitInquiry()).Finish();
+
+      // No chii claim interrupt: play proceeds to the next player.
+      await scenario.AssertEvent<NextPlayerEvent>().Resolve();
+    }
+
+    [TestMethod]
+    public async Task FailChii_TwoPlayers() {
+      // Chii is not allowed in 2-player games either.
+      var scenario = new ScenarioBuilder(2)
+          .WithPlayer(1, playerBuilder => playerBuilder
+              .SetFreeTiles("78m11122357999p"))
+          .WithWall(wall => wall.Reserve("9m"))
+          .Start(0);
+
+      (await scenario.WaitInquiry()).Finish();
+
+      // No chii claim interrupt: play proceeds to the next player.
+      await scenario.AssertEvent<NextPlayerEvent>().Resolve();
+    }
+
+    [TestMethod]
     public async Task FailChii_NotDiscardedByPrev() {
       var scenario = new ScenarioBuilder()
           .WithPlayer(2, playerBuilder => playerBuilder

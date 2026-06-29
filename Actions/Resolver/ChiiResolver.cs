@@ -11,6 +11,11 @@ namespace RabiRiichi.Actions.Resolver {
     }
 
     protected override bool ResolveAction(Player player, GameTile incoming, MultiPlayerInquiry output) {
+      // Chii is only allowed in 4-player games. In 2/3-player (sanma) games
+      // there is no left-player to chii from, so it must be disallowed.
+      if (player.game.config.playerCount < 4) {
+        return false;
+      }
       if (player.game.wall.IsHaitei) {
         return false;
       }
