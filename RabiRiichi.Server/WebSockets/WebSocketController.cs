@@ -123,7 +123,12 @@ namespace RabiRiichi.Server.WebSockets {
         connection.OnReceive += PublicListener;
         try {
           connection.Connect(adapter, adapter);
-          await Task.Delay(TimeSpan.FromDays(7), connection.Current.cts.Token);
+          // Wait until the stream closes (its cts) OR the request is aborted.
+          // RequestAborted fires on client disconnect AND on host shutdown
+          // (Ctrl+C), so this no longer blocks graceful shutdown.
+          using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
+              connection.Current.cts.Token, HttpContext.RequestAborted);
+          await Task.Delay(Timeout.InfiniteTimeSpan, linkedCts.Token);
         } catch (OperationCanceledException) { } finally {
           connection.Close();
           connection.OnReceive -= PublicListener;
@@ -183,7 +188,12 @@ namespace RabiRiichi.Server.WebSockets {
             user.room?.BroadcastRoomState();
             user.room?.SyncGameTo(user);
           });
-          await Task.Delay(TimeSpan.FromDays(7), rabiCtx.cts.Token);
+          // Wait until the stream closes (its cts) OR the request is aborted.
+          // RequestAborted fires on client disconnect AND on host shutdown
+          // (Ctrl+C), so this no longer blocks graceful shutdown.
+          using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
+              rabiCtx.cts.Token, HttpContext.RequestAborted);
+          await Task.Delay(Timeout.InfiniteTimeSpan, linkedCts.Token);
         } catch (OperationCanceledException) { } finally {
           rabiCtx?.Close();
           user.connection.OnReceive -= PublicListener;

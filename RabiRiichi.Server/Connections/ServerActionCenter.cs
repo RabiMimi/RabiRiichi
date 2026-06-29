@@ -11,6 +11,7 @@ namespace RabiRiichi.Server.Connections {
   public class ServerActionCenter(Room room) : IActionCenter {
     private class InquiryContext(MultiPlayerInquiry inquiry) {
       public readonly MultiPlayerInquiry inquiry = inquiry;
+      public readonly DateTime startTime = DateTime.UtcNow;
     }
 
     private readonly Room room = room;
@@ -42,8 +43,12 @@ namespace RabiRiichi.Server.Connections {
       }
       var singlePlayerInquiryMsg = ctx.inquiry.game.SerializeProto<SinglePlayerInquiryMsg>(inquiry, seat);
       if (singlePlayerInquiryMsg != null && ctx.inquiry.timeout > TimeSpan.Zero) {
-        double clientTimeout = ctx.inquiry.timeout.TotalSeconds;
-        singlePlayerInquiryMsg.TimeoutSeconds = clientTimeout;
+        var elapsed = DateTime.UtcNow - ctx.startTime;
+        var remaining = ctx.inquiry.timeout - elapsed;
+        if (remaining < TimeSpan.Zero) {
+          remaining = TimeSpan.Zero;
+        }
+        singlePlayerInquiryMsg.TimeoutSeconds = remaining.TotalSeconds;
       }
       var inquiryMsg = new ServerInquiryMsg {
         Inquiry = singlePlayerInquiryMsg
