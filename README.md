@@ -1,4 +1,4 @@
-# RabiRiichi (拉比立直)
+# RabiRiichi (兔兔立直)
 
 [![100hun](https://100hun.rabimimi.com/provider/codecov/github/RabiMimi/RabiRiichi/develop/badge.png?size=128)](https://github.com/KCFindstr/100hun)
 
