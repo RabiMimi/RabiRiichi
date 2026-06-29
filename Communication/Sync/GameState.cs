@@ -18,6 +18,7 @@ namespace RabiRiichi.Communication.Sync {
     [RabiBroadcast] public readonly int riichiStick = hand.riichiStick;
     [RabiBroadcast] public readonly GameTile agariTile = hand.agariTile;
     [RabiBroadcast] public readonly ScoreStorage agariScore = hand.agariScore;
+    [RabiBroadcast] public readonly long pointDelta = hand.pointDelta;
     [RabiBroadcast] public readonly GameTile riichiTile = hand.riichiTile;
     [RabiPrivate] public readonly bool isTempFuriten = hand.isTempFuriten;
     [RabiPrivate] public readonly bool isRiichiFuriten = hand.isRiichiFuriten;
@@ -29,6 +30,7 @@ namespace RabiRiichi.Communication.Sync {
         RiichiStick = riichiStick,
         AgariTile = ProtoConverters.ConvertGameTile(agariTile, true),
         AgariScore = agariScore?.ToProto(),
+        PointDelta = pointDelta,
         RiichiTile = ProtoConverters.ConvertGameTile(riichiTile, true),
         PendingTile = ProtoConverters.ConvertGameTile(pendingTile, this.playerId == playerId),
       };

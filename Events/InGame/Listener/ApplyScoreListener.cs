@@ -5,7 +5,12 @@ namespace RabiRiichi.Events.InGame.Listener {
     public static Task ApplyScore(ApplyScoreEvent ev) {
       var scoreChange = ev.scoreChange;
       foreach (var player in ev.game.players) {
-        player.points += scoreChange.DeltaScore(player.id);
+        var delta = scoreChange.DeltaScore(player.id);
+        player.points += delta;
+        // Persist the net settlement change (agari or ryuukyoku) so the result
+        // screen can be rebuilt on reconnect (the transfer list is otherwise
+        // discarded).
+        player.hand.pointDelta += delta;
       }
       return Task.CompletedTask;
     }
