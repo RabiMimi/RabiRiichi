@@ -15,7 +15,19 @@ namespace RabiRiichi.Core.Setup {
     /// <summary> 役种 </summary>
     protected readonly List<Type> stdPatterns = [];
 
-    public IEnumerable<Type> GetStdPatterns() => stdPatterns;
+    private bool _patternsInitialized = false;
+
+    private void EnsurePatternsInitialized() {
+      if (!_patternsInitialized) {
+        InitPatterns();
+        _patternsInitialized = true;
+      }
+    }
+
+    public IEnumerable<Type> GetStdPatterns() {
+      EnsurePatternsInitialized();
+      return stdPatterns;
+    }
 
     public static bool IsYaku(Type type) {
       return !type.Name.StartsWith("Fu") &&
@@ -97,7 +109,7 @@ namespace RabiRiichi.Core.Setup {
       InjectResolvers(collection);
 
       // 注入牌型
-      InitPatterns();
+      EnsurePatternsInitialized();
       InjectPatterns(collection);
     }
 
