@@ -48,10 +48,6 @@ namespace RabiRiichi.Core {
 
     /// <summary> 和了牌 </summary>
     public GameTile agariTile;
-    /// <summary> 和了点数明细，仅用于和了后（含断线重连）展示结算。 </summary>
-    public ScoreStorage agariScore;
-    /// <summary> 本局结算的点数变化（含和了与流局），用于结算展示（含断线重连）。 </summary>
-    public long pointDelta;
     /// <summary> 是否已经和了 </summary>
     public bool agari => agariTile != null;
 

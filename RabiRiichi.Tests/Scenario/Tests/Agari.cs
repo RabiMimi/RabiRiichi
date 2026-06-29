@@ -2,14 +2,11 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Actions;
 using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
-using RabiRiichi.Events;
 using RabiRiichi.Events.InGame;
 using RabiRiichi.Patterns;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using RabiRiichi.Generated.Communication.Sync;
-using SyncGameState = RabiRiichi.Communication.Sync.GameState;
 
 namespace RabiRiichi.Tests.Scenario.Tests {
   [TestClass]
@@ -111,42 +108,6 @@ namespace RabiRiichi.Tests.Scenario.Tests {
         Assert.AreEqual(0, game.info.honba);
         Assert.AreEqual(0, game.info.riichiStick);
       });
-    }
-
-    [TestMethod]
-    public async Task Tsumo_SyncSnapshotContainsAgariScore() {
-      // After a win, the score breakdown AND the point transfer must be
-      // persisted on the hand and included in the sync snapshot, so a
-      // reconnecting client can rebuild the result screen. Capture the snapshot
-      // synchronously at ConcludeGameEvent time, while the winning hand is still
-      // intact (BeginGameEvent, which resets it, runs later).
-      var scenario = await BuildTsumo();
-
-      PlayerHandStateMsg winnerMsg = null;
-      PlayerHandStateMsg loserMsg = null;
-      scenario.WithGame(game => {
-        new EventListener<ConcludeGameEvent>(game.eventBus).EarlyExec(_ => {
-          var winner = game.GetPlayer(0);
-          Assert.IsNotNull(winner.hand.agariTile, "agariTile should be set");
-          Assert.IsNotNull(winner.hand.agariScore, "agariScore should be set");
-          var proto = new SyncGameState(game, 0).ToProto(0);
-          winnerMsg = proto.Players.First(p => p.Id == 0).Hand;
-          loserMsg = proto.Players.First(p => p.Id == 1).Hand;
-          return System.Threading.Tasks.Task.CompletedTask;
-        }, times: 1);
-      });
-
-      await scenario.AssertEvent<ConcludeGameEvent>().Resolve();
-
-      Assert.IsNotNull(winnerMsg, "ConcludeGameEvent should have fired");
-      Assert.IsNotNull(winnerMsg.AgariScore, "sync snapshot should carry agari score");
-      Assert.IsNotNull(winnerMsg.AgariTile, "sync snapshot should carry agari tile");
-      Assert.AreEqual(4, winnerMsg.AgariScore.Result.Han);
-      Assert.AreEqual(30, winnerMsg.AgariScore.Result.Fu);
-
-      // The net point delta is persisted too: winner positive, loser negative.
-      Assert.IsTrue(winnerMsg.PointDelta > 0, "winner should have positive delta");
-      Assert.IsTrue(loserMsg.PointDelta < 0, "loser should have negative delta");
     }
     #endregion
 
