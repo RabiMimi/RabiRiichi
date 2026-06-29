@@ -13,6 +13,7 @@
 #   -p, --port        ASPNETCORE_URLS value           (default: http://0.0.0.0:5000)
 #   -e, --env-file    Path to an extra environment file to install
 #                     (key=value pairs, placed at /etc/rabiriichi/environment)
+#   -k, --jwt-key     JWT secret key (default: auto-generate if not already set)
 #   --undeploy        Stop and completely remove the service, user, and files
 #   -h, --help        Show this help and exit
 #
@@ -32,6 +33,7 @@ GITHUB_REPO="RabiMimi/RabiRiichi"  # override with --repo if needed
 RELEASE_TAG="latest"
 APP_URLS="http://0.0.0.0:5000"
 EXTRA_ENV_FILE=""
+JWT_KEY=""
 UNDEPLOY=false
 
 SERVICE_NAME="rabiriichi"
@@ -59,6 +61,7 @@ while [[ $# -gt 0 ]]; do
         -t|--tag)       RELEASE_TAG="$2";  shift 2 ;;
         -p|--port)      APP_URLS="$2";     shift 2 ;;
         -e|--env-file)  EXTRA_ENV_FILE="$2"; shift 2 ;;
+        -k|--jwt-key)   JWT_KEY="$2";      shift 2 ;;
         --undeploy)     UNDEPLOY=true; shift ;;
         -h|--help)      usage ;;
         *) die "Unknown option: $1. Run with --help for usage." ;;
@@ -222,6 +225,28 @@ success "Extraction complete."
 # ─── Install environment configuration ───────────────────────────────────────
 info "Writing environment config to ${ENV_FILE}..."
 
+# Retrieve existing JWT_SECRET if the environment file already exists
+EXISTING_JWT=""
+if [[ -f "${ENV_FILE}" ]]; then
+    EXISTING_JWT=$(grep -oP '^JWT_SECRET=\K.*' "${ENV_FILE}" || true)
+fi
+
+# Determine the JWT secret to use
+FINAL_JWT=""
+if [[ -n "$JWT_KEY" ]]; then
+    FINAL_JWT="$JWT_KEY"
+elif [[ -n "$EXISTING_JWT" ]]; then
+    FINAL_JWT="$EXISTING_JWT"
+    info "Retained existing JWT_SECRET from ${ENV_FILE}"
+else
+    info "Generating a random 64-character JWT secret..."
+    if command -v openssl &>/dev/null; then
+        FINAL_JWT=$(openssl rand -base64 48 | tr -d '\n\r')
+    else
+        FINAL_JWT=$(head -c 48 /dev/urandom | base64 | tr -d '\n\r')
+    fi
+fi
+
 # Write base environment variables
 cat > "${ENV_FILE}" <<EOF
 # RabiRiichi Server — environment configuration
@@ -231,9 +256,8 @@ cat > "${ENV_FILE}" <<EOF
 ASPNETCORE_ENVIRONMENT=Production
 ASPNETCORE_URLS=${APP_URLS}
 
-# JWT signing key (REQUIRED — replace with a strong random secret)
-# Generate with: openssl rand -base64 64
-# RabiRiichi__Jwt__Key=CHANGE_ME
+# JWT secret key used by TokenService
+JWT_SECRET=${FINAL_JWT}
 
 # Example: override a setting from appsettings.json
 # Logging__LogLevel__Default=Warning
