@@ -1,0 +1,52 @@
+name: Deploy (Dev)
+
+# Triggers on push to develop when server-related files change.
+# Runs on the self-hosted runner registered on the production server as user 'riichi' (dev runner).
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - "**.cs"
+      - "**.csproj"
+      - "**.sln"
+      - "**.json"
+      - "**.proto"
+      - ".github/workflows/deploy-dev.yml"
+  workflow_dispatch: # allow manual triggers from the Actions tab
+
+concurrency:
+  group: dev-deploy
+  cancel-in-progress: false # never cancel a running deploy mid-swap
+
+jobs:
+  deploy:
+    name: Build & Deploy (Dev)
+    runs-on: [self-hosted, linux, dev]
+    environment: development
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true # required for Protos submodule
+          fetch-depth: 1
+
+      - name: Verify .NET SDK
+        run: dotnet --version
+
+      - name: Restore dependencies
+        run: >
+          dotnet restore
+          RabiRiichi.Server/RabiRiichi.Server.csproj
+
+      - name: Run deploy script
+        run: bash /home/riichi/scripts/deploy.sh
+        # deploy.sh reads GITHUB_REF_NAME ('develop') and targets app-dev + rabirichi-dev.
+
+      - name: Verify service health
+        run: |
+          sleep 5
+          systemctl is-active rabirichi-dev
+          echo "Dev service is running."
