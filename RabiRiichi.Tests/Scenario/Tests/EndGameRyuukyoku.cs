@@ -1,4 +1,5 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using RabiRiichi.Actions;
 using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
 using RabiRiichi.Events.InGame;
@@ -439,6 +440,41 @@ namespace RabiRiichi.Tests.Scenario.Tests {
         Assert.AreEqual(1, ev.dealer);
         Assert.AreEqual(1, ev.honba);
       }).Resolve();
+    }
+
+    [TestMethod]
+    public async Task Ryuukyoku_WithRiichi_CarriesOverSticksAndNoDoubleDeduction() {
+      var scenario = new ScenarioBuilder()
+          .WithConfig(configBuilder => configBuilder.SetAgariOption(AgariOption.Kuitan | AgariOption.Pao))
+          .WithPlayer(0, playerBuilder => {
+            playerBuilder
+                .SetPoints(25000)
+                .SetFreeTiles("1112345678999m");
+          })
+          .WithWall(wall => wall.Reserve("2z6z"))
+          .Start(0);
+
+      (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry => {
+        playerInquiry
+            .AssertAction<PlayTileAction>()
+            .ChooseTile<RiichiAction>("2z")
+            .AssertNoMoreActions();
+      }).AssertAutoFinish();
+
+      scenario.ForceHaitei();
+
+      (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
+        playerInquiry
+            .ChooseTile<PlayTileAction>("6z")
+            .AssertNoMoreActions();
+      }).AssertAutoFinish();
+
+      await scenario.AssertRyuukyoku<EndGameRyuukyokuEvent>()
+          .AssertEvent<ApplyScoreEvent>()
+          .AssertEvent<BeginGameEvent>(ev => {
+            Assert.AreEqual(27000, ev.game.GetPlayer(0).points);
+            Assert.AreEqual(1, ev.riichiStick);
+          }).Resolve();
     }
     #endregion
   }
