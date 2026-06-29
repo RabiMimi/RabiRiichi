@@ -15,6 +15,15 @@ namespace RabiRiichi.Core.Setup {
     /// <summary> 役种 </summary>
     protected readonly List<Type> stdPatterns = [];
 
+    public IEnumerable<Type> GetStdPatterns() => stdPatterns;
+
+    public static bool IsYaku(Type type) {
+      return !type.Name.StartsWith("Fu") &&
+             type.Name != "Dora" &&
+             type.Name != "Uradora" &&
+             type.Name != "Akadora";
+    }
+
     #region Inject
 
     /// <summary> 注册Base Pattern </summary>
@@ -34,7 +43,12 @@ namespace RabiRiichi.Core.Setup {
 
     /// <summary> 移除Std Pattern </summary>
     protected bool RemoveStdPattern<T>() where T : StdPattern {
-      return stdPatterns.Remove(typeof(T));
+      return RemoveStdPattern(typeof(T));
+    }
+
+    /// <summary> 移除Std Pattern </summary>
+    protected bool RemoveStdPattern(Type type) {
+      return stdPatterns.Remove(type);
     }
 
     /// <summary>

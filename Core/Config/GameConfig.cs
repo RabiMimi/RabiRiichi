@@ -76,6 +76,11 @@ namespace RabiRiichi.Core.Config {
     /// <summary> 注册类 </summary>
     public BaseSetup setup = new RiichiSetup();
 
+    public string[] AllowedYakus => setup?.GetStdPatterns()
+      .Where(BaseSetup.IsYaku)
+      .Select(t => t.Name)
+      .ToArray() ?? [];
+
     /// <summary> 交互类 </summary>
     public IActionCenter actionCenter = null;
 
@@ -83,7 +88,7 @@ namespace RabiRiichi.Core.Config {
     public ulong? seed;
 
     public GameConfigMsg ToProto() {
-      return new GameConfigMsg {
+      var ret = new GameConfigMsg {
         PlayerCount = playerCount,
         TotalRound = totalRound,
         MinHan = minHan,
@@ -101,6 +106,11 @@ namespace RabiRiichi.Core.Config {
         NextRoundAckTimeout = nextRoundAckTimeout,
         GameplayActionTimeout = gameplayActionTimeout,
       };
+      if (initialTiles != null) {
+        ret.InitialTiles.AddRange(initialTiles.Select(t => (int)t.Val));
+      }
+      ret.AllowedYakus.AddRange(AllowedYakus);
+      return ret;
     }
 
     public static GameConfig FromProto(GameConfigMsg msg) {
@@ -151,6 +161,11 @@ namespace RabiRiichi.Core.Config {
         config.nextRoundAckTimeout = msg.NextRoundAckTimeout;
       if (msg.GameplayActionTimeout > 0)
         config.gameplayActionTimeout = msg.GameplayActionTimeout;
+      if (msg.InitialTiles.Count > 0) {
+        config.initialTiles = new Tiles(msg.InitialTiles.Select(t => new Tile((byte)t)));
+      } else {
+        config.initialTiles = Tiles.All.Value;
+      }
       return config;
     }
 

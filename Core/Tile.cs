@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -313,6 +313,50 @@ namespace RabiRiichi.Core {
     public static readonly Lazy<Tiles> All = new(() => {
       var ret = new Tiles();
       for (var g = TileSuit.M; g <= TileSuit.Z; g++) {
+        int maxTile = g == TileSuit.Z ? 7 : 9;
+        for (int i = 1; i <= maxTile; i++) {
+          for (int j = 0; j < 4; j++) {
+            ret.Add(new Tile {
+              Suit = g,
+              Num = (byte)i,
+              Akadora = maxTile == 9 && i == 5 && j == 0
+            });
+          }
+        }
+      }
+      return ret;
+    });
+
+    public static readonly Lazy<Tiles> Sanma = new(() => {
+      var ret = new Tiles();
+      for (var g = TileSuit.M; g <= TileSuit.Z; g++) {
+        int maxTile = g == TileSuit.Z ? 7 : 9;
+        for (int i = 1; i <= maxTile; i++) {
+          if (g == TileSuit.M && i is >= 2 and <= 8) {
+            continue;
+          }
+          for (int j = 0; j < 4; j++) {
+            ret.Add(new Tile {
+              Suit = g,
+              Num = (byte)i,
+              Akadora = maxTile == 9 && i == 5 && j == 0
+            });
+          }
+        }
+      }
+      return ret;
+    });
+
+    public static readonly Lazy<Tiles> TwoSets = new(() => {
+      var ret = new Tiles();
+      ret.AddRange(All.Value);
+      ret.AddRange(All.Value);
+      return ret;
+    });
+
+    public static readonly Lazy<Tiles> OnlySZ = new(() => {
+      var ret = new Tiles();
+      for (var g = TileSuit.S; g <= TileSuit.Z; g++) {
         int maxTile = g == TileSuit.Z ? 7 : 9;
         for (int i = 1; i <= maxTile; i++) {
           for (int j = 0; j < 4; j++) {

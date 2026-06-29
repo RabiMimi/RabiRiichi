@@ -1,10 +1,10 @@
-using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Microsoft.AspNetCore.Authorization;
 using RabiRiichi.Core.Config;
 using RabiRiichi.Server.Auth;
 using RabiRiichi.Server.Generated.Rpc;
 using RabiRiichi.Server.Models;
+using RabiRiichi.Server.Setup;
 
 namespace RabiRiichi.Server.Services {
   [Authorize]
@@ -15,6 +15,8 @@ namespace RabiRiichi.Server.Services {
 
     public ServerRoomStateResponse CreateRoom(CreateRoomRequest request, RoomList roomList, User user) {
       var config = GameConfig.FromProto(request?.Config);
+      var allowedYakus = request?.Config?.AllowedYakus?.ToArray();
+      config.setup = new DynamicRiichiSetup(allowedYakus);
       var room = new Room(rand, config);
       return roomList.Add(room) && room.AddPlayer(user)
         ? new ServerRoomStateResponse {
