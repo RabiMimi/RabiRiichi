@@ -4,7 +4,12 @@ namespace RabiRiichi.Events.InGame.Listener {
   public static class AgariListener {
     public static Task ExecuteAgari(AgariEvent ev) {
       foreach (var info in ev.agariInfos) {
-        ev.game.GetPlayer(info.playerId).hand.agariTile = ev.agariInfos.incoming;
+        var hand = ev.game.GetPlayer(info.playerId).hand;
+        hand.agariTile = ev.agariInfos.incoming;
+        // Persist the score breakdown so it survives past this transient event
+        // and can be included in the sync snapshot (e.g. for reconnects on the
+        // result screen).
+        hand.agariScore = info.scores;
       }
       var calcScoreEv = new CalcScoreEvent(ev, ev.agariInfos);
       ev.Q.Queue(calcScoreEv);

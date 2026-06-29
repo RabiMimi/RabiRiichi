@@ -2,6 +2,7 @@ using RabiRiichi.Communication.Proto;
 using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
 using RabiRiichi.Generated.Communication.Sync;
+using RabiRiichi.Patterns;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -16,6 +17,7 @@ namespace RabiRiichi.Communication.Sync {
     [RabiBroadcast] public readonly int jun = hand.jun;
     [RabiBroadcast] public readonly int riichiStick = hand.riichiStick;
     [RabiBroadcast] public readonly GameTile agariTile = hand.agariTile;
+    [RabiBroadcast] public readonly ScoreStorage agariScore = hand.agariScore;
     [RabiBroadcast] public readonly GameTile riichiTile = hand.riichiTile;
     [RabiPrivate] public readonly bool isTempFuriten = hand.isTempFuriten;
     [RabiPrivate] public readonly bool isRiichiFuriten = hand.isRiichiFuriten;
@@ -26,6 +28,7 @@ namespace RabiRiichi.Communication.Sync {
         Jun = jun,
         RiichiStick = riichiStick,
         AgariTile = ProtoConverters.ConvertGameTile(agariTile, true),
+        AgariScore = agariScore?.ToProto(),
         RiichiTile = ProtoConverters.ConvertGameTile(riichiTile, true),
         PendingTile = ProtoConverters.ConvertGameTile(pendingTile, this.playerId == playerId),
       };
