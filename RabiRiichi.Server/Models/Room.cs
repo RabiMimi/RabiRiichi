@@ -1,5 +1,6 @@
 using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
+using RabiRiichi.Server.Agents;
 using RabiRiichi.Server.Connections;
 using RabiRiichi.Server.Generated.Messages;
 
@@ -13,14 +14,14 @@ namespace RabiRiichi.Server.Models {
     public RoomList roomList;
     public Game game { get; private set; }
     public readonly GameConfig config = config;
-    private readonly List<User> players = [];
-    private readonly User[] seats = new User[config.playerCount];
+    public readonly List<IPlayerAgent> players = [];
+    private readonly IPlayerAgent[] seats = new IPlayerAgent[config.playerCount];
     private bool isDestroyed = false;
     private readonly Random rand = rand;
     private CancellationTokenSource gameCts;
 
-    private bool HasPlayer(User user) {
-      return players.Any(p => p == user);
+    private bool HasPlayer(IPlayerAgent player) {
+      return players.Any(p => p == player);
     }
 
     private void SetupSeat() {
@@ -38,14 +39,20 @@ namespace RabiRiichi.Server.Models {
         Id = id,
         Config = config.ToProto(),
       };
-      msg.Players.AddRange(players.Select(p => p.GetState()));
+      if (game != null) {
+        msg.Players.AddRange(seats.Select(p => p?.GetState()));
+      } else {
+        msg.Players.AddRange(players.Select(p => p.GetState()));
+      }
       return msg;
     }
 
     public void BroadcastRoomState() {
       var msg = ProtoUtils.CreateDto(CreateServerRoomStateMsg());
       foreach (var player in players) {
-        player.connection?.Queue(msg);
+        if (player is User user) {
+          user.connection?.Queue(msg);
+        }
       }
     }
 
@@ -129,25 +136,28 @@ namespace RabiRiichi.Server.Models {
       return true;
     }
 
-    public bool AddPlayer(User user) {
+    public bool AddPlayer(IPlayerAgent player) {
       if (isDestroyed) {
         return false;
       }
       if (players.Count >= config.playerCount) {
         return false;
       }
-      if (players.Contains(user)) {
+      if (players.Contains(player)) {
         return false;
       }
-      if (!user.JoinRoom(this)) {
-        return false;
+      if (player is User user) {
+        if (!user.JoinRoom(this)) {
+          return false;
+        }
       }
-      players.Add(user);
+      players.Add(player);
       BroadcastRoomState();
       return true;
     }
 
     public bool RemovePlayer(User user) {
+      int seat = SeatIndexOf(user);
       if (!user.ExitRoom(this)) {
         return false;
       }
@@ -155,10 +165,15 @@ namespace RabiRiichi.Server.Models {
         return false;
       }
       if (game != null) {
-        gameCts?.Cancel();
+        if (seat >= 0 && seat < seats.Length) {
+          seats[seat] = new DefaultAI(user.id, user.nickname + " (AI)", seat);
+        }
+        if (players.Count(p => p is User) == 0) {
+          gameCts?.Cancel();
+        }
       }
       BroadcastRoomState();
-      if (players.Count == 0) {
+      if (players.Count(p => p is User) == 0) {
         roomList.Remove(id);
         isDestroyed = true;
       }
@@ -172,7 +187,7 @@ namespace RabiRiichi.Server.Models {
       return players.IndexOf(user);
     }
 
-    public User GetPlayerBySeat(int seatIndex) {
+    public IPlayerAgent GetPlayerBySeat(int seatIndex) {
       return seats[seatIndex];
     }
   }

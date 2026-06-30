@@ -2,6 +2,8 @@ using Grpc.Core;
 using Microsoft.AspNetCore.Authorization;
 using RabiRiichi.Core.Config;
 using RabiRiichi.Server.Auth;
+using RabiRiichi.Server.Agents;
+using RabiRiichi.Server.Generated.Messages;
 using RabiRiichi.Server.Generated.Rpc;
 using RabiRiichi.Server.Models;
 using RabiRiichi.Server.Setup;
@@ -49,6 +51,35 @@ namespace RabiRiichi.Server.Services {
       return taskQueue.Execute(queue => {
         var user = queue.userList.Fetch(context);
         return JoinRoom(request, queue.roomList, user);
+      });
+    }
+
+    public ServerRoomStateResponse AddAi(AddAiRequest request, RoomList roomList, User user) {
+      if (user.room == null) {
+        throw new RpcException(new Status(StatusCode.FailedPrecondition, "User is not in a room"));
+      }
+      var room = user.room;
+      var humanPlayers = room.players.OfType<User>().OrderBy(p => room.SeatIndexOf(p)).ToList();
+      if (humanPlayers.Count == 0 || humanPlayers[0] != user) {
+        throw new RpcException(new Status(StatusCode.PermissionDenied, "Only the room owner can add AI"));
+      }
+
+      int aiId = -100 - room.players.Count;
+      string aiName = $"兔兔AI #{room.players.Count}";
+
+      var ai = new DefaultAI(aiId, aiName, room.players.Count, UserStatus.Ready);
+      if (!room.AddPlayer(ai)) {
+        throw new RpcException(new Status(StatusCode.Internal, "Cannot add AI to room"));
+      }
+      return new ServerRoomStateResponse {
+        State = room.CreateServerRoomStateMsg()
+      };
+    }
+
+    public override Task<ServerRoomStateResponse> AddAi(AddAiRequest request, ServerCallContext context) {
+      return taskQueue.Execute(queue => {
+        var user = queue.userList.Fetch(context);
+        return AddAi(request, queue.roomList, user);
       });
     }
   }

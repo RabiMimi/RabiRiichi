@@ -17,10 +17,6 @@ namespace RabiRiichi.Server.Connections {
     private readonly Room room = room;
     private InquiryContext context;
 
-    private ServerMessageWrapper SendMessage(int seat, ServerMessageDto msg) {
-      return room.GetPlayerBySeat(seat)?.connection.Queue(msg);
-    }
-
     private void EndInquiry(InquiryContext context) {
       var oldContext = Interlocked.CompareExchange(ref this.context, null, context);
       if (oldContext != context) {
@@ -30,49 +26,31 @@ namespace RabiRiichi.Server.Connections {
     }
 
     public void OnEvent(int seat, EventBase ev) {
-      var proto = ev.game.SerializeProto<EventMsg>(ev, seat);
-      if (proto != null) {
-        SendMessage(seat, proto.CreateDto());
-      }
+      room.GetPlayerBySeat(seat)?.OnEvent(ev);
     }
 
-    private ServerMessageWrapper SendInquiry(InquiryContext ctx, int seat) {
+    private void SendInquiry(InquiryContext ctx, int seat) {
       var inquiry = ctx?.inquiry.GetByPlayerId(seat);
       if (inquiry == null) {
-        return null;
+        return;
       }
-      var singlePlayerInquiryMsg = ctx.inquiry.game.SerializeProto<SinglePlayerInquiryMsg>(inquiry, seat);
-      if (singlePlayerInquiryMsg != null && ctx.inquiry.timeout > TimeSpan.Zero) {
+      var player = room.GetPlayerBySeat(seat);
+      if (player == null) {
+        return;
+      }
+      var remaining = TimeSpan.Zero;
+      if (ctx.inquiry.timeout > TimeSpan.Zero) {
         var elapsed = DateTime.UtcNow - ctx.startTime;
-        var remaining = ctx.inquiry.timeout - elapsed;
+        remaining = ctx.inquiry.timeout - elapsed;
         if (remaining < TimeSpan.Zero) {
           remaining = TimeSpan.Zero;
         }
-        singlePlayerInquiryMsg.TimeoutSeconds = remaining.TotalSeconds;
       }
-      var inquiryMsg = new ServerInquiryMsg {
-        Inquiry = singlePlayerInquiryMsg
-      };
-      var msg = SendMessage(seat, ProtoUtils.CreateDto(inquiryMsg));
-      if (msg != null) {
-        async Task WaitResponse() {
-          var waitAny = await Task.WhenAny(
-              ctx.inquiry.WaitForFinish,
-              msg.WaitResponse(TimeSpan.FromHours(1)));
-          if (waitAny is not Task<ClientMessageDto> responseTask) {
-            // Inquiry finished, no need to wait for response.
-            return;
-          }
-          var resp = responseTask.Result?.ClientMsg?.InquiryMsg;
-          var inquiryResp = resp == null ? InquiryResponse.Default(seat)
-              : new InquiryResponse(seat, resp.Index, resp.Response);
-          if (ctx.inquiry.OnResponse(inquiryResp)) {
-            EndInquiry(ctx);
-          }
+      player.OnInquiry(ctx.inquiry, inquiry, remaining, resp => {
+        if (ctx.inquiry.OnResponse(resp)) {
+          EndInquiry(ctx);
         }
-        _ = WaitResponse();
-      }
-      return msg;
+      });
     }
 
     public void SyncInquiryTo(int seat) {

@@ -55,6 +55,10 @@ namespace RabiRiichi.Server.WebSockets {
             var req = msg.ClientRequest.JoinRoom;
             var res = roomService.JoinRoom(req, queue.roomList, user);
             connection.Queue(ProtoUtils.CreateDto(res, msg.Id));
+          } else if (msg.ClientRequest?.AddAi != null) {
+            var req = msg.ClientRequest.AddAi;
+            var res = roomService.AddAi(req, queue.roomList, user);
+            connection.Queue(ProtoUtils.CreateDto(res, msg.Id));
           } else if (msg.ClientRequest?.GetMyInfo != null) {
             var req = msg.ClientRequest.GetMyInfo;
             var res = userService.GetMyInfo(user);
