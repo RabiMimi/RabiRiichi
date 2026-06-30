@@ -1,14 +1,15 @@
 using RabiRiichi.Actions;
 using RabiRiichi.Events;
 using RabiRiichi.Server.Generated.Messages;
+using RabiRiichi.Server.Models;
 
 namespace RabiRiichi.Server.Agents {
-  public class DefaultAI(int id, int seat, UserStatus status = UserStatus.Playing) : IPlayerAgent {
+  public class DefaultAI(int id, Room room, UserStatus status = UserStatus.Playing) : IPlayerAgent {
     public int id { get; } = id;
     public AiType aiType => AiType.Dummy;
     public string nickname => aiType.ToString().ToUpper();
     public UserStatus status { get; private set; } = status;
-    public int Seat { get; } = seat;
+    public int Seat => room.SeatIndexOf(this);
 
     public ServerPlayerStateMsg GetState() {
       return new ServerPlayerStateMsg {

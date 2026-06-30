@@ -166,7 +166,7 @@ namespace RabiRiichi.Server.Models {
       }
       if (game != null) {
         if (seat >= 0 && seat < seats.Length) {
-          seats[seat] = new DefaultAI(user.id, seat);
+          seats[seat] = new DefaultAI(user.id, this);
         }
         if (players.Count(p => p is User) == 0) {
           gameCts?.Cancel();
@@ -180,11 +180,11 @@ namespace RabiRiichi.Server.Models {
       return true;
     }
 
-    public int SeatIndexOf(User user) {
-      if (seats.Contains(user)) {
-        return Array.IndexOf(seats, user);
+    public int SeatIndexOf(IPlayerAgent player) {
+      if (seats.Contains(player)) {
+        return Array.IndexOf(seats, player);
       }
-      return players.IndexOf(user);
+      return players.IndexOf(player);
     }
 
     public IPlayerAgent GetPlayerBySeat(int seatIndex) {
