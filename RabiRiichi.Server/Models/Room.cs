@@ -99,6 +99,12 @@ namespace RabiRiichi.Server.Models {
               $"Player status transition failed, unexpected modification not guarded by lock?");
         }
       }
+      // Auto-ready AIs
+      foreach (var player in players) {
+        if (player is not User) {
+          GetReady(player);
+        }
+      }
       BroadcastRoomState();
       return true;
     }

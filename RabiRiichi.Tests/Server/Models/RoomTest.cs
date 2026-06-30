@@ -73,5 +73,47 @@ namespace RabiRiichi.Tests.Server {
         Assert.AreEqual(UserStatus.Playing, player.status);
       }
     }
+    [TestMethod]
+    public void TestStartNewGameAfterGameEnds() {
+      var rand = new Random(0);
+      var config = new GameConfig { playerCount = 4 };
+      var room = new Room(rand, config);
+
+      var user = new User { id = 1, nickname = "Human" };
+      Assert.IsTrue(room.AddPlayer(user));
+      Assert.IsTrue(room.GetReady(user));
+
+      for (int i = 0; i < 3; i++) {
+        var ai = new DefaultAI(-1 - i, room, UserStatus.InRoom);
+        Assert.IsTrue(room.AddPlayer(ai));
+        Assert.IsTrue(room.GetReady(ai));
+      }
+
+      // Game should have started
+      Assert.IsNotNull(room.game);
+      Assert.AreEqual(UserStatus.Playing, user.status);
+
+      // Invoke private TryEndGame via reflection
+      var tryEndGameMethod = typeof(Room).GetMethod("TryEndGame", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+      Assert.IsNotNull(tryEndGameMethod);
+      var result = (bool)tryEndGameMethod.Invoke(room, null);
+      Assert.IsTrue(result);
+
+      // After game ends, human should be InRoom
+      Assert.AreEqual(UserStatus.InRoom, user.status);
+      
+      // AIs should be Ready (with my proposed fix)
+      var AIs = room.players.Where(p => p is not User).ToList();
+      foreach (var ai in AIs) {
+        Assert.AreEqual(UserStatus.Ready, ai.status);
+      }
+
+      // Human gets ready again
+      Assert.IsTrue(room.GetReady(user));
+
+      // Game should start again
+      Assert.IsNotNull(room.game);
+      Assert.AreEqual(UserStatus.Playing, user.status);
+    }
   }
 }
