@@ -63,11 +63,9 @@ namespace RabiRiichi.Server.Services {
       if (humanPlayers.Count == 0 || humanPlayers[0] != user) {
         throw new RpcException(new Status(StatusCode.PermissionDenied, "Only the room owner can add AI"));
       }
-
       int aiId = -100 - room.players.Count;
-      string aiName = $"兔兔AI #{room.players.Count}";
 
-      var ai = new DefaultAI(aiId, aiName, room.players.Count, UserStatus.Ready);
+      var ai = new DefaultAI(aiId, room.players.Count, UserStatus.Ready);
       if (!room.AddPlayer(ai)) {
         throw new RpcException(new Status(StatusCode.Internal, "Cannot add AI to room"));
       }

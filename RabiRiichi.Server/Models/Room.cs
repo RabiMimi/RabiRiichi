@@ -166,7 +166,7 @@ namespace RabiRiichi.Server.Models {
       }
       if (game != null) {
         if (seat >= 0 && seat < seats.Length) {
-          seats[seat] = new DefaultAI(user.id, user.nickname + " (AI)", seat);
+          seats[seat] = new DefaultAI(user.id, seat);
         }
         if (players.Count(p => p is User) == 0) {
           gameCts?.Cancel();
