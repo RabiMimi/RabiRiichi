@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RabiRiichi.csproj" />
+    <ProjectReference Include="..\RabiRiichi.Server\RabiRiichi.Server.csproj" />
   </ItemGroup>
 
 </Project>

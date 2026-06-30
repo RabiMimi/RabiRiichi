@@ -16,7 +16,7 @@ namespace RabiRiichi.Server.Services {
     private readonly Random rand = rand;
 
     private static readonly Dictionary<AiType, Func<int, Room, IPlayerAgent>> AiCreators = new() {
-      { AiType.Dummy, (id, room) => new DefaultAI(id, room, UserStatus.Ready) }
+      { AiType.Dummy, (id, room) => new DefaultAI(id, room, UserStatus.InRoom) }
     };
 
     public ServerRoomStateResponse CreateRoom(CreateRoomRequest request, RoomList roomList, User user) {
@@ -76,6 +76,7 @@ namespace RabiRiichi.Server.Services {
       if (!room.AddPlayer(ai)) {
         throw new RpcException(new Status(StatusCode.Internal, "Cannot add AI to room"));
       }
+      room.GetReady(ai);
       return new ServerRoomStateResponse {
         State = room.CreateServerRoomStateMsg()
       };

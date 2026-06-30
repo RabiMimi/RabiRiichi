@@ -114,22 +114,25 @@ namespace RabiRiichi.Server.Models {
       });
     }
 
-    public bool GetReady(User user) {
-      if (!HasPlayer(user)) {
+    public bool GetReady(IPlayerAgent player) {
+      if (!HasPlayer(player)) {
         return false;
       }
-      if (!user.Transit(UserStatus.InRoom, UserStatus.Ready)) {
+      if (!player.Transit(UserStatus.InRoom, UserStatus.Ready)) {
         return false;
       }
       BroadcastRoomState();
-      return !players.All(p => p?.status == UserStatus.Ready) || TryStartGame();
+      if (players.Count == config.playerCount && players.All(p => p?.status == UserStatus.Ready)) {
+        TryStartGame();
+      }
+      return true;
     }
 
-    public bool CancelReady(User user) {
-      if (!HasPlayer(user)) {
+    public bool CancelReady(IPlayerAgent player) {
+      if (!HasPlayer(player)) {
         return false;
       }
-      if (!user.Transit(UserStatus.Ready, UserStatus.InRoom)) {
+      if (!player.Transit(UserStatus.Ready, UserStatus.InRoom)) {
         return false;
       }
       BroadcastRoomState();
