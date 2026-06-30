@@ -15,6 +15,10 @@ namespace RabiRiichi.Server.Services {
     private readonly RoomTaskQueue taskQueue = taskQueue;
     private readonly Random rand = rand;
 
+    private static readonly Dictionary<AiType, Func<int, int, IPlayerAgent>> AiCreators = new() {
+      { AiType.Dummy, (id, seat) => new DefaultAI(id, seat, UserStatus.Ready) }
+    };
+
     public ServerRoomStateResponse CreateRoom(CreateRoomRequest request, RoomList roomList, User user) {
       var config = GameConfig.FromProto(request?.Config);
       var allowedYakus = request?.Config?.AllowedYakus?.ToArray();
@@ -63,9 +67,12 @@ namespace RabiRiichi.Server.Services {
       if (humanPlayers.Count == 0 || humanPlayers[0] != user) {
         throw new RpcException(new Status(StatusCode.PermissionDenied, "Only the room owner can add AI"));
       }
+      if (!AiCreators.TryGetValue(request.Type, out var creator)) {
+        throw new RpcException(new Status(StatusCode.InvalidArgument, $"Invalid or unsupported AI type: {request.Type}"));
+      }
       int aiId = -100 - room.players.Count;
 
-      var ai = new DefaultAI(aiId, room.players.Count, UserStatus.Ready);
+      var ai = creator(aiId, room.players.Count);
       if (!room.AddPlayer(ai)) {
         throw new RpcException(new Status(StatusCode.Internal, "Cannot add AI to room"));
       }
