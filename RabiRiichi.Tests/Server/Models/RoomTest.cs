@@ -16,7 +16,7 @@ namespace RabiRiichi.Tests.Server {
       var room = new Room(rand, config);
 
       var user = new User { id = 1, nickname = "Human" };
-      
+
       // Add human player
       Assert.IsTrue(room.AddPlayer(user));
       Assert.AreEqual(UserStatus.InRoom, user.status);
@@ -40,7 +40,7 @@ namespace RabiRiichi.Tests.Server {
         Assert.AreEqual(UserStatus.Playing, player.status);
       }
     }
-    
+
     [TestMethod]
     public void TestGameStartsWhenHumanReadyLast() {
       var rand = new Random(0);
@@ -48,14 +48,14 @@ namespace RabiRiichi.Tests.Server {
       var room = new Room(rand, config);
 
       var user = new User { id = 1, nickname = "Human" };
-      
+
       // Add 3 AIs (they are created as InRoom and then readied)
       for (int i = 0; i < 3; i++) {
         var ai = new DefaultAI(-1 - i, room, UserStatus.InRoom);
         Assert.IsTrue(room.AddPlayer(ai));
         Assert.IsTrue(room.GetReady(ai));
       }
-      
+
       Assert.IsNull(room.game); // Game should not start yet
 
       // Add human player
@@ -65,7 +65,7 @@ namespace RabiRiichi.Tests.Server {
 
       // Human player gets ready
       Assert.IsTrue(room.GetReady(user));
-      
+
       // Now all players are ready, game should have started
       Assert.IsNotNull(room.game);
       Assert.AreEqual(UserStatus.Playing, user.status);
