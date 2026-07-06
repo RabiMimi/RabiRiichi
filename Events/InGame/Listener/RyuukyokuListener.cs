@@ -22,6 +22,7 @@ namespace RabiRiichi.Events.InGame.Listener {
         ev.nagashiManganPlayers = [.. ev.remainingPlayers.Where(player => IsNagashiMangan(ev.game.GetPlayer(player).hand))];
       }
       ev.tenpaiPlayers = [.. ev.remainingPlayers.Where(player => ev.game.GetPlayer(player).hand.Tenpai.Count > 0)];
+      ev.revealedTiles.AddRange(ev.tenpaiPlayers.SelectMany(playerId => ev.game.GetPlayer(playerId).hand.freeTiles));
       return Task.CompletedTask;
     }
 

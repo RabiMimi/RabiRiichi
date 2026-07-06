@@ -468,6 +468,7 @@ namespace RabiRiichi.Communication.Proto {
         ret.EndGameRyuukyoku.RemainingPlayers.AddRange(ege.remainingPlayers);
         ret.EndGameRyuukyoku.NagashiManganPlayers.AddRange(ege.nagashiManganPlayers);
         ret.EndGameRyuukyoku.TenpaiPlayers.AddRange(ege.tenpaiPlayers);
+        ret.EndGameRyuukyoku.RevealedTiles.AddRange(ege.revealedTiles.Select(x => ConvertGameTile(x, true)));
       } else if (ev is MidGameRyuukyokuEvent mge) {
         ret.MidGameRyuukyoku = new MidGameRyuukyokuEventMsg {
           Name = mge.name,
