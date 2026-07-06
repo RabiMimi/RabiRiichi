@@ -52,7 +52,7 @@ namespace RabiRiichi.Core.Config {
     /// <summary> 技能点数扣减策略 </summary>
     [RabiBroadcast] public PointsDeductionPolicy pointsDeductionPolicy = PointsDeductionPolicy.SufficientPoints;
 
-    [RabiBroadcast] public double nextRoundAckTimeout = 15.0;
+    [RabiBroadcast] public double nextRoundAckTimeout = 30.0;
 
     /// <summary> 摸打/鸣牌动作超时时间（秒） </summary>
     [RabiBroadcast] public double gameplayActionTimeout = 20.0;
