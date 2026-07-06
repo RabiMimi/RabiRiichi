@@ -7,6 +7,7 @@ using RabiRiichi.Server.Generated.Messages;
 using RabiRiichi.Server.Generated.Rpc;
 using RabiRiichi.Server.Models;
 using RabiRiichi.Server.Setup;
+using System.Text.Json;
 
 namespace RabiRiichi.Server.Services {
   [Authorize]
@@ -21,6 +22,16 @@ namespace RabiRiichi.Server.Services {
 
     public ServerRoomStateResponse CreateRoom(CreateRoomRequest request, RoomList roomList, User user) {
       var config = GameConfig.FromProto(request?.Config);
+      try {
+        config.Validate();
+      } catch (InvalidGameConfigException ex) {
+        var payload = new {
+          key = MapToI18nKey(ex.ErrorType),
+          @params = ex.Parameters
+        };
+        string json = JsonSerializer.Serialize(payload);
+        throw new RpcException(new Status(StatusCode.InvalidArgument, json));
+      }
       var allowedYakus = request?.Config?.AllowedYakus?.ToArray();
       config.setup = new DynamicRiichiSetup(allowedYakus, logger);
       var room = new Room(rand, config);
@@ -87,6 +98,23 @@ namespace RabiRiichi.Server.Services {
         var user = queue.userList.Fetch(context);
         return AddAi(request, queue.roomList, user);
       });
+    }
+
+    private static string MapToI18nKey(GameConfigErrorType errorType) {
+      return errorType switch {
+        GameConfigErrorType.InvalidPlayerCount => "error.lobby.playerCount",
+        GameConfigErrorType.InvalidTotalRound => "error.lobby.totalRound",
+        GameConfigErrorType.InvalidMinHan => "error.lobby.minHan",
+        GameConfigErrorType.InvalidTimeout => "error.lobby.timeout",
+        GameConfigErrorType.InsufficientTiles => "error.lobby.tileSet",
+        GameConfigErrorType.InvalidInitialPoints => "error.lobby.initialPoints",
+        GameConfigErrorType.InvalidFinishPoints => "error.lobby.finishPoints",
+        GameConfigErrorType.InvalidRiichiPoints => "error.lobby.riichiPoints",
+        GameConfigErrorType.InvalidHonbaPoints => "error.lobby.honbaPoints",
+        GameConfigErrorType.InvalidRyuukyokuPoints => "error.lobby.ryuukyokuPoints",
+        GameConfigErrorType.InvalidPointsRange => "error.lobby.pointsRange",
+        _ => "error.lobby.generic"
+      };
     }
   }
 }
