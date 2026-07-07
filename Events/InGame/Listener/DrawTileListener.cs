@@ -61,7 +61,7 @@ namespace RabiRiichi.Events.InGame.Listener {
     public static void AddActionHandler(WaitPlayerActionEvent ev, DiscardReason reason) {
       var eventBuilder = ev.eventBuilder;
       ev.inquiry.AddHandler<TsumoAction>((action) => {
-        eventBuilder.AddAgari(ev, action.playerId, action.incoming, action.agariInfo);
+        eventBuilder.AddAgari(ev, action.playerId, action.incoming, true, action.agariInfo);
       });
       ev.inquiry.AddHandler<PlayTileAction>((action) => {
         var option = action.chosen;

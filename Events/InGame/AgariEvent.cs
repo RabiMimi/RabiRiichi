@@ -24,10 +24,11 @@ namespace RabiRiichi.Events.InGame {
   }
 
   [RabiMessage]
-  public class AgariInfoList(int fromPlayer, GameTile incoming, params AgariInfo[] agariInfos) : IEnumerable<AgariInfo> {
+  public class AgariInfoList(int fromPlayer, GameTile incoming, bool isTsumo, params AgariInfo[] agariInfos) : IEnumerable<AgariInfo> {
     [RabiBroadcast] private readonly List<AgariInfo> agariInfos = [.. agariInfos];
     [RabiBroadcast] public readonly int fromPlayer = fromPlayer;
     [RabiBroadcast] public readonly GameTile incoming = incoming;
+    [RabiBroadcast] public readonly bool isTsumo = isTsumo;
 
     public void Add(AgariInfo info) {
       agariInfos.Add(info);
@@ -47,9 +48,9 @@ namespace RabiRiichi.Events.InGame {
 
   [RabiMessage]
   public class AgariEvent(EventBase parent, AgariInfoList info) : EventBase(parent) {
-    public class Builder(EventBase parent, int fromPlayer, GameTile incoming) : IEventBuilder {
+    public class Builder(EventBase parent, int fromPlayer, GameTile incoming, bool isTsumo) : IEventBuilder {
       public readonly EventBase parent = parent;
-      public readonly AgariInfoList agariInfos = new AgariInfoList(fromPlayer, incoming);
+      public readonly AgariInfoList agariInfos = new AgariInfoList(fromPlayer, incoming, isTsumo);
 
       public Builder Add(AgariInfo agariInfo) {
         agariInfos.Add(agariInfo);
@@ -61,7 +62,12 @@ namespace RabiRiichi.Events.InGame {
     }
     public override string name => "agari";
     #region Request
-    public bool isTsumo => agariInfos.incoming.IsTsumo;
+    /// <summary>
+    /// Whether this win is a self-draw (tsumo). Set explicitly from the winning
+    /// action type rather than inferred from the incoming tile's discardInfo,
+    /// which is unreliable at broadcast time (e.g. the chankan Freeze/revert).
+    /// </summary>
+    public bool isTsumo => agariInfos.isTsumo;
     [RabiBroadcast] public readonly AgariInfoList agariInfos = info;
 
     #endregion

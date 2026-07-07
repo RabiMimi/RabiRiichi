@@ -321,6 +321,7 @@ namespace RabiRiichi.Communication.Proto {
     public static AgariEventMsg ConvertAgariEvent([Consumes] AgariEvent ev) {
       var ret = new AgariEventMsg {
         Incoming = ConvertGameTile(ev.agariInfos.incoming, true),
+        IsTsumo = ev.isTsumo,
       };
       ret.AgariInfos.AddRange(ev.agariInfos.Select(
           x => ConvertAgariInfo(ev.game.GetPlayer(x.playerId).hand, x)));
