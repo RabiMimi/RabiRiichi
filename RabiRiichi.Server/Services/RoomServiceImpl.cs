@@ -17,7 +17,8 @@ namespace RabiRiichi.Server.Services {
     private readonly Random rand = rand;
 
     private static readonly Dictionary<AiType, Func<int, Room, IPlayerAgent>> AiCreators = new() {
-      { AiType.Dummy, (id, room) => new DefaultAI(id, room, UserStatus.InRoom) }
+      { AiType.Dummy, (id, room) => new DefaultAI(id, room, UserStatus.InRoom) },
+      { AiType.RuleBased, (id, room) => new RuleBasedAI(id, room, UserStatus.InRoom) },
     };
 
     public ServerRoomStateResponse CreateRoom(CreateRoomRequest request, RoomList roomList, User user) {
