@@ -35,8 +35,9 @@ namespace RabiRiichi.Tests.Scenario.Tests {
       (await scenario.WaitInquiry()).Finish();
 
       await scenario.AssertEvent<EndGameRyuukyokuEvent>(ev => {
-        Assert.IsTrue(ev.nagashiManganPlayers.Length == 0);
-        Assert.IsTrue(ev.tenpaiPlayers.Length == 0);
+        Assert.AreEqual(0, ev.nagashiManganPlayers.Length);
+        Assert.AreEqual(0, ev.tenpaiPlayers.Length);
+        Assert.AreEqual(0, ev.tenpaiWaits.Count);
         Assert.IsTrue(ev.remainingPlayers
             .SequenceEqualAfterSort(0, 1, 2, 3));
       }).AssertEvent<ApplyScoreEvent>(ev => {
@@ -79,8 +80,10 @@ namespace RabiRiichi.Tests.Scenario.Tests {
       (await scenario.WaitInquiry()).Finish();
 
       scenario.AssertEvent<EndGameRyuukyokuEvent>(ev => {
-        Assert.IsTrue(ev.nagashiManganPlayers.Length == 0);
+        Assert.AreEqual(0, ev.nagashiManganPlayers.Length);
         Assert.IsTrue(ev.tenpaiPlayers.SequenceEqualAfterSort(0));
+        Assert.AreEqual(1, ev.tenpaiWaits.Count);
+        Assert.AreEqual("123456789m", ev.tenpaiWaits[0].ToString());
         Assert.IsTrue(ev.remainingPlayers
             .SequenceEqualAfterSort(0, 1, 2, 3));
       }).AssertEvent<ApplyScoreEvent>(ev => {
@@ -157,8 +160,11 @@ namespace RabiRiichi.Tests.Scenario.Tests {
       (await scenario.WaitInquiry()).Finish();
 
       await scenario.AssertEvent<EndGameRyuukyokuEvent>(ev => {
-        Assert.IsTrue(ev.nagashiManganPlayers.Length == 0);
+        Assert.AreEqual(0, ev.nagashiManganPlayers.Length);
         Assert.IsTrue(ev.tenpaiPlayers.SequenceEqualAfterSort(0, 1));
+        Assert.AreEqual(2, ev.tenpaiWaits.Count);
+        Assert.AreEqual("123456789m", ev.tenpaiWaits[0].ToString());
+        Assert.AreEqual("123456789p", ev.tenpaiWaits[1].ToString());
         Assert.IsTrue(ev.remainingPlayers
             .SequenceEqualAfterSort(0, 1, 2, 3));
       }).AssertEvent<ApplyScoreEvent>(ev => {
@@ -201,8 +207,12 @@ namespace RabiRiichi.Tests.Scenario.Tests {
       (await scenario.WaitInquiry()).Finish();
 
       await scenario.AssertEvent<EndGameRyuukyokuEvent>(ev => {
-        Assert.IsTrue(ev.nagashiManganPlayers.Length == 0);
+        Assert.AreEqual(0, ev.nagashiManganPlayers.Length);
         Assert.IsTrue(ev.tenpaiPlayers.SequenceEqualAfterSort(0, 1, 2));
+        Assert.AreEqual(3, ev.tenpaiWaits.Count);
+        Assert.AreEqual("124578m", ev.tenpaiWaits[0].ToString());
+        Assert.AreEqual("4578p", ev.tenpaiWaits[1].ToString());
+        Assert.AreEqual("123456789s", ev.tenpaiWaits[2].ToString());
         Assert.IsTrue(ev.remainingPlayers
             .SequenceEqualAfterSort(0, 1, 2, 3));
       }).AssertEvent<ApplyScoreEvent>(ev => {
@@ -243,9 +253,14 @@ namespace RabiRiichi.Tests.Scenario.Tests {
       (await scenario.WaitInquiry()).Finish();
 
       await scenario.AssertEvent<EndGameRyuukyokuEvent>(ev => {
-        Assert.IsTrue(ev.nagashiManganPlayers.Length == 0);
+        Assert.AreEqual(0, ev.nagashiManganPlayers.Length);
         Assert.IsTrue(ev.tenpaiPlayers
             .SequenceEqualAfterSort(0, 1, 2, 3));
+        Assert.AreEqual(4, ev.tenpaiWaits.Count);
+        Assert.AreEqual("123456789m", ev.tenpaiWaits[0].ToString());
+        Assert.AreEqual("123456789p", ev.tenpaiWaits[1].ToString());
+        Assert.AreEqual("123456789s", ev.tenpaiWaits[2].ToString());
+        Assert.AreEqual("5z", ev.tenpaiWaits[3].ToString());
         Assert.IsTrue(ev.remainingPlayers
             .SequenceEqualAfterSort(0, 1, 2, 3));
       }).AssertEvent<ApplyScoreEvent>(ev => {

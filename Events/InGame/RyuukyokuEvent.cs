@@ -27,6 +27,7 @@ namespace RabiRiichi.Events.InGame {
     [RabiBroadcast] public int[] remainingPlayers = [];
     [RabiBroadcast] public int[] nagashiManganPlayers = [];
     [RabiBroadcast] public int[] tenpaiPlayers = [];
+    [RabiBroadcast] public readonly Dictionary<int, Tiles> tenpaiWaits = [];
     [RabiBroadcast] public readonly List<GameTile> revealedTiles = [];
 
     #endregion

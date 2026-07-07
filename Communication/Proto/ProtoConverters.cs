@@ -470,6 +470,13 @@ namespace RabiRiichi.Communication.Proto {
         ret.EndGameRyuukyoku.NagashiManganPlayers.AddRange(ege.nagashiManganPlayers);
         ret.EndGameRyuukyoku.TenpaiPlayers.AddRange(ege.tenpaiPlayers);
         ret.EndGameRyuukyoku.RevealedTiles.AddRange(ege.revealedTiles.Select(x => ConvertGameTile(x, true)));
+        foreach (var kv in ege.tenpaiWaits) {
+          var tpm = new TenpaiPlayerMsg {
+            PlayerId = kv.Key,
+          };
+          tpm.Waits.AddRange(kv.Value.Select(t => (int)t.Val));
+          ret.EndGameRyuukyoku.TenpaiPlayersWaits.Add(tpm);
+        }
       } else if (ev is MidGameRyuukyokuEvent mge) {
         ret.MidGameRyuukyoku = new MidGameRyuukyokuEventMsg {
           Name = mge.name,
