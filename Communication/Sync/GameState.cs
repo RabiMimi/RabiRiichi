@@ -46,11 +46,9 @@ namespace RabiRiichi.Communication.Sync {
           foreach (var winTile in tenpaiTiles) {
             var winGameTile = new GameTile(winTile, 0);
             var scores = patternResolver.ResolveMaxScore(hand, winGameTile, PatternMask.All);
-            int remaining = PlayTileAction.CountRemainingTiles(hand.player, winTile);
 
             ret.TenpaiWaits.Add(new TenpaiInfoMsg {
               WinningTile = winTile.Val,
-              RemainingCount = remaining,
               Han = scores?.result?.han ?? 0,
               Fu = scores?.result?.fu ?? 0,
               Yakuman = scores?.result?.yakuman ?? 0,

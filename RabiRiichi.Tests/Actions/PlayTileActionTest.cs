@@ -35,11 +35,9 @@ namespace RabiRiichi.Tests.Actions {
 
       var win6s = candidate7s.tenpaiInfos.FirstOrDefault(t => t.winningTile.ToString() == "6s");
       Assert.IsNotNull(win6s);
-      Assert.AreEqual(2, win6s.remainingCount);
 
       var win6p = candidate7s.tenpaiInfos.FirstOrDefault(t => t.winningTile.ToString() == "6p");
       Assert.IsNotNull(win6p);
-      Assert.AreEqual(2, win6p.remainingCount);
 
       // Verify discarding 6s (leaves hand 12367s 234m 34566p waiting on 5s/8s ryanmen)
       var candidate6s = playTileAction.candidates.FirstOrDefault(c => c.tile.tile.ToString() == "6s");
@@ -48,7 +46,6 @@ namespace RabiRiichi.Tests.Actions {
 
       var win5s = candidate6s.tenpaiInfos.FirstOrDefault(t => t.winningTile.ToString() == "5s");
       Assert.IsNotNull(win5s);
-      Assert.AreEqual(4, win5s.remainingCount);
     }
   }
 }

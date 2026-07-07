@@ -1,13 +1,11 @@
 using RabiRiichi.Core;
 using RabiRiichi.Patterns;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace RabiRiichi.Actions {
   public class TenpaiInfo {
     public Tile winningTile;
-    public int remainingCount;
     public int han;
     public int fu;
     public int yakuman;
@@ -77,11 +75,8 @@ namespace RabiRiichi.Actions {
             var winGameTile = new GameTile(winTile, 0);
             var scores = patternResolver.ResolveMaxScore(hand, winGameTile, PatternMask.All);
 
-            int remaining = CountRemainingTiles(player, winTile);
-
             var tenpaiInfo = new TenpaiInfo {
               winningTile = winTile,
-              remainingCount = remaining,
               han = scores?.result?.han ?? 0,
               fu = scores?.result?.fu ?? 0,
               yakuman = scores?.result?.yakuman ?? 0,
@@ -98,47 +93,6 @@ namespace RabiRiichi.Actions {
       hand.pendingTile = originalPendingTile;
 
       return candidates;
-    }
-
-    public static int CountRemainingTiles(Player player, Tile winTile) {
-      var game = player.game;
-      var target = winTile.WithoutDora;
-      int count = 0;
-
-      foreach (var tile in player.hand.freeTiles) {
-        if (tile.tile.WithoutDora == target) {
-          count++;
-        }
-      }
-      if (player.hand.pendingTile != null && player.hand.pendingTile.tile.WithoutDora == target) {
-        count++;
-      }
-
-      foreach (var p in game.players) {
-        foreach (var meld in p.hand.called) {
-          foreach (var tile in meld) {
-            if (tile.tile.WithoutDora == target) {
-              count++;
-            }
-          }
-        }
-      }
-
-      foreach (var p in game.players) {
-        foreach (var tile in p.hand.discarded) {
-          if (tile.tile.WithoutDora == target) {
-            count++;
-          }
-        }
-      }
-
-      foreach (var dora in game.wall.doras.Take(game.wall.revealedDoraCount)) {
-        if (dora.tile.WithoutDora == target) {
-          count++;
-        }
-      }
-
-      return Math.Max(0, 4 - count);
     }
   }
 }

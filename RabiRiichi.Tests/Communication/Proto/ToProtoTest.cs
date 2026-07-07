@@ -137,11 +137,9 @@ namespace RabiRiichi.Tests.Communication.Proto {
 
       var wait6s = protoSelf.TenpaiWaits.FirstOrDefault(w => w.WinningTile == new Tile("6s").Val);
       Assert.IsNotNull(wait6s, "6s should be in the waits list");
-      Assert.AreEqual(2, wait6s.RemainingCount);
 
       var wait6p = protoSelf.TenpaiWaits.FirstOrDefault(w => w.WinningTile == new Tile("6p").Val);
       Assert.IsNotNull(wait6p, "6p should be in the waits list");
-      Assert.AreEqual(2, wait6p.RemainingCount);
 
       // CASE 2: ToProto for opponent player (e.g. 0)
       var protoOpponent = handState.ToProto(0);

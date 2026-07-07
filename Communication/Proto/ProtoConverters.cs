@@ -235,7 +235,6 @@ namespace RabiRiichi.Communication.Proto {
     private static TenpaiInfoMsg ConvertTenpaiInfo(TenpaiInfo info) {
       return new TenpaiInfoMsg {
         WinningTile = info.winningTile.Val,
-        RemainingCount = info.remainingCount,
         Han = info.han,
         Fu = info.fu,
         Yakuman = info.yakuman,
