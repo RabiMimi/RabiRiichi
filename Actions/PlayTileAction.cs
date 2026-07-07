@@ -100,7 +100,7 @@ namespace RabiRiichi.Actions {
       return candidates;
     }
 
-    private static int CountRemainingTiles(Player player, Tile winTile) {
+    public static int CountRemainingTiles(Player player, Tile winTile) {
       var game = player.game;
       var target = winTile.WithoutDora;
       int count = 0;

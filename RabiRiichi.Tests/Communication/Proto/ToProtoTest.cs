@@ -8,9 +8,12 @@ using RabiRiichi.Generated.Events.InGame;
 using RabiRiichi.Generated.Patterns;
 using RabiRiichi.Patterns;
 using RabiRiichi.Tests.Helper;
+using RabiRiichi.Tests.Scenario;
+using RabiRiichi.Communication.Sync;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace RabiRiichi.Tests.Communication.Proto {
 
@@ -101,6 +104,49 @@ namespace RabiRiichi.Tests.Communication.Proto {
           break;
         }
       }
+    }
+
+    [TestMethod]
+    public async Task TestPlayerHandStateTenpaiWaitsSerialization() {
+      Game game = null;
+      var scenario = new ScenarioBuilder()
+          .WithPlayer(1, playerBuilder => {
+            // A hand that is already in tenpai (waiting on 6s and 6p)
+            playerBuilder.SetFreeTiles("12366s234m34566p");
+          })
+          .Start(1);
+
+      scenario.WithGame(g => game = g);
+
+      // Trigger game startup so player states are active
+      await scenario.WaitInquiry();
+
+      var player1 = game.GetPlayer(1);
+
+      // Verify that the hand is indeed in Tenpai
+      Assert.IsTrue(player1.hand.isFuriten || player1.hand.Tenpai.Count > 0, "Player 1 should be in tenpai");
+      Assert.AreEqual(2, player1.hand.Tenpai.Count);
+
+      // Construct PlayerHandState for Player 1
+      var handState = new PlayerHandState(player1.hand, 1);
+
+      // CASE 1: ToProto for the player themselves (1)
+      var protoSelf = handState.ToProto(1);
+      Assert.IsNotNull(protoSelf);
+      Assert.AreEqual(2, protoSelf.TenpaiWaits.Count, "Should serialize tenpai waits for self");
+
+      var wait6s = protoSelf.TenpaiWaits.FirstOrDefault(w => w.WinningTile == new Tile("6s").Val);
+      Assert.IsNotNull(wait6s, "6s should be in the waits list");
+      Assert.AreEqual(2, wait6s.RemainingCount);
+
+      var wait6p = protoSelf.TenpaiWaits.FirstOrDefault(w => w.WinningTile == new Tile("6p").Val);
+      Assert.IsNotNull(wait6p, "6p should be in the waits list");
+      Assert.AreEqual(2, wait6p.RemainingCount);
+
+      // CASE 2: ToProto for opponent player (e.g. 0)
+      var protoOpponent = handState.ToProto(0);
+      Assert.IsNotNull(protoOpponent);
+      Assert.AreEqual(0, protoOpponent.TenpaiWaits.Count, "Should NOT leak tenpai waits to opponents");
     }
   }
 }
