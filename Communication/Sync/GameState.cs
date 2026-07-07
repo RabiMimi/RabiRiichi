@@ -30,7 +30,7 @@ namespace RabiRiichi.Communication.Sync {
         PendingTile = ProtoConverters.ConvertGameTile(pendingTile, this.playerId == playerId),
       };
       ret.Called.AddRange(called.Select(x => x.ToProto()));
-      ret.Discarded.AddRange(discarded.Select(tile => ProtoConverters.ConvertGameTile(tile, this.playerId == playerId)));
+      ret.Discarded.AddRange(discarded.Select(tile => ProtoConverters.ConvertGameTile(tile, true)));
       ret.FreeTiles.AddRange(freeTiles.Select(tile => ProtoConverters.ConvertGameTile(tile, this.playerId == playerId)));
       if (this.playerId == playerId) {
         ret.IsTempFuriten = isTempFuriten;
