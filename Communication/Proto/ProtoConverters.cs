@@ -232,13 +232,14 @@ namespace RabiRiichi.Communication.Proto {
       return ret;
     }
 
-    private static TenpaiInfoMsg ConvertTenpaiInfo(TenpaiInfo info) {
+    public static TenpaiInfoMsg ConvertTenpaiInfo(TenpaiInfo info) {
       return new TenpaiInfoMsg {
         WinningTile = info.winningTile.Val,
         Han = info.han,
         Fu = info.fu,
         Yakuman = info.yakuman,
         Points = info.points,
+        YakuHan = info.yaku,
       };
     }
 

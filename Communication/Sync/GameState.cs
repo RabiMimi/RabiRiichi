@@ -44,16 +44,8 @@ namespace RabiRiichi.Communication.Sync {
         var tenpaiTiles = hand.Tenpai;
         if (tenpaiTiles.Count > 0) {
           foreach (var winTile in tenpaiTiles) {
-            var winGameTile = new GameTile(winTile, 0);
-            var scores = patternResolver.ResolveMaxScore(hand, winGameTile, PatternMask.All);
-
-            ret.TenpaiWaits.Add(new TenpaiInfoMsg {
-              WinningTile = winTile.Val,
-              Han = scores?.result?.han ?? 0,
-              Fu = scores?.result?.fu ?? 0,
-              Yakuman = scores?.result?.yakuman ?? 0,
-              Points = scores?.result?.BaseScore ?? 0,
-            });
+            var info = PlayTileAction.ComputeTenpaiInfo(patternResolver, hand, winTile);
+            ret.TenpaiWaits.Add(ProtoConverters.ConvertTenpaiInfo(info));
           }
         }
       }
