@@ -361,8 +361,8 @@ namespace RabiRiichi.Communication.Proto {
     }
 
     [Produces]
-    public static BeginGameEventMsg ConvertBeginGameEvent([Consumes] BeginGameEvent ev) {
-      return new() {
+    public static BeginGameEventMsg ConvertBeginGameEvent([Consumes] BeginGameEvent ev, [Consumes(PLAYER_ID)] int playerId) {
+      var ret = new BeginGameEventMsg {
         Round = ev.round,
         Dealer = ev.dealer,
         Honba = ev.honba,
@@ -370,6 +370,10 @@ namespace RabiRiichi.Communication.Proto {
         RemainingTiles = ev.remainingTiles,
         GameId = ev.game.info.gameId,
       };
+      if (playerId == GOD_VIEW_PLAYER_ID) {
+        ret.InitialWall.AddRange(ev.game.wall.initialWall.Select(t => ConvertGameTile(t, true)));
+      }
+      return ret;
     }
 
     [Produces]

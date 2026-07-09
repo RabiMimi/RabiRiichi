@@ -77,6 +77,71 @@ namespace RabiRiichi.Tests.Core {
       Assert.IsNull(wall.RevealDora(false));
     }
 
+    /// <summary>
+    /// initialWall is the flattened physical layout for display/replay. The dead
+    /// wall sits at the very end in the order:
+    ///   top:    ... Dora5 Dora4 Dora3 Dora2 Dora1 Rinshan3 Rinshan1
+    ///   bottom: ... Ura5  Ura4  Ura3  Ura2  Ura1  Rinshan4 Rinshan2
+    /// flattened top-then-bottom per stack, left to right; draw wall = draw order.
+    /// </summary>
+    private static void AssertInitialWallLayout(Wall wall) {
+      var iw = wall.initialWall;
+      int total = wall.remaining.Count + wall.doras.Count + wall.uradoras.Count + wall.rinshan.Count;
+      Assert.AreEqual(total, iw.Count, "initialWall must contain every tile once");
+      CollectionAssert.AllItemsAreUnique(iw);
+
+      int p = iw.Count;
+
+      // Tail: rinshan pairs, higher-numbered stacks first, (Rinshan1,Rinshan2) last.
+      // Rinshan1 (first drawn) = rinshan[^1]. Read the tail back-to-front.
+      int rc = wall.rinshan.Count;
+      int pairCount = (rc + 1) / 2;
+      // Rebuild expected rinshan tail order and compare against iw's tail.
+      var expectedRinshan = new System.Collections.Generic.List<GameTile>();
+      for (int pair = pairCount - 1; pair >= 0; pair--) {
+        int topN = 2 * pair;       // 0-based "first drawn" index
+        int bottomN = 2 * pair + 1;
+        expectedRinshan.Add(wall.rinshan[rc - 1 - topN]);
+        if (bottomN < rc) {
+          expectedRinshan.Add(wall.rinshan[rc - 1 - bottomN]);
+        }
+      }
+      for (int i = expectedRinshan.Count - 1; i >= 0; i--) {
+        Assert.AreSame(expectedRinshan[i], iw[--p], $"rinshan tail mismatch at {i}");
+      }
+
+      // Before rinshan: (Dora5,Ura5) ... (Dora1,Ura1). Read back-to-front:
+      // last dora/ura stack is (Dora1,Ura1) => bottom Ura1, top Dora1.
+      for (int k = 1; k <= Wall.NUM_DORA; k++) {
+        Assert.AreSame(wall.uradoras[k - 1], iw[--p], $"ura mismatch at {k}");
+        Assert.AreSame(wall.doras[k - 1], iw[--p], $"dora mismatch at {k}");
+      }
+
+      // Everything before the dead wall is the draw wall, in draw order
+      // (first draw = remaining[^1]). iw[0..p-1] should equal remaining reversed.
+      Assert.AreEqual(wall.remaining.Count, p);
+      for (int i = 0; i < wall.remaining.Count; i++) {
+        Assert.AreSame(wall.remaining[wall.remaining.Count - 1 - i], iw[i],
+            $"draw wall mismatch at {i}");
+      }
+    }
+
+    [TestMethod]
+    public void TestInitialWallLayout() {
+      AssertInitialWallLayout(wall);
+    }
+
+    [TestMethod]
+    public void TestInitialWallLayoutFlexibleRinshan() {
+      // Nukidora enlarges the rinshan pool; layout must stay consistent for any
+      // rinshan count (here 4 + number of North tiles = 8).
+      var config = new GameConfig { doraOption = DoraOption.Nukidora };
+      var nukiWall = new Wall(new RabiRand(2024), config);
+      nukiWall.Reset();
+      Assert.IsTrue(nukiWall.rinshan.Count > Wall.NUM_RINSHAN);
+      AssertInitialWallLayout(nukiWall);
+    }
+
     [TestMethod]
     public void TestCountDora() {
       // First Dora
