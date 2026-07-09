@@ -38,8 +38,8 @@ namespace RabiRiichi.Tests.Scenario.Tests {
           .AssertYaku<Dora>(han: 2)
           .AssertYaku<Akadora>(han: 1)
       ).AssertEvent<ConcludeGameEvent>(ev => {
-        ev.doras.AssertEquals("12345s");
-        ev.uradoras.AssertEquals("12345m");
+        ev.doras.AssertEquals("1s");
+        ev.uradoras.AssertEquals("");
       }).Resolve();
     }
     #endregion
@@ -81,8 +81,8 @@ namespace RabiRiichi.Tests.Scenario.Tests {
           .AssertYaku<Uradora>(han: 2)
           .AssertYaku<Akadora>(han: 1)
       ).AssertEvent<ConcludeGameEvent>(ev => {
-        ev.doras.AssertEquals("12456s");
-        ev.uradoras.AssertEquals("3s2345m");
+        ev.doras.AssertEquals("1s");
+        ev.uradoras.AssertEquals("3s");
       }).Resolve();
     }
 
@@ -119,8 +119,8 @@ namespace RabiRiichi.Tests.Scenario.Tests {
           .AssertYaku<Dora>(han: 2)
           .AssertYaku<Akadora>(han: 1)
       ).AssertEvent<ConcludeGameEvent>(ev => {
-        ev.doras.AssertEquals("12456s");
-        ev.uradoras.AssertEquals("3s2345m");
+        ev.doras.AssertEquals("1s");
+        ev.uradoras.AssertEquals("");
       }).Resolve();
     }
     #endregion

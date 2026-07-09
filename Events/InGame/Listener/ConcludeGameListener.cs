@@ -1,10 +1,22 @@
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace RabiRiichi.Events.InGame.Listener {
   public static class ConcludeGameListener {
     public static Task PrepareConcludeGame(ConcludeGameEvent ev) {
-      ev.doras.AddRange(ev.game.wall.doras);
-      ev.uradoras.AddRange(ev.game.wall.uradoras);
+      ev.doras.AddRange(ev.game.wall.doras.Take(ev.game.wall.revealedDoraCount));
+
+      bool anyWinnerHasRiichi = false;
+      foreach (var player in ev.game.players) {
+        if (player.hand.agariTile != null && player.hand.riichi) {
+          anyWinnerHasRiichi = true;
+          break;
+        }
+      }
+
+      if (anyWinnerHasRiichi) {
+        ev.uradoras.AddRange(ev.game.wall.uradoras.Take(ev.game.wall.revealedUradoraCount));
+      }
       return Task.CompletedTask;
     }
 
