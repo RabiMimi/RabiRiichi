@@ -27,6 +27,13 @@ namespace RabiRiichi.Core {
     public readonly EventQueue mainQueue;
     public readonly ProtoGraph protoGraph;
 
+    /// <summary>
+    /// 每个事件恰好触发一次（在按玩家私有过滤/分发之前），用于全量抓取（如录像）。
+    /// 与 <see cref="SendEvent"/> 不同，这里不会因 [RabiPrivate] 事件只投递给
+    /// owner 而遗漏——所有事件都会经过这里。
+    /// </summary>
+    public Action<EventBase> onGodViewEvent;
+
     public Game(GameConfig config) {
       if (config.actionCenter == null) {
         throw new ArgumentException("config.actionCenter must be provided");

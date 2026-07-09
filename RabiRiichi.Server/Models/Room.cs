@@ -76,6 +76,10 @@ namespace RabiRiichi.Server.Models {
       gameCts = new CancellationTokenSource();
       game = new Game(config);
       game.info.gameId = $"{DateTime.UtcNow:yyyyMMdd'T'HHmmss}-{id}";
+      // Subscribe before Start so no early events are missed. This tee sees every
+      // event once (incl. per-seat [RabiPrivate] ones), fixing the previous
+      // seat-0-only capture that dropped other seats' private events.
+      game.onGodViewEvent += actionCenter.CaptureGodViewEvent;
       // Start the game in a background task and log any exception that bubbles up.
       Task.Run(() => game.Start(gameCts.Token)).ContinueWith(t => {
         if (t.IsFaulted) {

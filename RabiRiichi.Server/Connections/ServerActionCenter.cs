@@ -32,23 +32,30 @@ namespace RabiRiichi.Server.Connections {
 
     public void OnEvent(int seat, EventBase ev) {
       room.GetPlayerBySeat(seat)?.OnEvent(ev);
+    }
 
-      if (room.replayStore != null && room.replayStore.IsEnabled) {
-        if (seat == 0) {
-          lock (replayLock) {
-            if (replayLog == null) {
-              replayLog = new GameLogMsg {
-                GameId = room.game.info.gameId,
-                CreatedAtUnixMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                Config = room.game.config.ToProto(),
-              };
-              replayLog.PlayerLogs.Add(new PlayerLogMsg());
-            }
-            var revealedProto = room.game.SerializeProto<EventMsg>(ev, ProtoConverters.GOD_VIEW_PLAYER_ID);
-            if (revealedProto != null) {
-              replayLog.PlayerLogs[0].Logs.Add(new SingleLogMsg { Event = revealedProto });
-            }
-          }
+    /// <summary>
+    /// Captures a single god-view (fully revealed) copy of every event for the
+    /// replay log. Subscribed to <see cref="Game.onGodViewEvent"/>, so it runs
+    /// once per event and is not affected by per-seat [RabiPrivate] filtering
+    /// (unlike the per-seat <see cref="OnEvent"/>).
+    /// </summary>
+    public void CaptureGodViewEvent(EventBase ev) {
+      if (room.replayStore == null || !room.replayStore.IsEnabled) {
+        return;
+      }
+      lock (replayLock) {
+        if (replayLog == null) {
+          replayLog = new GameLogMsg {
+            GameId = room.game.info.gameId,
+            CreatedAtUnixMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            Config = room.game.config.ToProto(),
+          };
+          replayLog.PlayerLogs.Add(new PlayerLogMsg());
+        }
+        var revealedProto = room.game.SerializeProto<EventMsg>(ev, ProtoConverters.GOD_VIEW_PLAYER_ID);
+        if (revealedProto != null) {
+          replayLog.PlayerLogs[0].Logs.Add(new SingleLogMsg { Event = revealedProto });
         }
       }
     }

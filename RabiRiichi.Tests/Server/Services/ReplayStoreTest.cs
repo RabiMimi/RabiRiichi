@@ -2,6 +2,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Generated.Core;
 using RabiRiichi.Server.Services;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,6 +12,8 @@ using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
 using RabiRiichi.Communication;
 using RabiRiichi.Communication.Proto;
+using RabiRiichi.Events;
+using RabiRiichi.Events.InGame;
 
 namespace RabiRiichi.Tests.Server.Services {
   [TestClass]
@@ -106,6 +109,31 @@ namespace RabiRiichi.Tests.Server.Services {
       
       Assert.IsFalse(File.Exists(file1), "Old file should be deleted");
       Assert.IsTrue(File.Exists(file2), "New file should be kept");
+    }
+
+    [TestMethod]
+    public async Task TestGodViewTeeCapturesNonZeroSeatPrivateEvents() {
+      // Regression: the replay tee must capture per-seat [RabiPrivate] events
+      // (e.g. furiten) owned by seats other than 0. The old seat-0-only capture
+      // dropped them because EventBroadcast only delivers private events to the
+      // owner seat.
+      var config = new GameConfig();
+      var mockActionCenter = new Mock<IActionCenter>();
+      config.actionCenter = mockActionCenter.Object;
+      var game = new Game(config);
+
+      game.GetPlayer(1).Reset();
+
+      var captured = new List<EventBase>();
+      game.onGodViewEvent += ev => captured.Add(ev);
+
+      // A furiten event owned by seat 1 (class-level [RabiPrivate] via
+      // PrivatePlayerEvent) is delivered only to seat 1, never seat 0.
+      var furitenEvent = new SetTempFuritenEvent(game.initialEvent, 1, true);
+      await game.eventBus.Process(furitenEvent, true);
+
+      Assert.IsTrue(captured.Contains(furitenEvent),
+          "God-view tee should capture a seat-1 private furiten event.");
     }
 
     [TestMethod]
