@@ -26,18 +26,19 @@ namespace RabiRiichi.Communication.Sync {
     [RabiPrivate] public readonly bool isDiscardFuriten = hand.isDiscardFuriten;
 
     public PlayerHandStateMsg ToProto(int playerId) {
+      bool reveal = playerId == ProtoConverters.GOD_VIEW_PLAYER_ID || this.playerId == playerId;
       var ret = new PlayerHandStateMsg {
         Jun = jun,
         RiichiStick = riichiStick,
         AgariTile = ProtoConverters.ConvertGameTile(agariTile, true),
         RiichiTile = ProtoConverters.ConvertGameTile(riichiTile, true),
-        PendingTile = ProtoConverters.ConvertGameTile(pendingTile, this.playerId == playerId),
+        PendingTile = ProtoConverters.ConvertGameTile(pendingTile, reveal),
       };
       ret.Called.AddRange(called.Select(x => x.ToProto()));
       ret.Discarded.AddRange(discarded.Select(tile => ProtoConverters.ConvertGameTile(tile, true)));
       ret.NukiDora.AddRange(nukiDora.Select(tile => ProtoConverters.ConvertGameTile(tile, true)));
-      ret.FreeTiles.AddRange(freeTiles.Select(tile => ProtoConverters.ConvertGameTile(tile, this.playerId == playerId)));
-      if (this.playerId == playerId) {
+      ret.FreeTiles.AddRange(freeTiles.Select(tile => ProtoConverters.ConvertGameTile(tile, reveal)));
+      if (reveal) {
         ret.IsTempFuriten = isTempFuriten;
         ret.IsRiichiFuriten = isRiichiFuriten;
         ret.IsDiscardFuriten = isDiscardFuriten;

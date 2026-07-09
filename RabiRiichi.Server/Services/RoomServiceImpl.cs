@@ -11,10 +11,11 @@ using System.Text.Json;
 
 namespace RabiRiichi.Server.Services {
   [Authorize]
-  public class RoomServiceImpl(ILogger<RoomServiceImpl> logger, RoomTaskQueue taskQueue, Random rand) : RoomService.RoomServiceBase {
+  public class RoomServiceImpl(ILogger<RoomServiceImpl> logger, RoomTaskQueue taskQueue, Random rand, ReplayStore replayStore) : RoomService.RoomServiceBase {
     private readonly ILogger<RoomServiceImpl> logger = logger;
     private readonly RoomTaskQueue taskQueue = taskQueue;
     private readonly Random rand = rand;
+    private readonly ReplayStore replayStore = replayStore;
 
     private static readonly Dictionary<AiType, Func<int, Room, IPlayerAgent>> AiCreators = new() {
       { AiType.Dummy, (id, room) => new DefaultAI(id, room, UserStatus.InRoom) },
@@ -35,7 +36,7 @@ namespace RabiRiichi.Server.Services {
       }
       var allowedYakus = request?.Config?.AllowedYakus?.ToArray();
       config.setup = new DynamicRiichiSetup(allowedYakus, logger);
-      var room = new Room(rand, config);
+      var room = new Room(rand, config, replayStore);
       return roomList.Add(room) && room.AddPlayer(user)
         ? new ServerRoomStateResponse {
           State = room.CreateServerRoomStateMsg()

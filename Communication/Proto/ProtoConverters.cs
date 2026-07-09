@@ -14,6 +14,7 @@ namespace RabiRiichi.Communication.Proto {
   public class ProtoConverters {
     #region Key Constants
     public const string PLAYER_ID = "pid";
+    public const int GOD_VIEW_PLAYER_ID = -1;
     #endregion
 
     #region ActionMsg
@@ -319,7 +320,7 @@ namespace RabiRiichi.Communication.Proto {
       return new() {
         PlayerId = ev.playerId,
         Kan = ev.kan.ToProto(),
-        Incoming = ConvertGameTile(ev.incoming, ev.playerId == playerId),
+        Incoming = ConvertGameTile(ev.incoming, playerId == GOD_VIEW_PLAYER_ID || ev.playerId == playerId),
         KanSource = ev.kanSource,
       };
     }
@@ -367,6 +368,7 @@ namespace RabiRiichi.Communication.Proto {
         Honba = ev.honba,
         RiichiStick = ev.riichiStick,
         RemainingTiles = ev.remainingTiles,
+        GameId = ev.game.info.gameId,
       };
     }
 
@@ -393,7 +395,7 @@ namespace RabiRiichi.Communication.Proto {
         [Consumes] DealerFirstTurnEvent ev, [Consumes(PLAYER_ID)] int playerId) {
       var ret = new DealerFirstTurnEventMsg {
         PlayerId = ev.playerId,
-        Incoming = ConvertGameTile(ev.incoming, ev.playerId == playerId)
+        Incoming = ConvertGameTile(ev.incoming, playerId == GOD_VIEW_PLAYER_ID || ev.playerId == playerId)
       };
       return ret;
     }
@@ -404,7 +406,7 @@ namespace RabiRiichi.Communication.Proto {
         PlayerId = ev.playerId,
         Count = ev.count,
       };
-      ret.Tiles.AddRange(ev.tiles.Select(tile => ConvertGameTile(tile, ev.playerId == playerId)));
+      ret.Tiles.AddRange(ev.tiles.Select(tile => ConvertGameTile(tile, playerId == GOD_VIEW_PLAYER_ID || ev.playerId == playerId)));
       return ret;
     }
 
@@ -416,7 +418,7 @@ namespace RabiRiichi.Communication.Proto {
         Discarded = ConvertGameTile(ev.discarded, true),
         Reason = ev.reason,
         FromHand = ev.fromHand,
-        Incoming = ConvertGameTile(ev.incoming, ev.playerId == playerId),
+        Incoming = ConvertGameTile(ev.incoming, playerId == GOD_VIEW_PLAYER_ID || ev.playerId == playerId),
         IsRiichi = ev is RiichiEvent
       };
       return ret;
@@ -428,7 +430,7 @@ namespace RabiRiichi.Communication.Proto {
       return new DrawTileEventMsg {
         PlayerId = ev.playerId,
         Source = ev.source,
-        Tile = ConvertGameTile(ev.tile, playerId == ev.playerId),
+        Tile = ConvertGameTile(ev.tile, playerId == GOD_VIEW_PLAYER_ID || playerId == ev.playerId),
       };
     }
 
@@ -626,7 +628,7 @@ namespace RabiRiichi.Communication.Proto {
 
     [Produces]
     public static GameTileMsg ConvertGameTile([Consumes] GameTile tile, [Consumes(PLAYER_ID)] int playerId) {
-      return tile == null ? null : ConvertGameTile(tile, tile.playerId == playerId);
+      return tile == null ? null : ConvertGameTile(tile, playerId == GOD_VIEW_PLAYER_ID || tile.playerId == playerId);
     }
     #endregion
   }

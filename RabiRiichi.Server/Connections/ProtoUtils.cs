@@ -3,6 +3,8 @@ using Google.Protobuf.WellKnownTypes;
 using RabiRiichi.Server.Generated.Messages;
 using RabiRiichi.Server.Generated.Rpc;
 
+using RabiRiichi.Generated.Core;
+
 namespace RabiRiichi.Server.Connections {
   public static class ProtoUtils {
     public static ServerMessageDto CreateDto<T>(T obj, int respondTo = 0) where T : IMessage<T> {
@@ -25,6 +27,8 @@ namespace RabiRiichi.Server.Connections {
         ret.ServerError = wsErrorMsg;
       } else if (obj is ServerRoomStateResponse roomState) {
         ret.RoomState = roomState;
+      } else if (obj is GameLogMsg replay) {
+        ret.Replay = replay;
       } else if (obj is Empty) {
         // noop
       } else {

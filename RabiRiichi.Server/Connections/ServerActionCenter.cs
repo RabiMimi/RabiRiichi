@@ -3,9 +3,12 @@ using RabiRiichi.Communication;
 using RabiRiichi.Events;
 using RabiRiichi.Generated.Actions;
 using RabiRiichi.Generated.Events;
+using RabiRiichi.Generated.Core;
+using RabiRiichi.Communication.Proto;
 using RabiRiichi.Server.Generated.Messages;
 using RabiRiichi.Server.Generated.Rpc;
 using RabiRiichi.Server.Models;
+using System.Threading;
 
 namespace RabiRiichi.Server.Connections {
   public class ServerActionCenter(Room room) : IActionCenter {
@@ -16,6 +19,8 @@ namespace RabiRiichi.Server.Connections {
 
     private readonly Room room = room;
     private InquiryContext context;
+    private GameLogMsg replayLog;
+    private readonly object replayLock = new();
 
     private void EndInquiry(InquiryContext context) {
       var oldContext = Interlocked.CompareExchange(ref this.context, null, context);
@@ -27,6 +32,31 @@ namespace RabiRiichi.Server.Connections {
 
     public void OnEvent(int seat, EventBase ev) {
       room.GetPlayerBySeat(seat)?.OnEvent(ev);
+
+      if (room.replayStore != null && room.replayStore.IsEnabled) {
+        if (seat == 0) {
+          lock (replayLock) {
+            if (replayLog == null) {
+              replayLog = new GameLogMsg {
+                GameId = room.game.info.gameId,
+                CreatedAtUnixMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                Config = room.game.config.ToProto(),
+              };
+              replayLog.PlayerLogs.Add(new PlayerLogMsg());
+            }
+            var revealedProto = room.game.SerializeProto<EventMsg>(ev, ProtoConverters.GOD_VIEW_PLAYER_ID);
+            if (revealedProto != null) {
+              replayLog.PlayerLogs[0].Logs.Add(new SingleLogMsg { Event = revealedProto });
+            }
+          }
+        }
+      }
+    }
+
+    public GameLogMsg GetReplayLog() {
+      lock (replayLock) {
+        return replayLog;
+      }
     }
 
     private void SendInquiry(InquiryContext ctx, int seat) {

@@ -3,13 +3,14 @@ using RabiRiichi.Core.Config;
 using RabiRiichi.Server.Agents;
 using RabiRiichi.Server.Connections;
 using RabiRiichi.Server.Generated.Messages;
+using RabiRiichi.Server.Services;
 
 namespace RabiRiichi.Server.Models {
   public class CreateRoomResp(int id) {
     public int id { get; set; } = id;
   }
 
-  public class Room(Random rand, GameConfig config) {
+  public class Room(Random rand, GameConfig config, ReplayStore replayStore = null) {
     public int id;
     public RoomList roomList;
     public Game game { get; private set; }
@@ -18,6 +19,7 @@ namespace RabiRiichi.Server.Models {
     private readonly IPlayerAgent[] seats = new IPlayerAgent[config.playerCount];
     private bool isDestroyed = false;
     private readonly Random rand = rand;
+    public readonly ReplayStore replayStore = replayStore;
     private CancellationTokenSource gameCts;
 
     private bool HasPlayer(IPlayerAgent player) {
@@ -73,12 +75,24 @@ namespace RabiRiichi.Server.Models {
       BroadcastRoomState();
       gameCts = new CancellationTokenSource();
       game = new Game(config);
+      game.info.gameId = $"{DateTime.UtcNow:yyyyMMdd'T'HHmmss}-{id}";
       // Start the game in a background task and log any exception that bubbles up.
       Task.Run(() => game.Start(gameCts.Token)).ContinueWith(t => {
         if (t.IsFaulted) {
           global::RabiRiichi.Utils.Logger.Warn("[Room] Game task faulted:");
           foreach (var ex in t.Exception!.InnerExceptions) {
             global::RabiRiichi.Utils.Logger.Warn(ex);
+          }
+        }
+        if (replayStore != null && replayStore.IsEnabled) {
+          var sac = config.actionCenter as ServerActionCenter;
+          var log = sac?.GetReplayLog();
+          if (log != null) {
+            try {
+              replayStore.SaveReplay(log.GameId, log);
+            } catch (Exception ex) {
+              global::RabiRiichi.Utils.Logger.Warn($"Failed to save replay: {ex}");
+            }
           }
         }
         game = null;

@@ -15,13 +15,15 @@ namespace RabiRiichi.Server.WebSockets {
       TokenService tokenService,
       InfoServiceImpl infoService,
       RoomServiceImpl roomService,
-      UserServiceImpl userService) : ControllerBase {
+      UserServiceImpl userService,
+      ReplayStore replayStore) : ControllerBase {
     private readonly ILogger<WebSocketController> logger = logger;
     private readonly RoomTaskQueue taskQueue = taskQueue;
     private readonly TokenService tokenService = tokenService;
     private readonly InfoServiceImpl infoService = infoService;
     private readonly RoomServiceImpl roomService = roomService;
     private readonly UserServiceImpl userService = userService;
+    private readonly ReplayStore replayStore = replayStore;
 
     private Task HandlePublic(Connection connection, ClientMessageDto msg) {
       return taskQueue.Execute(queue => {
@@ -32,6 +34,16 @@ namespace RabiRiichi.Server.WebSockets {
             var req = msg.ClientRequest.CreateUser;
             var res = userService.CreateUser(req, queue.userList);
             connection.Queue(ProtoUtils.CreateDto(res, msg.Id));
+          } else if (msg.ClientRequest?.GetReplay != null) {
+            var req = msg.ClientRequest.GetReplay;
+            if (!ReplayStore.IsValidGameId(req.GameId)) {
+              throw new RpcException(new Status(Grpc.Core.StatusCode.InvalidArgument, "Invalid game ID"));
+            }
+            var replay = replayStore.GetReplay(req.GameId);
+            if (replay == null) {
+              throw new RpcException(new Status(Grpc.Core.StatusCode.NotFound, "Replay not found"));
+            }
+            connection.Queue(ProtoUtils.CreateDto(replay, msg.Id));
           }
         } catch (RpcException e) {
           connection.Queue(ProtoUtils.CreateDto(new ServerErrorResponse {
