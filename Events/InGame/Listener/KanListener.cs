@@ -19,7 +19,8 @@ namespace RabiRiichi.Events.InGame.Listener {
       }
       ev.waitEvent.timeout = System.TimeSpan.FromSeconds(ev.game.config.gameplayActionTimeout);
       ev.waitEvent.inquiry.AddHandler<RonAction>((action) => {
-        ev.waitEvent.eventBuilder.AddAgari(ev.waitEvent, ev.playerId, ev.incoming, action.agariInfo);
+        // Chankan is a claimed win (robbing a kan), never a tsumo.
+        ev.waitEvent.eventBuilder.AddAgari(ev.waitEvent, ev.playerId, ev.incoming, false, action.agariInfo);
       });
       ev.Q.Queue(ev.waitEvent);
       ev.waitEvent.OnFinish += () => {

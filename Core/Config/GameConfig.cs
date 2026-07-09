@@ -2,6 +2,8 @@ using RabiRiichi.Communication;
 using RabiRiichi.Core.Setup;
 using RabiRiichi.Generated.Core.Config;
 using RabiRiichi.Utils;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace RabiRiichi.Core.Config {
@@ -50,7 +52,7 @@ namespace RabiRiichi.Core.Config {
     /// <summary> 技能点数扣减策略 </summary>
     [RabiBroadcast] public PointsDeductionPolicy pointsDeductionPolicy = PointsDeductionPolicy.SufficientPoints;
 
-    [RabiBroadcast] public double nextRoundAckTimeout = 15.0;
+    [RabiBroadcast] public double nextRoundAckTimeout = 30.0;
 
     /// <summary> 摸打/鸣牌动作超时时间（秒） </summary>
     [RabiBroadcast] public double gameplayActionTimeout = 20.0;
@@ -70,11 +72,70 @@ namespace RabiRiichi.Core.Config {
         return riichiPolicy.HasFlag(RiichiPolicy.ValidPoints) ? pointThreshold.validPointsRange[0] : long.MinValue;
       }
     }
+
+    public void Validate() {
+      if (playerCount < 2 || playerCount > 4) {
+        throw new InvalidGameConfigException(GameConfigErrorType.InvalidPlayerCount, "Player count must be between 2 and 4.");
+      }
+      if (totalRound < 1 || totalRound > 2) {
+        throw new InvalidGameConfigException(GameConfigErrorType.InvalidTotalRound, "Total round must be 1 or 2.");
+      }
+      if (minHan < 1 || minHan > 13) {
+        throw new InvalidGameConfigException(GameConfigErrorType.InvalidMinHan, "Min Han must be between 1 and 13.");
+      }
+      if (gameplayActionTimeout < 5 || gameplayActionTimeout > 3600) {
+        throw new InvalidGameConfigException(GameConfigErrorType.InvalidTimeout, "Action timeout must be between 5 and 3600 seconds.");
+      }
+
+      // Dead wall = rinshan (岭上) + dora + uradora, plus one tile of margin so
+      // haitei is reachable. Enabling nukidora enlarges the rinshan region by
+      // one tile per pullable North, so reserve those too.
+      int nukiRinshan = doraOption.HasFlag(DoraOption.Nukidora)
+          ? initialTiles?.Count(t => t.IsSame(Tile.North)) ?? 0
+          : 0;
+      int deadWall = Wall.NUM_RINSHAN + nukiRinshan + Wall.NUM_DORA * 2;
+      int minTiles = playerCount * 13 + deadWall + 1;
+      if (initialTiles == null || initialTiles.Count < minTiles) {
+        throw new InvalidGameConfigException(GameConfigErrorType.InsufficientTiles,
+          "Insufficient tiles",
+          new() {
+            { "count", initialTiles?.Count ?? 0 },
+            { "players", playerCount },
+            { "min", minTiles }
+          });
+      }
+
+      if (pointThreshold != null) {
+        if (pointThreshold.initialPoints < 0 || pointThreshold.initialPoints > 1000000) {
+          throw new InvalidGameConfigException(GameConfigErrorType.InvalidInitialPoints, "Initial points must be between 0 and 1,000,000.");
+        }
+        if (pointThreshold.finishPoints < 0 || pointThreshold.finishPoints > 1000000) {
+          throw new InvalidGameConfigException(GameConfigErrorType.InvalidFinishPoints, "Finish points must be between 0 and 1,000,000.");
+        }
+        if (pointThreshold.riichiPoints < 0 || pointThreshold.riichiPoints > 1000000) {
+          throw new InvalidGameConfigException(GameConfigErrorType.InvalidRiichiPoints, "Riichi points must be between 0 and 1,000,000.");
+        }
+        if (pointThreshold.honbaPoints < 0 || pointThreshold.honbaPoints > 1000000) {
+          throw new InvalidGameConfigException(GameConfigErrorType.InvalidHonbaPoints, "Honba points must be between 0 and 1,000,000.");
+        }
+        if (pointThreshold.ryuukyokuPoints == null || pointThreshold.ryuukyokuPoints.Length < 2) {
+          throw new InvalidGameConfigException(GameConfigErrorType.InvalidRyuukyokuPoints, "Ryuukyoku points must contain 2 values.");
+        }
+        if (pointThreshold.ryuukyokuPoints.Any(p => p < 0 || p > 1000000)) {
+          throw new InvalidGameConfigException(GameConfigErrorType.InvalidRyuukyokuPoints, "Ryuukyoku points must be between 0 and 1,000,000.");
+        }
+      }
+    }
     #endregion
 
     #region For Developer Use
     /// <summary> 注册类 </summary>
     public BaseSetup setup = new RiichiSetup();
+
+    public string[] AllowedYakus => setup?.GetStdPatterns()
+      .Where(BaseSetup.IsYaku)
+      .Select(t => t.Name)
+      .ToArray() ?? [];
 
     /// <summary> 交互类 </summary>
     public IActionCenter actionCenter = null;
@@ -83,7 +144,7 @@ namespace RabiRiichi.Core.Config {
     public ulong? seed;
 
     public GameConfigMsg ToProto() {
-      return new GameConfigMsg {
+      var ret = new GameConfigMsg {
         PlayerCount = playerCount,
         TotalRound = totalRound,
         MinHan = minHan,
@@ -101,6 +162,11 @@ namespace RabiRiichi.Core.Config {
         NextRoundAckTimeout = nextRoundAckTimeout,
         GameplayActionTimeout = gameplayActionTimeout,
       };
+      if (initialTiles != null) {
+        ret.InitialTiles.AddRange(initialTiles.Select(t => (int)t.Val));
+      }
+      ret.AllowedYakus.AddRange(AllowedYakus);
+      return ret;
     }
 
     public static GameConfig FromProto(GameConfigMsg msg) {
@@ -151,9 +217,33 @@ namespace RabiRiichi.Core.Config {
         config.nextRoundAckTimeout = msg.NextRoundAckTimeout;
       if (msg.GameplayActionTimeout > 0)
         config.gameplayActionTimeout = msg.GameplayActionTimeout;
+      if (msg.InitialTiles.Count > 0) {
+        config.initialTiles = new Tiles(msg.InitialTiles.Select(t => new Tile((byte)t)));
+      } else {
+        config.initialTiles = Tiles.All.Value;
+      }
       return config;
     }
 
     #endregion
+  }
+
+  public enum GameConfigErrorType {
+    InvalidPlayerCount,
+    InvalidTotalRound,
+    InvalidMinHan,
+    InvalidTimeout,
+    InsufficientTiles,
+    InvalidInitialPoints,
+    InvalidFinishPoints,
+    InvalidRiichiPoints,
+    InvalidHonbaPoints,
+    InvalidRyuukyokuPoints,
+    InvalidPointsRange,
+  }
+
+  public class InvalidGameConfigException(GameConfigErrorType errorType, string message, Dictionary<string, object> parameters = null) : Exception(message) {
+    public GameConfigErrorType ErrorType { get; } = errorType;
+    public Dictionary<string, object> Parameters { get; } = parameters ?? [];
   }
 }

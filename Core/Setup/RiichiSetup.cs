@@ -11,6 +11,8 @@ namespace RabiRiichi.Core.Setup {
       collection.TryAddSingleton<ChankanResolver>();
       collection.TryAddSingleton<ChiiResolver>();
       collection.TryAddSingleton<KanResolver>();
+      collection.TryAddSingleton<NukiChankanResolver>();
+      collection.TryAddSingleton<NukiDoraResolver>();
       collection.TryAddSingleton<PlayTileResolver>();
       collection.TryAddSingleton<PonResolver>();
       collection.TryAddSingleton<RiichiResolver>();
@@ -91,6 +93,7 @@ namespace RabiRiichi.Core.Setup {
       // Bonus pattern
       AddStdPattern<Akadora>();
       AddStdPattern<Dora>();
+      AddStdPattern<NukiDora>();
       AddStdPattern<Uradora>();
     }
   }

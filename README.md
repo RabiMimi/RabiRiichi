@@ -1,4 +1,4 @@
-# RabiRiichi (拉比立直)
+# RabiRiichi (兔兔立直)
 
 [![100hun](https://100hun.rabimimi.com/provider/codecov/github/RabiMimi/RabiRiichi/develop/badge.png?size=128)](https://github.com/KCFindstr/100hun)
 
@@ -12,6 +12,13 @@
 RabiRiichi is a riichi mahjong module for .NET Core.
 
 See [Documentation](https://riichi-docs.rabimimi.com) for more information. (Currently only available in Simplified Chinese)
+
+## Hosted Servers
+
+| Environment | Address                                                            |
+| ----------- | ----------------------------------------------------------------- |
+| Production  | [RabiRiichi 兔兔立直](https://riichi.rabimimi.com)                  |
+| Development | [RabiRiichi-dev 兔兔开发](https://riichi-dev.rabimimi.com)                 |
 
 ## Development
 

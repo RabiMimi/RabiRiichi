@@ -16,7 +16,10 @@ namespace RabiRiichi.Patterns {
         return false;
       }
 
-      var tiles = groups.SelectMany(tile => tile.ToTiles());
+      // Pulled-aside nukidora tiles are still owned by the player, so they earn
+      // uradora too when the ura indicator is West.
+      var tiles = groups.SelectMany(tile => tile.ToTiles())
+          .Concat(hand.nukiDora.Select(t => t.tile));
       int han = 0;
       foreach (var tile in tiles) {
         han += hand.game.wall.CountUradora(tile);

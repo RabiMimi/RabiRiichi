@@ -1,6 +1,8 @@
 using RabiRiichi.Communication;
+using RabiRiichi.Core;
 using RabiRiichi.Generated.Events.InGame;
 using System;
+using System.Collections.Generic;
 
 namespace RabiRiichi.Events.InGame {
   /// <summary>
@@ -25,6 +27,8 @@ namespace RabiRiichi.Events.InGame {
     [RabiBroadcast] public int[] remainingPlayers = [];
     [RabiBroadcast] public int[] nagashiManganPlayers = [];
     [RabiBroadcast] public int[] tenpaiPlayers = [];
+    [RabiBroadcast] public readonly Dictionary<int, Tiles> tenpaiWaits = [];
+    [RabiBroadcast] public readonly List<GameTile> revealedTiles = [];
 
     #endregion
   }

@@ -7,14 +7,12 @@ on:
       - develop
     paths:
       - "**.cs"
-      - "!RabiRiichi.Server/**"
   pull_request:
     branches:
       - main
       - develop
     paths:
       - "**.cs"
-      - "!RabiRiichi.Server/**"
   workflow_dispatch:
 
 jobs:

@@ -26,8 +26,15 @@ namespace RabiRiichi.Server.Services {
         user.room?.SyncGameTo(user);
       });
       try {
-        await Task.Delay(TimeSpan.FromDays(7), rabiCtx.cts.Token);
-      } catch (OperationCanceledException) { }
+        // Wait until the stream closes (its cts) OR the call is cancelled.
+        // context.CancellationToken fires on client disconnect AND on host
+        // shutdown (Ctrl+C), so this no longer blocks graceful shutdown.
+        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
+            rabiCtx.cts.Token, context.CancellationToken);
+        await Task.Delay(Timeout.InfiniteTimeSpan, linkedCts.Token);
+      } catch (OperationCanceledException) { } finally {
+        rabiCtx.Close();
+      }
     }
   }
 }

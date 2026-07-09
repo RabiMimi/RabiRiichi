@@ -1,4 +1,4 @@
-﻿using RabiRiichi.Core.Config;
+using RabiRiichi.Core.Config;
 using RabiRiichi.Generated.Core;
 using RabiRiichi.Utils;
 using System;
@@ -14,8 +14,18 @@ namespace RabiRiichi.Core {
 
     /// <summary> 宝牌数量 </summary>
     public const int NUM_DORA = 5;
-    /// <summary> 岭上牌数量 </summary>
+    /// <summary> 基础岭上牌数量（不含拔北扩充） </summary>
     public const int NUM_RINSHAN = 4;
+    /// <summary>
+    /// 实际岭上牌数量。启用拔北时，每张可拔的北都需要一张额外岭上牌补充，
+    /// 因此岭上牌数量为基础值加上初始牌山中的北风数量。
+    /// </summary>
+    public readonly int rinshanSize =
+        NUM_RINSHAN + (config.doraOption.HasFlag(DoraOption.Nukidora)
+            ? config.initialTiles.Count(t => t.IsSame(Tile.North))
+            : 0);
+    /// <summary> 初始牌山全部136张牌的顺序 </summary>
+    public List<GameTile> initialWall = [];
     /// <summary> 牌山剩下的牌 </summary>
     public readonly ListStack<GameTile> remaining = [];
     /// <summary> 岭上牌 </summary>
@@ -35,7 +45,7 @@ namespace RabiRiichi.Core {
         .Concat(doras.Skip(revealedDoraCount))
         .Concat(uradoras);
     /// <summary> 牌山剩下的牌数 </summary>
-    public int NumRemaining => remaining.Count - (NUM_RINSHAN - rinshan.Count);
+    public int NumRemaining => remaining.Count - (rinshanSize - rinshan.Count);
     /// <summary> 是否到了海底 </summary>
     public bool IsHaitei => NumRemaining <= 0;
 
@@ -50,9 +60,47 @@ namespace RabiRiichi.Core {
       revealedUradoraCount = 0;
       remaining.AddRange(config.initialTiles.Select(tile => new GameTile(tile, idPool.GetID())));
       rand.Shuffle(remaining);
-      rinshan.AddRange(remaining.PopMany(NUM_RINSHAN));
+      rinshan.AddRange(remaining.PopMany(rinshanSize));
       doras.AddRange(remaining.PopMany(NUM_DORA));
       uradoras.AddRange(remaining.PopMany(NUM_DORA));
+      initialWall = BuildInitialWall();
+    }
+
+    /// <summary>
+    /// 构建牌山的展示布局（客户端用于渲染/录像）。这是一个扁平化的物理牌墙表示，
+    /// 顺序 = 摸牌顺序（先摸的在前；每墩内上面的牌先摸，因此上牌在前、下牌在后）。
+    /// 王牌固定在末尾，布局如下（左到右，每墩上-下）：
+    /// <code>
+    /// 上排: ... Dora5 Dora4 Dora3 Dora2 Dora1 Rinshan3 Rinshan1
+    /// 下排: ... Ura5  Ura4  Ura3  Ura2  Ura1  Rinshan4 Rinshan2
+    /// </code>
+    /// 其中 DoraK/UraK 为第K张（会）翻出的指示牌（Dora1最先翻），RinshanK 为第K张
+    /// （会）摸出的岭上牌（Rinshan1最先摸）。岭上牌数量可变。
+    /// </summary>
+    private List<GameTile> BuildInitialWall() {
+      var result = new List<GameTile>();
+      // 牌河（可摸区）：摸牌从 remaining 末尾开始，因此摸牌顺序 = remaining 反序。
+      for (int i = remaining.Count - 1; i >= 0; i--) {
+        result.Add(remaining[i]);
+      }
+      // 王牌：Dora5..Dora1 与 Ura5..Ura1 交错成墩（上=Dora，下=Ura）。
+      for (int k = NUM_DORA; k >= 1; k--) {
+        result.Add(doras[k - 1]);
+        result.Add(uradoras[k - 1]);
+      }
+      // 岭上：先摸的（Rinshan1）在牌墙最右墩的上面。DrawRinshan 从 rinshan 末尾摸，
+      // 所以 Rinshan1 = rinshan[^1]。按墩排列：... (Rinshan3,Rinshan4)(Rinshan1,Rinshan2)。
+      // 即成对分组，编号大的墩在左，(1,2) 墩在最右。
+      int pairCount = (rinshan.Count + 1) / 2;
+      for (int pair = pairCount - 1; pair >= 0; pair--) {
+        int top = 2 * pair;      // Rinshan(2*pair+1) 的0基索引：越先摸下标越大
+        int bottom = 2 * pair + 1;
+        result.Add(rinshan[rinshan.Count - 1 - top]);
+        if (bottom < rinshan.Count) {
+          result.Add(rinshan[rinshan.Count - 1 - bottom]);
+        }
+      }
+      return result;
     }
 
     /// <summary> 检查牌山是否还有给定的牌数 </summary>

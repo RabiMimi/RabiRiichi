@@ -17,6 +17,8 @@ namespace RabiRiichi.Core {
     [RabiBroadcast] public int round = 0;
     /// <summary> 场风 </summary>
     [RabiBroadcast] public Wind wind => (Wind)(round % config.playerCount);
+    /// <summary> 游戏ID </summary>
+    [RabiBroadcast] public string gameId = "";
     /// <summary> 庄家ID </summary>
     [RabiBroadcast] public int dealer = 0;
     /// <summary> 本场 </summary>
@@ -47,6 +49,7 @@ namespace RabiRiichi.Core {
     public GameInfoMsg ToProto() {
       return new GameInfoMsg {
         Round = round,
+        GameId = gameId,
         Dealer = dealer,
         Honba = honba,
         CurrentPlayer = currentPlayer,

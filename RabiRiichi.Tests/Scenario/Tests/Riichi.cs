@@ -120,6 +120,37 @@ namespace RabiRiichi.Tests.Scenario.Tests {
       }).AssertAutoFinish();
     }
 
+    [TestMethod]
+    public async Task AnkanAllowedIfTenpaiUnchanged() {
+      // Riichi hand: 111m (concealed triplet) 234p 567p + 55s/99s shanpon.
+      // Drawing the 4th 1m lets an ankan 1111m that keeps the exact same wait
+      // (shanpon 5s/9s), so it IS allowed.
+      var scenario = new ScenarioBuilder()
+          .WithPlayer(1, playerBuilder => {
+            playerBuilder
+                .SetFreeTiles("111m234p567p99s55s")
+                .SetRiichiTile("9m");
+          })
+          .WithWall(wall => wall
+              .Reserve("1m")
+              .AddRinshan("7z"))
+          .Start(1);
+
+      (await scenario.WaitPlayerTurn(1)).ForPlayer(1, playerInquiry => {
+        // Draws the 4th 1m: ankan 1111m keeps the shanpon 5s/9s wait -> allowed.
+        playerInquiry
+            .AssertAction<PlayTileAction>()
+            .ChooseTiles<KanAction>("1111m", action => {
+              Assert.AreEqual(1, action.options.Count);
+            })
+            .AssertNoMoreActions();
+      }).AssertAutoFinish();
+
+      scenario.AssertEvent<AddKanEvent>(ev => {
+        Assert.AreEqual(TileSource.Ankan, ev.kanSource);
+      });
+    }
+
     #region Ippatsu
     [TestMethod]
     public async Task NoIppatsuWhenRiichiTileClaimed() {

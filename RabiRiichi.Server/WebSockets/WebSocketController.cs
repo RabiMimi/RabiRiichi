@@ -15,13 +15,15 @@ namespace RabiRiichi.Server.WebSockets {
       TokenService tokenService,
       InfoServiceImpl infoService,
       RoomServiceImpl roomService,
-      UserServiceImpl userService) : ControllerBase {
+      UserServiceImpl userService,
+      ReplayStore replayStore) : ControllerBase {
     private readonly ILogger<WebSocketController> logger = logger;
     private readonly RoomTaskQueue taskQueue = taskQueue;
     private readonly TokenService tokenService = tokenService;
     private readonly InfoServiceImpl infoService = infoService;
     private readonly RoomServiceImpl roomService = roomService;
     private readonly UserServiceImpl userService = userService;
+    private readonly ReplayStore replayStore = replayStore;
 
     private Task HandlePublic(Connection connection, ClientMessageDto msg) {
       return taskQueue.Execute(queue => {
@@ -32,6 +34,16 @@ namespace RabiRiichi.Server.WebSockets {
             var req = msg.ClientRequest.CreateUser;
             var res = userService.CreateUser(req, queue.userList);
             connection.Queue(ProtoUtils.CreateDto(res, msg.Id));
+          } else if (msg.ClientRequest?.GetReplay != null) {
+            var req = msg.ClientRequest.GetReplay;
+            if (!ReplayStore.IsValidGameId(req.GameId)) {
+              throw new RpcException(new Status(Grpc.Core.StatusCode.InvalidArgument, "Invalid game ID"));
+            }
+            var replay = replayStore.GetReplay(req.GameId);
+            if (replay == null) {
+              throw new RpcException(new Status(Grpc.Core.StatusCode.NotFound, "Replay not found"));
+            }
+            connection.Queue(ProtoUtils.CreateDto(replay, msg.Id));
           }
         } catch (RpcException e) {
           connection.Queue(ProtoUtils.CreateDto(new ServerErrorResponse {
@@ -54,6 +66,14 @@ namespace RabiRiichi.Server.WebSockets {
           } else if (msg.ClientRequest?.JoinRoom != null) {
             var req = msg.ClientRequest.JoinRoom;
             var res = roomService.JoinRoom(req, queue.roomList, user);
+            connection.Queue(ProtoUtils.CreateDto(res, msg.Id));
+          } else if (msg.ClientRequest?.AddAi != null) {
+            var req = msg.ClientRequest.AddAi;
+            var res = roomService.AddAi(req, queue.roomList, user);
+            connection.Queue(ProtoUtils.CreateDto(res, msg.Id));
+          } else if (msg.ClientRequest?.RemoveRoomPlayer != null) {
+            var req = msg.ClientRequest.RemoveRoomPlayer;
+            var res = roomService.RemoveRoomPlayer(req, queue.roomList, user);
             connection.Queue(ProtoUtils.CreateDto(res, msg.Id));
           } else if (msg.ClientRequest?.GetMyInfo != null) {
             var req = msg.ClientRequest.GetMyInfo;
@@ -123,7 +143,12 @@ namespace RabiRiichi.Server.WebSockets {
         connection.OnReceive += PublicListener;
         try {
           connection.Connect(adapter, adapter);
-          await Task.Delay(TimeSpan.FromDays(7), connection.Current.cts.Token);
+          // Wait until the stream closes (its cts) OR the request is aborted.
+          // RequestAborted fires on client disconnect AND on host shutdown
+          // (Ctrl+C), so this no longer blocks graceful shutdown.
+          using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
+              connection.Current.cts.Token, HttpContext.RequestAborted);
+          await Task.Delay(Timeout.InfiniteTimeSpan, linkedCts.Token);
         } catch (OperationCanceledException) { } finally {
           connection.Close();
           connection.OnReceive -= PublicListener;
@@ -183,7 +208,12 @@ namespace RabiRiichi.Server.WebSockets {
             user.room?.BroadcastRoomState();
             user.room?.SyncGameTo(user);
           });
-          await Task.Delay(TimeSpan.FromDays(7), rabiCtx.cts.Token);
+          // Wait until the stream closes (its cts) OR the request is aborted.
+          // RequestAborted fires on client disconnect AND on host shutdown
+          // (Ctrl+C), so this no longer blocks graceful shutdown.
+          using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
+              rabiCtx.cts.Token, HttpContext.RequestAborted);
+          await Task.Delay(Timeout.InfiniteTimeSpan, linkedCts.Token);
         } catch (OperationCanceledException) { } finally {
           rabiCtx?.Close();
           user.connection.OnReceive -= PublicListener;

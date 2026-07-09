@@ -42,10 +42,9 @@ namespace RabiRiichi.Events.InGame.Listener {
       var players = ev.game.players;
       // 累计立直棒
       foreach (var player in players) {
-        info.riichiStick += player.hand.riichiStick;
-        player.points -= player.hand.riichiStick * ev.game.config.pointThreshold.riichiPoints;
         player.hand.riichiStick = 0;
       }
+      ev.riichiStick = info.riichiStick;
       if (info.config.endGamePolicy.HasAnyFlag(EndGamePolicy.PointsOutOfRange)
           && players.Any(p => !info.config.pointThreshold.ArePointsValid(p.points))) {
         // 天边

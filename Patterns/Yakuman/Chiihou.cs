@@ -9,7 +9,7 @@ namespace RabiRiichi.Patterns {
     }
 
     public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
-      bool flag = hand.game.IsFirstJun && !hand.player.IsDealer;
+      bool flag = incoming.IsTsumo && hand.game.IsFirstJun && !hand.player.IsDealer;
       if (flag) {
         scores.Add(new Scoring(ScoringType.Yakuman, 1, this));
       }

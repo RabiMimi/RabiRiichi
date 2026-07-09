@@ -33,6 +33,7 @@ namespace RabiRiichi.Events.InGame.Listener {
       eventBus.Subscribe<IncreaseJunEvent>(ResetIppatsu, EventPriority.After + 10);
       eventBus.Subscribe<ClaimTileEvent>(ResetAllIppatsu, EventPriority.After + 10);
       eventBus.Subscribe<AddKanEvent>(ResetAllIppatsu, EventPriority.After + 10);
+      eventBus.Subscribe<NukiDoraEvent>(ResetAllIppatsu, EventPriority.After + 10);
     }
   }
 }

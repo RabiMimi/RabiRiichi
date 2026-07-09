@@ -14,6 +14,7 @@ namespace RabiRiichi.Communication.Proto {
   public class ProtoConverters {
     #region Key Constants
     public const string PLAYER_ID = "pid";
+    public const int GOD_VIEW_PLAYER_ID = -1;
     #endregion
 
     #region ActionMsg
@@ -61,12 +62,27 @@ namespace RabiRiichi.Communication.Proto {
     public static PlayerActionMsg ConvertNextRoundActionMsg([Consumes] NextRoundActionMsg action) {
       return new() { NextRoundAction = action };
     }
+
+    [Produces]
+    public static PlayerActionMsg ConvertNukiDoraActionMsg([Consumes] NukiDoraActionMsg action) {
+      return new() { NukiDoraAction = action };
+    }
     #endregion
 
     #region EventMsg
     [Produces]
     public static EventMsg ConvertAddKanEventMsg([Consumes] AddKanEventMsg ev) {
       return new() { AddKanEvent = ev };
+    }
+
+    [Produces]
+    public static EventMsg ConvertNukiDoraEventMsg([Consumes] NukiDoraEventMsg ev) {
+      return new() { NukiDoraEvent = ev };
+    }
+
+    [Produces]
+    public static EventMsg ConvertAddNukiDoraEventMsg([Consumes] AddNukiDoraEventMsg ev) {
+      return new() { AddNukiDoraEvent = ev };
     }
 
     [Produces]
@@ -232,14 +248,23 @@ namespace RabiRiichi.Communication.Proto {
       return ret;
     }
 
-    private static TenpaiInfoMsg ConvertTenpaiInfo(TenpaiInfo info) {
+    [Produces]
+    public static NukiDoraActionMsg ConvertNukiDoraAction([Consumes] NukiDoraAction action) {
+      var ret = new NukiDoraActionMsg();
+      // 每个选项是一张可拔的北
+      ret.Tiles.AddRange(action.options.Select(
+          o => ConvertGameTile(((ChooseTilesActionOption)o).tiles[0], true)));
+      return ret;
+    }
+
+    public static TenpaiInfoMsg ConvertTenpaiInfo(TenpaiInfo info) {
       return new TenpaiInfoMsg {
         WinningTile = info.winningTile.Val,
-        RemainingCount = info.remainingCount,
         Han = info.han,
         Fu = info.fu,
         Yakuman = info.yakuman,
         Points = info.points,
+        YakuHan = info.yaku,
       };
     }
 
@@ -295,7 +320,7 @@ namespace RabiRiichi.Communication.Proto {
       return new() {
         PlayerId = ev.playerId,
         Kan = ev.kan.ToProto(),
-        Incoming = ConvertGameTile(ev.incoming, ev.playerId == playerId),
+        Incoming = ConvertGameTile(ev.incoming, playerId == GOD_VIEW_PLAYER_ID || ev.playerId == playerId),
         KanSource = ev.kanSource,
       };
     }
@@ -321,6 +346,7 @@ namespace RabiRiichi.Communication.Proto {
     public static AgariEventMsg ConvertAgariEvent([Consumes] AgariEvent ev) {
       var ret = new AgariEventMsg {
         Incoming = ConvertGameTile(ev.agariInfos.incoming, true),
+        IsTsumo = ev.isTsumo,
       };
       ret.AgariInfos.AddRange(ev.agariInfos.Select(
           x => ConvertAgariInfo(ev.game.GetPlayer(x.playerId).hand, x)));
@@ -335,14 +361,19 @@ namespace RabiRiichi.Communication.Proto {
     }
 
     [Produces]
-    public static BeginGameEventMsg ConvertBeginGameEvent([Consumes] BeginGameEvent ev) {
-      return new() {
+    public static BeginGameEventMsg ConvertBeginGameEvent([Consumes] BeginGameEvent ev, [Consumes(PLAYER_ID)] int playerId) {
+      var ret = new BeginGameEventMsg {
         Round = ev.round,
         Dealer = ev.dealer,
         Honba = ev.honba,
         RiichiStick = ev.riichiStick,
         RemainingTiles = ev.remainingTiles,
+        GameId = ev.game.info.gameId,
       };
+      if (playerId == GOD_VIEW_PLAYER_ID) {
+        ret.InitialWall.AddRange(ev.game.wall.initialWall.Select(t => ConvertGameTile(t, true)));
+      }
+      return ret;
     }
 
     [Produces]
@@ -368,7 +399,7 @@ namespace RabiRiichi.Communication.Proto {
         [Consumes] DealerFirstTurnEvent ev, [Consumes(PLAYER_ID)] int playerId) {
       var ret = new DealerFirstTurnEventMsg {
         PlayerId = ev.playerId,
-        Incoming = ConvertGameTile(ev.incoming, ev.playerId == playerId)
+        Incoming = ConvertGameTile(ev.incoming, playerId == GOD_VIEW_PLAYER_ID || ev.playerId == playerId)
       };
       return ret;
     }
@@ -379,7 +410,7 @@ namespace RabiRiichi.Communication.Proto {
         PlayerId = ev.playerId,
         Count = ev.count,
       };
-      ret.Tiles.AddRange(ev.tiles.Select(tile => ConvertGameTile(tile, ev.playerId == playerId)));
+      ret.Tiles.AddRange(ev.tiles.Select(tile => ConvertGameTile(tile, playerId == GOD_VIEW_PLAYER_ID || ev.playerId == playerId)));
       return ret;
     }
 
@@ -391,7 +422,7 @@ namespace RabiRiichi.Communication.Proto {
         Discarded = ConvertGameTile(ev.discarded, true),
         Reason = ev.reason,
         FromHand = ev.fromHand,
-        Incoming = ConvertGameTile(ev.incoming, ev.playerId == playerId),
+        Incoming = ConvertGameTile(ev.incoming, playerId == GOD_VIEW_PLAYER_ID || ev.playerId == playerId),
         IsRiichi = ev is RiichiEvent
       };
       return ret;
@@ -403,7 +434,7 @@ namespace RabiRiichi.Communication.Proto {
       return new DrawTileEventMsg {
         PlayerId = ev.playerId,
         Source = ev.source,
-        Tile = ConvertGameTile(ev.tile, playerId == ev.playerId),
+        Tile = ConvertGameTile(ev.tile, playerId == GOD_VIEW_PLAYER_ID || playerId == ev.playerId),
       };
     }
 
@@ -422,6 +453,22 @@ namespace RabiRiichi.Communication.Proto {
         Kan = ev.kan.ToProto(),
         Incoming = ConvertGameTile(ev.incoming, true),
         KanSource = ev.kanSource,
+      };
+    }
+
+    [Produces]
+    public static NukiDoraEventMsg ConvertNukiDoraEvent([Consumes] NukiDoraEvent ev) {
+      return new() {
+        PlayerId = ev.playerId,
+        Incoming = ConvertGameTile(ev.incoming, true),
+      };
+    }
+
+    [Produces]
+    public static AddNukiDoraEventMsg ConvertAddNukiDoraEvent([Consumes] AddNukiDoraEvent ev) {
+      return new() {
+        PlayerId = ev.playerId,
+        Incoming = ConvertGameTile(ev.incoming, true),
       };
     }
 
@@ -468,6 +515,14 @@ namespace RabiRiichi.Communication.Proto {
         ret.EndGameRyuukyoku.RemainingPlayers.AddRange(ege.remainingPlayers);
         ret.EndGameRyuukyoku.NagashiManganPlayers.AddRange(ege.nagashiManganPlayers);
         ret.EndGameRyuukyoku.TenpaiPlayers.AddRange(ege.tenpaiPlayers);
+        ret.EndGameRyuukyoku.RevealedTiles.AddRange(ege.revealedTiles.Select(x => ConvertGameTile(x, true)));
+        foreach (var kv in ege.tenpaiWaits) {
+          var tpm = new TenpaiPlayerMsg {
+            PlayerId = kv.Key,
+          };
+          tpm.Waits.AddRange(kv.Value.Select(t => (int)t.Val));
+          ret.EndGameRyuukyoku.TenpaiPlayersWaits.Add(tpm);
+        }
       } else if (ev is MidGameRyuukyokuEvent mge) {
         ret.MidGameRyuukyoku = new MidGameRyuukyokuEventMsg {
           Name = mge.name,
@@ -577,7 +632,7 @@ namespace RabiRiichi.Communication.Proto {
 
     [Produces]
     public static GameTileMsg ConvertGameTile([Consumes] GameTile tile, [Consumes(PLAYER_ID)] int playerId) {
-      return tile == null ? null : ConvertGameTile(tile, tile.playerId == playerId);
+      return tile == null ? null : ConvertGameTile(tile, playerId == GOD_VIEW_PLAYER_ID || tile.playerId == playerId);
     }
     #endregion
   }

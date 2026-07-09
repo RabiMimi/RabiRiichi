@@ -34,23 +34,6 @@ namespace RabiRiichi.Actions.Resolver {
 
       // 大明杠或暗杠
       CheckCombo(hand.freeTiles, result, [incoming], tile, tile, tile);
-      if (hand.riichi) {
-        var tenpai = hand.Tenpai;
-        // 立直时，检查暗杠不会影响听牌
-        result.RemoveAll((gameTiles) => {
-          // 假装杠了
-          hand.freeTiles.RemoveAll(tile => gameTiles.Contains(tile));
-          var kan = new Kan(gameTiles, TileSource.Ankan);
-          hand.called.Add(kan);
-          // 检查听牌
-          var newTenpai = hand.Tenpai;
-          bool validKan = tenpai.SequenceEqual(newTenpai);
-          // 还原
-          hand.called.Remove(kan);
-          hand.freeTiles.AddRange(gameTiles.Where(tile => tile != incoming));
-          return !validKan;
-        });
-      }
       if (incoming.IsTsumo) {
         // 加杠
         var groups = hand.called.OfType<Kou>();
@@ -74,6 +57,12 @@ namespace RabiRiichi.Actions.Resolver {
         }
       }
 
+      if (hand.riichi) {
+        // 立直后只能暗杠，且必须满足：(a) 杠的是刚摸到的这张牌，
+        // (b) 杠后听牌不变（不能改变听口，更不能因此不听）。
+        result.RemoveAll(gameTiles => !IsValidRiichiKan(hand, gameTiles, incoming));
+      }
+
       result.RemoveAll(tiles => !HasMoveAfterClaim(hand.freeTiles, player.game.config, tiles, incoming));
 
       if (result.Count == 0) {
@@ -81,6 +70,36 @@ namespace RabiRiichi.Actions.Resolver {
       }
       output.Add(new KanAction(player.id, result, -incoming.discardInfo?.fromPlayer.Dist(player) ?? 0));
       return true;
+    }
+
+    /// <summary>
+    /// 立直后暗杠是否合法：必须包含刚摸到的牌，且杠后听牌完全不变。
+    /// </summary>
+    private static bool IsValidRiichiKan(Hand hand, List<GameTile> gameTiles, GameTile incoming) {
+      // 只能杠刚摸到的这张牌（不能杠手里原有的四张）。
+      if (!gameTiles.Any(t => t.IsSame(incoming))) {
+        return false;
+      }
+
+      var tenpai = hand.Tenpai;
+
+      // 模拟暗杠：incoming 尚未加入 freeTiles，将其余三张从 freeTiles 移除，
+      // 并把这个杠子作为暗杠加入副露，使 hand.Count 仍为 13 以计算听牌。
+      var removed = gameTiles.Where(t => t != incoming).ToList();
+      hand.freeTiles.RemoveAll(removed.Contains);
+      var kan = new Kan(gameTiles, TileSource.Ankan);
+      hand.called.Add(kan);
+
+      // 立直中手牌必然听牌，tenpai 非空；若杠后不再听牌，newTenpai 为空，
+      // SequenceEqual 自然为 false，因此无需额外判空。
+      var newTenpai = hand.Tenpai;
+      bool validKan = tenpai.SequenceEqual(newTenpai);
+
+      // 还原
+      hand.called.Remove(kan);
+      hand.freeTiles.AddRange(removed);
+
+      return validKan;
     }
   }
 }

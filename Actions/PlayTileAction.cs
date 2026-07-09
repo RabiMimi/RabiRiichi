@@ -1,14 +1,15 @@
 using RabiRiichi.Core;
+using RabiRiichi.Generated.Core;
 using RabiRiichi.Patterns;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace RabiRiichi.Actions {
   public class TenpaiInfo {
     public Tile winningTile;
-    public int remainingCount;
     public int han;
+    /// <summary> 记作役的番数（不含宝牌），用于番缚判定 </summary>
+    public int yaku;
     public int fu;
     public int yakuman;
     public long points;
@@ -74,20 +75,8 @@ namespace RabiRiichi.Actions {
 
         if (shanten == 0) {
           foreach (var winTile in machihai) {
-            var winGameTile = new GameTile(winTile, 0);
-            var scores = patternResolver.ResolveMaxScore(hand, winGameTile, PatternMask.All);
-
-            int remaining = CountRemainingTiles(player, winTile);
-
-            var tenpaiInfo = new TenpaiInfo {
-              winningTile = winTile,
-              remainingCount = remaining,
-              han = scores?.result?.han ?? 0,
-              fu = scores?.result?.fu ?? 0,
-              yakuman = scores?.result?.yakuman ?? 0,
-              points = scores?.result?.BaseScore ?? 0
-            };
-            candidate.tenpaiInfos.Add(tenpaiInfo);
+            candidate.tenpaiInfos.Add(
+                ComputeTenpaiInfo(patternResolver, hand, winTile));
           }
         }
 
@@ -100,45 +89,29 @@ namespace RabiRiichi.Actions {
       return candidates;
     }
 
-    private static int CountRemainingTiles(Player player, Tile winTile) {
-      var game = player.game;
-      var target = winTile.WithoutDora;
-      int count = 0;
+    /// <summary>
+    /// Computes the guaranteed-minimum score a wait can achieve, for display in
+    /// the tenpai preview. The win is scored as a ron (so tsumo-only value like
+    /// suuankou or menzen tsumo is not assumed) and accidental yaku
+    /// (PatternMask.Luck: ippatsu, haitei/houtei, rinshan, chankan) are excluded.
+    /// </summary>
+    public static TenpaiInfo ComputeTenpaiInfo(
+        PatternResolver patternResolver, Hand hand, Tile winTile) {
+      var winGameTile = new GameTile(winTile, 0) {
+        discardInfo = new DiscardInfo(null, DiscardReason.Draw, 0),
+        source = TileSource.Discard,
+      };
+      var scores = patternResolver.ResolveMaxScore(
+          hand, winGameTile, PatternMask.Regular | PatternMask.Bonus);
 
-      foreach (var tile in player.hand.freeTiles) {
-        if (tile.tile.WithoutDora == target) {
-          count++;
-        }
-      }
-      if (player.hand.pendingTile != null && player.hand.pendingTile.tile.WithoutDora == target) {
-        count++;
-      }
-
-      foreach (var p in game.players) {
-        foreach (var meld in p.hand.called) {
-          foreach (var tile in meld) {
-            if (tile.tile.WithoutDora == target) {
-              count++;
-            }
-          }
-        }
-      }
-
-      foreach (var p in game.players) {
-        foreach (var tile in p.hand.discarded) {
-          if (tile.tile.WithoutDora == target) {
-            count++;
-          }
-        }
-      }
-
-      foreach (var dora in game.wall.doras.Take(game.wall.revealedDoraCount)) {
-        if (dora.tile.WithoutDora == target) {
-          count++;
-        }
-      }
-
-      return Math.Max(0, 4 - count);
+      return new TenpaiInfo {
+        winningTile = winTile,
+        han = scores?.result?.han ?? 0,
+        yaku = scores?.result?.yaku ?? 0,
+        fu = scores?.result?.fu ?? 0,
+        yakuman = scores?.result?.yakuman ?? 0,
+        points = scores?.result?.BaseScore ?? 0,
+      };
     }
   }
 }

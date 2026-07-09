@@ -1,26 +1,29 @@
 using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
+using RabiRiichi.Server.Agents;
 using RabiRiichi.Server.Connections;
 using RabiRiichi.Server.Generated.Messages;
+using RabiRiichi.Server.Services;
 
 namespace RabiRiichi.Server.Models {
   public class CreateRoomResp(int id) {
     public int id { get; set; } = id;
   }
 
-  public class Room(Random rand, GameConfig config) {
+  public class Room(Random rand, GameConfig config, ReplayStore replayStore = null) {
     public int id;
     public RoomList roomList;
     public Game game { get; private set; }
     public readonly GameConfig config = config;
-    private readonly List<User> players = [];
-    private readonly User[] seats = new User[config.playerCount];
+    public readonly List<IPlayerAgent> players = [];
+    private readonly IPlayerAgent[] seats = new IPlayerAgent[config.playerCount];
     private bool isDestroyed = false;
     private readonly Random rand = rand;
+    public readonly ReplayStore replayStore = replayStore;
     private CancellationTokenSource gameCts;
 
-    private bool HasPlayer(User user) {
-      return players.Any(p => p == user);
+    private bool HasPlayer(IPlayerAgent player) {
+      return players.Any(p => p == player);
     }
 
     private void SetupSeat() {
@@ -38,14 +41,20 @@ namespace RabiRiichi.Server.Models {
         Id = id,
         Config = config.ToProto(),
       };
-      msg.Players.AddRange(players.Select(p => p.GetState()));
+      if (game != null) {
+        msg.Players.AddRange(seats.Select(p => p?.GetState()));
+      } else {
+        msg.Players.AddRange(players.Select(p => p.GetState()));
+      }
       return msg;
     }
 
     public void BroadcastRoomState() {
       var msg = ProtoUtils.CreateDto(CreateServerRoomStateMsg());
       foreach (var player in players) {
-        player.connection?.Queue(msg);
+        if (player is User user) {
+          user.connection?.Queue(msg);
+        }
       }
     }
 
@@ -66,12 +75,28 @@ namespace RabiRiichi.Server.Models {
       BroadcastRoomState();
       gameCts = new CancellationTokenSource();
       game = new Game(config);
+      game.info.gameId = $"{DateTime.UtcNow:yyyyMMdd'T'HHmmss}-{id}";
+      // Subscribe before Start so no early events are missed. This tee sees every
+      // event once (incl. per-seat [RabiPrivate] ones), fixing the previous
+      // seat-0-only capture that dropped other seats' private events.
+      game.onGodViewEvent += actionCenter.CaptureGodViewEvent;
       // Start the game in a background task and log any exception that bubbles up.
       Task.Run(() => game.Start(gameCts.Token)).ContinueWith(t => {
         if (t.IsFaulted) {
           global::RabiRiichi.Utils.Logger.Warn("[Room] Game task faulted:");
           foreach (var ex in t.Exception!.InnerExceptions) {
             global::RabiRiichi.Utils.Logger.Warn(ex);
+          }
+        }
+        if (replayStore != null && replayStore.IsEnabled) {
+          var sac = config.actionCenter as ServerActionCenter;
+          var log = sac?.GetReplayLog();
+          if (log != null) {
+            try {
+              replayStore.SaveReplay(log.GameId, log);
+            } catch (Exception ex) {
+              global::RabiRiichi.Utils.Logger.Warn($"Failed to save replay: {ex}");
+            }
           }
         }
         game = null;
@@ -92,6 +117,12 @@ namespace RabiRiichi.Server.Models {
               $"Player status transition failed, unexpected modification not guarded by lock?");
         }
       }
+      // Auto-ready AIs
+      foreach (var player in players) {
+        if (player is not User) {
+          GetReady(player);
+        }
+      }
       BroadcastRoomState();
       return true;
     }
@@ -107,47 +138,53 @@ namespace RabiRiichi.Server.Models {
       });
     }
 
-    public bool GetReady(User user) {
-      if (!HasPlayer(user)) {
+    public bool GetReady(IPlayerAgent player) {
+      if (!HasPlayer(player)) {
         return false;
       }
-      if (!user.Transit(UserStatus.InRoom, UserStatus.Ready)) {
+      if (!player.Transit(UserStatus.InRoom, UserStatus.Ready)) {
         return false;
       }
       BroadcastRoomState();
-      return !players.All(p => p?.status == UserStatus.Ready) || TryStartGame();
+      if (players.Count == config.playerCount && players.All(p => p?.status == UserStatus.Ready)) {
+        TryStartGame();
+      }
+      return true;
     }
 
-    public bool CancelReady(User user) {
-      if (!HasPlayer(user)) {
+    public bool CancelReady(IPlayerAgent player) {
+      if (!HasPlayer(player)) {
         return false;
       }
-      if (!user.Transit(UserStatus.Ready, UserStatus.InRoom)) {
+      if (!player.Transit(UserStatus.Ready, UserStatus.InRoom)) {
         return false;
       }
       BroadcastRoomState();
       return true;
     }
 
-    public bool AddPlayer(User user) {
+    public bool AddPlayer(IPlayerAgent player) {
       if (isDestroyed) {
         return false;
       }
       if (players.Count >= config.playerCount) {
         return false;
       }
-      if (players.Contains(user)) {
+      if (players.Contains(player)) {
         return false;
       }
-      if (!user.JoinRoom(this)) {
-        return false;
+      if (player is User user) {
+        if (!user.JoinRoom(this)) {
+          return false;
+        }
       }
-      players.Add(user);
+      players.Add(player);
       BroadcastRoomState();
       return true;
     }
 
     public bool RemovePlayer(User user) {
+      int seat = SeatIndexOf(user);
       if (!user.ExitRoom(this)) {
         return false;
       }
@@ -155,24 +192,51 @@ namespace RabiRiichi.Server.Models {
         return false;
       }
       if (game != null) {
-        gameCts?.Cancel();
+        if (seat >= 0 && seat < seats.Length) {
+          seats[seat] = new DefaultAI(user.id, this);
+        }
+        if (players.Count(p => p is User) == 0) {
+          gameCts?.Cancel();
+        }
       }
       BroadcastRoomState();
-      if (players.Count == 0) {
+      if (players.Count(p => p is User) == 0) {
         roomList.Remove(id);
         isDestroyed = true;
       }
       return true;
     }
 
-    public int SeatIndexOf(User user) {
-      if (seats.Contains(user)) {
-        return Array.IndexOf(seats, user);
+    /// <summary>
+    /// Removes a player from the room. Only valid before the game starts, and
+    /// currently only for AI players. Unlike <see cref="RemovePlayer"/>, this
+    /// does not touch human-departure logic (ExitRoom / seat substitution /
+    /// room destruction); removing a human still goes through
+    /// <see cref="RemovePlayer"/>.
+    /// </summary>
+    public bool RemoveRoomPlayer(IPlayerAgent player) {
+      if (game != null) {
+        return false;
       }
-      return players.IndexOf(user);
+      // Humans leave via RemovePlayer (which handles ExitRoom / room teardown).
+      if (player is User) {
+        return false;
+      }
+      if (!players.Remove(player)) {
+        return false;
+      }
+      BroadcastRoomState();
+      return true;
     }
 
-    public User GetPlayerBySeat(int seatIndex) {
+    public int SeatIndexOf(IPlayerAgent player) {
+      if (seats.Contains(player)) {
+        return Array.IndexOf(seats, player);
+      }
+      return players.IndexOf(player);
+    }
+
+    public IPlayerAgent GetPlayerBySeat(int seatIndex) {
       return seats[seatIndex];
     }
   }

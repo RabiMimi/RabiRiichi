@@ -2,6 +2,9 @@ using RabiRiichi.Communication.Proto;
 using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
 using RabiRiichi.Generated.Communication.Sync;
+using RabiRiichi.Actions;
+using RabiRiichi.Generated.Actions;
+using RabiRiichi.Patterns;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -13,6 +16,7 @@ namespace RabiRiichi.Communication.Sync {
     [RabiPrivate] public readonly GameTile pendingTile = hand.pendingTile;
     [RabiBroadcast] public readonly List<MenLike> called = [.. hand.called];
     [RabiBroadcast] public readonly List<GameTile> discarded = [.. hand.discarded];
+    [RabiBroadcast] public readonly List<GameTile> nukiDora = [.. hand.nukiDora];
     [RabiBroadcast] public readonly int jun = hand.jun;
     [RabiBroadcast] public readonly int riichiStick = hand.riichiStick;
     [RabiBroadcast] public readonly GameTile agariTile = hand.agariTile;
@@ -22,20 +26,31 @@ namespace RabiRiichi.Communication.Sync {
     [RabiPrivate] public readonly bool isDiscardFuriten = hand.isDiscardFuriten;
 
     public PlayerHandStateMsg ToProto(int playerId) {
+      bool reveal = playerId == ProtoConverters.GOD_VIEW_PLAYER_ID || this.playerId == playerId;
       var ret = new PlayerHandStateMsg {
         Jun = jun,
         RiichiStick = riichiStick,
         AgariTile = ProtoConverters.ConvertGameTile(agariTile, true),
         RiichiTile = ProtoConverters.ConvertGameTile(riichiTile, true),
-        PendingTile = ProtoConverters.ConvertGameTile(pendingTile, this.playerId == playerId),
+        PendingTile = ProtoConverters.ConvertGameTile(pendingTile, reveal),
       };
       ret.Called.AddRange(called.Select(x => x.ToProto()));
-      ret.Discarded.AddRange(discarded.Select(tile => ProtoConverters.ConvertGameTile(tile, this.playerId == playerId)));
-      ret.FreeTiles.AddRange(freeTiles.Select(tile => ProtoConverters.ConvertGameTile(tile, this.playerId == playerId)));
-      if (this.playerId == playerId) {
+      ret.Discarded.AddRange(discarded.Select(tile => ProtoConverters.ConvertGameTile(tile, true)));
+      ret.NukiDora.AddRange(nukiDora.Select(tile => ProtoConverters.ConvertGameTile(tile, true)));
+      ret.FreeTiles.AddRange(freeTiles.Select(tile => ProtoConverters.ConvertGameTile(tile, reveal)));
+      if (reveal) {
         ret.IsTempFuriten = isTempFuriten;
         ret.IsRiichiFuriten = isRiichiFuriten;
         ret.IsDiscardFuriten = isDiscardFuriten;
+
+        var patternResolver = hand.game.Get<PatternResolver>();
+        var tenpaiTiles = hand.Tenpai;
+        if (tenpaiTiles.Count > 0) {
+          foreach (var winTile in tenpaiTiles) {
+            var info = PlayTileAction.ComputeTenpaiInfo(patternResolver, hand, winTile);
+            ret.TenpaiWaits.Add(ProtoConverters.ConvertTenpaiInfo(info));
+          }
+        }
       }
       return ret;
     }

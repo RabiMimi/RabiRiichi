@@ -15,6 +15,28 @@ namespace RabiRiichi.Core.Setup {
     /// <summary> 役种 </summary>
     protected readonly List<Type> stdPatterns = [];
 
+    private bool _patternsInitialized = false;
+
+    private void EnsurePatternsInitialized() {
+      if (!_patternsInitialized) {
+        InitPatterns();
+        _patternsInitialized = true;
+      }
+    }
+
+    public IEnumerable<Type> GetStdPatterns() {
+      EnsurePatternsInitialized();
+      return stdPatterns;
+    }
+
+    public static bool IsYaku(Type type) {
+      return !type.Name.StartsWith("Fu") &&
+             type.Name != "Dora" &&
+             type.Name != "Uradora" &&
+             type.Name != "Akadora" &&
+             type.Name != "NukiDora";
+    }
+
     #region Inject
 
     /// <summary> 注册Base Pattern </summary>
@@ -34,7 +56,12 @@ namespace RabiRiichi.Core.Setup {
 
     /// <summary> 移除Std Pattern </summary>
     protected bool RemoveStdPattern<T>() where T : StdPattern {
-      return stdPatterns.Remove(typeof(T));
+      return RemoveStdPattern(typeof(T));
+    }
+
+    /// <summary> 移除Std Pattern </summary>
+    protected bool RemoveStdPattern(Type type) {
+      return stdPatterns.Remove(type);
     }
 
     /// <summary>
@@ -83,7 +110,7 @@ namespace RabiRiichi.Core.Setup {
       InjectResolvers(collection);
 
       // 注入牌型
-      InitPatterns();
+      EnsurePatternsInitialized();
       InjectPatterns(collection);
     }
 
@@ -118,6 +145,7 @@ namespace RabiRiichi.Core.Setup {
       LateClaimTileListener.Register(eventBus);
       NextGameListener.Register(eventBus);
       NextPlayerListener.Register(eventBus);
+      NukiDoraListener.Register(eventBus);
       RevealDoraListener.Register(eventBus);
       RyuukyokuListener.Register(eventBus);
       SetFuritenListener.Register(eventBus);

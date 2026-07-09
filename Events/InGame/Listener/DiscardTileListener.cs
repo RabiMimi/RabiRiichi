@@ -34,7 +34,7 @@ namespace RabiRiichi.Events.InGame.Listener {
         eventBuilder.AddEvent(new ClaimTileEvent(ev, action.playerId, new Kan(option.tiles), discardEv.discarded));
       });
       ev.inquiry.AddHandler<RonAction>((action) => {
-        eventBuilder.AddAgari(ev, discardEv.playerId, discardEv.discarded, action.agariInfo);
+        eventBuilder.AddAgari(ev, discardEv.playerId, discardEv.discarded, false, action.agariInfo);
       });
       ev.OnFinish += () => {
         if (discardEv is RiichiEvent) {

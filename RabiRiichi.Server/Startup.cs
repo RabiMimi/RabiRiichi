@@ -40,6 +40,12 @@ services.AddSingleton<InfoServiceImpl>();
 services.AddSingleton<UserServiceImpl>();
 services.AddSingleton<RoomServiceImpl>();
 services.AddSingleton<GameServiceImpl>();
+var replayOptions = new ReplayOptions();
+services.AddSingleton(replayOptions);
+services.AddSingleton<ReplayStore>();
+if (replayOptions.IsEnabled && replayOptions.TTL.HasValue) {
+  services.AddHostedService<ReplayCleanupService>();
+}
 
 services.AddSingleton(new Random(builder.Environment.IsDevelopment()
     ? 0 : (int)(DateTimeOffset.Now.ToUnixTimeMilliseconds() & 0xffffffff)));

@@ -8,11 +8,13 @@
 # Options:
 #   -u, --user        Dedicated OS user to run the service (default: riichi)
 #   -d, --dir         Installation directory          (default: /opt/rabiriichi)
-#   -r, --repo        GitHub repository slug          (default: auto-detected from git remote)
+#   -r, --repo        GitHub repository slug          (default: RabiMimi/RabiRiichi)
 #   -t, --tag         Release tag to deploy           (default: latest)
 #   -p, --port        ASPNETCORE_URLS value           (default: http://0.0.0.0:5000)
 #   -e, --env-file    Path to an extra environment file to install
 #                     (key=value pairs, placed at /etc/rabiriichi/environment)
+#   -k, --jwt-key     JWT secret key (default: auto-generate if not already set)
+#   --undeploy        Stop and completely remove the service, user, and files
 #   -h, --help        Show this help and exit
 #
 # Requirements (installed on the target server):
@@ -27,10 +29,12 @@ set -euo pipefail
 # ─── Defaults ────────────────────────────────────────────────────────────────
 SERVICE_USER="riichi"
 INSTALL_DIR="/opt/rabiriichi"
-GITHUB_REPO=""          # auto-detect from git remote origin
+GITHUB_REPO="RabiMimi/RabiRiichi"  # override with --repo if needed
 RELEASE_TAG="latest"
 APP_URLS="http://0.0.0.0:5000"
 EXTRA_ENV_FILE=""
+JWT_KEY=""
+UNDEPLOY=false
 
 SERVICE_NAME="rabiriichi"
 CONFIG_DIR="/etc/rabiriichi"
@@ -57,6 +61,8 @@ while [[ $# -gt 0 ]]; do
         -t|--tag)       RELEASE_TAG="$2";  shift 2 ;;
         -p|--port)      APP_URLS="$2";     shift 2 ;;
         -e|--env-file)  EXTRA_ENV_FILE="$2"; shift 2 ;;
+        -k|--jwt-key)   JWT_KEY="$2";      shift 2 ;;
+        --undeploy)     UNDEPLOY=true; shift ;;
         -h|--help)      usage ;;
         *) die "Unknown option: $1. Run with --help for usage." ;;
     esac
@@ -67,15 +73,47 @@ if [[ $EUID -ne 0 ]]; then
     die "This script must be run as root (or via sudo)."
 fi
 
-# ─── Auto-detect GitHub repo from git remote ─────────────────────────────────
-if [[ -z "$GITHUB_REPO" ]]; then
-    REMOTE_URL=$(git -C "$(dirname "$0")/.." remote get-url origin 2>/dev/null || true)
-    if [[ "$REMOTE_URL" =~ github\.com[:/]([^/]+/[^/]+?)(\.git)?$ ]]; then
-        GITHUB_REPO="${BASH_REMATCH[1]}"
-        info "Auto-detected GitHub repo: ${GITHUB_REPO}"
-    else
-        die "Could not auto-detect GitHub repo. Pass --repo owner/name explicitly."
+# ─── Undeploy ────────────────────────────────────────────────────────────────
+if [[ "$UNDEPLOY" == true ]]; then
+    warn "Undeploying RabiRiichi.Server..."
+
+    UNIT_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
+
+    if systemctl is-active --quiet "${SERVICE_NAME}" 2>/dev/null; then
+        info "Stopping service '${SERVICE_NAME}'..."
+        systemctl stop "${SERVICE_NAME}"
     fi
+
+    if systemctl is-enabled --quiet "${SERVICE_NAME}" 2>/dev/null; then
+        info "Disabling service '${SERVICE_NAME}'..."
+        systemctl disable "${SERVICE_NAME}"
+    fi
+
+    if [[ -f "${UNIT_FILE}" ]]; then
+        info "Removing systemd unit ${UNIT_FILE}..."
+        rm -f "${UNIT_FILE}"
+        systemctl daemon-reload
+        systemctl reset-failed "${SERVICE_NAME}" 2>/dev/null || true
+    fi
+
+    if [[ -d "${INSTALL_DIR}" ]]; then
+        info "Removing install directory ${INSTALL_DIR}..."
+        rm -rf "${INSTALL_DIR}"
+    fi
+
+    if [[ -d "${CONFIG_DIR}" ]]; then
+        info "Removing config directory ${CONFIG_DIR}..."
+        rm -rf "${CONFIG_DIR}"
+    fi
+
+    if id -u "${SERVICE_USER}" &>/dev/null; then
+        info "Removing system user '${SERVICE_USER}'..."
+        userdel "${SERVICE_USER}"
+    fi
+
+    echo ""
+    success "RabiRiichi.Server has been fully undeployed."
+    exit 0
 fi
 
 # ─── Resolve release tag ─────────────────────────────────────────────────────
@@ -187,6 +225,28 @@ success "Extraction complete."
 # ─── Install environment configuration ───────────────────────────────────────
 info "Writing environment config to ${ENV_FILE}..."
 
+# Retrieve existing JWT_SECRET if the environment file already exists
+EXISTING_JWT=""
+if [[ -f "${ENV_FILE}" ]]; then
+    EXISTING_JWT=$(grep -oP '^JWT_SECRET=\K.*' "${ENV_FILE}" || true)
+fi
+
+# Determine the JWT secret to use
+FINAL_JWT=""
+if [[ -n "$JWT_KEY" ]]; then
+    FINAL_JWT="$JWT_KEY"
+elif [[ -n "$EXISTING_JWT" ]]; then
+    FINAL_JWT="$EXISTING_JWT"
+    info "Retained existing JWT_SECRET from ${ENV_FILE}"
+else
+    info "Generating a random 64-character JWT secret..."
+    if command -v openssl &>/dev/null; then
+        FINAL_JWT=$(openssl rand -base64 48 | tr -d '\n\r')
+    else
+        FINAL_JWT=$(head -c 48 /dev/urandom | base64 | tr -d '\n\r')
+    fi
+fi
+
 # Write base environment variables
 cat > "${ENV_FILE}" <<EOF
 # RabiRiichi Server — environment configuration
@@ -196,9 +256,8 @@ cat > "${ENV_FILE}" <<EOF
 ASPNETCORE_ENVIRONMENT=Production
 ASPNETCORE_URLS=${APP_URLS}
 
-# JWT signing key (REQUIRED — replace with a strong random secret)
-# Generate with: openssl rand -base64 64
-# RabiRiichi__Jwt__Key=CHANGE_ME
+# JWT secret key used by TokenService
+JWT_SECRET=${FINAL_JWT}
 
 # Example: override a setting from appsettings.json
 # Logging__LogLevel__Default=Warning
@@ -235,7 +294,7 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
-Type=notify
+Type=exec
 User=${SERVICE_USER}
 Group=${SERVICE_USER}
 WorkingDirectory=${INSTALL_DIR}
