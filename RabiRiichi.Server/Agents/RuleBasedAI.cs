@@ -1,9 +1,7 @@
 using RabiRiichi.Actions;
 using RabiRiichi.Core;
-using RabiRiichi.Events;
 using RabiRiichi.Server.Generated.Messages;
 using RabiRiichi.Server.Models;
-using RabiRiichi.Utils;
 
 namespace RabiRiichi.Server.Agents {
   /// <summary>
@@ -25,56 +23,16 @@ namespace RabiRiichi.Server.Agents {
   ///  - Call (chii/pon/kan) only when it clearly advances a yaku-bearing hand;
   ///    otherwise stay concealed.
   /// </summary>
-  public class RuleBasedAI(int id, Room room, UserStatus status = UserStatus.Playing) : IPlayerAgent {
-    public int id { get; } = id;
-    public AiType aiType => AiType.RuleBased;
+  public class RuleBasedAI(int id, Room room, UserStatus status = UserStatus.Playing)
+      : AIAgent(id, room, status) {
+    public override AiType aiType => AiType.RuleBased;
 
-    public string nickname => aiType.ToString().ToUpper();
-
-    public UserStatus status { get; private set; } = status;
-    public int Seat => room.SeatIndexOf(this);
-
-    public ServerPlayerStateMsg GetState() {
-      return new ServerPlayerStateMsg {
-        Id = id,
-        Nickname = nickname,
-        Status = status,
-        Seat = Seat,
-        AiType = AiType.RuleBased,
-      };
-    }
-
-    public bool Transit(UserStatus expected, UserStatus next) {
-      if (status != expected) {
-        return false;
-      }
-      status = next;
-      return true;
-    }
-
-    public void OnEvent(EventBase ev) {
-      // The strategy is stateless across events; it decides purely from the
-      // public state available at inquiry time.
-    }
-
-    public void OnInquiry(
+    protected override InquiryResponse Decide(
         MultiPlayerInquiry gameInquiry,
         SinglePlayerInquiry playerInquiry,
-        TimeSpan remainingTimeout,
-        Action<InquiryResponse> onResponse) {
-      // Respond asynchronously so we never block or re-enter the engine's event
-      // lock (mirrors DefaultAI).
-      Task.Run(() => {
-        try {
-          var view = new PublicGameView(gameInquiry.game, Seat);
-          var decision = RuleBasedStrategy.Decide(view, playerInquiry);
-          onResponse(decision);
-        } catch (Exception e) {
-          Logger.Warn(e);
-          // Fall back to the safe default (skip / tsumogiri) on any error.
-          onResponse(InquiryResponse.Default(Seat));
-        }
-      });
+        TimeSpan remainingTimeout) {
+      var view = new PublicGameView(gameInquiry.game, Seat);
+      return RuleBasedStrategy.Decide(view, playerInquiry);
     }
   }
 }

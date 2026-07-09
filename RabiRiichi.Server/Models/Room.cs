@@ -189,6 +189,28 @@ namespace RabiRiichi.Server.Models {
       return true;
     }
 
+    /// <summary>
+    /// Removes a player from the room. Only valid before the game starts, and
+    /// currently only for AI players. Unlike <see cref="RemovePlayer"/>, this
+    /// does not touch human-departure logic (ExitRoom / seat substitution /
+    /// room destruction); removing a human still goes through
+    /// <see cref="RemovePlayer"/>.
+    /// </summary>
+    public bool RemoveRoomPlayer(IPlayerAgent player) {
+      if (game != null) {
+        return false;
+      }
+      // Humans leave via RemovePlayer (which handles ExitRoom / room teardown).
+      if (player is User) {
+        return false;
+      }
+      if (!players.Remove(player)) {
+        return false;
+      }
+      BroadcastRoomState();
+      return true;
+    }
+
     public int SeatIndexOf(IPlayerAgent player) {
       if (seats.Contains(player)) {
         return Array.IndexOf(seats, player);

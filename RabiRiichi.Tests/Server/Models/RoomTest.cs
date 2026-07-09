@@ -115,5 +115,61 @@ namespace RabiRiichi.Tests.Server {
       Assert.IsNotNull(room.game);
       Assert.AreEqual(UserStatus.Playing, user.status);
     }
+
+    [TestMethod]
+    public void TestRemoveRoomPlayerBeforeGameStarts() {
+      var rand = new Random(0);
+      var config = new GameConfig { playerCount = 4 };
+      var room = new Room(rand, config);
+
+      var user = new User { id = 1, nickname = "Human" };
+      Assert.IsTrue(room.AddPlayer(user));
+
+      var ai = new DefaultAI(-100, room, UserStatus.InRoom);
+      Assert.IsTrue(room.AddPlayer(ai));
+      Assert.AreEqual(2, room.players.Count);
+
+      // The AI can be removed before the game starts.
+      Assert.IsTrue(room.RemoveRoomPlayer(ai));
+      Assert.IsFalse(room.players.Contains(ai));
+      Assert.AreEqual(1, room.players.Count);
+    }
+
+    [TestMethod]
+    public void TestRemoveRoomPlayerRejectsHumanPlayer() {
+      var rand = new Random(0);
+      var config = new GameConfig { playerCount = 4 };
+      var room = new Room(rand, config);
+
+      var user = new User { id = 1, nickname = "Human" };
+      Assert.IsTrue(room.AddPlayer(user));
+
+      // RemoveRoomPlayer must not remove a human player.
+      Assert.IsFalse(room.RemoveRoomPlayer(user));
+      Assert.IsTrue(room.players.Contains(user));
+    }
+
+    [TestMethod]
+    public void TestRemoveRoomPlayerRejectedAfterGameStarts() {
+      var rand = new Random(0);
+      var config = new GameConfig { playerCount = 4 };
+      var room = new Room(rand, config);
+
+      var user = new User { id = 1, nickname = "Human" };
+      Assert.IsTrue(room.AddPlayer(user));
+      Assert.IsTrue(room.GetReady(user));
+
+      DefaultAI lastAi = null;
+      for (int i = 0; i < 3; i++) {
+        lastAi = new DefaultAI(-1 - i, room, UserStatus.InRoom);
+        Assert.IsTrue(room.AddPlayer(lastAi));
+        Assert.IsTrue(room.GetReady(lastAi));
+      }
+
+      // Game has started; players can no longer be kicked.
+      Assert.IsNotNull(room.game);
+      Assert.IsFalse(room.RemoveRoomPlayer(lastAi));
+      Assert.IsTrue(room.players.Contains(lastAi));
+    }
   }
 }

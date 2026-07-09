@@ -71,10 +71,7 @@ namespace RabiRiichi.Server.Services {
     }
 
     public ServerRoomStateResponse AddAi(AddAiRequest request, RoomList roomList, User user) {
-      if (user.room == null) {
-        throw new RpcException(new Status(StatusCode.FailedPrecondition, "User is not in a room"));
-      }
-      var room = user.room;
+      var room = user.room ?? throw new RpcException(new Status(StatusCode.FailedPrecondition, "User is not in a room"));
       var humanPlayers = room.players.OfType<User>().OrderBy(p => room.SeatIndexOf(p)).ToList();
       if (humanPlayers.Count == 0 || humanPlayers[0] != user) {
         throw new RpcException(new Status(StatusCode.PermissionDenied, "Only the room owner can add AI"));
@@ -98,6 +95,29 @@ namespace RabiRiichi.Server.Services {
       return taskQueue.Execute(queue => {
         var user = queue.userList.Fetch(context);
         return AddAi(request, queue.roomList, user);
+      });
+    }
+
+    public ServerRoomStateResponse RemoveRoomPlayer(RemoveRoomPlayerRequest request, RoomList roomList, User user) {
+      var room = user.room ?? throw new RpcException(new Status(StatusCode.FailedPrecondition, "User is not in a room"));
+      var humanPlayers = room.players.OfType<User>().OrderBy(p => room.SeatIndexOf(p)).ToList();
+      if (humanPlayers.Count == 0 || humanPlayers[0] != user) {
+        throw new RpcException(new Status(StatusCode.PermissionDenied, "Only the room owner can remove players"));
+      }
+      var target = room.players.FirstOrDefault(p => p.id == request.Id)
+        ?? throw new RpcException(new Status(StatusCode.NotFound, "Player not found in room"));
+      if (!room.RemoveRoomPlayer(target)) {
+        throw new RpcException(new Status(StatusCode.FailedPrecondition, "Cannot remove player from room"));
+      }
+      return new ServerRoomStateResponse {
+        State = room.CreateServerRoomStateMsg()
+      };
+    }
+
+    public override Task<ServerRoomStateResponse> RemoveRoomPlayer(RemoveRoomPlayerRequest request, ServerCallContext context) {
+      return taskQueue.Execute(queue => {
+        var user = queue.userList.Fetch(context);
+        return RemoveRoomPlayer(request, queue.roomList, user);
       });
     }
 
