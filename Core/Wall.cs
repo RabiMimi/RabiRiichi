@@ -14,8 +14,16 @@ namespace RabiRiichi.Core {
 
     /// <summary> 宝牌数量 </summary>
     public const int NUM_DORA = 5;
-    /// <summary> 岭上牌数量 </summary>
+    /// <summary> 基础岭上牌数量（不含拔北扩充） </summary>
     public const int NUM_RINSHAN = 4;
+    /// <summary>
+    /// 实际岭上牌数量。启用拔北时，每张可拔的北都需要一张额外岭上牌补充，
+    /// 因此岭上牌数量为基础值加上初始牌山中的北风数量。
+    /// </summary>
+    public readonly int rinshanSize =
+        NUM_RINSHAN + (config.doraOption.HasFlag(DoraOption.Nukidora)
+            ? config.initialTiles.Count(t => t.IsSame(Tile.North))
+            : 0);
     /// <summary> 牌山剩下的牌 </summary>
     public readonly ListStack<GameTile> remaining = [];
     /// <summary> 岭上牌 </summary>
@@ -35,7 +43,7 @@ namespace RabiRiichi.Core {
         .Concat(doras.Skip(revealedDoraCount))
         .Concat(uradoras);
     /// <summary> 牌山剩下的牌数 </summary>
-    public int NumRemaining => remaining.Count - (NUM_RINSHAN - rinshan.Count);
+    public int NumRemaining => remaining.Count - (rinshanSize - rinshan.Count);
     /// <summary> 是否到了海底 </summary>
     public bool IsHaitei => NumRemaining <= 0;
 
@@ -50,7 +58,7 @@ namespace RabiRiichi.Core {
       revealedUradoraCount = 0;
       remaining.AddRange(config.initialTiles.Select(tile => new GameTile(tile, idPool.GetID())));
       rand.Shuffle(remaining);
-      rinshan.AddRange(remaining.PopMany(NUM_RINSHAN));
+      rinshan.AddRange(remaining.PopMany(rinshanSize));
       doras.AddRange(remaining.PopMany(NUM_DORA));
       uradoras.AddRange(remaining.PopMany(NUM_DORA));
     }

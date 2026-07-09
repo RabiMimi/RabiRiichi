@@ -129,6 +129,8 @@ namespace RabiRiichi.Core.Config {
     InstantRevealAfterKakan = 1 << 5,
     /// <summary> 暗杠宝牌即开 </summary>
     InstantRevealAfterAnkan = 1 << 6,
+    /// <summary> 拔北宝牌（三麻北风处理）。启用后可拔北，每张北算1番宝牌。 </summary>
+    Nukidora = 1 << 7,
     /// <summary> 所有 </summary>
     All = Dora | Uradora | InstantRevealAfterDaiminkan | InstantRevealAfterKakan | InstantRevealAfterAnkan,
     /// <summary> 默认值 </summary>

@@ -87,7 +87,14 @@ namespace RabiRiichi.Core.Config {
         throw new InvalidGameConfigException(GameConfigErrorType.InvalidTimeout, "Action timeout must be between 5 and 3600 seconds.");
       }
 
-      int minTiles = playerCount * 13 + 15;
+      // Dead wall = rinshan (岭上) + dora + uradora, plus one tile of margin so
+      // haitei is reachable. Enabling nukidora enlarges the rinshan region by
+      // one tile per pullable North, so reserve those too.
+      int nukiRinshan = doraOption.HasFlag(DoraOption.Nukidora)
+          ? initialTiles?.Count(t => t.IsSame(Tile.North)) ?? 0
+          : 0;
+      int deadWall = Wall.NUM_RINSHAN + nukiRinshan + Wall.NUM_DORA * 2;
+      int minTiles = playerCount * 13 + deadWall + 1;
       if (initialTiles == null || initialTiles.Count < minTiles) {
         throw new InvalidGameConfigException(GameConfigErrorType.InsufficientTiles,
           "Insufficient tiles",

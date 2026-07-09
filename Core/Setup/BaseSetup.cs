@@ -33,7 +33,8 @@ namespace RabiRiichi.Core.Setup {
       return !type.Name.StartsWith("Fu") &&
              type.Name != "Dora" &&
              type.Name != "Uradora" &&
-             type.Name != "Akadora";
+             type.Name != "Akadora" &&
+             type.Name != "NukiDora";
     }
 
     #region Inject
@@ -144,6 +145,7 @@ namespace RabiRiichi.Core.Setup {
       LateClaimTileListener.Register(eventBus);
       NextGameListener.Register(eventBus);
       NextPlayerListener.Register(eventBus);
+      NukiDoraListener.Register(eventBus);
       RevealDoraListener.Register(eventBus);
       RyuukyokuListener.Register(eventBus);
       SetFuritenListener.Register(eventBus);

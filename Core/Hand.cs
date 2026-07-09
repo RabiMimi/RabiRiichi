@@ -22,6 +22,9 @@ namespace RabiRiichi.Core {
     /// <summary> 牌河 </summary>
     public List<GameTile> discarded = [];
 
+    /// <summary> 拔出的北（拔北宝牌），每张算1番宝牌，不计入手牌数 </summary>
+    public List<GameTile> nukiDora = [];
+
     /// <summary> 当前玩家 </summary>
     public Player player;
 
@@ -152,6 +155,17 @@ namespace RabiRiichi.Core {
       Debug.Assert(original != null, "加杠了个空气");
       called.Remove(original);
       AddGroup(tiles, TileSource.Kakan);
+    }
+
+    /// <summary> 拔北：将一张北风放到拔北宝牌区，不破坏门清（类似暗杠自摸） </summary>
+    public void Nuki(GameTile tile) {
+      tile.player = player;
+      tile.source = TileSource.Nuki;
+      if (tile.formTime == -1) {
+        tile.formTime = game.Time;
+      }
+      freeTiles.Remove(tile);
+      nukiDora.Add(tile);
     }
   }
 }

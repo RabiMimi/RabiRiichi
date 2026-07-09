@@ -64,5 +64,29 @@ namespace RabiRiichi.Tests.Core {
       // Should not throw
       config.Validate();
     }
+
+    [TestMethod]
+    public void TestInsufficientTilesWithNukidora() {
+      // Nukidora enlarges the dead wall by one per pullable North, so the
+      // minimum tile requirement grows accordingly.
+      var config = new GameConfig {
+        playerCount = 2,
+        doraOption = DoraOption.Nukidora,
+      };
+
+      // With 3 North tiles present, the dead wall grows by 3, so the minimum is
+      // 41 + 3 = 44. 43 (40 filler + 3 North) must fail.
+      var withNorth = Enumerable.Range(0, 40).Select(_ => new Tile(TileSuit.M, 1))
+          .Concat(Enumerable.Range(0, 3).Select(_ => Tile.North)).ToList();
+      config.initialTiles = new Tiles(withNorth);
+      var ex = Assert.ThrowsException<InvalidGameConfigException>(() => config.Validate());
+      Assert.AreEqual(GameConfigErrorType.InsufficientTiles, ex.ErrorType);
+
+      // 44 tiles (41 filler + 3 North) should pass.
+      var enough = Enumerable.Range(0, 41).Select(_ => new Tile(TileSuit.M, 1))
+          .Concat(Enumerable.Range(0, 3).Select(_ => Tile.North)).ToList();
+      config.initialTiles = new Tiles(enough);
+      config.Validate();
+    }
   }
 }

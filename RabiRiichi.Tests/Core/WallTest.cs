@@ -386,6 +386,31 @@ namespace RabiRiichi.Tests.Core {
       Assert.AreEqual(rinshanCount, wall.rinshan.Count);
     }
 
+    #region Nukidora rinshan size
+    [TestMethod]
+    public void TestRinshanSizeDefault() {
+      // Without nukidora, rinshan pool is the base size.
+      Assert.AreEqual(Wall.NUM_RINSHAN, wall.rinshanSize);
+      Assert.AreEqual(Wall.NUM_RINSHAN, wall.rinshan.Count);
+    }
+
+    [TestMethod]
+    public void TestRinshanSizeWithNukidora() {
+      // With nukidora enabled, the rinshan pool grows by the number of North
+      // tiles in the initial wall (standard set has 4).
+      var config = new GameConfig { doraOption = DoraOption.Nukidora };
+      int norths = config.initialTiles.Count(t => t.IsSame(Tile.North));
+      var nukiWall = new Wall(new RabiRand(114514), config);
+      nukiWall.Reset();
+      Assert.AreEqual(Wall.NUM_RINSHAN + norths, nukiWall.rinshanSize);
+      Assert.AreEqual(nukiWall.rinshanSize, nukiWall.rinshan.Count);
+      // Live-wall accounting stays consistent with the enlarged dead wall.
+      Assert.AreEqual(
+          Tiles.All.Value.Count - (Wall.NUM_DORA * 2) - nukiWall.rinshanSize,
+          nukiWall.NumRemaining);
+    }
+    #endregion
+
     #region Dora Options Test
     [TestMethod]
     public void TestDoraOption_EverythingOn() {

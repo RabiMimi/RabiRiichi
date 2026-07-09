@@ -61,12 +61,27 @@ namespace RabiRiichi.Communication.Proto {
     public static PlayerActionMsg ConvertNextRoundActionMsg([Consumes] NextRoundActionMsg action) {
       return new() { NextRoundAction = action };
     }
+
+    [Produces]
+    public static PlayerActionMsg ConvertNukiDoraActionMsg([Consumes] NukiDoraActionMsg action) {
+      return new() { NukiDoraAction = action };
+    }
     #endregion
 
     #region EventMsg
     [Produces]
     public static EventMsg ConvertAddKanEventMsg([Consumes] AddKanEventMsg ev) {
       return new() { AddKanEvent = ev };
+    }
+
+    [Produces]
+    public static EventMsg ConvertNukiDoraEventMsg([Consumes] NukiDoraEventMsg ev) {
+      return new() { NukiDoraEvent = ev };
+    }
+
+    [Produces]
+    public static EventMsg ConvertAddNukiDoraEventMsg([Consumes] AddNukiDoraEventMsg ev) {
+      return new() { AddNukiDoraEvent = ev };
     }
 
     [Produces]
@@ -229,6 +244,15 @@ namespace RabiRiichi.Communication.Proto {
     public static KanActionMsg ConvertKanAction([Consumes] KanAction action) {
       var ret = new KanActionMsg();
       ret.TileGroups.AddRange(ConvertTilesOptions(action.options));
+      return ret;
+    }
+
+    [Produces]
+    public static NukiDoraActionMsg ConvertNukiDoraAction([Consumes] NukiDoraAction action) {
+      var ret = new NukiDoraActionMsg();
+      // 每个选项是一张可拔的北
+      ret.Tiles.AddRange(action.options.Select(
+          o => ConvertGameTile(((ChooseTilesActionOption)o).tiles[0], true)));
       return ret;
     }
 
@@ -423,6 +447,22 @@ namespace RabiRiichi.Communication.Proto {
         Kan = ev.kan.ToProto(),
         Incoming = ConvertGameTile(ev.incoming, true),
         KanSource = ev.kanSource,
+      };
+    }
+
+    [Produces]
+    public static NukiDoraEventMsg ConvertNukiDoraEvent([Consumes] NukiDoraEvent ev) {
+      return new() {
+        PlayerId = ev.playerId,
+        Incoming = ConvertGameTile(ev.incoming, true),
+      };
+    }
+
+    [Produces]
+    public static AddNukiDoraEventMsg ConvertAddNukiDoraEvent([Consumes] AddNukiDoraEvent ev) {
+      return new() {
+        PlayerId = ev.playerId,
+        Incoming = ConvertGameTile(ev.incoming, true),
       };
     }
 

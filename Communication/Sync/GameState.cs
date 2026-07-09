@@ -16,6 +16,7 @@ namespace RabiRiichi.Communication.Sync {
     [RabiPrivate] public readonly GameTile pendingTile = hand.pendingTile;
     [RabiBroadcast] public readonly List<MenLike> called = [.. hand.called];
     [RabiBroadcast] public readonly List<GameTile> discarded = [.. hand.discarded];
+    [RabiBroadcast] public readonly List<GameTile> nukiDora = [.. hand.nukiDora];
     [RabiBroadcast] public readonly int jun = hand.jun;
     [RabiBroadcast] public readonly int riichiStick = hand.riichiStick;
     [RabiBroadcast] public readonly GameTile agariTile = hand.agariTile;
@@ -34,6 +35,7 @@ namespace RabiRiichi.Communication.Sync {
       };
       ret.Called.AddRange(called.Select(x => x.ToProto()));
       ret.Discarded.AddRange(discarded.Select(tile => ProtoConverters.ConvertGameTile(tile, true)));
+      ret.NukiDora.AddRange(nukiDora.Select(tile => ProtoConverters.ConvertGameTile(tile, true)));
       ret.FreeTiles.AddRange(freeTiles.Select(tile => ProtoConverters.ConvertGameTile(tile, this.playerId == playerId)));
       if (this.playerId == playerId) {
         ret.IsTempFuriten = isTempFuriten;

@@ -10,6 +10,8 @@ namespace RabiRiichi.Core {
 
   public struct Tile : IComparable<Tile> {
     public static readonly Tile Empty = new(0);
+    /// <summary> 北风（拔北宝牌用） </summary>
+    public static readonly Tile North = new(TileSuit.Z, 4);
     /// <summary>
     /// LSB to MSB:
     /// 4 bit digit

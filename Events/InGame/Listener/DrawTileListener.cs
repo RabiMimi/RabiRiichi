@@ -28,6 +28,9 @@ namespace RabiRiichi.Events.InGame.Listener {
       if (game.TryGet<KanResolver>(out var resolver3)) {
         yield return resolver3;
       }
+      if (game.TryGet<NukiDoraResolver>(out var resolverNuki)) {
+        yield return resolverNuki;
+      }
       if (game.TryGet<TsumoResolver>(out var resolver4)) {
         yield return resolver4;
       }
@@ -77,6 +80,9 @@ namespace RabiRiichi.Events.InGame.Listener {
         var option = action.chosen;
         var kan = new Kan(option.tiles);
         eventBuilder.AddEvent(new KanEvent(ev, action.playerId, kan, option.tiles[^1]));
+      });
+      ev.inquiry.AddHandler<NukiDoraAction>((action) => {
+        eventBuilder.AddEvent(new NukiDoraEvent(ev, action.playerId, action.chosen.tiles[0]));
       });
       ev.inquiry.AddHandler<RyuukyokuAction>((action) => {
         eventBuilder.AddEvent(action.ev);

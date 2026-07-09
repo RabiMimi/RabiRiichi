@@ -43,7 +43,7 @@ namespace RabiRiichi.Tests.Scenario {
       Assert.IsTrue(game.wall.NumRemaining >= 0, $"Wall remaining is {game.wall.NumRemaining} < 0");
       Assert.AreEqual(Wall.NUM_DORA, game.wall.uradoras.Count, $"Wall uradoras count is {game.wall.uradoras.Count} != {Wall.NUM_DORA}");
       Assert.AreEqual(Wall.NUM_DORA, game.wall.doras.Count, $"Wall doras count is {game.wall.doras.Count} != {Wall.NUM_DORA}");
-      Assert.IsTrue(game.wall.rinshan.Count <= Wall.NUM_RINSHAN, $"Wall rinshan count is {game.wall.rinshan.Count} > {Wall.NUM_RINSHAN}");
+      Assert.IsTrue(game.wall.rinshan.Count <= game.wall.rinshanSize, $"Wall rinshan count is {game.wall.rinshan.Count} > {game.wall.rinshanSize}");
     }
 
     /// <summary> 启用或禁用游戏询问玩家时的状态检查。默认启用 </summary>
@@ -792,7 +792,7 @@ namespace RabiRiichi.Tests.Scenario {
         for (int i = uradoras.Count; i < Wall.NUM_DORA; i++) {
           wall.uradoras.Add(DrawNext());
         }
-        for (int i = rinshan.Count; i < Wall.NUM_RINSHAN; i++) {
+        for (int i = rinshan.Count; i < wall.rinshanSize; i++) {
           wall.rinshan.Add(DrawNext());
         }
         wall.remaining.AddRange(allTiles);
