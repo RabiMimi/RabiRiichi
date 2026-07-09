@@ -186,10 +186,9 @@ namespace RabiRiichi.Tests.Scenario.Tests {
     }
 
     [TestMethod]
-    public async Task NorthInWinningHandCountsAsKita() {
-      // North kept in the hand (as a triplet) still scores nukidora, even
-      // without pulling: 3 North in the winning hand = 3 nukidora han.
-      // Shanpon tenpai on 9p/4z; tsumo the third North to form 444z.
+    public async Task NorthInWinningHandDoesNotCountAsKita() {
+      // North kept in the hand (as a triplet) is NOT nukidora — only pulled
+      // North are. Shanpon tenpai on 9p/4z; tsumo the third North to form 444z.
       var scenario = Builder(DoraOption.Default | DoraOption.Nukidora)
           .WithPlayer(1, pb => pb.SetFreeTiles("123m456m789m99p44z"))
           .WithWall(wall => wall.Reserve("4z"))
@@ -200,16 +199,17 @@ namespace RabiRiichi.Tests.Scenario.Tests {
         pi.ApplyAction<TsumoAction>();
       }).AssertAutoFinish();
 
-      await scenario.AssertEvent<AgariEvent>(ev => ev.agariInfos
-          .AssertTsumo(1)
-          .AssertYaku<NukiDora>(han: 3)
-      ).Resolve();
+      await scenario.AssertEvent<AgariEvent>(ev => {
+        var info = ev.agariInfos.AssertTsumo(1);
+        Assert.IsFalse(info.scores.Any(s => s.Source is NukiDora),
+            "North kept in hand must not score nukidora.");
+      }).Resolve();
     }
 
     [TestMethod]
-    public async Task WestIndicatorStacksWithNukiDora() {
-      // Indicator West (3z) -> North (4z) is also a regular dora. Each North
-      // therefore scores both NukiDora (+1) and Dora (+1).
+    public async Task WestIndicatorNorthInHandIsPlainDoraOnly() {
+      // Indicator West (3z) -> North (4z) is a regular dora. North kept in hand
+      // scores Dora (+3) but NOT nukidora (they were never pulled).
       var scenario = Builder(DoraOption.Default | DoraOption.Nukidora)
           .WithPlayer(1, pb => pb.SetFreeTiles("123m456m789m99p44z"))
           .WithWall(wall => wall.Reserve("4z").AddDoras("3z").SetRevealedDoraCount(1))
@@ -219,12 +219,12 @@ namespace RabiRiichi.Tests.Scenario.Tests {
         pi.ApplyAction<TsumoAction>();
       }).AssertAutoFinish();
 
-      await scenario.AssertEvent<AgariEvent>(ev => ev.agariInfos
-          .AssertTsumo(1)
-          // 3 North in hand: NukiDora +3, and regular Dora +3 (indicator West).
-          .AssertYaku<NukiDora>(han: 3)
-          .AssertYaku<Dora>(han: 3)
-      ).Resolve();
+      await scenario.AssertEvent<AgariEvent>(ev => {
+        var info = ev.agariInfos.AssertTsumo(1);
+        info.AssertYaku<Dora>(han: 3);
+        Assert.IsFalse(info.scores.Any(s => s.Source is NukiDora),
+            "North kept in hand must not score nukidora.");
+      }).Resolve();
     }
 
     [TestMethod]
