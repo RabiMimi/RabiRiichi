@@ -51,6 +51,15 @@ namespace RabiRiichi.Server.Connections {
             CreatedAtUnixMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
             Config = room.game.config.ToProto(),
           };
+          foreach (var player in room.players) {
+            var playerState = player.GetState();
+            replayLog.Players.Add(new GameLogPlayerMsg {
+              Id = player.id,
+              Nickname = player.nickname,
+              Seat = player.Seat,
+              AiType = playerState.AiType
+            });
+          }
           replayLog.PlayerLogs.Add(new PlayerLogMsg());
         }
         var revealedProto = room.game.SerializeProto<EventMsg>(ev, ProtoConverters.GOD_VIEW_PLAYER_ID);
