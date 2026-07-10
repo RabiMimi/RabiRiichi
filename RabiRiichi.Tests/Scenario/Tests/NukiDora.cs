@@ -107,6 +107,53 @@ namespace RabiRiichi.Tests.Scenario.Tests {
     #region Gating
 
     [TestMethod]
+    public async Task SuccessNukiOnDealerFirstTurn() {
+      // Regression: the dealer's opening draw goes through DealerFirstTurnEvent,
+      // which previously omitted the nukidora resolver. The dealer draws a North
+      // (the trailing 4z of the 14-tile first-turn hand) and must be offered the
+      // pull, just like on any normal draw.
+      var scenario = Builder()
+          .WithPlayer(0, pb => pb.SetFreeTiles("123456789m123p1s4z"))
+          .WithWall(wall => wall.AddRinshan("9p"))
+          .SetFirstJun()
+          .Start(0);
+
+      (await scenario.WaitInquiry()).ForPlayer(0, pi => {
+        pi.AssertAction<PlayTileAction>()
+          .ChooseTiles<NukiDoraAction>("4z", action => {
+            Assert.AreEqual(1, action.options.Count);
+          });
+      }).AssertAutoFinish();
+
+      scenario
+          .AssertEvent<NukiDoraEvent>(ev => Assert.AreEqual(0, ev.playerId))
+          .AssertEvent<AddNukiDoraEvent>(ev => Assert.AreEqual(0, ev.playerId));
+
+      (await scenario.WaitInquiry()).ForPlayer(0, pi => pi.AssertAction<PlayTileAction>());
+      scenario.WithPlayer(0, p => {
+        Assert.AreEqual(1, p.hand.nukiDora.Count);
+        Assert.IsTrue(p.hand.nukiDora[0].tile.IsSame(Tile.North));
+        Assert.AreEqual(Game.HAND_SIZE, p.hand.Count);
+      });
+    }
+
+    [TestMethod]
+    public async Task FailNukiOnDealerFirstTurnWhenDisabled() {
+      // Dealer first turn with nukidora disabled: still no pull, even holding
+      // the drawn North. Locks the gating in both directions.
+      var scenario = Builder(DoraOption.Default)
+          .WithPlayer(0, pb => pb.SetFreeTiles("123456789m123p1s4z"))
+          .WithWall(wall => wall.AddRinshan("9p"))
+          .SetFirstJun()
+          .Start(0);
+
+      (await scenario.WaitInquiry()).ForPlayer(0, pi => {
+        pi.AssertAction<PlayTileAction>()
+          .AssertNoAction<NukiDoraAction>();
+      }).AssertAutoFinish(false);
+    }
+
+    [TestMethod]
     public async Task FailNukiWhenDisabled() {
       // Nukidora flag off: no nuki action even holding North.
       var scenario = Builder(DoraOption.Default)
