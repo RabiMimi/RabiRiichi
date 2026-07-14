@@ -47,6 +47,8 @@ namespace RabiRiichi.Server.Connections {
         ret.VersionCheckMsg = versionCheck;
       } else if (obj is ServerInquiryMsg inquiry) {
         ret.Inquiry = inquiry;
+      } else if (obj is PlayerChatMessage chatMsg) {
+        ret.ChatMsg = chatMsg;
       } else if (obj is Empty) {
         // noop
       } else {

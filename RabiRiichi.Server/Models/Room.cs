@@ -58,6 +58,38 @@ namespace RabiRiichi.Server.Models {
       }
     }
 
+    public void BroadcastChatMessage(User sender, PlayerChatMessage chatMsg) {
+      if (isDestroyed) {
+        return;
+      }
+
+      // Validate sticker path to avoid path traversal / external folder access
+      var sticker = chatMsg.Sticker;
+      if (!string.IsNullOrEmpty(sticker)) {
+        if (sticker.Contains("..") || sticker.StartsWith("/") || sticker.StartsWith("\\") || System.IO.Path.IsPathRooted(sticker)) {
+          return;
+        }
+      }
+
+      var broadcastMsg = new PlayerChatMessage {
+        SenderId = sender.id,
+      };
+
+      if (!string.IsNullOrEmpty(chatMsg.Text)) {
+        broadcastMsg.Text = chatMsg.Text;
+      }
+      if (!string.IsNullOrEmpty(chatMsg.Sticker)) {
+        broadcastMsg.Sticker = chatMsg.Sticker;
+      }
+
+      var msg = ProtoUtils.CreateDto(broadcastMsg);
+      foreach (var player in players) {
+        if (player is User user) {
+          user.connection?.Queue(msg);
+        }
+      }
+    }
+
     private bool TryStartGame() {
       if (players.Count != config.playerCount
           || players.Any(p => p.status != UserStatus.Ready)) {
