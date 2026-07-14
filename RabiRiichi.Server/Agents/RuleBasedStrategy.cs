@@ -1,7 +1,6 @@
 using RabiRiichi.Actions;
 using RabiRiichi.Core;
-using System.Collections.Generic;
-using System.Linq;
+using RabiRiichi.Generated.Core;
 using System.Text.Json;
 
 namespace RabiRiichi.Server.Agents {
@@ -42,27 +41,36 @@ namespace RabiRiichi.Server.Agents {
         return Choose(view.Seat, riichiIdx, tileIdx);
       }
 
-      // 4. Plain discard (our own turn).
+      // 4. Self-turn set-asides that compete with the discard: kan (ankan/kakan)
+      //    and nukidora. These are only worth taking when they clearly help, so
+      //    they are evaluated BEFORE the plain discard - otherwise the AI would
+      //    always fall through to discarding and never kan/nuki on its own turn.
+      var selfCall = ChooseSelfTurnCall(view, actions);
+      if (selfCall != null) {
+        return selfCall;
+      }
+
+      // 5. Plain discard (our own turn).
       int discardIdx = actions.FindIndex(a => a is PlayTileAction and not RiichiAction);
       if (discardIdx >= 0 && actions[discardIdx] is PlayTileAction play) {
         int tileIdx = ChooseDiscardIndex(view, play);
         return Choose(view.Seat, discardIdx, tileIdx);
       }
 
-      // 5. Calls (chii/pon/kan) - only when clearly beneficial.
-      int callIdx = ChooseCall(view, actions);
-      if (callIdx >= 0 && actions[callIdx] is IChoiceAction) {
-        // Take the first (best) offered grouping for the chosen call.
-        return Choose(view.Seat, callIdx, 0);
+      // 6. Reactive calls on another player's discard (chii/pon/daiminkan) - only
+      //    when they clearly advance a yaku-bearing hand.
+      var reactiveCall = ChooseReactiveCall(view, actions);
+      if (reactiveCall != null) {
+        return reactiveCall;
       }
 
-      // 6. Confirm-style actions we didn't special-case (e.g. next round).
+      // 7. Confirm-style actions we didn't special-case (e.g. next round).
       int nextRoundIdx = actions.FindIndex(a => a is NextRoundAction);
       if (nextRoundIdx >= 0) {
         return Confirm(view.Seat, nextRoundIdx);
       }
 
-      // 7. Otherwise decline / take the safe default.
+      // 8. Otherwise decline / take the safe default.
       return InquiryResponse.Default(view.Seat);
     }
 
@@ -293,26 +301,350 @@ namespace RabiRiichi.Server.Agents {
 
     #endregion
 
-    #region Call decision
+    #region Call decision - self turn (kan / nukidora)
 
     /// <summary>
-    /// Decide whether to call a meld. Conservative: only call to secure a
-    /// yakuhai triplet (a clear, fast yaku). Otherwise stay concealed to preserve
-    /// menzen value and riichi potential.
-    /// Returns the action index to take, or -1 to skip.
+    /// Classifies a <see cref="KanAction"/> option by matching it against the
+    /// viewer's public state: an option whose 3 base tiles already form a called
+    /// pon is a kakan; an option containing a tile taken from a discard is a
+    /// daiminkan; otherwise it is a concealed ankan.
     /// </summary>
-    public static int ChooseCall(PublicGameView view, IReadOnlyList<IPlayerAction> actions) {
-      // Prefer pon of a value honor (fast, guaranteed yaku).
+    private enum KanKind { Ankan, Kakan, Daiminkan }
+
+    private static KanKind ClassifyKan(PublicGameView view, IReadOnlyList<GameTile> option) {
+      // Kakan: three of the four tiles already sit in an existing called pon.
+      if (option.Count > 0
+          && view.SelfCalled.Any(m => m is Kou && m.IsSame(MenLikeOf(option[0])))) {
+        return KanKind.Kakan;
+      }
+      // Daiminkan: one of the tiles came from an opponent's discard (not tsumo).
+      if (option.Any(t => !t.IsTsumo)) {
+        return KanKind.Daiminkan;
+      }
+      return KanKind.Ankan;
+    }
+
+    // A throwaway single-tile Kou-key wrapper so we can reuse MenLike.IsSame for
+    // "same kind" comparison against a called pon.
+    private static Kou MenLikeOf(GameTile tile) =>
+        new(new[] { tile, tile, tile });
+
+    /// <summary> First index matching the predicate, or -1 (IReadOnlyList has no FindIndex). </summary>
+    private static int IndexOfAction(
+        IReadOnlyList<IPlayerAction> actions, System.Func<IPlayerAction, bool> pred) {
       for (int i = 0; i < actions.Count; i++) {
-        if (actions[i] is PonAction pon && pon.options.Count > 0) {
-          var tiles = pon.options[0].tiles;
-          if (tiles.Count > 0 && IsValueHonor(view, tiles[0].tile)) {
-            return i;
-          }
+        if (pred(actions[i])) {
+          return i;
         }
       }
-      // Everything else (chii, non-yakuhai pon, most kan): skip to stay concealed.
       return -1;
+    }
+
+    /// <summary>
+    /// Considers self-turn set-asides (ankan, kakan, nukidora) that compete with
+    /// the discard. Returns a response if one is worth taking now, else null so
+    /// the caller proceeds to the normal discard. A strong player kans/nukis
+    /// aggressively for the extra dora and rinshan draw, but never while folding
+    /// or when it would damage the hand.
+    /// </summary>
+    private static InquiryResponse ChooseSelfTurnCall(
+        PublicGameView view, IReadOnlyList<IPlayerAction> actions) {
+      // Nukidora (3-player North): always beneficial - a free dora that does not
+      // break concealment. Take it whenever offered.
+      int nukiIdx = IndexOfAction(actions, a => a is NukiDoraAction);
+      if (nukiIdx >= 0 && actions[nukiIdx] is NukiDoraAction nuki && nuki.options.Count > 0) {
+        return Choose(view.Seat, nukiIdx, 0);
+      }
+
+      int kanIdx = IndexOfAction(actions, a => a is KanAction);
+      if (kanIdx < 0 || actions[kanIdx] is not KanAction kan || kan.options.Count == 0) {
+        return null;
+      }
+
+      int bestOption = ChooseSelfKanOption(view, kan);
+      return bestOption >= 0 ? Choose(view.Seat, kanIdx, bestOption) : null;
+    }
+
+    /// <summary>
+    /// Picks which kan option to declare on our own turn, or -1 to decline.
+    /// Evaluates every offered ankan/kakan and keeps the most valuable safe one.
+    /// </summary>
+    private static int ChooseSelfKanOption(PublicGameView view, KanAction kan) {
+      // Under a fold (an opponent is in riichi and we are not close to winning),
+      // avoid kan: it reveals a fresh dora that can only help the aggressor and
+      // gives up a safe discard.
+      bool folding = view.OpponentSeats.Any(view.IsRiichi)
+          && !view.SelfRiichi
+          && SelfBestShanten(view) > 0;
+
+      int bestIdx = -1;
+      double bestScore = 0;
+      for (int i = 0; i < kan.options.Count; i++) {
+        var option = kan.options[i].tiles;
+        if (option.Count == 0) {
+          continue;
+        }
+        var kind = ClassifyKan(view, option);
+        double score = ScoreSelfKan(view, option, kind, folding);
+        if (score > bestScore) {
+          bestScore = score;
+          bestIdx = i;
+        }
+      }
+      return bestIdx;
+    }
+
+    /// <summary>
+    /// Value of declaring a given ankan/kakan (higher = better; 0 or below means
+    /// decline). We reward the guaranteed extra dora indicator and rinshan draw,
+    /// but require the kan not to hurt the hand: an ankan must not raise our
+    /// shanten, and we do not kan while folding.
+    /// </summary>
+    private static double ScoreSelfKan(
+        PublicGameView view, IReadOnlyList<GameTile> option, KanKind kind, bool folding) {
+      if (folding) {
+        return 0;
+      }
+      // The wall must be able to supply a replacement tile; if not, the engine
+      // would not have offered it, but guard anyway.
+      if (view.WallRemaining <= 0) {
+        return 0;
+      }
+
+      double dora = option.Sum(t => view.CountDora(t.tile) + (t.tile.Akadora ? 1 : 0));
+      double baseValue = 5 + dora * 3; // rinshan chance + guaranteed new dora reveal
+
+      if (kind == KanKind.Kakan) {
+        // Kakan almost always gains value (upgrades an existing pon, new dora,
+        // rinshan). The only real risk is being robbed (chankan); we still take
+        // it because we are pushing, but slightly prefer it when tenpai.
+        if (SelfBestShanten(view) == 0) {
+          baseValue += 3;
+        }
+        return baseValue;
+      }
+
+      // Ankan: only if it does not worsen our shanten. Compare the hand's shanten
+      // keeping the four tiles concealed vs. setting them aside as a kan.
+      int before = SelfBestShanten(view);
+      int after = ShantenIfAnkan(view, option);
+      if (after > before) {
+        return 0; // the kan breaks our shape - decline
+      }
+      // A neutral or improving ankan is good; reward keeping/advancing tenpai.
+      if (after == 0) {
+        baseValue += 2;
+      }
+      return baseValue;
+    }
+
+    /// <summary> Shanten of our current concealed hand (free + pending draw). </summary>
+    private static int SelfBestShanten(PublicGameView view) {
+      var hand = new List<GameTile>(view.SelfHand.freeTiles);
+      if (view.SelfHand.pendingTile != null) {
+        hand.Add(view.SelfHand.pendingTile);
+      }
+      return view.ShantenOf(hand);
+    }
+
+    /// <summary>
+    /// Shanten after setting aside the four ankan tiles: they leave the free
+    /// tiles and become a concealed meld, so the remaining hand must still be a
+    /// legal waiting shape.
+    /// </summary>
+    private static int ShantenIfAnkan(PublicGameView view, IReadOnlyList<GameTile> option) {
+      var hand = new List<GameTile>(view.SelfHand.freeTiles);
+      if (view.SelfHand.pendingTile != null) {
+        hand.Add(view.SelfHand.pendingTile);
+      }
+      foreach (var t in option) {
+        hand.RemoveAll(h => ReferenceEquals(h, t));
+      }
+      var called = new List<MenLike>(view.SelfCalled) { new Kan(option, TileSource.Ankan) };
+      return view.ShantenOf(hand, called);
+    }
+
+    #endregion
+
+    #region Call decision - reactive (chii / pon / daiminkan)
+
+    /// <summary>
+    /// Considers calling on another player's discard (chii, pon, or daiminkan).
+    /// Opening the hand sacrifices menzen (and riichi), so a strong player only
+    /// calls when it advances a hand that will still have a yaku and is worth
+    /// opening for. Returns a response, or null to stay concealed.
+    /// </summary>
+    private static InquiryResponse ChooseReactiveCall(
+        PublicGameView view, IReadOnlyList<IPlayerAction> actions) {
+      // Never open the hand once we are in riichi or already tenpai concealed with
+      // a live wait - the concealed hand is worth more.
+      if (view.SelfRiichi) {
+        return null;
+      }
+
+      int bestActionIdx = -1;
+      int bestOptionIdx = 0;
+      double bestScore = 0;
+      for (int i = 0; i < actions.Count; i++) {
+        if (actions[i] is not IChoiceAction) {
+          continue;
+        }
+        switch (actions[i]) {
+          case PonAction pon:
+            EvaluateMeldCall(view, pon.options, isChii: false,
+                ref bestScore, ref bestActionIdx, ref bestOptionIdx, i);
+            break;
+          case ChiiAction chii:
+            EvaluateMeldCall(view, chii.options, isChii: true,
+                ref bestScore, ref bestActionIdx, ref bestOptionIdx, i);
+            break;
+          case KanAction daiminkan:
+            EvaluateDaiminkan(view, daiminkan.options,
+                ref bestScore, ref bestActionIdx, ref bestOptionIdx, i);
+            break;
+        }
+      }
+
+      return bestActionIdx >= 0
+          ? Choose(view.Seat, bestActionIdx, bestOptionIdx)
+          : null;
+    }
+
+    /// <summary>
+    /// Scores every grouping of a pon/chii and keeps the best one across all call
+    /// actions. A call is only accepted when it strictly advances the hand
+    /// (lowers shanten) AND the resulting open hand can still hold a yaku.
+    /// </summary>
+    private static void EvaluateMeldCall(
+        PublicGameView view, IReadOnlyList<ChooseTilesActionOption> options, bool isChii,
+        ref double bestScore, ref int bestActionIdx, ref int bestOptionIdx, int actionIndex) {
+      for (int j = 0; j < options.Count; j++) {
+        var tiles = options[j].tiles;
+        if (tiles.Count == 0) {
+          continue;
+        }
+        double score = ScoreOpenCall(view, tiles, isChii);
+        if (score > bestScore) {
+          bestScore = score;
+          bestActionIdx = actionIndex;
+          bestOptionIdx = j;
+        }
+      }
+    }
+
+    /// <summary>
+    /// Value of opening with a pon/chii using <paramref name="calledTiles"/>
+    /// (the meld's tiles, including the claimed discard). Returns 0 to decline.
+    /// </summary>
+    private static double ScoreOpenCall(
+        PublicGameView view, IReadOnlyList<GameTile> calledTiles, bool isChii) {
+      // The claimed tile is the meld member NOT in our hand; the others are ours.
+      // Removing our contributed tiles and adding the meld must lower shanten.
+      var claimed = calledTiles.FirstOrDefault(t => !t.IsTsumo) ?? calledTiles[0];
+      var fromHand = calledTiles.Where(t => !ReferenceEquals(t, claimed)).ToList();
+
+      int before = SelfBestShanten(view);
+
+      var remaining = new List<GameTile>(view.SelfHand.freeTiles);
+      if (view.SelfHand.pendingTile != null) {
+        remaining.Add(view.SelfHand.pendingTile);
+      }
+      foreach (var t in fromHand) {
+        int at = remaining.FindIndex(h => h.tile.IsSame(t.tile));
+        if (at < 0) {
+          return 0; // we do not actually hold the tiles - should not happen
+        }
+        remaining.RemoveAt(at);
+      }
+      var meld = isChii ? (MenLike)new Shun(calledTiles) : new Kou(calledTiles);
+      var called = new List<MenLike>(view.SelfCalled) { meld };
+      int after = view.ShantenOf(remaining, called);
+
+      // Must strictly advance the hand to justify giving up menzen.
+      if (after >= before) {
+        return 0;
+      }
+
+      // The open hand must be able to finish with a yaku. Without a guaranteed
+      // yaku source, an open hand often cannot win at all - decline.
+      if (!OpenHandCanHaveYaku(view, calledTiles, called, remaining, isChii)) {
+        return 0;
+      }
+
+      double score = 100; // base value of advancing toward an open win
+      score += (before - after) * 40; // reward bigger shanten jumps
+      score += calledTiles.Sum(t => view.CountDora(t.tile) + (t.tile.Akadora ? 1 : 0)) * 10;
+      if (after == 0) {
+        score += 30; // calling directly into tenpai is especially strong
+      }
+      return score;
+    }
+
+    /// <summary>
+    /// Whether an open hand built with the given meld can plausibly complete with
+    /// a yaku (a hard requirement to win open). Recognizes the fast, reliable
+    /// open yaku: yakuhai, tanyao, and full flushes (honitsu / chinitsu).
+    /// </summary>
+    private static bool OpenHandCanHaveYaku(
+        PublicGameView view, IReadOnlyList<GameTile> calledTiles,
+        IReadOnlyList<MenLike> allCalled, IReadOnlyList<GameTile> remaining, bool isChii) {
+      // Yakuhai: ponning a value honor guarantees a yaku outright.
+      if (!isChii && IsValueHonor(view, calledTiles[0].tile)) {
+        return true;
+      }
+
+      // Gather every tile the finished hand would contain (concealed + all melds).
+      var all = new List<Tile>();
+      foreach (var t in remaining) {
+        all.Add(t.tile);
+      }
+      foreach (var meld in allCalled) {
+        foreach (var t in meld) {
+          all.Add(t.tile);
+        }
+      }
+
+      // Tanyao: no terminals or honors anywhere.
+      if (all.All(t => t.IsMPS && t.Num is >= 2 and <= 8)) {
+        return true;
+      }
+
+      // Honitsu / chinitsu: a single suit (+ honors for honitsu).
+      var suits = all.Where(t => t.IsMPS).Select(t => t.Suit).Distinct().ToList();
+      if (suits.Count <= 1) {
+        return true;
+      }
+
+      // An already-open hand that had a yaku source keeps it; but with mixed suits
+      // and no honor/tanyao path, opening further is not clearly winnable.
+      return false;
+    }
+
+    /// <summary>
+    /// Scores a daiminkan (open kan on a discard). Like a yakuhai pon it breaks
+    /// menzen, so we only take it for a value honor that advances the hand; the
+    /// extra dora + rinshan make it slightly better than the equivalent pon.
+    /// </summary>
+    private static void EvaluateDaiminkan(
+        PublicGameView view, IReadOnlyList<ChooseTilesActionOption> options,
+        ref double bestScore, ref int bestActionIdx, ref int bestOptionIdx, int actionIndex) {
+      // Do not open-kan while folding.
+      if (view.OpponentSeats.Any(view.IsRiichi) && SelfBestShanten(view) > 0) {
+        return;
+      }
+      for (int j = 0; j < options.Count; j++) {
+        var tiles = options[j].tiles;
+        if (tiles.Count == 0 || !IsValueHonor(view, tiles[0].tile)) {
+          continue;
+        }
+        double score = 90
+            + tiles.Sum(t => view.CountDora(t.tile) + (t.tile.Akadora ? 1 : 0)) * 10;
+        if (score > bestScore) {
+          bestScore = score;
+          bestActionIdx = actionIndex;
+          bestOptionIdx = j;
+        }
+      }
     }
 
     #endregion

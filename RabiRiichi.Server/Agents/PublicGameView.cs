@@ -1,7 +1,5 @@
 using RabiRiichi.Core;
 using RabiRiichi.Patterns;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace RabiRiichi.Server.Agents {
   /// <summary>
@@ -48,6 +46,15 @@ namespace RabiRiichi.Server.Agents {
 
     /// <summary> The viewer's own hand (private to the viewer, so fair to read). </summary>
     public Hand SelfHand => Self.hand;
+
+    /// <summary> Whether the viewer's hand is still fully concealed (no calls). </summary>
+    public bool SelfMenzen => SelfHand.menzen;
+
+    /// <summary> Whether the viewer has declared riichi. </summary>
+    public bool SelfRiichi => SelfHand.riichi;
+
+    /// <summary> The viewer's own called (open) melds. </summary>
+    public IReadOnlyList<MenLike> SelfCalled => SelfHand.called;
 
     public int PlayerCount => game.config.playerCount;
 
@@ -104,7 +111,8 @@ namespace RabiRiichi.Server.Agents {
       int count = 0;
 
       foreach (var tile in SelfHand.freeTiles) {
-        if (tile.tile.WithoutDora == target) count++;
+        if (tile.tile.WithoutDora == target)
+          count++;
       }
       if (SelfHand.pendingTile != null && SelfHand.pendingTile.tile.WithoutDora == target) {
         count++;
@@ -113,15 +121,18 @@ namespace RabiRiichi.Server.Agents {
         var hand = PlayerAt(seat).hand;
         foreach (var meld in hand.called) {
           foreach (var tile in meld) {
-            if (tile.tile.WithoutDora == target) count++;
+            if (tile.tile.WithoutDora == target)
+              count++;
           }
         }
         foreach (var tile in hand.discarded) {
-          if (tile.tile.WithoutDora == target) count++;
+          if (tile.tile.WithoutDora == target)
+            count++;
         }
       }
       foreach (var indicator in RevealedDoraIndicators) {
-        if (indicator.WithoutDora == target) count++;
+        if (indicator.WithoutDora == target)
+          count++;
       }
       return count;
     }
@@ -168,6 +179,36 @@ namespace RabiRiichi.Server.Agents {
         }
       }
       return new DiscardEval(discard, shanten, ukeire);
+    }
+
+    /// <summary>
+    /// Best (lowest) shanten of a hypothetical concealed holding, built from the
+    /// viewer's OWN tiles plus their existing called melds. The holding must be a
+    /// legal size (13 or 14 counting melds as 3 each); otherwise an unreachable
+    /// shanten is reported. Runs on a throwaway <see cref="Hand"/>, so it never
+    /// mutates game state or reads hidden tiles.
+    /// </summary>
+    public int ShantenOf(IReadOnlyList<GameTile> freeTiles) {
+      return ShantenOf(freeTiles, SelfHand.called);
+    }
+
+    /// <summary>
+    /// Shanten of a hypothetical holding with an explicit meld set. Used to score
+    /// calls (chii/pon/kan) that both add a meld and consume free tiles.
+    /// </summary>
+    public int ShantenOf(IReadOnlyList<GameTile> freeTiles, IReadOnlyList<MenLike> called) {
+      var tempHand = new Hand {
+        player = Self,
+        freeTiles = [.. freeTiles],
+        called = [.. called],
+      };
+      // The resolver expects a 13-tile (waiting) or 14-tile (with incoming) hand,
+      // melds counting as 3. For a post-call hand we evaluate the 13-tile wait.
+      if (tempHand.Count is not Game.HAND_SIZE and not (Game.HAND_SIZE + 1)) {
+        return int.MaxValue;
+      }
+      var resolver = game.Get<PatternResolver>();
+      return resolver.ResolveShanten(tempHand, null, out _, Game.HAND_SIZE);
     }
   }
 }

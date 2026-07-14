@@ -1,7 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Actions;
 using RabiRiichi.Core;
-using RabiRiichi.Events.InGame;
+using RabiRiichi.Generated.Core;
 using RabiRiichi.Patterns;
 using RabiRiichi.Server.Agents;
 using RabiRiichi.Tests.Scenario;
@@ -259,6 +259,237 @@ namespace RabiRiichi.Tests.Server.Agents {
       var resp = RuleBasedStrategy.Decide(view, InquiryWith(0, action));
       int encoded = JsonSerializer.Deserialize<int>(resp.response);
       Assert.IsTrue(encoded >= 0 && encoded < action.options.Count);
+    }
+
+    #endregion
+
+    #region Kan / Nukidora / Call decisions
+
+    /// <summary> Builds a self-turn tsumo GameTile (discardInfo == null). </summary>
+    private static GameTile Tsumo(string tile, int traceId) =>
+        new(new Tile(tile), traceId);
+
+    /// <summary> Builds a tile taken from an opponent's discard (not tsumo). </summary>
+    private static GameTile Claimed(Game game, string tile, int traceId, int fromSeat) {
+      var gt = new GameTile(new Tile(tile), traceId);
+      gt.discardInfo = new DiscardInfo(game.GetPlayer(fromSeat), DiscardReason.Draw, traceId);
+      return gt;
+    }
+
+    [TestMethod]
+    public void Decide_TakesKakanWhenPushing() {
+      // Seat 0 already ponned 1z (east) and holds the fourth 1z as its draw.
+      // Kakan upgrades the pon, reveals a new dora, and draws from the dead wall,
+      // so a pushing player should take it rather than discard.
+      // Free tiles must total 10 so that with the called pon (counts as 3) the
+      // hand is a legal 13. The fourth 1z is the freshly drawn pending tile.
+      var game = BuildGame(b => b
+          .WithPlayer(0, p => p.SetFreeTiles("234567p2345s").AddCalled("111z", 0, 1)));
+      var player = game.GetPlayer(0);
+      var draw = Tsumo("1z", 900);
+      draw.player = player;
+      player.hand.pendingTile = draw;
+      var view = ViewFor(game, 0);
+
+      // The existing pon of 1z as a called Kou.
+      var pon = (Kou)player.hand.called.First(m => m is Kou);
+      var kakanOption = new List<GameTile>(pon) { draw };
+      var kan = new KanAction(0, new List<List<GameTile>> { kakanOption });
+      // A discard is also on the table: the kan must be chosen over tsumogiri,
+      // which is exactly the case the old strategy mishandled.
+      var hand14 = new List<GameTile>(player.hand.freeTiles) { draw };
+      var play = new PlayTileAction(player, hand14, hand14[0]);
+
+      var inquiry = InquiryWith(0, kan, play);
+      var resp = RuleBasedStrategy.Decide(view, inquiry);
+      Assert.AreEqual(inquiry.actions.IndexOf(kan), resp.index,
+          "AI should declare the kakan when pushing, not just discard");
+    }
+
+    [TestMethod]
+    public void Decide_TakesAnkanWhenItKeepsTenpai() {
+      // Concealed 2345667p 234567s + four 1p (drawn the 4th). Ankan of 1p leaves a
+      // clean waiting shape, so the AI should kan for the extra dora.
+      var game = BuildGame(b => b
+          .WithPlayer(0, p => p.SetFreeTiles("111p234567p2345s")));
+      var player = game.GetPlayer(0);
+      // Draw the fourth 1p, giving four concealed 1p.
+      var draw = Tsumo("1p", 901);
+      draw.player = player;
+      player.hand.pendingTile = draw;
+      var view = ViewFor(game, 0);
+
+      var fourOfAKind = player.hand.freeTiles
+          .Where(t => t.tile.IsSame(new Tile("1p")))
+          .Concat(new[] { draw })
+          .ToList();
+      var kan = new KanAction(0, new List<List<GameTile>> { fourOfAKind });
+      // Offer a discard too: the ankan must be preferred over tsumogiri.
+      var hand14 = new List<GameTile>(player.hand.freeTiles) { draw };
+      var play = new PlayTileAction(player, hand14, hand14[0]);
+
+      var inquiry = InquiryWith(0, kan, play);
+      var resp = RuleBasedStrategy.Decide(view, inquiry);
+      Assert.AreEqual(inquiry.actions.IndexOf(kan), resp.index,
+          "AI should ankan when it does not damage the hand");
+    }
+
+    [TestMethod]
+    public void Decide_DoesNotKanWhileFolding() {
+      // An opponent is in riichi and seat 0 is far from tenpai: taking an ankan
+      // only reveals a dora for the aggressor and wastes a safe turn.
+      var game = BuildGame(b => b
+          .WithPlayer(0, p => p.SetFreeTiles("111p258m369s1234z"))
+          .WithPlayer(1, p => p
+              .SetFreeTiles("123456789p1234s")
+              .SetRiichiTile("9s")));
+      var player = game.GetPlayer(0);
+      var draw = Tsumo("1p", 902);
+      draw.player = player;
+      player.hand.pendingTile = draw;
+      var view = ViewFor(game, 0);
+
+      var fourOfAKind = player.hand.freeTiles
+          .Where(t => t.tile.IsSame(new Tile("1p")))
+          .Concat(new[] { draw })
+          .ToList();
+      var kan = new KanAction(0, new List<List<GameTile>> { fourOfAKind });
+      // Also offer a plain discard so declining the kan is a real alternative.
+      var hand14 = new List<GameTile>(player.hand.freeTiles) { draw };
+      var play = new PlayTileAction(player, hand14, hand14[0]);
+
+      var inquiry = InquiryWith(0, kan, play);
+      var resp = RuleBasedStrategy.Decide(view, inquiry);
+      Assert.AreNotEqual(inquiry.actions.IndexOf(kan), resp.index,
+          "AI should not kan while folding against a riichi");
+    }
+
+    [TestMethod]
+    public void Decide_AlwaysTakesNukidora() {
+      // Nukidora is a free dora that does not break concealment; always take it.
+      var game = BuildGame(b => b
+          .WithPlayer(0, p => p.SetFreeTiles("123456789p123s4z")));
+      var player = game.GetPlayer(0);
+      var view = ViewFor(game, 0);
+
+      var north = player.hand.freeTiles.First(t => t.tile.IsSame(new Tile("4z")));
+      var nuki = new NukiDoraAction(0, new List<List<GameTile>> { new() { north } });
+      // Offer a discard too; the nuki should still win.
+      var hand14 = new List<GameTile>(player.hand.freeTiles);
+      var play = new PlayTileAction(player, hand14, hand14[0]);
+
+      var inquiry = InquiryWith(0, nuki, play);
+      var resp = RuleBasedStrategy.Decide(view, inquiry);
+      Assert.AreEqual(inquiry.actions.IndexOf(nuki), resp.index,
+          "AI should always pull North for the free dora");
+    }
+
+    [TestMethod]
+    public void Decide_PonsValueHonorToAdvanceHand() {
+      // Seat 0 holds two east (round + seat wind on East round for the dealer) and
+      // an otherwise fast hand; ponning the third secures a yakuhai and advances.
+      var game = BuildGame(b => b
+          .WithPlayer(0, p => p.SetFreeTiles("11z23455p23456s7s")));
+      var player = game.GetPlayer(0);
+      var view = ViewFor(game, 0);
+
+      var own = player.hand.freeTiles.Where(t => t.tile.IsSame(new Tile("1z"))).ToList();
+      var claimed = Claimed(game, "1z", 903, 1);
+      var group = new List<GameTile> { own[0], own[1], claimed };
+      var pon = new PonAction(0, new List<List<GameTile>> { group });
+
+      var inquiry = InquiryWith(0, pon);
+      var resp = RuleBasedStrategy.Decide(view, inquiry);
+      Assert.AreEqual(inquiry.actions.IndexOf(pon), resp.index,
+          "AI should pon a value honor that advances the hand");
+    }
+
+    [TestMethod]
+    public void Decide_DoesNotPonNonYakuhaiIntoAYakulessHand() {
+      // Ponning a non-yakuhai triplet from a mixed-suit hand yields no realistic
+      // yaku, so the open hand could never win: the AI must stay concealed.
+      var game = BuildGame(b => b
+          .WithPlayer(0, p => p.SetFreeTiles("22m567p13579s99p1z")));
+      var player = game.GetPlayer(0);
+      var view = ViewFor(game, 0);
+
+      var own = player.hand.freeTiles.Where(t => t.tile.IsSame(new Tile("2m"))).ToList();
+      var claimed = Claimed(game, "2m", 904, 1);
+      var group = new List<GameTile> { own[0], own[1], claimed };
+      var pon = new PonAction(0, new List<List<GameTile>> { group });
+
+      var inquiry = InquiryWith(0, pon);
+      var resp = RuleBasedStrategy.Decide(view, inquiry);
+      Assert.AreNotEqual(inquiry.actions.IndexOf(pon), resp.index,
+          "AI should not open a yakuless hand with a non-yakuhai pon");
+    }
+
+    [TestMethod]
+    public void Decide_ChiiWhenItReachesTenpaiWithTanyao() {
+      // A pure tanyao shape one tile from tenpai; chii-ing 4s5s(+3s) completes a
+      // run into tenpai and the all-simples hand keeps a yaku, so a strong player
+      // opens for the fast, valid hand.
+      var game = BuildGame(b => b
+          .WithPlayer(0, p => p.SetFreeTiles("234m456p22s45s678s")));
+      var player = game.GetPlayer(0);
+      var view = ViewFor(game, 0);
+
+      var own = new List<GameTile> {
+        player.hand.freeTiles.First(t => t.tile.IsSame(new Tile("4s"))),
+        player.hand.freeTiles.First(t => t.tile.IsSame(new Tile("5s"))),
+      };
+      var claimed = Claimed(game, "3s", 905, 3);
+      var group = new List<GameTile> { claimed, own[0], own[1] };
+      var chii = new ChiiAction(0, new List<List<GameTile>> { group });
+
+      var inquiry = InquiryWith(0, chii);
+      var resp = RuleBasedStrategy.Decide(view, inquiry);
+      Assert.AreEqual(inquiry.actions.IndexOf(chii), resp.index,
+          "AI should chii into a tenpai tanyao hand");
+    }
+
+    [TestMethod]
+    public void Decide_DoesNotChiiWhenItWouldStripTheOnlyYaku() {
+      // A mixed-suit hand with terminals: chii-ing here opens a hand with no
+      // tanyao/yakuhai/flush path, so it cannot win open. Stay concealed.
+      var game = BuildGame(b => b
+          .WithPlayer(0, p => p.SetFreeTiles("13m456p789p123s99s")));
+      var player = game.GetPlayer(0);
+      var view = ViewFor(game, 0);
+
+      var own = new List<GameTile> {
+        player.hand.freeTiles.First(t => t.tile.IsSame(new Tile("1m"))),
+        player.hand.freeTiles.First(t => t.tile.IsSame(new Tile("3m"))),
+      };
+      var claimed = Claimed(game, "2m", 906, 3);
+      var group = new List<GameTile> { own[0], claimed, own[1] };
+      var chii = new ChiiAction(0, new List<List<GameTile>> { group });
+
+      var inquiry = InquiryWith(0, chii);
+      var resp = RuleBasedStrategy.Decide(view, inquiry);
+      Assert.AreNotEqual(inquiry.actions.IndexOf(chii), resp.index,
+          "AI should not open a yakuless terminal hand with a chii");
+    }
+
+    [TestMethod]
+    public void Decide_DoesNotCallAfterRiichi() {
+      // Once in riichi the concealed hand is locked; never open with a pon.
+      var game = BuildGame(b => b
+          .WithPlayer(0, p => p
+              .SetFreeTiles("11z234567p23456s")
+              .SetRiichiTile("9s")));
+      var player = game.GetPlayer(0);
+      var view = ViewFor(game, 0);
+
+      var own = player.hand.freeTiles.Where(t => t.tile.IsSame(new Tile("1z"))).ToList();
+      var claimed = Claimed(game, "1z", 907, 1);
+      var group = new List<GameTile> { own[0], own[1], claimed };
+      var pon = new PonAction(0, new List<List<GameTile>> { group });
+
+      var inquiry = InquiryWith(0, pon);
+      var resp = RuleBasedStrategy.Decide(view, inquiry);
+      Assert.AreNotEqual(inquiry.actions.IndexOf(pon), resp.index,
+          "AI in riichi must not open its hand");
     }
 
     #endregion
