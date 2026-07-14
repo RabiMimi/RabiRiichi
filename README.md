@@ -15,14 +15,14 @@ See [Documentation](https://riichi-docs.rabimimi.com) for more information. (Cur
 
 ## Hosted Servers
 
-| Environment | Address                                                            |
-| ----------- | ----------------------------------------------------------------- |
-| Production  | [RabiRiichi 兔兔立直](https://riichi.rabimimi.com)                  |
-| Development | [RabiRiichi-dev 兔兔开发](https://riichi-dev.rabimimi.com)                 |
+| Environment | Address                                                    |
+| ----------- | ---------------------------------------------------------- |
+| Production  | [RabiRiichi 兔兔立直](https://riichi.rabimimi.com)         |
+| Development | [RabiRiichi-dev 兔兔开发](https://riichi-dev.rabimimi.com) |
 
 ## Development
 
-To develop, clone this repository and open `RabiRiichi.sln`. [.NET 6 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/6.0) is required.
+To develop, clone this repository and open `RabiRiichi.sln`. [.NET 9 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0) is required.
 
 This repository uses git submodule to manage shared proto files and gRPC services. To init git submodule, run:
 
