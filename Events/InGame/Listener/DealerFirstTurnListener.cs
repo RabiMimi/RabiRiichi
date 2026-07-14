@@ -35,6 +35,9 @@ namespace RabiRiichi.Events.InGame.Listener {
       if (game.TryGet<KanResolver>(out var resolver3)) {
         yield return resolver3;
       }
+      if (game.TryGet<NukiDoraResolver>(out var resolverNuki)) {
+        yield return resolverNuki;
+      }
       if (game.TryGet<TenhouResolver>(out var resolver4)) {
         yield return resolver4;
       }

@@ -64,24 +64,30 @@ namespace RabiRiichi.Server.Connections {
     public static void AddRoomListeners(this User user, RoomTaskQueue taskQueue) {
       user.connection.OnReceive += dto => {
         var msg = dto.ClientMsg?.RoomUpdateMsg;
-        if (msg == null) {
-          return;
+        if (msg != null) {
+          _ = taskQueue.Execute(() => {
+            switch (msg.Status) {
+              case UserStatus.Ready:
+                user.room?.GetReady(user);
+                break;
+              case UserStatus.InRoom:
+                user.room?.CancelReady(user);
+                break;
+              case UserStatus.None:
+                user.room?.RemovePlayer(user);
+                break;
+              default:
+                break;
+            }
+          });
         }
-        _ = taskQueue.Execute(() => {
-          switch (msg.Status) {
-            case UserStatus.Ready:
-              user.room?.GetReady(user);
-              break;
-            case UserStatus.InRoom:
-              user.room?.CancelReady(user);
-              break;
-            case UserStatus.None:
-              user.room?.RemovePlayer(user);
-              break;
-            default:
-              break;
-          }
-        });
+
+        var chatMsg = dto.ClientMsg?.ChatMsg;
+        if (chatMsg != null) {
+          _ = taskQueue.Execute(() => {
+            user.room?.BroadcastChatMessage(user, chatMsg);
+          });
+        }
       };
 
       user.connection.OnDisconnectContext += rabiCtx => {
