@@ -13,6 +13,8 @@ namespace RabiRiichi.Events.InGame.Listener {
       freeTiles.Remove(incoming);
       incoming.player = null;
       incoming.source = TileSource.Wall;
+      // The dealer's first tile is treated as their jun-1 draw.
+      incoming.drawnJun = ev.player.hand.jun;
       ev.player.hand.pendingTile = incoming;
       foreach (var resolver in GetDealerFirstTurnResolvers(ev.game)) {
         resolver.Resolve(ev.player, incoming, ev.waitEvent.inquiry);

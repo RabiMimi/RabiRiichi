@@ -616,6 +616,7 @@ namespace RabiRiichi.Communication.Proto {
         From = info.from,
         Reason = info.reason,
         Time = info.time,
+        Jun = info.jun,
       };
     }
 
@@ -627,6 +628,7 @@ namespace RabiRiichi.Communication.Proto {
         FormTime = tile.formTime,
         Source = tile.source,
         DiscardInfo = ConvertDiscardInfo(tile.discardInfo),
+        DrawnJun = tile.drawnJun,
       };
     }
 

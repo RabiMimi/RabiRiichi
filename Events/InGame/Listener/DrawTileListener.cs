@@ -41,6 +41,10 @@ namespace RabiRiichi.Events.InGame.Listener {
 
     public static Task DrawTile(DrawTileEvent e) {
       e.tile = DrawFrom(e);
+      // Record the drawer's current jun on the tile. IncreaseJunEvent is always
+      // queued immediately before DrawTileEvent, so hand.jun already reflects the
+      // turn this tile is drawn on.
+      e.tile.drawnJun = e.player.hand.jun;
       e.player.hand.pendingTile = e.tile;
       var resolvers = GetDrawTileResolvers(e.game);
       foreach (var resolver in resolvers) {
