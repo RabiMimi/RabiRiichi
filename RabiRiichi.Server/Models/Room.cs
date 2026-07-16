@@ -66,7 +66,7 @@ namespace RabiRiichi.Server.Models {
       // Validate sticker path to avoid path traversal / external folder access
       var sticker = chatMsg.Sticker;
       if (!string.IsNullOrEmpty(sticker)) {
-        if (sticker.Contains("..") || sticker.StartsWith("/") || sticker.StartsWith("\\") || System.IO.Path.IsPathRooted(sticker)) {
+        if (sticker.Contains("..") || sticker.StartsWith('/') || sticker.StartsWith('\\') || Path.IsPathRooted(sticker)) {
           return;
         }
       }
