@@ -1,13 +1,16 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Generated.Core;
+using RabiRiichi.Generated.Actions;
 using RabiRiichi.Server.Services;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using RabiRiichi.Actions;
 using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
 using RabiRiichi.Communication;
@@ -134,6 +137,55 @@ namespace RabiRiichi.Tests.Server.Services {
 
       Assert.IsTrue(captured.Contains(furitenEvent),
           "God-view tee should capture a seat-1 private furiten event.");
+    }
+
+    [TestMethod]
+    public void TestInquirySerializationCarriesTenpaiInfos() {
+      // Regression for GH #91: the replay log records inquiries (not just
+      // events) so the replay client can show the tenpai indicator. Verify a
+      // play-tile inquiry serialized from the owner's seat keeps its candidate
+      // tenpai waits — that is the data the replay UI reads.
+      var config = new GameConfig();
+      var mockActionCenter = new Mock<IActionCenter>();
+      config.actionCenter = mockActionCenter.Object;
+
+      var game = new Game(config);
+      var player = game.GetPlayer(0);
+      player.Reset();
+
+      var discardTile = new GameTile(new Tile(TileSuit.M, 1), 1) { player = player };
+      var winningTile = new Tile(TileSuit.M, 4);
+      var action = new PlayTileAction(0, [discardTile], discardTile) {
+        candidates = [
+          new DiscardCandidate {
+            tile = discardTile,
+            tenpaiInfos = [
+              new TenpaiInfo {
+                winningTile = winningTile,
+                han = 1,
+                yaku = 1,
+                fu = 30,
+                yakuman = 0,
+                points = 1000,
+              },
+            ],
+          },
+        ],
+      };
+      var inquiry = new SinglePlayerInquiry(0);
+      inquiry.AddAction(action);
+
+      var proto = game.SerializeProto<SinglePlayerInquiryMsg>(inquiry, 0);
+
+      Assert.IsNotNull(proto, "Inquiry should serialize from the owner's seat");
+      var playTile = proto.Actions
+          .Select(a => a.PlayTileAction)
+          .FirstOrDefault(a => a != null);
+      Assert.IsNotNull(playTile, "Serialized inquiry should contain the play-tile action");
+      Assert.AreEqual(1, playTile.Candidates.Count, "Discard candidate should survive");
+      Assert.AreEqual(1, playTile.Candidates[0].TenpaiInfos.Count,
+          "Candidate tenpai waits must be recorded for the replay tenpai indicator");
+      Assert.AreEqual((int)winningTile.Val, playTile.Candidates[0].TenpaiInfos[0].WinningTile);
     }
 
     [TestMethod]
