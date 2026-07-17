@@ -11,7 +11,7 @@
 
 RabiRiichi is a riichi mahjong module for .NET Core.
 
-See [Documentation](https://riichi-docs.rabimimi.com) for more information. (Currently only available in Simplified Chinese)
+See [Documentation](https://riichi-docs.rabimimi.com) for more information.
 
 ## Hosted Servers
 
