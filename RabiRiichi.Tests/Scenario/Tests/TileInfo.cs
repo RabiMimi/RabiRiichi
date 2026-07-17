@@ -99,8 +99,20 @@ namespace RabiRiichi.Tests.Scenario.Tests {
           .AssertNoMoreActions()
       ).AssertAutoFinish();
 
+      var postPonInquiry = await scenario.WaitInquiry();
+      scenario.WithPlayer(2, player => {
+        var ponTiles = player.hand.called.Single().ToArray();
+        var ownTiles = ponTiles.Where(tile => tile.discardInfo == null).ToArray();
+        var claimedTile = ponTiles.Single(tile => tile.discardInfo != null);
+
+        Assert.AreEqual(2, ownTiles.Length);
+        Assert.IsTrue(ownTiles.All(tile => tile.formJun == player.hand.jun));
+        Assert.AreEqual(0, claimedTile.formJun,
+            "the claimed discard keeps its discard jun instead of a form jun");
+      });
+
       // Seat 2 must now discard from hand.
-      (await scenario.WaitInquiry()).ForPlayer(2, inq => inq
+      postPonInquiry.ForPlayer(2, inq => inq
           .ChooseTile<PlayTileAction>("3z")
           .AssertNoMoreActions()
       ).AssertAutoFinish();

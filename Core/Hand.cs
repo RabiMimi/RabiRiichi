@@ -133,6 +133,14 @@ namespace RabiRiichi.Core {
         tile.source = source;
         if (tile.formTime == -1) {
           tile.formTime = game.Time;
+          // A call advances the caller's jun immediately after the meld is
+          // formed; self-contained kans form during the current jun. Claimed
+          // discards retain their own discard jun instead of a form jun.
+          if (tile.discardInfo == null) {
+            tile.formJun = source is TileSource.Chii or TileSource.Pon or TileSource.Daiminkan
+                ? jun + 1
+                : jun;
+          }
         }
         Remove(tile);
       }

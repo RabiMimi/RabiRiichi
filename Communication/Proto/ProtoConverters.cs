@@ -629,6 +629,7 @@ namespace RabiRiichi.Communication.Proto {
         Source = tile.source,
         DiscardInfo = ConvertDiscardInfo(tile.discardInfo),
         DrawnJun = tile.drawnJun,
+        FormJun = tile.formJun,
       };
     }
 
