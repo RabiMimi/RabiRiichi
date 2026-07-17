@@ -56,13 +56,32 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
     }
 
     [TestMethod]
-    public void LlmPromptName_IsGemiTanukiInZhs() {
-      // Prompt-only name (embedded in the LLM prompt); humans get the localized
-      // name client-side via the @llm: sentinel.
+    public void LlmPromptName_MatchesClientLlmLabels() {
+      // Prompt-only name (embedded in the LLM prompt) MUST match the web
+      // client's ai.llm.* strings, so a nameless bot knows the name humans see
+      // (client localizes the @llm: sentinel to the same label).
       Assert.AreEqual("Gemi狸",
           AiLocalization.LlmPromptName("", LlmProvider.Gemini, "zhs"));
-      Assert.AreEqual("Gemini",
+      Assert.AreEqual("Gemibo",
           AiLocalization.LlmPromptName("", LlmProvider.Gemini, "en"));
+      Assert.AreEqual("Gemiヌ",
+          AiLocalization.LlmPromptName("", LlmProvider.Gemini, "ja"));
+      Assert.AreEqual("OpenAI",
+          AiLocalization.LlmPromptName("", LlmProvider.Openai, "zhs"));
+      Assert.AreEqual("OpenAI",
+          AiLocalization.LlmPromptName("", LlmProvider.Openai, "en"));
+      Assert.AreEqual("OpenAI",
+          AiLocalization.LlmPromptName("", LlmProvider.Openai, "ja"));
+    }
+
+    [TestMethod]
+    public void LlmPromptName_FallsBackToGenericLlmLabel() {
+      // An unknown provider must not leak a raw enum name; it uses the client's
+      // generic "LLM" label instead.
+      Assert.AreEqual("LLM",
+          AiLocalization.LlmPromptName("", (LlmProvider)999, "en"));
+      Assert.AreEqual("LLM",
+          AiLocalization.LlmPromptName("", (LlmProvider)999, "zhs"));
     }
 
     [TestMethod]

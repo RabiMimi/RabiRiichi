@@ -61,24 +61,35 @@ namespace RabiRiichi.Server.Agents.Llm {
         };
 
     // PROMPT-ONLY names for an LLM AI that has no custom display name, so the
-    // model can refer to itself / other LLM bots naturally. These mirror the
-    // labels the client localizes for the same sentinel; the client's copy is
-    // authoritative for what humans see. Gemini in zhs is the product-requested
-    // "Gemi狸".
+    // model can refer to itself / other LLM bots by the SAME name a human sees.
+    // These MUST match the web client's `ai.llm.*` locale strings
+    // (src/locales/*.json), because when no custom name is set the client shows
+    // the localized label for the `@llm:{provider}` sentinel; if the server used
+    // a different name here, the bot would be unaware of its own display name.
     private static readonly Dictionary<string, Dictionary<LlmProvider, string>> LlmPromptNames =
         new() {
           [LangZhs] = new() {
             [LlmProvider.Gemini] = "Gemi狸",
-            [LlmProvider.Openai] = "AI",
+            [LlmProvider.Openai] = "OpenAI",
           },
           [LangEn] = new() {
-            [LlmProvider.Gemini] = "Gemini",
-            [LlmProvider.Openai] = "AI",
+            [LlmProvider.Gemini] = "Gemibo",
+            [LlmProvider.Openai] = "OpenAI",
           },
           [LangJa] = new() {
-            [LlmProvider.Gemini] = "ジェミたぬき",
-            [LlmProvider.Openai] = "AI",
+            [LlmProvider.Gemini] = "Gemiヌ",
+            [LlmProvider.Openai] = "OpenAI",
           },
+        };
+
+    // Generic LLM label, matching the client's `ai.llm.generic` for an unknown
+    // provider. Used as the fallback so a nameless bot is still named the same
+    // way humans see it (never a raw enum like "GEMINI").
+    private static readonly Dictionary<string, string> LlmGenericNames =
+        new() {
+          [LangZhs] = "LLM",
+          [LangEn] = "LLM",
+          [LangJa] = "LLM",
         };
 
     /// <summary>
@@ -113,7 +124,10 @@ namespace RabiRiichi.Server.Agents.Llm {
       if (LlmPromptNames[LangEn].TryGetValue(provider, out var en)) {
         return en;
       }
-      return provider.ToString();
+      // Unknown provider: mirror the client's generic LLM label, never a raw enum.
+      return LlmGenericNames.TryGetValue(lang, out var generic)
+          ? generic
+          : LlmGenericNames[LangEn];
     }
   }
 }
