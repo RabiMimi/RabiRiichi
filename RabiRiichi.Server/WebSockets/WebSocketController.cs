@@ -54,9 +54,19 @@ namespace RabiRiichi.Server.WebSockets {
       });
     }
 
-    private Task HandlePrivate(User user, Connection connection, ClientMessageDto msg) {
-      return taskQueue.Execute(queue => {
-        try {
+    private async Task HandlePrivate(User user, Connection connection, ClientMessageDto msg) {
+      try {
+        // AddAi is handled separately: LLM validation makes a network call that
+        // must NOT run inside the serialized room task queue (it would stall all
+        // rooms). AddAiAsync validates outside the queue and only queues the
+        // fast room mutation.
+        if (msg.ClientRequest?.AddAi != null) {
+          var res = await roomService.AddAiAsync(msg.ClientRequest.AddAi, user);
+          connection.Queue(ProtoUtils.CreateDto(res, msg.Id));
+          return;
+        }
+
+        await taskQueue.Execute(queue => {
           if (msg.ClientRequest?.CreateRoom != null) {
             connection.Queue(ProtoUtils.CreateDto(roomService.CreateRoom(msg.ClientRequest.CreateRoom, queue.roomList, user), msg.Id));
           } else if (msg.ClientRequest?.CreateUser != null) {
@@ -67,10 +77,6 @@ namespace RabiRiichi.Server.WebSockets {
             var req = msg.ClientRequest.JoinRoom;
             var res = roomService.JoinRoom(req, queue.roomList, user);
             connection.Queue(ProtoUtils.CreateDto(res, msg.Id));
-          } else if (msg.ClientRequest?.AddAi != null) {
-            var req = msg.ClientRequest.AddAi;
-            var res = roomService.AddAi(req, queue.roomList, user);
-            connection.Queue(ProtoUtils.CreateDto(res, msg.Id));
           } else if (msg.ClientRequest?.RemoveRoomPlayer != null) {
             var req = msg.ClientRequest.RemoveRoomPlayer;
             var res = roomService.RemoveRoomPlayer(req, queue.roomList, user);
@@ -80,13 +86,13 @@ namespace RabiRiichi.Server.WebSockets {
             var res = userService.GetMyInfo(user);
             connection.Queue(ProtoUtils.CreateDto(res, msg.Id));
           }
-        } catch (RpcException e) {
-          connection.Queue(ProtoUtils.CreateDto(new ServerErrorResponse {
-            Status = e.Status.StatusCode.ToString(),
-            Message = e.Status.Detail,
-          }, msg.Id));
-        }
-      });
+        });
+      } catch (RpcException e) {
+        connection.Queue(ProtoUtils.CreateDto(new ServerErrorResponse {
+          Status = e.Status.StatusCode.ToString(),
+          Message = e.Status.Detail,
+        }, msg.Id));
+      }
     }
 
     private async Task<User> HandleSignIn(WebSocketAdapter adapter) {

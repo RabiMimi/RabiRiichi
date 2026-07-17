@@ -12,6 +12,8 @@ namespace RabiRiichi.Server.Agents {
   /// <see cref="Decide"/>.
   /// </summary>
   public abstract class AIAgent(int id, Room room, UserStatus status = UserStatus.Playing) : IPlayerAgent {
+    /// <summary> The room this agent belongs to (for seat lookup, chat, etc.). </summary>
+    protected readonly Room room = room;
     public int id { get; } = id;
     public UserStatus status { get; private set; } = status;
     public int Seat => room.SeatIndexOf(this);
@@ -19,7 +21,7 @@ namespace RabiRiichi.Server.Agents {
     /// <summary> The concrete AI kind, used for state reporting and nickname. </summary>
     public abstract AiType aiType { get; }
 
-    public string nickname => aiType.ToString().ToUpper();
+    public virtual string nickname => aiType.ToString().ToUpper();
 
     public ServerPlayerStateMsg GetState() {
       return new ServerPlayerStateMsg {
@@ -39,9 +41,10 @@ namespace RabiRiichi.Server.Agents {
       return true;
     }
 
-    public void OnEvent(EventBase ev) {
-      // AIs are stateless across events; they decide purely from the public
-      // state available at inquiry time.
+    public virtual void OnEvent(EventBase ev) {
+      // AIs are stateless across events by default; they decide purely from the
+      // public state available at inquiry time. Subclasses (e.g. the LLM agent)
+      // may override to accumulate a running transcript.
     }
 
     public void OnInquiry(

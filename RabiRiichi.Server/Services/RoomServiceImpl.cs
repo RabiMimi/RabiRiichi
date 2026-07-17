@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using RabiRiichi.Core.Config;
 using RabiRiichi.Server.Auth;
 using RabiRiichi.Server.Agents;
+using RabiRiichi.Server.Agents.Llm;
 using RabiRiichi.Server.Generated.Messages;
 using RabiRiichi.Server.Generated.Rpc;
 using RabiRiichi.Server.Models;
@@ -11,11 +12,12 @@ using System.Text.Json;
 
 namespace RabiRiichi.Server.Services {
   [Authorize]
-  public class RoomServiceImpl(ILogger<RoomServiceImpl> logger, RoomTaskQueue taskQueue, Random rand, ReplayStore replayStore) : RoomService.RoomServiceBase {
+  public class RoomServiceImpl(ILogger<RoomServiceImpl> logger, RoomTaskQueue taskQueue, Random rand, ReplayStore replayStore, LlmValidator llmValidator) : RoomService.RoomServiceBase {
     private readonly ILogger<RoomServiceImpl> logger = logger;
     private readonly RoomTaskQueue taskQueue = taskQueue;
     private readonly Random rand = rand;
     private readonly ReplayStore replayStore = replayStore;
+    private readonly LlmValidator llmValidator = llmValidator;
 
     private static readonly Dictionary<AiType, Func<int, Room, IPlayerAgent>> AiCreators = new() {
       { AiType.Dummy, (id, room) => new DefaultAI(id, room, UserStatus.InRoom) },
@@ -71,18 +73,33 @@ namespace RabiRiichi.Server.Services {
       });
     }
 
-    public ServerRoomStateResponse AddAi(AddAiRequest request, RoomList roomList, User user) {
+    /// <summary>
+    /// Synchronous room mutation to admit an AI. For LLM AIs, pass the already
+    /// validated <paramref name="llmSettings"/> (validation must happen OUTSIDE
+    /// the serialized task queue, since it makes a network call). Must be called
+    /// on the task-queue thread.
+    /// </summary>
+    public ServerRoomStateResponse AddAi(
+        AddAiRequest request, RoomList roomList, User user, LlmSettings llmSettings = null) {
       var room = user.room ?? throw new RpcException(new Status(StatusCode.FailedPrecondition, "User is not in a room"));
       var humanPlayers = room.players.OfType<User>().OrderBy(p => room.SeatIndexOf(p)).ToList();
       if (humanPlayers.Count == 0 || humanPlayers[0] != user) {
         throw new RpcException(new Status(StatusCode.PermissionDenied, "Only the room owner can add AI"));
       }
-      if (!AiCreators.TryGetValue(request.Type, out var creator)) {
-        throw new RpcException(new Status(StatusCode.InvalidArgument, $"Invalid or unsupported AI type: {request.Type}"));
-      }
       int aiId = -100 - room.players.Count;
 
-      var ai = creator(aiId, room);
+      IPlayerAgent ai;
+      if (request.Type == AiType.Llm) {
+        if (llmSettings == null) {
+          throw new RpcException(new Status(StatusCode.InvalidArgument, "LLM config missing"));
+        }
+        ai = new LlmAI(aiId, room, llmSettings, UserStatus.InRoom);
+      } else if (AiCreators.TryGetValue(request.Type, out var creator)) {
+        ai = creator(aiId, room);
+      } else {
+        throw new RpcException(new Status(StatusCode.InvalidArgument, $"Invalid or unsupported AI type: {request.Type}"));
+      }
+
       if (!room.AddPlayer(ai)) {
         throw new RpcException(new Status(StatusCode.Internal, "Cannot add AI to room"));
       }
@@ -92,11 +109,47 @@ namespace RabiRiichi.Server.Services {
       };
     }
 
+    /// <summary>
+    /// Full AddAi flow used by the WebSocket handler. LLM validation (a network
+    /// call) runs OUTSIDE the task queue to avoid stalling all rooms; only the
+    /// room mutation is queued.
+    /// </summary>
+    public async Task<ServerRoomStateResponse> AddAiAsync(AddAiRequest request, User user) {
+      LlmSettings llmSettings = null;
+      if (request.Type == AiType.Llm) {
+        llmSettings = ParseAndValidateLlmConfig(request);
+        await ValidateLlmLiveAsync(llmSettings);
+      }
+      return await taskQueue.Execute(queue => AddAi(request, queue.roomList, user, llmSettings));
+    }
+
+    /// <summary> Static (non-network) validation + normalization of LLM config. </summary>
+    private static LlmSettings ParseAndValidateLlmConfig(AddAiRequest request) {
+      var settings = LlmSettings.FromProto(request.LlmConfig, out var error);
+      if (settings == null) {
+        throw new RpcException(new Status(StatusCode.InvalidArgument,
+            LlmErrorPayload($"error.lobby.llm.config.{error}")));
+      }
+      return settings;
+    }
+
+    /// <summary> Live validation: one small ping to the provider. </summary>
+    private async Task ValidateLlmLiveAsync(LlmSettings settings) {
+      var result = await llmValidator.ValidateAsync(settings);
+      if (!result.Ok) {
+        throw new RpcException(new Status(StatusCode.InvalidArgument,
+            LlmErrorPayload($"error.lobby.llm.{result.Reason}")));
+      }
+    }
+
+    /// <summary> Serializes an i18n error payload the client localizes. </summary>
+    private static string LlmErrorPayload(string key) {
+      return JsonSerializer.Serialize(new { key, @params = new { } });
+    }
+
     public override Task<ServerRoomStateResponse> AddAi(AddAiRequest request, ServerCallContext context) {
-      return taskQueue.Execute(queue => {
-        var user = queue.userList.Fetch(context);
-        return AddAi(request, queue.roomList, user);
-      });
+      // gRPC path (dormant): validate then mutate. Kept for parity.
+      return AddAiAsync(request, taskQueue.userList.Fetch(context));
     }
 
     public ServerRoomStateResponse RemoveRoomPlayer(RemoveRoomPlayerRequest request, RoomList roomList, User user) {

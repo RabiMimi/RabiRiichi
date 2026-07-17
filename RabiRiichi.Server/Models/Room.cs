@@ -59,27 +59,42 @@ namespace RabiRiichi.Server.Models {
     }
 
     public void BroadcastChatMessage(User sender, PlayerChatMessage chatMsg) {
+      BroadcastChat(sender.id, chatMsg.Text, chatMsg.Sticker);
+    }
+
+    /// <summary>
+    /// Broadcasts a chat message on behalf of an in-game agent (e.g. an LLM AI).
+    /// Same validation and fan-out as a human message. Safe to call from any
+    /// thread; it only enqueues to connections.
+    /// </summary>
+    public void SendAgentChat(int senderId, string text, string sticker) {
+      BroadcastChat(senderId, text, sticker);
+    }
+
+    private void BroadcastChat(int senderId, string text, string sticker) {
       if (isDestroyed) {
         return;
       }
 
       // Validate sticker path to avoid path traversal / external folder access
-      var sticker = chatMsg.Sticker;
       if (!string.IsNullOrEmpty(sticker)) {
         if (sticker.Contains("..") || sticker.StartsWith('/') || sticker.StartsWith('\\') || Path.IsPathRooted(sticker)) {
-          return;
+          sticker = null;
         }
       }
 
-      var broadcastMsg = new PlayerChatMessage {
-        SenderId = sender.id,
-      };
-
-      if (!string.IsNullOrEmpty(chatMsg.Text)) {
-        broadcastMsg.Text = chatMsg.Text;
+      if (string.IsNullOrEmpty(text) && string.IsNullOrEmpty(sticker)) {
+        return;
       }
-      if (!string.IsNullOrEmpty(chatMsg.Sticker)) {
-        broadcastMsg.Sticker = chatMsg.Sticker;
+
+      var broadcastMsg = new PlayerChatMessage {
+        SenderId = senderId,
+      };
+      if (!string.IsNullOrEmpty(text)) {
+        broadcastMsg.Text = text;
+      }
+      if (!string.IsNullOrEmpty(sticker)) {
+        broadcastMsg.Sticker = sticker;
       }
 
       var msg = ProtoUtils.CreateDto(broadcastMsg);

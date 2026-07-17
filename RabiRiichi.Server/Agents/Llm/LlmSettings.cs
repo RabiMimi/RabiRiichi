@@ -1,0 +1,109 @@
+using System;
+using RabiRiichi.Server.Generated.Rpc;
+
+namespace RabiRiichi.Server.Agents.Llm {
+  /// <summary>
+  /// Hardcoded server-side guardrails for LLM interactions. Kept in one place so
+  /// they are easy to tune and reason about. No env configuration for v1.
+  /// </summary>
+  public static class LlmLimits {
+    /// <summary> Per-request wall-clock budget for a normal in-game decision. </summary>
+    public static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(20);
+
+    /// <summary> Budget for the one-shot validation ping when adding the AI. </summary>
+    public static readonly TimeSpan ValidationTimeout = TimeSpan.FromSeconds(15);
+
+    /// <summary> Max output tokens for an in-game decision (JSON is small). </summary>
+    public const int MaxDecisionTokens = 512;
+
+    /// <summary> Max output tokens for the validation ping. </summary>
+    public const int MaxValidationTokens = 8;
+
+    /// <summary>
+    /// Max number of buffered event-delta lines kept per LLM agent. Guards
+    /// against unbounded memory if the model repeatedly fails/falls back.
+    /// </summary>
+    public const int MaxTranscriptLines = 400;
+  }
+
+
+
+  /// <summary>
+  /// A validated, immutable view of an <see cref="LlmAiConfig"/> plus derived
+  /// values (resolved base URL, display name, normalized language). Construct via
+  /// <see cref="FromProto"/> which enforces required fields.
+  /// </summary>
+  public sealed class LlmSettings {
+    public LlmProvider Provider { get; }
+    public string ApiToken { get; }
+    public string BaseUrl { get; }
+    public string Model { get; }
+    public string Language { get; }
+
+    /// <summary>
+    /// The custom display name the user chose, or empty if none. When empty the
+    /// AI's broadcast nickname is a client-localized sentinel (see
+    /// <see cref="LlmDisplayName.NicknameFor"/>) so each viewer sees the name in
+    /// their own UI language — the server never invents a human-facing name.
+    /// </summary>
+    public string CustomDisplayName { get; }
+
+    private LlmSettings(LlmProvider provider, string apiToken, string baseUrl,
+                        string model, string language, string customDisplayName) {
+      Provider = provider;
+      ApiToken = apiToken;
+      BaseUrl = baseUrl;
+      Model = model;
+      Language = language;
+      CustomDisplayName = customDisplayName;
+    }
+
+    /// <summary>
+    /// Validates and normalizes a proto config. Returns null and sets
+    /// <paramref name="error"/> (a short, client-facing reason) on invalid input.
+    /// This does NOT contact the provider — see <c>LlmValidator</c> for that.
+    /// </summary>
+    public static LlmSettings FromProto(LlmAiConfig config, out string error) {
+      error = null;
+      if (config == null) {
+        error = "missing";
+        return null;
+      }
+      if (config.Provider is not (LlmProvider.Openai or LlmProvider.Gemini)) {
+        error = "provider";
+        return null;
+      }
+      if (string.IsNullOrWhiteSpace(config.ApiToken)) {
+        error = "token";
+        return null;
+      }
+      if (string.IsNullOrWhiteSpace(config.Model)) {
+        error = "model";
+        return null;
+      }
+
+      var baseUrl = string.IsNullOrWhiteSpace(config.BaseUrl)
+          ? DefaultBaseUrl(config.Provider)
+          : config.BaseUrl.Trim().TrimEnd('/');
+      if (!Uri.TryCreate(baseUrl, UriKind.Absolute, out var uri) ||
+          (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)) {
+        error = "url";
+        return null;
+      }
+
+      var language = AiLocalization.NormalizeLanguage(config.Language);
+      var customName = string.IsNullOrWhiteSpace(config.DisplayName)
+          ? "" : config.DisplayName.Trim();
+
+      return new LlmSettings(config.Provider, config.ApiToken.Trim(), baseUrl,
+          config.Model.Trim(), language, customName);
+    }
+
+    /// <summary> The default API base URL for a provider. </summary>
+    public static string DefaultBaseUrl(LlmProvider provider) => provider switch {
+      LlmProvider.Openai => "https://api.openai.com",
+      LlmProvider.Gemini => "https://generativelanguage.googleapis.com",
+      _ => null,
+    };
+  }
+}

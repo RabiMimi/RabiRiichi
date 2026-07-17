@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using RabiRiichi.Server.Agents.Llm;
 using RabiRiichi.Server.Auth;
 using RabiRiichi.Server.Models;
 using RabiRiichi.Server.Services;
@@ -31,6 +32,11 @@ services.AddAuthorization();
 services.AddGrpc();
 services.AddControllers();
 
+// LLM AI: outbound HTTP + provider factory + config validator.
+services.AddHttpClient();
+services.AddSingleton<ILlmProviderFactory, LlmProviderFactory>();
+services.AddSingleton<LlmValidator>();
+
 // Objects for DI
 services.AddSingleton<RoomList>();
 services.AddSingleton<UserList>();
@@ -52,6 +58,11 @@ services.AddSingleton(new Random(builder.Environment.IsDevelopment()
 
 // Build app
 var app = builder.Build();
+
+// Wire the LLM provider factory into the process-wide runtime so AI agents
+// (created outside a DI scope) share the app's HttpClient factory.
+LlmRuntime.Factory = app.Services.GetRequiredService<ILlmProviderFactory>();
+
 app.UseRouting();
 
 // Use cors
