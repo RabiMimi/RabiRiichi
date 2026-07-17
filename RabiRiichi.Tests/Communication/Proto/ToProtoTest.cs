@@ -1,5 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Communication;
+using RabiRiichi.Communication.Proto;
 using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
 using RabiRiichi.Events.InGame;
@@ -145,6 +146,48 @@ namespace RabiRiichi.Tests.Communication.Proto {
       var protoOpponent = handState.ToProto(0);
       Assert.IsNotNull(protoOpponent);
       Assert.AreEqual(0, protoOpponent.TenpaiWaits.Count, "Should NOT leak tenpai waits to opponents");
+    }
+
+    [TestMethod]
+    public async Task TestGameStateHidesOpponentConcealedHand() {
+      // Regression: GameState.ToProto must hide every OTHER player's concealed
+      // freeTiles from the receiver. A previous bug passed the receiver id (not
+      // the hand owner's id) into PlayerHandState, making `reveal` always true
+      // and leaking all hands to everyone.
+      // Give the OPPONENT (seat 0) a fixed 13-tile concealed hand and start at
+      // seat 1 (so the non-dealer seat 0 keeps exactly 13 tiles, no draw).
+      Game game = null;
+      var scenario = new ScenarioBuilder()
+          .WithPlayer(0, pb => pb.SetFreeTiles("1223344556677s"))
+          .Start(1);
+      scenario.WithGame(g => game = g);
+      await scenario.WaitInquiry();
+
+      // Serialize the whole game state from seat 1's perspective.
+      var state = new GameState(game, 1).ToProto(1);
+
+      var self = state.Players.First(p => p.Id == 1);
+      var opponent = state.Players.First(p => p.Id == 0);
+      int emptyTile = Tile.Empty.Val;
+
+      // Own hand is fully visible.
+      Assert.IsTrue(self.Hand.FreeTiles.Count > 0);
+      Assert.IsTrue(self.Hand.FreeTiles.All(t => t.Tile != emptyTile),
+          "Own concealed tiles must be visible to self");
+
+      // Opponent's concealed hand: traceIds present, faces hidden.
+      Assert.IsTrue(opponent.Hand.FreeTiles.Count > 0);
+      Assert.IsTrue(opponent.Hand.FreeTiles.All(t => t.Tile == emptyTile),
+          "Opponent concealed tiles must be hidden (face 0)");
+      Assert.IsTrue(opponent.Hand.FreeTiles.All(t => t.TraceId > 0),
+          "Opponent tiles still carry their real per-round traceId");
+
+      // God view sees everything.
+      var godState = new GameState(game, ProtoConverters.GOD_VIEW_PLAYER_ID)
+          .ToProto(ProtoConverters.GOD_VIEW_PLAYER_ID);
+      var godOpponent = godState.Players.First(p => p.Id == 1);
+      Assert.IsTrue(godOpponent.Hand.FreeTiles.All(t => t.Tile != emptyTile),
+          "God view reveals all hands");
     }
   }
 }
