@@ -15,16 +15,12 @@ namespace RabiRiichi.Server.Agents.Llm {
 
     /// <summary>
     /// Parses an LLM response into a decision. Tolerant of code fences and of
-    /// leading/trailing prose: it extracts the first balanced JSON object.
+    /// leading/trailing prose: it finds the first valid decision JSON object.
     /// Returns a decision with Choice = -1 if no valid object/choice is found.
     /// </summary>
     public static LlmDecision Parse(string raw) {
-      var json = ExtractJsonObject(raw);
-      if (json == null) {
-        return new LlmDecision();
-      }
       try {
-        var node = JsonNode.Parse(json)?.AsObject();
+        var node = LlmJsonParser.FindObject(raw, IsDecisionObject);
         if (node == null) {
           return new LlmDecision();
         }
@@ -37,6 +33,9 @@ namespace RabiRiichi.Server.Agents.Llm {
         return new LlmDecision();
       }
     }
+
+    private static bool IsDecisionObject(JsonObject node) =>
+        ReadInt(node, "choice") >= 0;
 
     private static int ReadInt(JsonObject node, string key) {
       if (!node.TryGetPropertyValue(key, out var v) || v == null) {
@@ -70,49 +69,5 @@ namespace RabiRiichi.Server.Agents.Llm {
       }
     }
 
-    /// <summary>
-    /// Extracts the first balanced {...} object from arbitrary text (strips code
-    /// fences and surrounding prose). Returns null if none found.
-    /// </summary>
-    public static string ExtractJsonObject(string raw) {
-      if (string.IsNullOrWhiteSpace(raw)) {
-        return null;
-      }
-      int start = raw.IndexOf('{');
-      if (start < 0) {
-        return null;
-      }
-      int depth = 0;
-      bool inString = false;
-      bool escape = false;
-      for (int i = start; i < raw.Length; i++) {
-        char c = raw[i];
-        if (inString) {
-          if (escape) {
-            escape = false;
-          } else if (c == '\\') {
-            escape = true;
-          } else if (c == '"') {
-            inString = false;
-          }
-          continue;
-        }
-        switch (c) {
-          case '"':
-            inString = true;
-            break;
-          case '{':
-            depth++;
-            break;
-          case '}':
-            depth--;
-            if (depth == 0) {
-              return raw.Substring(start, i - start + 1);
-            }
-            break;
-        }
-      }
-      return null;
-    }
   }
 }

@@ -61,19 +61,53 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
     }
 
     [TestMethod]
-    public void ExtractJsonObject_HandlesNestedBraces() {
+    public void Parse_HandlesNestedObjects() {
       var raw = "prefix {\"choice\": 1, \"obj\": {\"a\": 2}} suffix";
-      var json = LlmDecision.ExtractJsonObject(raw);
-      Assert.AreEqual("{\"choice\": 1, \"obj\": {\"a\": 2}}", json);
+      Assert.AreEqual(1, LlmDecision.Parse(raw).Choice);
     }
 
     [TestMethod]
-    public void ExtractJsonObject_IgnoresBracesInStrings() {
+    public void Parse_IgnoresBracesInStrings() {
       var raw = "{\"say\": \"} not the end {\", \"choice\": 4}";
-      var json = LlmDecision.ExtractJsonObject(raw);
-      var d = LlmDecision.Parse(json);
+      var d = LlmDecision.Parse(raw);
       Assert.AreEqual(4, d.Choice);
       Assert.AreEqual("} not the end {", d.Say);
+    }
+
+    [TestMethod]
+    public void Parse_SkipsInvalidBraceFragmentBeforeDecision() {
+      var raw = "I considered {east or south}, then chose:\n{\"choice\":2}";
+      Assert.AreEqual(2, LlmDecision.Parse(raw).Choice);
+    }
+
+    [TestMethod]
+    public void Parse_SkipsUnrelatedJsonObjectBeforeDecision() {
+      var raw = "Debug: {\"confidence\":0.8}\nFinal: {\"choice\":3,\"say\":\"pon\"}";
+      var decision = LlmDecision.Parse(raw);
+      Assert.AreEqual(3, decision.Choice);
+      Assert.AreEqual("pon", decision.Say);
+    }
+
+    [TestMethod]
+    public void Parse_SkipsMalformedDecisionBeforeValidDecision() {
+      var raw = "Draft: {\"choice\":\"later\"}\nFinal: {\"choice\":5}";
+      Assert.AreEqual(5, LlmDecision.Parse(raw).Choice);
+    }
+
+    [TestMethod]
+    public void Parse_FindsDecisionInsideArrayWrapper() {
+      var raw = "Result: [{\"choice\":1,\"sticker\":\"happy\"}]";
+      var decision = LlmDecision.Parse(raw);
+      Assert.AreEqual(1, decision.Choice);
+      Assert.AreEqual("happy", decision.Sticker);
+    }
+
+    [TestMethod]
+    public void Parse_HandlesEscapedQuotesAndBackslashes() {
+      var raw = "```json\n{\"choice\":4,\"say\":\"she said \\\"kan\\\" at C:\\\\tiles\"}\n```";
+      var decision = LlmDecision.Parse(raw);
+      Assert.AreEqual(4, decision.Choice);
+      Assert.AreEqual("she said \"kan\" at C:\\tiles", decision.Say);
     }
   }
 }

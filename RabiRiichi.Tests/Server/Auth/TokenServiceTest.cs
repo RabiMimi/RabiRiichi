@@ -27,5 +27,17 @@ namespace RabiRiichi.Tests.Server.Auth {
       Assert.IsFalse(service.IsTokenValid("invalid_token", out int validatedUserId));
       Assert.AreEqual(-1, validatedUserId);
     }
+
+    [TestMethod]
+    public void TestTokenFromPreviousServerInstanceIsInvalid() {
+      var previousServer = new TokenService();
+      var restartedServer = new TokenService();
+      var token = previousServer.BuildToken(123);
+
+      Assert.IsTrue(previousServer.IsTokenValid(token, out var originalUserId));
+      Assert.AreEqual(123, originalUserId);
+      Assert.IsFalse(restartedServer.IsTokenValid(token, out var restartedUserId));
+      Assert.AreEqual(-1, restartedUserId);
+    }
   }
 }

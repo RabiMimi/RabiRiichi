@@ -31,6 +31,13 @@ namespace RabiRiichi.Server.Agents.Llm {
           ["temperature"] = 0.7,
           ["messages"] = BuildMessages(messages),
         };
+        // DeepSeek V4 thinks by default. Its reasoning tokens share the output
+        // budget, which can leave our small validation and decision requests
+        // with no visible JSON response. RabiRiichi only needs a quick action
+        // choice, so explicitly use DeepSeek's documented non-thinking mode.
+        if (IsDeepSeekModel(settings.Model)) {
+          body["thinking"] = new JsonObject { ["type"] = "disabled" };
+        }
 
         using var req = new HttpRequestMessage(HttpMethod.Post, url) {
           Content = JsonContent.Create(body),
@@ -66,6 +73,9 @@ namespace RabiRiichi.Server.Agents.Llm {
       LlmRole.Assistant => "assistant",
       _ => "user",
     };
+
+    internal static bool IsDeepSeekModel(string model) =>
+        model?.StartsWith("deepseek-", StringComparison.OrdinalIgnoreCase) == true;
 
     /// <summary> Extracts <c>choices[0].message.content</c> from the response. </summary>
     public static LlmResult ParseContent(string json) {

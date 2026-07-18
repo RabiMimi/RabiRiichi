@@ -25,6 +25,16 @@ services.AddCors(options => {
 services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options => {
       options.TokenValidationParameters = TokenService.ValidationParameters;
+      options.Events = new JwtBearerEvents {
+        OnTokenValidated = context => {
+          var tokenService = context.HttpContext.RequestServices
+              .GetRequiredService<TokenService>();
+          if (!tokenService.IsCurrentServerToken(context.Principal)) {
+            context.Fail("Token belongs to a previous server instance");
+          }
+          return Task.CompletedTask;
+        },
+      };
     });
 services.AddAuthorization();
 

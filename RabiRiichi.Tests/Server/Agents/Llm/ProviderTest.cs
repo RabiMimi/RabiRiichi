@@ -12,11 +12,11 @@ using System.Threading.Tasks;
 namespace RabiRiichi.Tests.Server.Agents.Llm {
   [TestClass]
   public class ProviderTest {
-    private static LlmSettings OpenAi(string baseUrl = null) => LlmSettings.FromProto(
+    private static LlmSettings OpenAi(string baseUrl = null, string model = "gpt-4o-mini") => LlmSettings.FromProto(
         new LlmAiConfig {
           Provider = LlmProvider.Openai,
           ApiToken = "sk-test",
-          Model = "gpt-4o-mini",
+          Model = model,
           Language = "en",
           BaseUrl = baseUrl ?? "",
         }, out _);
@@ -56,6 +56,32 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
       await provider.CompleteAsync(Messages, 100, CancellationToken.None);
       Assert.AreEqual("https://proxy.local/v1/chat/completions",
           handler.LastRequest.RequestUri.ToString());
+    }
+
+    [TestMethod]
+    public async Task OpenAi_DisablesThinkingForDeepSeekModels() {
+      var handler = new FakeHttpHandler(HttpStatusCode.OK,
+          "{\"choices\":[{\"message\":{\"content\":\"x\"}}]}");
+      var provider = new OpenAiProvider(handler.Client(),
+          OpenAi("https://api.deepseek.com", "deepseek-v4-flash"));
+
+      await provider.CompleteAsync(Messages, 100, CancellationToken.None);
+
+      var sent = JsonNode.Parse(handler.LastRequestBody);
+      Assert.AreEqual("disabled", sent["thinking"]["type"].GetValue<string>());
+      Assert.AreEqual("https://api.deepseek.com/v1/chat/completions",
+          handler.LastRequest.RequestUri.ToString());
+    }
+
+    [TestMethod]
+    public async Task OpenAi_DoesNotSendProviderSpecificThinkingToOtherModels() {
+      var handler = new FakeHttpHandler(HttpStatusCode.OK,
+          "{\"choices\":[{\"message\":{\"content\":\"x\"}}]}");
+      var provider = new OpenAiProvider(handler.Client(), OpenAi());
+
+      await provider.CompleteAsync(Messages, 100, CancellationToken.None);
+
+      Assert.IsNull(JsonNode.Parse(handler.LastRequestBody)["thinking"]);
     }
 
     [TestMethod]
@@ -119,8 +145,8 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
       Assert.IsNull(body["previous_interaction_id"]);
       Assert.AreEqual(128,
           body["generation_config"]["max_output_tokens"].GetValue<int>());
-      // Thinking kept low so short replies actually surface as output.
-      Assert.AreEqual("low",
+      // Gemini 3 Flash supports minimal, its lowest thinking level.
+      Assert.AreEqual("minimal",
           body["generation_config"]["thinking_level"].GetValue<string>());
 
       // Full non-system history as steps, in order, with correct step types.
@@ -130,6 +156,15 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
       Assert.AreEqual("u1", steps[0]["content"][0]["text"].GetValue<string>());
       Assert.AreEqual("model_output", steps[1]["type"].GetValue<string>());
       Assert.AreEqual("user_input", steps[2]["type"].GetValue<string>());
+    }
+
+    [TestMethod]
+    public void Gemini_UsesLowestPortableThinkingLevelForPro() {
+      var body = GeminiProvider.BuildRequestBody(Messages, 128,
+          previousInteractionId: null, model: "gemini-3.1-pro-preview");
+
+      Assert.AreEqual("low",
+          body["generation_config"]["thinking_level"].GetValue<string>());
     }
 
     [TestMethod]

@@ -125,11 +125,10 @@ namespace RabiRiichi.Server.Agents.Llm {
         ["generation_config"] = new JsonObject {
           ["temperature"] = 0.7,
           ["max_output_tokens"] = maxOutputTokens,
-          // Gemini 2.5+/3.x "think" by default, which can consume the entire
-          // output budget and leave no visible text (a 200 with only a thought
-          // step). Keep thinking minimal so short replies (the "OK" ping and our
-          // small decision JSON) always fit and actually surface as output.
-          ["thinking_level"] = "low",
+          // Flash models support "minimal", the closest available setting to
+          // thinking-off. Pro models reject "minimal", so use their lowest
+          // portable level, "low". This keeps the small decision JSON visible.
+          ["thinking_level"] = LowestThinkingLevel(model),
         },
       };
 
@@ -150,6 +149,12 @@ namespace RabiRiichi.Server.Agents.Llm {
         body["input"] = LastUserText(nonSystem);
       }
       return body;
+    }
+
+    internal static string LowestThinkingLevel(string model) {
+      var isGemini3 = model?.StartsWith("gemini-3", StringComparison.OrdinalIgnoreCase) == true;
+      var isFlash = model?.Contains("flash", StringComparison.OrdinalIgnoreCase) == true;
+      return isGemini3 && isFlash ? "minimal" : "low";
     }
 
     /// <summary> One Interactions "step" for a non-system message. </summary>
