@@ -26,7 +26,8 @@ namespace RabiRiichi.Server.Agents.Llm {
           .OrderBy(kv => kv.Key)
           .Select(kv => $"- seat {kv.Key}: {kv.Value}"));
       return LoadTemplate(settings.PromptTemplate)
-          .Replace("{{PERSONA_HINT}}", PersonaHint(settings.Language))
+          .Replace("{{PERSONA_HINT}}",
+              PersonaHint(settings.PromptTemplate, settings.Language))
           .Replace("{{SELF_NAME}}", NameOf(selfSeat))
           .Replace("{{SELF_SEAT}}", selfSeat.ToString())
           .Replace("{{LANGUAGE}}", LanguageLabel(settings.Language))
@@ -141,6 +142,7 @@ namespace RabiRiichi.Server.Agents.Llm {
     private static string LoadTemplate(LlmPromptTemplate template) {
       var suffix = template switch {
         LlmPromptTemplate.CuteJk => ".Agents.Llm.Prompts.cute-jk.md",
+        LlmPromptTemplate.Mesugaki => ".Agents.Llm.Prompts.mesugaki.md",
         _ => throw new ArgumentOutOfRangeException(nameof(template)),
       };
       var assembly = typeof(LlmPromptBuilder).Assembly;
@@ -179,10 +181,26 @@ namespace RabiRiichi.Server.Agents.Llm {
       _ => "English",
     };
 
-    private static string PersonaHint(string language) => language switch {
+    private static string PersonaHint(
+        LlmPromptTemplate template, string language) => template switch {
+          LlmPromptTemplate.CuteJk => CuteJkPersonaHint(language),
+          LlmPromptTemplate.Mesugaki => MesugakiPersonaHint(language),
+          _ => throw new ArgumentOutOfRangeException(nameof(template)),
+        };
+
+    private static string CuteJkPersonaHint(string language) => language switch {
       AiLocalization.LangJa => "In Japanese, speak like a friendly JK: casual endings, light fillers, and cute but readable phrasing.",
       AiLocalization.LangZhs => "用中文时说得软萌可爱一点：轻松口语、亲昵的语气词，像元气女高中生一样，但别太夸张。",
       _ => "In English, keep it cutesy and bubbly like an anime schoolgirl (for example, ehehe~, yay!, or mou~), but still clear.",
+    };
+
+    private static string MesugakiPersonaHint(string language) => language switch {
+      AiLocalization.LangJa =>
+          "日本語では、生意気で煽り好きなメスガキ口調にしてください。「ざぁこ♡」「よわよわ♡」のような短い挑発を多用し、相手を必ず「<名前>-おじさん」と呼んでください。",
+      AiLocalization.LangZhs =>
+          "用中文时保持嚣张、坏笑着挑衅的雌小鬼语气，多用“杂鱼♡”“好弱♡”之类的短句，并把每位对手称为“<名字>大叔”。",
+      _ =>
+          "In English, sound smug, bratty, and gleefully taunting. Frequently use short jabs such as “weakling♡” or “too easy♡”, and always call each opponent “<name>-ojisan”.",
     };
 
     private static string TileNotationHint(string language) => language switch {

@@ -26,6 +26,16 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
           DisplayName = name,
         }, out _);
 
+    private static LlmSettings MesugakiSettings() =>
+        LlmSettings.FromProto(new LlmAiConfig {
+          Provider = LlmProvider.Openai,
+          ApiToken = "sk",
+          Model = "m",
+          Language = "en",
+          DisplayName = "TestBot",
+          PromptTemplate = LlmPromptTemplate.Mesugaki,
+        }, out _);
+
     private static IReadOnlyDictionary<int, string> Names() => new Dictionary<int, string> {
       [0] = "TestBot",
       [1] = "Alice",
@@ -70,6 +80,37 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
       StringAssert.Contains(japanese, "5z=白");
       StringAssert.Contains(japanese, "自風");
       StringAssert.Contains(japanese, "場風");
+    }
+
+    [TestMethod]
+    public void SystemPrompt_LoadsMesugakiPersona() {
+      var prompt = new LlmPromptBuilder(MesugakiSettings(), Names())
+          .BuildSystemPrompt(0);
+
+      StringAssert.Contains(prompt, "extremely teasing, smug mesugaki");
+      StringAssert.Contains(prompt, "Use the ♡ symbol frequently");
+      StringAssert.Contains(prompt, "Alice-ojisan");
+      StringAssert.Contains(prompt, "weakling♡");
+      Assert.IsFalse(prompt.Contains("cutesy and bubbly like an anime schoolgirl"));
+      Assert.IsFalse(prompt.Contains("{{"));
+    }
+
+    [TestMethod]
+    public void SystemPrompt_LocalizesMesugakiPersonaHint() {
+      var config = new LlmAiConfig {
+        Provider = LlmProvider.Openai,
+        ApiToken = "sk",
+        Model = "m",
+        Language = "ja",
+        PromptTemplate = LlmPromptTemplate.Mesugaki,
+      };
+      var settings = LlmSettings.FromProto(config, out _);
+
+      var prompt = new LlmPromptBuilder(settings, Names()).BuildSystemPrompt(0);
+
+      StringAssert.Contains(prompt, "ざぁこ♡");
+      StringAssert.Contains(prompt, "<名前>-おじさん");
+      Assert.IsFalse(prompt.Contains("friendly JK"));
     }
 
     [TestMethod]

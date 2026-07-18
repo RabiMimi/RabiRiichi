@@ -104,6 +104,7 @@ namespace RabiRiichi.Server.Agents.Llm {
       var promptTemplate = config.PromptTemplate switch {
         LlmPromptTemplate.Unspecified => LlmPromptTemplate.CuteJk,
         LlmPromptTemplate.CuteJk => LlmPromptTemplate.CuteJk,
+        LlmPromptTemplate.Mesugaki => LlmPromptTemplate.Mesugaki,
         _ => LlmPromptTemplate.Unspecified,
       };
       if (promptTemplate == LlmPromptTemplate.Unspecified) {
