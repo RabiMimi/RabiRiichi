@@ -28,7 +28,7 @@ namespace RabiRiichi.Server.Agents.Llm {
         var body = new JsonObject {
           ["model"] = settings.Model,
           ["max_tokens"] = maxOutputTokens,
-          ["temperature"] = 0.7,
+          ["temperature"] = 1.0,
           ["messages"] = BuildMessages(messages),
         };
         // DeepSeek V4 thinks by default. Its reasoning tokens share the output

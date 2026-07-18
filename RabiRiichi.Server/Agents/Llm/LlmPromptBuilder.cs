@@ -5,15 +5,18 @@ using System.Text;
 
 namespace RabiRiichi.Server.Agents.Llm {
   public sealed record LlmChatEntry(string Sender, string Text, string Sticker);
+  public enum LlmSeatRole { Human, Llm, OtherAi }
 
   /// <summary>Builds prompts from an embedded markdown persona template.</summary>
   public sealed class LlmPromptBuilder(
       LlmSettings settings,
-      IReadOnlyDictionary<int, string> seatNames) {
+      IReadOnlyDictionary<int, string> seatNames,
+      IReadOnlyDictionary<int, LlmSeatRole> seatRoles = null) {
     private const int DetailedChatLimit = 10;
     private const int ChatTextLimit = 256;
     private readonly LlmSettings settings = settings;
     private readonly IReadOnlyDictionary<int, string> seatNames = seatNames;
+    private readonly IReadOnlyDictionary<int, LlmSeatRole> seatRoles = seatRoles;
 
     private string NameOf(int seat) =>
         seatNames.TryGetValue(seat, out var n) ? n : $"P{seat}";
@@ -25,7 +28,7 @@ namespace RabiRiichi.Server.Agents.Llm {
       var opponents = string.Join("\n", seatNames
           .Where(kv => kv.Key != selfSeat)
           .OrderBy(kv => kv.Key)
-          .Select(kv => $"- seat {kv.Key}: {kv.Value}"));
+          .Select(kv => $"- seat {kv.Key}: {kv.Value}{RoleLabel(kv.Key)}"));
       return LoadTemplate(settings.PromptTemplate)
           .Replace("{{PERSONA_HINT}}",
               PersonaHint(settings.PromptTemplate, settings.Language))
@@ -36,6 +39,31 @@ namespace RabiRiichi.Server.Agents.Llm {
           .Replace("{{KAN_GUIDE}}", KanGuide(settings.Language))
           .Replace("{{OPPONENTS}}", opponents)
           .Replace("{{STICKER_MOODS}}", string.Join(", ", StickerRegistry.Moods));
+    }
+
+    private string RoleLabel(int seat) {
+      if (seatRoles == null || !seatRoles.TryGetValue(seat, out var role)) return "";
+      return (role, AiLocalization.NormalizeLanguage(settings.Language)) switch {
+        (LlmSeatRole.Human, AiLocalization.LangJa) =>
+            "（人間プレイヤー：この名前だけ「-おじさん」と呼んでよい）",
+        (LlmSeatRole.Llm, AiLocalization.LangJa) =>
+            "（LLMプレイヤーのかわいい女の子：「おじさん」と呼ばない）",
+        (LlmSeatRole.OtherAi, AiLocalization.LangJa) =>
+            "（AIプレイヤー：「おじさん」と呼ばない）",
+        (LlmSeatRole.Human, AiLocalization.LangZhs) =>
+            "（人类玩家：只有这种名字可以称为大叔）",
+        (LlmSeatRole.Llm, AiLocalization.LangZhs) =>
+            "（LLM玩家，是可爱的女孩子：绝对不能称为大叔）",
+        (LlmSeatRole.OtherAi, AiLocalization.LangZhs) =>
+            "（AI玩家：绝对不能称为大叔）",
+        (LlmSeatRole.Human, _) =>
+            " (human player; only this kind of name may be called -ojisan)",
+        (LlmSeatRole.Llm, _) =>
+            " (LLM player; a cute girl; never call her ojisan)",
+        (LlmSeatRole.OtherAi, _) =>
+            " (AI player; never call it ojisan)",
+        _ => "",
+      };
     }
 
     public string BuildRoundHeader(PublicGameView view) {
@@ -203,11 +231,11 @@ namespace RabiRiichi.Server.Agents.Llm {
 
     private static string MesugakiPersonaHint(string language) => language switch {
       AiLocalization.LangJa =>
-          "日本語では、生意気で煽り好きなメスガキ口調にしてください。「ざぁこ♡」「よわよわ♡」のような短い挑発を多用し、実在する対戦相手だけを「<名前>-おじさん」と呼んでください。牌・字牌・風・三元牌・行動などを「おじさん」と呼んではいけません。",
+          "日本語では、生意気で煽り好きなメスガキ口調にしてください。「ざぁこ♡」「よわよわ♡」のような短い挑発を多用してください。「人間プレイヤー」と明記された相手だけを「<名前>-おじさん」と呼んでください。他のLLMは全員かわいい女の子なので、絶対に「おじさん」と呼んではいけません。AI・牌・字牌・風・三元牌・行動なども「おじさん」と呼んではいけません。",
       AiLocalization.LangZhs =>
-          "用中文时保持嚣张、坏笑着挑衅的雌小鬼语气，多用“杂鱼♡”“好弱♡”之类的短句。只有玩家列表里的真实对手才能称为“<名字>大叔”；绝对不能把牌、字牌、风牌、三元牌、动作或其他游戏概念称为大叔。",
+          "用中文时保持嚣张、坏笑着挑衅的雌小鬼语气，多用“杂鱼♡”“好弱♡”之类的短句。只有明确标为“人类玩家”的对手才能称为“<名字>大叔”。其他LLM全都是可爱的女孩子，绝对不能称为大叔；AI、牌、字牌、风牌、三元牌、动作或其他游戏概念也不能称为大叔。",
       _ =>
-          "In English, sound smug, bratty, and gleefully taunting. Frequently use short jabs such as “weakling♡” or “too easy♡”. Call only actual opponents from the player list “<name>-ojisan”; never apply ojisan to tiles, honors, winds, dragons, actions, or other game concepts.",
+          "In English, sound smug, bratty, and gleefully taunting. Frequently use short jabs such as “weakling♡” or “too easy♡”. Call only opponents explicitly labeled “human player” “<name>-ojisan”. All other LLMs are cute girls, so never call them ojisan; never apply ojisan to other AIs, tiles, honors, winds, dragons, actions, or game concepts.",
     };
 
     private static string TileNotationHint(string language) => language switch {

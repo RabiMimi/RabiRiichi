@@ -126,7 +126,7 @@ namespace RabiRiichi.Server.Agents.Llm {
     private List<LlmMessage> BuildTurnMessages(
         PublicGameView view, string selectedAction, string automaticActionNote,
         out string userMessage, out long chatsThrough) {
-      var builder = new LlmPromptBuilder(settings, SeatNames());
+      var builder = new LlmPromptBuilder(settings, SeatNames(), SeatRoles());
       var recent = eventLog.Drain(out var newRound);
       List<LlmChatEntry> chats;
       lock (chatLock) {
@@ -199,6 +199,18 @@ namespace RabiRiichi.Server.Agents.Llm {
       var map = new Dictionary<int, string>();
       for (var seat = 0; seat < room.config.playerCount; seat++) {
         map[seat] = SeatName(seat);
+      }
+      return map;
+    }
+
+    private Dictionary<int, LlmSeatRole> SeatRoles() {
+      var map = new Dictionary<int, LlmSeatRole>();
+      for (var seat = 0; seat < room.config.playerCount; seat++) {
+        map[seat] = room.GetPlayerBySeat(seat) switch {
+          User => LlmSeatRole.Human,
+          LlmAI => LlmSeatRole.Llm,
+          _ => LlmSeatRole.OtherAi,
+        };
       }
       return map;
     }

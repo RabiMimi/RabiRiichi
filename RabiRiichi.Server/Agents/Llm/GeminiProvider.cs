@@ -123,7 +123,7 @@ namespace RabiRiichi.Server.Agents.Llm {
         ["model"] = model,
         ["store"] = true,
         ["generation_config"] = new JsonObject {
-          ["temperature"] = 0.7,
+          ["temperature"] = 1.0,
           ["max_output_tokens"] = maxOutputTokens,
           // Flash models support "minimal", the closest available setting to
           // thinking-off. Pro models reject "minimal", so use their lowest

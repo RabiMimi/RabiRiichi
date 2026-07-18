@@ -43,6 +43,14 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
       [3] = "Bob",
     };
 
+    private static IReadOnlyDictionary<int, LlmSeatRole> Roles() =>
+        new Dictionary<int, LlmSeatRole> {
+          [0] = LlmSeatRole.Llm,
+          [1] = LlmSeatRole.Human,
+          [2] = LlmSeatRole.OtherAi,
+          [3] = LlmSeatRole.Llm,
+        };
+
     [TestMethod]
     public void SystemPrompt_ListsOpponentsAndSchemaAndLanguage() {
       var builder = new LlmPromptBuilder(Settings("zhs"), Names());
@@ -88,14 +96,17 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
 
     [TestMethod]
     public void SystemPrompt_LoadsMesugakiPersona() {
-      var prompt = new LlmPromptBuilder(MesugakiSettings(), Names())
+      var prompt = new LlmPromptBuilder(MesugakiSettings(), Names(), Roles())
           .BuildSystemPrompt(0);
 
       StringAssert.Contains(prompt, "extremely teasing, smug mesugaki");
-      StringAssert.Contains(prompt, "Use the ♡ symbol frequently");
+      StringAssert.Contains(prompt, "use lots of \"~\", \"♡\"");
       StringAssert.Contains(prompt, "Alice-ojisan");
       StringAssert.Contains(prompt, "weakling♡");
-      StringAssert.Contains(prompt, "never apply ojisan to tiles");
+      StringAssert.Contains(prompt, "never apply ojisan to other AIs, tiles");
+      StringAssert.Contains(prompt, "Alice (human player");
+      StringAssert.Contains(prompt, "Bob (LLM player; a cute girl; never call her ojisan)");
+      StringAssert.Contains(prompt, "All other LLMs are cute girls");
       Assert.IsFalse(prompt.Contains("cutesy and bubbly like an anime schoolgirl"));
       Assert.IsFalse(prompt.Contains("{{"));
     }
@@ -111,11 +122,12 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
       };
       var settings = LlmSettings.FromProto(config, out _);
 
-      var prompt = new LlmPromptBuilder(settings, Names()).BuildSystemPrompt(0);
+      var prompt = new LlmPromptBuilder(settings, Names(), Roles()).BuildSystemPrompt(0);
 
       StringAssert.Contains(prompt, "ざぁこ♡");
       StringAssert.Contains(prompt, "<名前>-おじさん");
       StringAssert.Contains(prompt, "牌・字牌・風・三元牌");
+      StringAssert.Contains(prompt, "Bob（LLMプレイヤーのかわいい女の子：「おじさん」と呼ばない）");
       Assert.IsFalse(prompt.Contains("friendly JK"));
     }
 
