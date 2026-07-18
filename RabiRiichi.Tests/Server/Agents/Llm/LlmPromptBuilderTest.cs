@@ -45,11 +45,31 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
       Assert.IsFalse(prompt.Contains("\"choice\""));
       StringAssert.Contains(prompt, "\"say\"");
       StringAssert.Contains(prompt, "Simplified Chinese");
+      StringAssert.Contains(prompt, "m=万子");
+      StringAssert.Contains(prompt, "1z=东");
+      StringAssert.Contains(prompt, "5z=白");
+      StringAssert.Contains(prompt, "自风");
+      StringAssert.Contains(prompt, "场风");
       StringAssert.Contains(prompt, "1 in 5 turns");
       // Every advertised sticker mood is a valid one from the registry.
       foreach (var mood in StickerRegistry.Moods) {
         StringAssert.Contains(prompt, mood);
       }
+    }
+
+    [TestMethod]
+    public void SystemPrompt_LocalizesTileNotationGuidance() {
+      var english = new LlmPromptBuilder(Settings("en"), Names()).BuildSystemPrompt(0);
+      StringAssert.Contains(english, "m = characters/manzu");
+      StringAssert.Contains(english, "5z = white dragon");
+      StringAssert.Contains(english, "seat wind");
+      StringAssert.Contains(english, "prevailing round wind");
+
+      var japanese = new LlmPromptBuilder(Settings("ja"), Names()).BuildSystemPrompt(0);
+      StringAssert.Contains(japanese, "m=萬子");
+      StringAssert.Contains(japanese, "5z=白");
+      StringAssert.Contains(japanese, "自風");
+      StringAssert.Contains(japanese, "場風");
     }
 
     [TestMethod]
@@ -90,6 +110,8 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
           chats, quietReminder: true, consecutiveChatReminder: true);
       StringAssert.Contains(prompt, "Recent events");
       StringAssert.Contains(prompt, "Alice discards 1z");
+      StringAssert.Contains(prompt, "Round wind (prevailing wind): East");
+      StringAssert.Contains(prompt, "Your seat wind: East");
       StringAssert.Contains(prompt, "You decided to: discard 1m");
       StringAssert.Contains(prompt, "<trimmed due to length>");
       StringAssert.Contains(prompt, "<sticker: mimi/happy.png>");

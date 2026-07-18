@@ -30,6 +30,7 @@ namespace RabiRiichi.Server.Agents.Llm {
           .Replace("{{SELF_NAME}}", NameOf(selfSeat))
           .Replace("{{SELF_SEAT}}", selfSeat.ToString())
           .Replace("{{LANGUAGE}}", LanguageLabel(settings.Language))
+          .Replace("{{TILE_NOTATION}}", TileNotationHint(settings.Language))
           .Replace("{{OPPONENTS}}", opponents)
           .Replace("{{STICKER_MOODS}}", string.Join(", ", StickerRegistry.Moods));
     }
@@ -71,6 +72,9 @@ namespace RabiRiichi.Server.Agents.Llm {
       }
 
       AppendChats(sb, chats);
+      sb.AppendLine($"Round wind (prevailing wind): {WindLabel(view.RoundWind)}. " +
+          $"Your seat wind: {WindLabel(view.SelfWind)}" +
+          (view.SelfIsDealer ? " (you are dealer)." : "."));
       sb.Append("Your hand: ").AppendLine(DescribeSelfHand(view));
       sb.Append("Wall tiles left: ").Append(view.WallRemaining);
       var riichiSeats = view.OpponentSeats.Where(view.IsRiichi).Select(NameOf).ToList();
@@ -179,6 +183,21 @@ namespace RabiRiichi.Server.Agents.Llm {
       AiLocalization.LangJa => "In Japanese, speak like a friendly JK: casual endings, light fillers, and cute but readable phrasing.",
       AiLocalization.LangZhs => "用中文时说得软萌可爱一点：轻松口语、亲昵的语气词，像元气女高中生一样，但别太夸张。",
       _ => "In English, keep it cutesy and bubbly like an anime schoolgirl (for example, ehehe~, yay!, or mou~), but still clear.",
+    };
+
+    private static string TileNotationHint(string language) => language switch {
+      AiLocalization.LangJa =>
+          "牌表記: m=萬子、p=筒子、s=索子、z=字牌。" +
+          "1z=東、2z=南、3z=西、4z=北、5z=白、6z=發、7z=中。" +
+          "風牌は1z〜4zだけで、5z〜7zは三元牌です。自風は自分の席の風、場風はその局の共通の風で、別々に示されます。同じ風なら両方に該当します。",
+      AiLocalization.LangZhs =>
+          "牌张记法：m=万子，p=筒子，s=索子，z=字牌。" +
+          "1z=东，2z=南，3z=西，4z=北，5z=白，6z=发，7z=中。" +
+          "只有1z至4z是风牌，5z至7z是三元牌。自风是你座位的风，场风是本局共同的风，两者会分别标明；相同时该风同时属于自风和场风。",
+      _ =>
+          "Tile notation: m = characters/manzu, p = dots/pinzu, s = bamboo/souzu, and z = honors. " +
+          "1z = East, 2z = South, 3z = West, 4z = North, 5z = white dragon, 6z = green dragon, 7z = red dragon. " +
+          "Only 1z-4z are winds; 5z-7z are dragons. Your seat wind and the prevailing round wind are listed separately; if they are the same, that wind counts as both.",
     };
   }
 }
