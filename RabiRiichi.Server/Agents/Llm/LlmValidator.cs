@@ -34,10 +34,19 @@ namespace RabiRiichi.Server.Agents.Llm {
       var result = await provider.CompleteAsync(
           messages, LlmLimits.MaxValidationTokens, cts.Token);
 
-      return result.Success
-          ? LlmValidationResult.Success
-          : LlmValidationResult.Fail(ClassifyError(result.Error));
+      // A reply proves reachability. So does a well-formed response that carried
+      // no visible text (a thinking model can spend a tiny budget entirely on
+      // thoughts) — the model is clearly working, so don't reject it here.
+      if (result.Success || IsReachableButEmpty(result.Error)) {
+        return LlmValidationResult.Success;
+      }
+      return LlmValidationResult.Fail(ClassifyError(result.Error));
     }
+
+    /// <summary> A 2xx that returned a valid interaction but no visible text. </summary>
+    private static bool IsReachableButEmpty(string error) =>
+        error != null &&
+        error.Contains("no output text", System.StringComparison.OrdinalIgnoreCase);
 
     /// <summary> Maps a raw provider error into a short, stable reason code. </summary>
     public static string ClassifyError(string error) {
@@ -57,6 +66,12 @@ namespace RabiRiichi.Server.Agents.Llm {
       }
       if (e.Contains("429")) {
         return "rate_limit";
+      }
+      // A 2xx that yielded no usable text (e.g. a thinking model that spent its
+      // whole budget on thoughts, or an unexpected body). Distinct from a
+      // genuine connectivity failure so the reason isn't misleading.
+      if (e.Contains("empty response") || e.Contains("parse error")) {
+        return "no_output";
       }
       return "unreachable";
     }

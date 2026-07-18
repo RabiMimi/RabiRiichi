@@ -16,8 +16,12 @@ namespace RabiRiichi.Server.Agents.Llm {
     /// <summary> Max output tokens for an in-game decision (JSON is small). </summary>
     public const int MaxDecisionTokens = 512;
 
-    /// <summary> Max output tokens for the validation ping. </summary>
-    public const int MaxValidationTokens = 8;
+    /// <summary>
+    /// Max output tokens for the validation ping. Kept small but not tiny:
+    /// thinking models need a little headroom to emit visible text after any
+    /// internal reasoning, otherwise a 200 comes back with no output.
+    /// </summary>
+    public const int MaxValidationTokens = 32;
 
     /// <summary>
     /// Max number of buffered event-delta lines kept per LLM agent. Guards

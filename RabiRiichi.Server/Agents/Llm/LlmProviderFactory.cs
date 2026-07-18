@@ -10,9 +10,9 @@ namespace RabiRiichi.Server.Agents.Llm {
 
   /// <summary>
   /// Default factory backed by an <see cref="IHttpClientFactory"/>. Each provider
-  /// gets a fresh <see cref="HttpClient"/> with the per-request timeout applied
-  /// via the cancellation token (not HttpClient.Timeout, so we can distinguish
-  /// timeout from other errors cleanly).
+  /// borrows a shared <see cref="HttpClient"/>; per-request timeouts are applied
+  /// via the cancellation token (not HttpClient.Timeout) so we can distinguish
+  /// timeout from other errors cleanly.
   /// </summary>
   public sealed class LlmProviderFactory(IHttpClientFactory httpFactory) : ILlmProviderFactory {
     private readonly IHttpClientFactory httpFactory = httpFactory;

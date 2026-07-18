@@ -4,6 +4,7 @@ using RabiRiichi.Server.Generated.Rpc;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,14 +19,6 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
           Model = "gpt-4o-mini",
           Language = "en",
           BaseUrl = baseUrl ?? "",
-        }, out _);
-
-    private static LlmSettings Gemini() => LlmSettings.FromProto(
-        new LlmAiConfig {
-          Provider = LlmProvider.Gemini,
-          ApiToken = "key-123",
-          Model = "gemini-2.0-flash",
-          Language = "en",
         }, out _);
 
     private static readonly IReadOnlyList<LlmMessage> Messages = new List<LlmMessage> {
@@ -80,46 +73,162 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
       Assert.IsFalse(OpenAiProvider.ParseContent("garbage").Success);
     }
 
-    // ---- Gemini ----
+    // ---- Gemini (Interactions API, raw HTTP) ----
+
+    private static LlmSettings Gemini() => LlmSettings.FromProto(
+        new LlmAiConfig {
+          Provider = LlmProvider.Gemini,
+          ApiToken = "key-123",
+          Model = "gemini-3.5-flash",
+          Language = "en",
+        }, out _);
+
+    private static string InteractionResponse(string id, string text) =>
+        "{\"id\":\"" + id + "\",\"status\":\"completed\",\"steps\":[" +
+        "{\"type\":\"model_output\",\"content\":[" +
+        "{\"type\":\"text\",\"text\":\"" + text + "\"}]}]}";
 
     [TestMethod]
-    public async Task Gemini_ParsesContentAndMapsRolesAndKey() {
-      var body = "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"pon!\"}]}}]}";
-      var handler = new FakeHttpHandler(HttpStatusCode.OK, body);
+    public async Task Gemini_PostsToInteractionsWithKeyHeaderAndParsesText() {
+      var handler = new FakeHttpHandler(
+          HttpStatusCode.OK, InteractionResponse("int-1", "pon!"));
       var provider = new GeminiProvider(handler.Client(), Gemini());
 
       var result = await provider.CompleteAsync(Messages, 100, CancellationToken.None);
 
       Assert.IsTrue(result.Success);
       Assert.AreEqual("pon!", result.Content);
-      var url = handler.LastRequest.RequestUri.ToString();
-      StringAssert.Contains(url, "/v1beta/models/gemini-2.0-flash:generateContent");
-      StringAssert.Contains(url, "key=key-123");
+      Assert.AreEqual("https://generativelanguage.googleapis.com/v1beta/interactions",
+          handler.LastRequest.RequestUri.ToString());
+      // Key travels in the header, never the URL.
+      Assert.AreEqual("key-123",
+          handler.LastRequest.Headers.GetValues("x-goog-api-key").First());
     }
 
     [TestMethod]
-    public void Gemini_BuildBody_MapsSystemInstructionAndModelRole() {
-      var body = GeminiProvider.BuildBody(new List<LlmMessage> {
+    public void Gemini_BuildBody_FirstTurnSendsSystemAndStepsNoPrevId() {
+      var body = GeminiProvider.BuildRequestBody(new List<LlmMessage> {
         LlmMessage.System("be nice"),
         LlmMessage.User("u1"),
         LlmMessage.Assistant("a1"),
         LlmMessage.User("u2"),
-      }, 128);
+      }, 128, previousInteractionId: null, model: "gemini-3.5-flash");
 
-      // System instruction is separated out.
-      Assert.AreEqual("be nice",
-          body["system_instruction"]["parts"][0]["text"].GetValue<string>());
-      var contents = body["contents"].AsArray();
-      Assert.AreEqual(3, contents.Count);
-      Assert.AreEqual("user", contents[0]["role"].GetValue<string>());
-      Assert.AreEqual("model", contents[1]["role"].GetValue<string>());
+      Assert.AreEqual("gemini-3.5-flash", body["model"].GetValue<string>());
+      Assert.AreEqual("be nice", body["system_instruction"].GetValue<string>());
+      Assert.IsNull(body["previous_interaction_id"]);
       Assert.AreEqual(128,
-          body["generationConfig"]["maxOutputTokens"].GetValue<int>());
+          body["generation_config"]["max_output_tokens"].GetValue<int>());
+      // Thinking kept low so short replies actually surface as output.
+      Assert.AreEqual("low",
+          body["generation_config"]["thinking_level"].GetValue<string>());
+
+      // Full non-system history as steps, in order, with correct step types.
+      var steps = body["input"].AsArray();
+      Assert.AreEqual(3, steps.Count);
+      Assert.AreEqual("user_input", steps[0]["type"].GetValue<string>());
+      Assert.AreEqual("u1", steps[0]["content"][0]["text"].GetValue<string>());
+      Assert.AreEqual("model_output", steps[1]["type"].GetValue<string>());
+      Assert.AreEqual("user_input", steps[2]["type"].GetValue<string>());
     }
 
     [TestMethod]
-    public void Gemini_ParseContent_EmptyIsFailure() {
-      Assert.IsFalse(GeminiProvider.ParseContent("{\"candidates\":[]}").Success);
+    public void Gemini_BuildBody_ContinuationSendsPrevIdAndOnlyLastTurn() {
+      var body = GeminiProvider.BuildRequestBody(new List<LlmMessage> {
+        LlmMessage.System("be nice"),
+        LlmMessage.User("u1"),
+        LlmMessage.Assistant("a1"),
+        LlmMessage.User("u2"),
+      }, 128, previousInteractionId: "int-1", model: "gemini-3.5-flash");
+
+      Assert.AreEqual("int-1", body["previous_interaction_id"].GetValue<string>());
+      // system_instruction is interaction-scoped, so it is re-sent every turn.
+      Assert.AreEqual("be nice", body["system_instruction"].GetValue<string>());
+      // Only the newest user turn is sent as a plain-string input.
+      Assert.AreEqual("u2", body["input"].GetValue<string>());
+    }
+
+    [TestMethod]
+    public async Task Gemini_ChainsPreviousInteractionIdAcrossCalls() {
+      var bodies = new List<string>();
+      var handler = new FakeHttpHandler(async req => {
+        bodies.Add(await req.Content.ReadAsStringAsync());
+        var resp = InteractionResponse($"int-{bodies.Count}", "ok");
+        return new HttpResponseMessage(HttpStatusCode.OK) {
+          Content = new StringContent(resp),
+        };
+      });
+      var provider = new GeminiProvider(handler.Client(), Gemini());
+
+      await provider.CompleteAsync(Messages, 100, CancellationToken.None);
+      await provider.CompleteAsync(Messages, 100, CancellationToken.None);
+
+      // First call has no prior id; second call references the first's id.
+      var first = JsonNode.Parse(bodies[0]);
+      Assert.IsNull(first["previous_interaction_id"]);
+      var second = JsonNode.Parse(bodies[1]);
+      Assert.AreEqual("int-1", second["previous_interaction_id"].GetValue<string>());
+    }
+
+    [TestMethod]
+    public async Task Gemini_HttpErrorReportsFailureWithCode() {
+      var handler = new FakeHttpHandler(HttpStatusCode.Unauthorized,
+          "{\"error\":{\"code\":401,\"message\":\"bad key\",\"status\":\"UNAUTHENTICATED\"}}");
+      var provider = new GeminiProvider(handler.Client(), Gemini());
+      var result = await provider.CompleteAsync(Messages, 100, CancellationToken.None);
+      Assert.IsFalse(result.Success);
+      StringAssert.Contains(result.Error, "401");
+    }
+
+    [TestMethod]
+    public void Gemini_ParseResponse_ReadsIdAndConcatenatesText() {
+      var json = "{\"id\":\"int-9\",\"steps\":[" +
+          "{\"type\":\"thought\",\"content\":[{\"type\":\"text\",\"text\":\"hmm\"}]}," +
+          "{\"type\":\"model_output\",\"content\":[" +
+          "{\"type\":\"text\",\"text\":\"pon\"},{\"type\":\"text\",\"text\":\"!\"}]}]}";
+      var result = GeminiProvider.ParseResponse(json, out var id);
+      Assert.IsTrue(result.Success);
+      Assert.AreEqual("pon!", result.Content);
+      Assert.AreEqual("int-9", id);
+    }
+
+    [TestMethod]
+    public void Gemini_ParseResponse_UnusableBodyIsEmptyResponse() {
+      // No id and no steps => genuinely unusable body.
+      var result = GeminiProvider.ParseResponse("{}", out _);
+      Assert.IsFalse(result.Success);
+      StringAssert.Contains(result.Error, "empty response");
+      Assert.IsFalse(GeminiProvider.ParseResponse("garbage", out _).Success);
+    }
+
+    [TestMethod]
+    public void Gemini_ParseResponse_ReadsOutputsArrayShape() {
+      var json = "{\"id\":\"int-2\",\"outputs\":[{\"text\":\"kan\"}]}";
+      var result = GeminiProvider.ParseResponse(json, out var id);
+      Assert.IsTrue(result.Success);
+      Assert.AreEqual("kan", result.Content);
+      Assert.AreEqual("int-2", id);
+    }
+
+    [TestMethod]
+    public void Gemini_ParseResponse_ReadsOutputTextConvenienceField() {
+      var json = "{\"id\":\"int-3\",\"output_text\":\"ron\"}";
+      var result = GeminiProvider.ParseResponse(json, out _);
+      Assert.IsTrue(result.Success);
+      Assert.AreEqual("ron", result.Content);
+    }
+
+    [TestMethod]
+    public void Gemini_ParseResponse_ValidInteractionNoTextIsReachableButEmpty() {
+      // A well-formed interaction (has id) whose model spent its budget on a
+      // thought and produced no visible text. This proves reachability, so the
+      // error is the distinct "no output text" (not "empty response").
+      var json = "{\"id\":\"int-7\",\"steps\":[" +
+          "{\"type\":\"thought\",\"content\":[{\"type\":\"text\",\"text\":\"hmm\"}]}]}";
+      var result = GeminiProvider.ParseResponse(json, out var id);
+      Assert.IsFalse(result.Success);
+      Assert.AreEqual("int-7", id);
+      StringAssert.Contains(result.Error, "no output text");
     }
   }
 }

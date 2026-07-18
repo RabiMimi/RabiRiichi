@@ -36,6 +36,16 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
     }
 
     [TestMethod]
+    public async Task Validate_AcceptsReachableButEmpty() {
+      // A thinking model can return a valid interaction with no visible text
+      // under a tiny ping budget; reachability is still proven, so validation
+      // must succeed rather than reject a working model.
+      var validator = new LlmValidator(new StubFactory(LlmResult.Fail("no output text")));
+      var result = await validator.ValidateAsync(Settings());
+      Assert.IsTrue(result.Ok);
+    }
+
+    [TestMethod]
     public async Task Validate_FailsAndClassifiesAuth() {
       var validator = new LlmValidator(new StubFactory(LlmResult.Fail("HTTP 401: bad key")));
       var result = await validator.ValidateAsync(Settings());
