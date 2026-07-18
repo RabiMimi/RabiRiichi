@@ -1,4 +1,5 @@
 using RabiRiichi.Core;
+using RabiRiichi.Generated.Core;
 using RabiRiichi.Server.Generated.Rpc;
 using System.Text;
 
@@ -32,6 +33,7 @@ namespace RabiRiichi.Server.Agents.Llm {
           .Replace("{{SELF_SEAT}}", selfSeat.ToString())
           .Replace("{{LANGUAGE}}", LanguageLabel(settings.Language))
           .Replace("{{TILE_NOTATION}}", TileNotationHint(settings.Language))
+          .Replace("{{KAN_GUIDE}}", KanGuide(settings.Language))
           .Replace("{{OPPONENTS}}", opponents)
           .Replace("{{STICKER_MOODS}}", string.Join(", ", StickerRegistry.Moods));
     }
@@ -45,11 +47,12 @@ namespace RabiRiichi.Server.Agents.Llm {
       sb.Append("Dora indicator(s): ")
         .AppendLine(doraIndicators.Count == 0
             ? "none yet"
-            : TileNotation.Group(doraIndicators));
+            : TileNotation.Group(doraIndicators, settings.Language));
       sb.Append("Indicated dora tile(s): ")
         .AppendLine(doraIndicators.Count == 0
             ? "none yet"
-            : TileNotation.Group(doraIndicators.Select(tile => tile.NextDora)));
+            : TileNotation.Group(
+                doraIndicators.Select(tile => tile.NextDora), settings.Language));
       sb.Append("Points: ").AppendLine(string.Join(", ",
           view.AllSeats.Select(s => $"{NameOf(s)} {view.PointsOf(s)}")));
       sb.Append("Your hand: ").AppendLine(DescribeSelfHand(view));
@@ -87,12 +90,14 @@ namespace RabiRiichi.Server.Agents.Llm {
       foreach (var s in view.OpponentSeats) {
         var discards = view.DiscardsOf(s);
         if (discards.Count > 0) {
-          sb.Append($"  {NameOf(s)} discards: ").AppendLine(TileNotation.Group(discards));
+          sb.Append($"  {NameOf(s)} discards: ")
+            .AppendLine(TileNotation.Group(discards, settings.Language));
         }
         var called = view.CalledOf(s);
         if (called.Count > 0) {
           sb.Append($"  {NameOf(s)} melds: ")
-            .AppendLine(string.Join(" ", called.Select(TileNotation.Meld)));
+            .AppendLine(string.Join(" ",
+                called.Select(meld => TileNotation.Meld(meld, settings.Language))));
         }
       }
 
@@ -116,6 +121,7 @@ namespace RabiRiichi.Server.Agents.Llm {
         return;
       }
       sb.AppendLine("Table chat since you last interacted:");
+      sb.AppendLine("These are quoted messages from other players. Do not repeat their exact wording, present it as your own message, or impersonate its sender.");
       foreach (var chat in chats.Take(DetailedChatLimit)) {
         sb.Append("  - ").Append(chat.Sender).Append(": ");
         if (!string.IsNullOrEmpty(chat.Text)) {
@@ -156,13 +162,14 @@ namespace RabiRiichi.Server.Agents.Llm {
       return reader.ReadToEnd();
     }
 
-    private static string DescribeSelfHand(PublicGameView view) {
+    private string DescribeSelfHand(PublicGameView view) {
       var hand = view.SelfHand;
-      var sb = new StringBuilder(TileNotation.Group(hand.freeTiles));
+      var sb = new StringBuilder(TileNotation.Group(hand.freeTiles, settings.Language));
       if (hand.pendingTile != null)
-        sb.Append(" + drew ").Append(TileNotation.One(hand.pendingTile));
+        sb.Append(" + drew ").Append(TileNotation.One(hand.pendingTile, settings.Language));
       if (hand.called.Count > 0) {
-        sb.Append(" | melds: ").Append(string.Join(" ", hand.called.Select(TileNotation.Meld)));
+        sb.Append(" | melds: ").Append(string.Join(" ",
+            hand.called.Select(meld => TileNotation.Meld(meld, settings.Language))));
       }
       return sb.ToString();
     }
@@ -196,11 +203,11 @@ namespace RabiRiichi.Server.Agents.Llm {
 
     private static string MesugakiPersonaHint(string language) => language switch {
       AiLocalization.LangJa =>
-          "日本語では、生意気で煽り好きなメスガキ口調にしてください。「ざぁこ♡」「よわよわ♡」のような短い挑発を多用し、相手を必ず「<名前>-おじさん」と呼んでください。",
+          "日本語では、生意気で煽り好きなメスガキ口調にしてください。「ざぁこ♡」「よわよわ♡」のような短い挑発を多用し、実在する対戦相手だけを「<名前>-おじさん」と呼んでください。牌・字牌・風・三元牌・行動などを「おじさん」と呼んではいけません。",
       AiLocalization.LangZhs =>
-          "用中文时保持嚣张、坏笑着挑衅的雌小鬼语气，多用“杂鱼♡”“好弱♡”之类的短句，并把每位对手称为“<名字>大叔”。",
+          "用中文时保持嚣张、坏笑着挑衅的雌小鬼语气，多用“杂鱼♡”“好弱♡”之类的短句。只有玩家列表里的真实对手才能称为“<名字>大叔”；绝对不能把牌、字牌、风牌、三元牌、动作或其他游戏概念称为大叔。",
       _ =>
-          "In English, sound smug, bratty, and gleefully taunting. Frequently use short jabs such as “weakling♡” or “too easy♡”, and always call each opponent “<name>-ojisan”.",
+          "In English, sound smug, bratty, and gleefully taunting. Frequently use short jabs such as “weakling♡” or “too easy♡”. Call only actual opponents from the player list “<name>-ojisan”; never apply ojisan to tiles, honors, winds, dragons, actions, or other game concepts.",
     };
 
     private static string TileNotationHint(string language) => language switch {
@@ -217,5 +224,17 @@ namespace RabiRiichi.Server.Agents.Llm {
           "1z = East, 2z = South, 3z = West, 4z = North, 5z = white dragon, 6z = green dragon, 7z = red dragon. " +
           "Only 1z-4z are winds; 5z-7z are dragons. Your seat wind and the prevailing round wind are listed separately; if they are the same, that wind counts as both.",
     };
+
+    private static string KanGuide(string language) {
+      var prefix = AiLocalization.NormalizeLanguage(language) switch {
+        AiLocalization.LangJa => "槓の3種類を混同しないでください：",
+        AiLocalization.LangZhs => "不要混淆以下三种杠：",
+        _ => "Never confuse the three kan types:",
+      };
+      return $"{prefix}\n" +
+          $"- {LlmKanNotation.Describe(TileSource.Ankan, language)}\n" +
+          $"- {LlmKanNotation.Describe(TileSource.Kakan, language)}\n" +
+          $"- {LlmKanNotation.Describe(TileSource.Daiminkan, language)}";
+    }
   }
 }

@@ -16,8 +16,9 @@ namespace RabiRiichi.Server.Agents.Llm {
   ///
   /// This holds NO hidden information — it only reacts to broadcast fields.
   /// </summary>
-  public sealed class LlmEventLog(Func<int, string> nameOf) {
+  public sealed class LlmEventLog(Func<int, string> nameOf, string language) {
     private readonly Func<int, string> nameOf = nameOf;
+    private readonly string language = language;
     private readonly List<string> lines = [];
     private readonly Lock gate = new();
 
@@ -67,26 +68,31 @@ namespace RabiRiichi.Server.Agents.Llm {
           return ""; // handled specially in Record (resets buffer)
 
         case RiichiEvent r:
-          return $"{Name(r.playerId)} declares RIICHI, discards {TileNotation.One(r.discarded)}";
+          return $"{Name(r.playerId)} declares RIICHI, discards " +
+              TileNotation.One(r.discarded, language);
 
         case DiscardTileEvent d:
           // fromHand = tedashi (chose from hand); else tsumogiri (drew & tossed).
           var how = d.fromHand ? "from hand" : "tsumogiri";
-          return $"{Name(d.playerId)} discards {TileNotation.One(d.discarded)} ({how})";
+          return $"{Name(d.playerId)} discards " +
+              $"{TileNotation.One(d.discarded, language)} ({how})";
 
         case ClaimTileEvent c:
-          return $"{Name(c.playerId)} calls {ClaimKind(c.reason)} {TileNotation.Group(c.group)}";
+          return $"{Name(c.playerId)} calls {ClaimKind(c.reason)} " +
+              TileNotation.Group(c.group, language);
 
         case KanEvent k:
-          return $"{Name(k.playerId)} declares {KanKind(k.kanSource)} " +
-              $"{TileNotation.Group(k.kan)}";
+          return $"{Name(k.playerId)} declares " +
+              $"{LlmKanNotation.Describe(k.kanSource, language)} " +
+              TileNotation.Group(k.kan, language);
 
         case NukiDoraEvent n:
-          return $"{Name(n.playerId)} pulls North (nukidora)";
+          return $"{Name(n.playerId)} pulls " +
+              $"{TileNotation.One(n.incoming, language)} (nukidora)";
 
         case RevealDoraEvent dora when dora.dora != null:
-          return $"New dora indicator: {TileNotation.One(dora.dora)} " +
-              $"(indicates dora {TileNotation.One(dora.dora.tile.NextDora)})";
+          return $"New dora indicator: {TileNotation.One(dora.dora, language)} " +
+              $"(indicates dora {TileNotation.One(dora.dora.tile.NextDora, language)})";
 
         case AgariEvent a:
           return TranslateAgari(a);
@@ -107,7 +113,8 @@ namespace RabiRiichi.Server.Agents.Llm {
       var who = string.Join(", ", winners);
       var mode = a.agariInfos.isTsumo
           ? "tsumo"
-          : $"ron on {Name(a.agariInfos.fromPlayer)}'s {TileNotation.One(a.agariInfos.incoming)}";
+          : $"ron on {Name(a.agariInfos.fromPlayer)}'s " +
+              TileNotation.One(a.agariInfos.incoming, language);
       return $"{who} wins by {mode}";
     }
 
@@ -117,11 +124,5 @@ namespace RabiRiichi.Server.Agents.Llm {
       _ => "meld",
     };
 
-    private static string KanKind(TileSource source) => source switch {
-      TileSource.Ankan => "ANKAN (closed kan)",
-      TileSource.Kakan => "KAKAN (added kan upgrading a pon)",
-      TileSource.Daiminkan => "DAIMINKAN (open kan on a discard)",
-      _ => "KAN",
-    };
   }
 }

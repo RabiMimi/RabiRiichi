@@ -7,6 +7,8 @@ Respond ONLY in this language: {{LANGUAGE}}.
 
 {{TILE_NOTATION}}
 
+{{KAN_GUIDE}}
+
 The other players are:
 {{OPPONENTS}}
 

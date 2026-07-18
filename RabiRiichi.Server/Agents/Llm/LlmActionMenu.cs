@@ -68,8 +68,10 @@ namespace RabiRiichi.Server.Agents.Llm {
           $"{selectedAction}.";
     }
 
-    public static string DescribeSelected(SinglePlayerInquiry inquiry, InquiryResponse response) {
-      var choice = Build(inquiry).FirstOrDefault(c => c.Matches(response));
+    public static string DescribeSelected(
+        SinglePlayerInquiry inquiry, InquiryResponse response,
+        string language = AiLocalization.LangEn) {
+      var choice = Build(inquiry, language).FirstOrDefault(c => c.Matches(response));
       if (choice != null) return choice.Description;
       if (response.index < 0) return "pass / take no action";
       return response.index < inquiry.actions.Count
@@ -77,28 +79,29 @@ namespace RabiRiichi.Server.Agents.Llm {
           : "take the selected legal action";
     }
 
-    public static IReadOnlyList<LlmChoice> Build(SinglePlayerInquiry inquiry) {
+    public static IReadOnlyList<LlmChoice> Build(
+        SinglePlayerInquiry inquiry, string language = AiLocalization.LangEn) {
       var choices = new List<LlmChoice>();
       var actions = inquiry.actions;
       for (int ai = 0; ai < actions.Count; ai++) {
         switch (actions[ai]) {
           case RiichiAction riichi:
-            AddTileOptions(choices, ai, riichi, "riichi");
+            AddTileOptions(choices, ai, riichi, "riichi", language);
             break;
           case PlayTileAction play:
-            AddTileOptions(choices, ai, play, "discard");
+            AddTileOptions(choices, ai, play, "discard", language);
             break;
           case ChiiAction chii:
-            AddTilesOptions(choices, ai, chii, "chii");
+            AddTilesOptions(choices, ai, chii, "chii", language);
             break;
           case PonAction pon:
-            AddTilesOptions(choices, ai, pon, "pon");
+            AddTilesOptions(choices, ai, pon, "pon", language);
             break;
           case KanAction kan:
-            AddKanOptions(choices, ai, kan);
+            AddKanOptions(choices, ai, kan, language);
             break;
           case NukiDoraAction nuki:
-            AddTilesOptions(choices, ai, nuki, "nukidora");
+            AddTilesOptions(choices, ai, nuki, "nukidora", language);
             break;
           case RonAction:
             AddConfirm(choices, ai, "ron", "Declare RON (win on the discard)");
@@ -123,17 +126,19 @@ namespace RabiRiichi.Server.Agents.Llm {
     }
 
     private static void AddTileOptions(
-        List<LlmChoice> choices, int actionIndex, PlayTileAction action, string kind) {
+        List<LlmChoice> choices, int actionIndex, PlayTileAction action,
+        string kind, string language) {
       var options = action.options;
       for (int oi = 0; oi < options.Count; oi++) {
         var tile = options[oi].tile;
-        var desc = $"{kind} {TileNotation.One(tile)}";
+        var desc = $"{kind} {TileNotation.One(tile, language)}";
         // Attach tenpai/value info when discarding this tile leaves tenpai.
         var cand = action.candidates?.Find(c => c.tile.tile.IsSame(tile.tile));
         if (cand != null && cand.tenpaiInfos.Count > 0) {
           var best = cand.tenpaiInfos.OrderByDescending(t => t.han * 100 + t.points).First();
           var waits = string.Join("", cand.tenpaiInfos
-              .Select(t => t.winningTile).Distinct().Select(TileNotation.One));
+              .Select(t => t.winningTile).Distinct()
+              .Select(wait => TileNotation.One(wait, language)));
           desc += $" -> TENPAI (wait {waits}, up to {best.han} han)";
         }
         choices.Add(new LlmChoice {
@@ -147,7 +152,8 @@ namespace RabiRiichi.Server.Agents.Llm {
     }
 
     private static void AddTilesOptions(
-        List<LlmChoice> choices, int actionIndex, ChooseTilesAction action, string kind) {
+        List<LlmChoice> choices, int actionIndex, ChooseTilesAction action,
+        string kind, string language) {
       var options = action.options;
       for (int oi = 0; oi < options.Count; oi++) {
         var tiles = options[oi].tiles;
@@ -156,23 +162,25 @@ namespace RabiRiichi.Server.Agents.Llm {
           ActionIndex = actionIndex,
           OptionIndex = oi,
           Kind = kind,
-          Description = $"{kind} using {TileNotation.Group(tiles)}",
+          Description = $"{kind} using {TileNotation.Group(tiles, language)}",
         });
       }
     }
 
     private static void AddKanOptions(
-        List<LlmChoice> choices, int actionIndex, KanAction action) {
+        List<LlmChoice> choices, int actionIndex, KanAction action, string language) {
       var options = action.options;
       for (var optionIndex = 0; optionIndex < options.Count; optionIndex++) {
         var tiles = options[optionIndex].tiles;
-        var (kind, explanation) = KanDescription(new Kan(tiles).KanSource);
+        var source = new Kan(tiles).KanSource;
+        var kind = LlmKanNotation.Kind(source);
         choices.Add(new LlmChoice {
           Id = choices.Count,
           ActionIndex = actionIndex,
           OptionIndex = optionIndex,
           Kind = kind,
-          Description = $"{kind} ({explanation}) using {TileNotation.Group(tiles)}",
+          Description = $"{LlmKanNotation.Describe(source, language)} using " +
+              TileNotation.Group(tiles, language),
         });
       }
     }
@@ -180,13 +188,6 @@ namespace RabiRiichi.Server.Agents.Llm {
     private static bool IsDaiminkanOnly(KanAction action) =>
         action.options.Count > 0 &&
         action.options.All(option => new Kan(option.tiles).KanSource == TileSource.Daiminkan);
-
-    private static (string Kind, string Explanation) KanDescription(TileSource source) => source switch {
-      TileSource.Ankan => ("ankan", "closed kan from your own hand"),
-      TileSource.Kakan => ("kakan", "added kan upgrading an existing pon"),
-      TileSource.Daiminkan => ("daiminkan", "open kan on another player's discard"),
-      _ => ("kan", "four-of-a-kind call"),
-    };
 
     private static void AddConfirm(
         List<LlmChoice> choices, int actionIndex, string kind, string desc) {

@@ -11,7 +11,13 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
       Assert.AreEqual("1m", TileNotation.One(new Tile("1m")));
       Assert.AreEqual("5p", TileNotation.One(new Tile("5p")));
       Assert.AreEqual("9s", TileNotation.One(new Tile("9s")));
-      Assert.AreEqual("1z", TileNotation.One(new Tile("1z")));
+      Assert.AreEqual("1z(East wind)", TileNotation.One(new Tile("1z")));
+      Assert.AreEqual("4z(North wind)", TileNotation.One(new Tile("4z")));
+      Assert.AreEqual("5z(White dragon)", TileNotation.One(new Tile("5z")));
+      Assert.AreEqual("4z(北・風牌)", TileNotation.One(new Tile("4z"), "ja"));
+      Assert.AreEqual("5z(白・三元牌)", TileNotation.One(new Tile("5z"), "ja"));
+      Assert.AreEqual("4z(北风牌)", TileNotation.One(new Tile("4z"), "zhs"));
+      Assert.AreEqual("5z(白，三元牌)", TileNotation.One(new Tile("5z"), "zhs"));
     }
 
     [TestMethod]
@@ -25,7 +31,9 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
         new("3m"), new("1m"), new("2m"),
         new("9s"), new("5p"), new("1z"), new("1z"),
       };
-      Assert.AreEqual("123m5p9s11z", TileNotation.Group(tiles));
+      Assert.AreEqual(
+          "123m5p9s 1z(East wind) 1z(East wind)",
+          TileNotation.Group(tiles));
     }
 
     [TestMethod]

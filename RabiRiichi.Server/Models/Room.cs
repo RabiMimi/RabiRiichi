@@ -67,8 +67,11 @@ namespace RabiRiichi.Server.Models {
     /// Same validation and fan-out as a human message. Safe to call from any
     /// thread; it only enqueues to connections.
     /// </summary>
-    public void SendAgentChat(int senderId, string text, string sticker) {
-      BroadcastChat(senderId, text, sticker);
+    public void SendAgentChat(IPlayerAgent sender, string text, string sticker) {
+      if (!HasPlayer(sender)) {
+        return;
+      }
+      BroadcastChat(sender.id, text, sticker);
     }
 
     private void BroadcastChat(int senderId, string text, string sticker) {

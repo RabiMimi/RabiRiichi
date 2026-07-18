@@ -76,6 +76,21 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
     }
 
     [TestMethod]
+    public void Build_LocalizesHonorNamesInActionDetails() {
+      var game = BuildGame(b => b
+          .WithPlayer(0, p => p.SetFreeTiles("123456789m1112z")));
+      var player = game.GetPlayer(0);
+      var hand14 = player.hand.freeTiles.ToList();
+      var play = new PlayTileAction(player, hand14, hand14[0]);
+
+      var menu = LlmActionMenu.Build(InquiryWith(0, play), "zhs");
+
+      Assert.IsTrue(menu.Any(choice =>
+          choice.Kind == "discard" &&
+          choice.Description.StartsWith("discard 2z(南风牌)")));
+    }
+
+    [TestMethod]
     public void Build_ChoiceIdsAreContiguousAndStable() {
       var game = BuildGame(b => b
           .WithPlayer(0, p => p.SetFreeTiles("123456789m1234p")));
@@ -144,11 +159,19 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
       var menu = LlmActionMenu.Build(InquiryWith(0, kan));
 
       Assert.IsTrue(menu.Any(choice => choice.Kind == "ankan" &&
-          choice.Description.Contains("closed kan")));
+          choice.Description.Contains("four matching tiles entirely")));
       Assert.IsTrue(menu.Any(choice => choice.Kind == "kakan" &&
-          choice.Description.Contains("upgrading an existing pon")));
+          choice.Description.Contains("existing open pon")));
       Assert.IsTrue(menu.Any(choice => choice.Kind == "daiminkan" &&
           choice.Description.Contains("another player's discard")));
+
+      var chineseMenu = LlmActionMenu.Build(InquiryWith(0, kan), "zhs");
+      Assert.IsTrue(chineseMenu.Any(choice => choice.Kind == "ankan" &&
+          choice.Description.Contains("暗杠：不使用他家的弃牌")));
+      Assert.IsTrue(chineseMenu.Any(choice => choice.Kind == "kakan" &&
+          choice.Description.Contains("加杠：在自己已经碰出的明刻上")));
+      Assert.IsTrue(chineseMenu.Any(choice => choice.Kind == "daiminkan" &&
+          choice.Description.Contains("大明杠：用自己手里的三张相同牌")));
     }
 
     [TestMethod]

@@ -33,7 +33,7 @@ namespace RabiRiichi.Server.Agents.Llm {
         : base(id, room, status) {
       this.settings = settings;
       provider = LlmRuntime.Factory.Create(settings);
-      eventLog = new LlmEventLog(SeatName);
+      eventLog = new LlmEventLog(SeatName, settings.Language);
     }
 
     private string LogTag =>
@@ -64,8 +64,9 @@ namespace RabiRiichi.Server.Agents.Llm {
       if (LlmActionMenu.IsOutOfTurnCallInquiry(playerInquiry)) {
         return selected;
       }
-      var menu = LlmActionMenu.Build(playerInquiry);
-      var selectedAction = LlmActionMenu.DescribeSelected(playerInquiry, selected);
+      var menu = LlmActionMenu.Build(playerInquiry, settings.Language);
+      var selectedAction = LlmActionMenu.DescribeSelected(
+          playerInquiry, selected, settings.Language);
       var automaticActionNote = LlmActionMenu.DescribeAutomaticAction(
           view.SelfRiichi, menu, selectedAction);
 
@@ -163,12 +164,12 @@ namespace RabiRiichi.Server.Agents.Llm {
       if (decision == null) return false;
       var emitted = false;
       if (!string.IsNullOrWhiteSpace(decision.Say)) {
-        room.SendAgentChat(id, decision.Say, null);
+        room.SendAgentChat(this, decision.Say, null);
         emitted = true;
       }
       var sticker = StickerRegistry.ResolvePath(decision.Sticker);
       if (sticker != null) {
-        room.SendAgentChat(id, null, sticker);
+        room.SendAgentChat(this, null, sticker);
         emitted = true;
       }
       return emitted;

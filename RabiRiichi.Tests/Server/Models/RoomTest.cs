@@ -1,14 +1,47 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using RabiRiichi.Actions;
 using RabiRiichi.Core.Config;
 using RabiRiichi.Server.Models;
 using RabiRiichi.Server.Agents;
 using RabiRiichi.Server.Generated.Messages;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace RabiRiichi.Tests.Server {
   [TestClass]
   public class RoomTest {
+    private sealed class ChatRecordingAi(int id, Room room)
+        : AIAgent(id, room, UserStatus.InRoom) {
+      public readonly List<int> ChatSenders = [];
+      public override AiType aiType => AiType.Dummy;
+
+      public override void OnChat(int senderId, string text, string sticker) {
+        ChatSenders.Add(senderId);
+      }
+
+      protected override InquiryResponse Decide(
+          MultiPlayerInquiry gameInquiry,
+          SinglePlayerInquiry playerInquiry,
+          TimeSpan remainingTimeout) => InquiryResponse.Default(Seat);
+    }
+
+    [TestMethod]
+    public void AgentChatUsesTheEmittingAgentIdentity() {
+      var room = new Room(new Random(0), new GameConfig { playerCount = 4 });
+      var gemini = new ChatRecordingAi(-101, room);
+      var deepSeek = new ChatRecordingAi(-102, room);
+      var observer = new ChatRecordingAi(-103, room);
+      Assert.IsTrue(room.AddPlayer(gemini));
+      Assert.IsTrue(room.AddPlayer(deepSeek));
+      Assert.IsTrue(room.AddPlayer(observer));
+
+      room.SendAgentChat(gemini, "gemini message", null);
+      room.SendAgentChat(deepSeek, "deepseek message", null);
+
+      CollectionAssert.AreEqual(new[] { -101, -102 }, observer.ChatSenders);
+    }
+
     [TestMethod]
     public void TestGameStartsWhenAiAddedLast() {
       var rand = new Random(0);

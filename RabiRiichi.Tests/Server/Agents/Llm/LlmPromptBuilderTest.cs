@@ -60,6 +60,10 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
       StringAssert.Contains(prompt, "5z=白");
       StringAssert.Contains(prompt, "自风");
       StringAssert.Contains(prompt, "场风");
+      StringAssert.Contains(prompt, "不要混淆以下三种杠");
+      StringAssert.Contains(prompt, "ANKAN (暗杠");
+      StringAssert.Contains(prompt, "KAKAN (加杠");
+      StringAssert.Contains(prompt, "DAIMINKAN (大明杠");
       StringAssert.Contains(prompt, "1 in 5 turns");
       // Every advertised sticker mood is a valid one from the registry.
       foreach (var mood in StickerRegistry.Moods) {
@@ -91,6 +95,7 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
       StringAssert.Contains(prompt, "Use the ♡ symbol frequently");
       StringAssert.Contains(prompt, "Alice-ojisan");
       StringAssert.Contains(prompt, "weakling♡");
+      StringAssert.Contains(prompt, "never apply ojisan to tiles");
       Assert.IsFalse(prompt.Contains("cutesy and bubbly like an anime schoolgirl"));
       Assert.IsFalse(prompt.Contains("{{"));
     }
@@ -110,6 +115,7 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
 
       StringAssert.Contains(prompt, "ざぁこ♡");
       StringAssert.Contains(prompt, "<名前>-おじさん");
+      StringAssert.Contains(prompt, "牌・字牌・風・三元牌");
       Assert.IsFalse(prompt.Contains("friendly JK"));
     }
 
@@ -151,16 +157,25 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
           chats, quietReminder: true, consecutiveChatReminder: true);
       StringAssert.Contains(prompt, "Recent events");
       StringAssert.Contains(prompt, "Alice discards 1z");
+      StringAssert.Contains(prompt, "Alice discards: 1z(East wind)");
       StringAssert.Contains(prompt, "Round wind (prevailing wind): East");
       StringAssert.Contains(prompt, "Your seat wind: East");
       StringAssert.Contains(prompt, "You decided to: discard 1m");
       StringAssert.Contains(prompt, "<trimmed due to length>");
       StringAssert.Contains(prompt, "<sticker: mimi/happy.png>");
+      StringAssert.Contains(prompt, "quoted messages from other players");
+      StringAssert.Contains(prompt, "Do not repeat their exact wording");
       StringAssert.Contains(prompt, "They then chatted in this order (details omitted): Alice, Bob");
       StringAssert.Contains(prompt, "quiet for at least 10 turns");
       StringAssert.Contains(prompt, "automatically discarded 1m after riichi");
       StringAssert.Contains(prompt, "chatted on 2 or more consecutive turns");
       Assert.IsFalse(prompt.Contains("Choices:"));
+
+      var chinesePrompt = new LlmPromptBuilder(Settings("zhs"), Names())
+          .BuildDecisionPrompt(
+              view, events, "discard 1m", null, [],
+              quietReminder: false, consecutiveChatReminder: false);
+      StringAssert.Contains(chinesePrompt, "Alice discards: 1z(东风牌)");
     }
 
     [TestMethod]
