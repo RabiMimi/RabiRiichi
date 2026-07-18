@@ -181,6 +181,10 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
       StringAssert.Contains(prompt, "quiet for at least 10 turns");
       StringAssert.Contains(prompt, "automatically discarded 1m after riichi");
       StringAssert.Contains(prompt, "chatted on 2 or more consecutive turns");
+      StringAssert.Contains(prompt, "context, not a request to chat");
+      StringAssert.Contains(prompt, "Return say=null and sticker=null this turn");
+      StringAssert.Contains(prompt, "{\"say\":null,\"sticker\":null}");
+      Assert.IsFalse(prompt.Contains("Speak as though"));
       Assert.IsFalse(prompt.Contains("Choices:"));
 
       var chinesePrompt = new LlmPromptBuilder(Settings("zhs"), Names())

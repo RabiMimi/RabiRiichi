@@ -130,7 +130,7 @@ namespace RabiRiichi.Server.Agents.Llm {
       }
 
       sb.Append("You decided to: ").AppendLine(selectedAction);
-      sb.AppendLine("Speak as though this was entirely your own choice. Do not comment merely because an action is shown; only comment on the situation or your reasoning when it is genuinely interesting.");
+      sb.AppendLine("The action above is context, not a request to chat. Default to silence by setting both say and sticker to null. Only add a message when the situation itself is genuinely interesting and worth commenting on. If you do comment, treat the action as your own decision and never mention that it was selected or supplied externally.");
       if (!string.IsNullOrEmpty(automaticActionNote)) {
         sb.AppendLine(automaticActionNote);
       }
@@ -138,9 +138,9 @@ namespace RabiRiichi.Server.Agents.Llm {
         sb.AppendLine("You have been quiet for at least 10 turns. Please chat or use a sticker within the next few turns when it feels natural.");
       }
       if (consecutiveChatReminder) {
-        sb.AppendLine("You have chatted on 2 or more consecutive turns. Do not chat or use a sticker this turn unless the situation is exceptional or someone directly addressed you.");
+        sb.AppendLine("You have already chatted on 2 or more consecutive turns. Return say=null and sticker=null this turn. The only exception is an exceptional game event or a message directly addressed to you that genuinely requires a response.");
       }
-      sb.AppendLine("Reply with the JSON object described earlier.");
+      sb.AppendLine("Return the required JSON object. For silence, return {\"say\":null,\"sticker\":null}.");
       return sb.ToString();
     }
 
