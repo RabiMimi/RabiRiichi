@@ -3,13 +3,12 @@ using System.Linq;
 using System.Text;
 using RabiRiichi.Actions;
 using RabiRiichi.Core;
+using RabiRiichi.Generated.Core;
 
 namespace RabiRiichi.Server.Agents.Llm {
   /// <summary>
-  /// One selectable choice presented to the LLM: a stable (actionIndex,
-  /// optionIndex) pair, a short machine kind, and a human description. The LLM
-  /// replies with the <see cref="Id"/>; we map it straight back to an
-  /// <see cref="InquiryResponse"/>.
+  /// One legal choice represented by a stable (actionIndex, optionIndex) pair,
+  /// a short machine kind, and a human description used in LLM context.
   /// </summary>
   public sealed class LlmChoice {
     /// <summary> Opaque id the LLM selects (index into the menu). </summary>
@@ -25,22 +24,59 @@ namespace RabiRiichi.Server.Agents.Llm {
     /// <summary> Human-readable description for the prompt. </summary>
     public string Description { get; init; }
 
+    /// <summary> Canonical serialized response payload for this choice. </summary>
+    public string SerializedResponse => OptionIndex < 0
+        ? "{}"
+        : System.Text.Json.JsonSerializer.Serialize(OptionIndex);
+
     /// <summary> Builds the response for this choice. </summary>
     public InquiryResponse ToResponse(int seat) {
-      return OptionIndex < 0
-          ? new InquiryResponse(seat, ActionIndex, "{}")
-          : new InquiryResponse(seat, ActionIndex,
-              System.Text.Json.JsonSerializer.Serialize(OptionIndex));
+      return new InquiryResponse(seat, ActionIndex, SerializedResponse);
+    }
+
+    /// <summary> Whether a response selects this exact choice. </summary>
+    public bool Matches(InquiryResponse response) {
+      return ActionIndex == response.index && SerializedResponse == response.response;
     }
   }
 
   /// <summary>
-  /// Flattens a <see cref="SinglePlayerInquiry"/> into a compact, numbered menu
-  /// of <see cref="LlmChoice"/>s. This is the ONLY place that understands the
-  /// engine's action shapes for the LLM path, keeping the agent decoupled from
-  /// action internals. Choice ids are stable within one menu.
+  /// Flattens a <see cref="SinglePlayerInquiry"/> into compact descriptions of
+  /// its legal actions. This is the only LLM-path code that understands the
+  /// engine's action shapes. Choice ids are stable within one menu.
   /// </summary>
   public static class LlmActionMenu {
+    /// <summary>
+    /// True for reaction inquiries that could expose a chii, pon, or daiminkan
+    /// opportunity. Ron is deliberately exempt so the model may react to a win.
+    /// </summary>
+    public static bool IsOutOfTurnCallInquiry(SinglePlayerInquiry inquiry) {
+      if (inquiry.actions.Any(action => action is RonAction)) return false;
+      return inquiry.actions.Any(action => action is ChiiAction or PonAction ||
+          action is KanAction kan && IsDaiminkanOnly(kan));
+    }
+
+    public static string DescribeAutomaticAction(
+        bool selfRiichi, IReadOnlyList<LlmChoice> menu, string selectedAction) {
+      if (menu.Count != 1) return null;
+      if (selfRiichi && menu[0].Kind == "discard" &&
+          selectedAction.StartsWith("discard ", System.StringComparison.Ordinal)) {
+        return $"You automatically discarded {selectedAction["discard ".Length..]} " +
+            "after riichi because that was the only valid action.";
+      }
+      return "You automatically took this action because it was the only valid action: " +
+          $"{selectedAction}.";
+    }
+
+    public static string DescribeSelected(SinglePlayerInquiry inquiry, InquiryResponse response) {
+      var choice = Build(inquiry).FirstOrDefault(c => c.Matches(response));
+      if (choice != null) return choice.Description;
+      if (response.index < 0) return "pass / take no action";
+      return response.index < inquiry.actions.Count
+          ? inquiry.actions[response.index].GetType().Name.Replace("Action", "")
+          : "take the selected legal action";
+    }
+
     public static IReadOnlyList<LlmChoice> Build(SinglePlayerInquiry inquiry) {
       var choices = new List<LlmChoice>();
       var actions = inquiry.actions;
@@ -59,7 +95,7 @@ namespace RabiRiichi.Server.Agents.Llm {
             AddTilesOptions(choices, ai, pon, "pon");
             break;
           case KanAction kan:
-            AddTilesOptions(choices, ai, kan, "kan");
+            AddKanOptions(choices, ai, kan);
             break;
           case NukiDoraAction nuki:
             AddTilesOptions(choices, ai, nuki, "nukidora");
@@ -124,6 +160,33 @@ namespace RabiRiichi.Server.Agents.Llm {
         });
       }
     }
+
+    private static void AddKanOptions(
+        List<LlmChoice> choices, int actionIndex, KanAction action) {
+      var options = action.options;
+      for (var optionIndex = 0; optionIndex < options.Count; optionIndex++) {
+        var tiles = options[optionIndex].tiles;
+        var (kind, explanation) = KanDescription(new Kan(tiles).KanSource);
+        choices.Add(new LlmChoice {
+          Id = choices.Count,
+          ActionIndex = actionIndex,
+          OptionIndex = optionIndex,
+          Kind = kind,
+          Description = $"{kind} ({explanation}) using {TileNotation.Group(tiles)}",
+        });
+      }
+    }
+
+    private static bool IsDaiminkanOnly(KanAction action) =>
+        action.options.Count > 0 &&
+        action.options.All(option => new Kan(option.tiles).KanSource == TileSource.Daiminkan);
+
+    private static (string Kind, string Explanation) KanDescription(TileSource source) => source switch {
+      TileSource.Ankan => ("ankan", "closed kan from your own hand"),
+      TileSource.Kakan => ("kakan", "added kan upgrading an existing pon"),
+      TileSource.Daiminkan => ("daiminkan", "open kan on another player's discard"),
+      _ => ("kan", "four-of-a-kind call"),
+    };
 
     private static void AddConfirm(
         List<LlmChoice> choices, int actionIndex, string kind, string desc) {

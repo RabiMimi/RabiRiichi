@@ -87,6 +87,10 @@ namespace RabiRiichi.Server.Models {
         return;
       }
 
+      foreach (var player in players) {
+        player.OnChat(senderId, text, sticker);
+      }
+
       var broadcastMsg = new PlayerChatMessage {
         SenderId = senderId,
       };

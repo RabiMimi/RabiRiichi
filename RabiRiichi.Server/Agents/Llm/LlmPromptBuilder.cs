@@ -1,103 +1,67 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using RabiRiichi.Core;
-using RabiRiichi.Server.Agents;
+using RabiRiichi.Server.Generated.Rpc;
+using System.Text;
 
 namespace RabiRiichi.Server.Agents.Llm {
-  /// <summary>
-  /// Builds the compact prompts sent to an LLM player. Split into:
-  ///  - a persistent SYSTEM prompt (rules of engagement, response schema,
-  ///    persona, language, sticker moods, opponent names),
-  ///  - a per-round HEADER (seats/winds/points/dora/your hand), sent when a new
-  ///    round starts, and
-  ///  - a per-decision USER message (recent public events + the numbered menu of
-  ///    legal choices).
-  ///
-  /// Everything is derived from <see cref="PublicGameView"/> (fair info only)
-  /// and kept terse to save tokens while preserving the facts needed to play.
-  /// </summary>
+  public sealed record LlmChatEntry(string Sender, string Text, string Sticker);
+
+  /// <summary>Builds prompts from an embedded markdown persona template.</summary>
   public sealed class LlmPromptBuilder(
       LlmSettings settings,
       IReadOnlyDictionary<int, string> seatNames) {
+    private const int DetailedChatLimit = 10;
+    private const int ChatTextLimit = 256;
     private readonly LlmSettings settings = settings;
     private readonly IReadOnlyDictionary<int, string> seatNames = seatNames;
 
     private string NameOf(int seat) =>
         seatNames.TryGetValue(seat, out var n) ? n : $"P{seat}";
 
-    /// <summary>
-    /// The system prompt. Sent once as the first message of the conversation.
-    /// </summary>
+    public static bool ShouldSendConsecutiveChatReminder(int consecutiveChatTurns) =>
+        consecutiveChatTurns >= 2;
+
     public string BuildSystemPrompt(int selfSeat) {
-      var sb = new StringBuilder();
-      sb.AppendLine(
-          "You are an expert Japanese riichi mahjong player in an online game. " +
-          "Play to win, but as a table companion your persona is a cute, cheerful " +
-          "Japanese high-school girl (JK). Be adorable and upbeat: use light, " +
-          "playful language, gentle interjections and emoji/kaomoji sparingly " +
-          "(e.g. ～, ♪, (`・ω・´), えへへ), and soft sentence endings. Keep it " +
-          "endearing, never crude, and never let the cuteness get in the way of " +
-          "strong play or valid JSON.");
-      sb.AppendLine(PersonaHint(settings.Language));
-      sb.AppendLine($"Your name at the table is \"{NameOf(selfSeat)}\" (seat {selfSeat}).");
-      sb.Append("Respond ONLY in this language: ").AppendLine(LanguageLabel(settings.Language));
-      sb.AppendLine();
-
-      sb.AppendLine("The other players are:");
-      foreach (var kv in seatNames.Where(kv => kv.Key != selfSeat).OrderBy(kv => kv.Key)) {
-        sb.AppendLine($"  - seat {kv.Key}: {kv.Value}");
-      }
-      sb.AppendLine();
-
-      sb.AppendLine(
-          "On each of your turns you will get the recent public events and a " +
-          "numbered list of legal CHOICES. Pick exactly one by its id.");
-      sb.AppendLine("Reply with a single JSON object, no markdown, of the form:");
-      sb.AppendLine(
-          "{\"choice\": <id>, \"say\": <short chat message or null>, " +
-          "\"sticker\": <mood or null>, \"reason\": <very brief, optional>}");
-      sb.AppendLine(
-          "\"choice\" is REQUIRED and must be one of the listed ids. " +
-          "\"say\" is an optional short message to the table (in your language); " +
-          "keep it natural and address players by name. " +
-          $"\"sticker\" is optional and must be one of: {string.Join(", ", StickerRegistry.Moods)}.");
-      sb.AppendLine(
-          "Chat OCCASIONALLY to feel like a lively table companion — roughly " +
-          "every few turns (aim for about 1 in 3), and more freely on notable " +
-          "moments (a win/loss, riichi, a risky deal-in, a good call, banter). " +
-          "On other turns leave \"say\" and \"sticker\" as null so you don't spam.");
-      sb.AppendLine(
-          "Do not reveal your concealed tiles to others via chat. Do not use " +
-          "tools. Output JSON only.");
-      return sb.ToString();
+      var opponents = string.Join("\n", seatNames
+          .Where(kv => kv.Key != selfSeat)
+          .OrderBy(kv => kv.Key)
+          .Select(kv => $"- seat {kv.Key}: {kv.Value}"));
+      return LoadTemplate(settings.PromptTemplate)
+          .Replace("{{PERSONA_HINT}}", PersonaHint(settings.Language))
+          .Replace("{{SELF_NAME}}", NameOf(selfSeat))
+          .Replace("{{SELF_SEAT}}", selfSeat.ToString())
+          .Replace("{{LANGUAGE}}", LanguageLabel(settings.Language))
+          .Replace("{{OPPONENTS}}", opponents)
+          .Replace("{{STICKER_MOODS}}", string.Join(", ", StickerRegistry.Moods));
     }
 
-    /// <summary> The per-round header describing the fresh board. </summary>
     public string BuildRoundHeader(PublicGameView view) {
       var sb = new StringBuilder();
       sb.AppendLine($"== New round == {WindLabel(view.RoundWind)} {view.Round % view.PlayerCount + 1}, honba {view.Honba}.");
       sb.AppendLine($"You are seat {view.Seat}, seat wind {WindLabel(view.SelfWind)}" +
           (view.SelfIsDealer ? " (DEALER)." : "."));
+      var doraIndicators = view.RevealedDoraIndicators;
       sb.Append("Dora indicator(s): ")
-        .AppendLine(view.RevealedDoraIndicators.Count == 0
+        .AppendLine(doraIndicators.Count == 0
             ? "none yet"
-            : TileNotation.Group(view.RevealedDoraIndicators));
-      sb.Append("Points: ");
-      sb.AppendLine(string.Join(", ",
+            : TileNotation.Group(doraIndicators));
+      sb.Append("Indicated dora tile(s): ")
+        .AppendLine(doraIndicators.Count == 0
+            ? "none yet"
+            : TileNotation.Group(doraIndicators.Select(tile => tile.NextDora)));
+      sb.Append("Points: ").AppendLine(string.Join(", ",
           view.AllSeats.Select(s => $"{NameOf(s)} {view.PointsOf(s)}")));
       sb.Append("Your hand: ").AppendLine(DescribeSelfHand(view));
       return sb.ToString();
     }
 
-    /// <summary>
-    /// The per-decision message: recent events (delta), the current concise
-    /// board snapshot, and the numbered choice menu.
-    /// </summary>
     public string BuildDecisionPrompt(
         PublicGameView view,
         IReadOnlyList<string> recentEvents,
-        IReadOnlyList<LlmChoice> menu) {
+        string selectedAction,
+        string automaticActionNote,
+        IReadOnlyList<LlmChatEntry> chats,
+        bool quietReminder,
+        bool consecutiveChatReminder) {
       var sb = new StringBuilder();
       if (recentEvents.Count > 0) {
         sb.AppendLine("Recent events:");
@@ -106,6 +70,7 @@ namespace RabiRiichi.Server.Agents.Llm {
         }
       }
 
+      AppendChats(sb, chats);
       sb.Append("Your hand: ").AppendLine(DescribeSelfHand(view));
       sb.Append("Wall tiles left: ").Append(view.WallRemaining);
       var riichiSeats = view.OpponentSeats.Where(view.IsRiichi).Select(NameOf).ToList();
@@ -114,7 +79,6 @@ namespace RabiRiichi.Server.Agents.Llm {
       }
       sb.AppendLine(".");
 
-      // Opponent discard rivers (compact) help the model read the table.
       foreach (var s in view.OpponentSeats) {
         var discards = view.DiscardsOf(s);
         if (discards.Count > 0) {
@@ -127,25 +91,72 @@ namespace RabiRiichi.Server.Agents.Llm {
         }
       }
 
-      sb.AppendLine("Choices:");
-      foreach (var c in menu) {
-        sb.Append("  ").Append(c.Id).Append(": ").AppendLine(c.Description);
+      sb.Append("You decided to: ").AppendLine(selectedAction);
+      sb.AppendLine("Speak as though this was entirely your own choice. Do not comment merely because an action is shown; only comment on the situation or your reasoning when it is genuinely interesting.");
+      if (!string.IsNullOrEmpty(automaticActionNote)) {
+        sb.AppendLine(automaticActionNote);
+      }
+      if (quietReminder) {
+        sb.AppendLine("You have been quiet for at least 10 turns. Please chat or use a sticker within the next few turns when it feels natural.");
+      }
+      if (consecutiveChatReminder) {
+        sb.AppendLine("You have chatted on 2 or more consecutive turns. Do not chat or use a sticker this turn unless the situation is exceptional or someone directly addressed you.");
       }
       sb.AppendLine("Reply with the JSON object described earlier.");
       return sb.ToString();
     }
 
-    /// <summary> Concealed hand + pending draw + open melds, compactly. </summary>
+    private static void AppendChats(StringBuilder sb, IReadOnlyList<LlmChatEntry> chats) {
+      if (chats.Count == 0) {
+        return;
+      }
+      sb.AppendLine("Table chat since you last interacted:");
+      foreach (var chat in chats.Take(DetailedChatLimit)) {
+        sb.Append("  - ").Append(chat.Sender).Append(": ");
+        if (!string.IsNullOrEmpty(chat.Text)) {
+          sb.Append(TrimChat(chat.Text));
+        }
+        if (!string.IsNullOrEmpty(chat.Sticker)) {
+          if (!string.IsNullOrEmpty(chat.Text))
+            sb.Append(' ');
+          sb.Append("<sticker: ").Append(chat.Sticker).Append('>');
+        }
+        sb.AppendLine();
+      }
+      if (chats.Count > DetailedChatLimit) {
+        sb.Append("They then chatted in this order (details omitted): ")
+          .Append(string.Join(", ", chats.Skip(DetailedChatLimit).Select(c => c.Sender)))
+          .AppendLine(".");
+      }
+    }
+
+    private static string TrimChat(string text) => text.Length <= ChatTextLimit
+        ? text
+        : text[..ChatTextLimit] + "... <trimmed due to length>";
+
+    private static string LoadTemplate(LlmPromptTemplate template) {
+      var suffix = template switch {
+        LlmPromptTemplate.CuteJk => ".Agents.Llm.Prompts.cute-jk.md",
+        _ => throw new ArgumentOutOfRangeException(nameof(template)),
+      };
+      var assembly = typeof(LlmPromptBuilder).Assembly;
+      var resourceName = assembly.GetManifestResourceNames()
+          .SingleOrDefault(name => name.EndsWith(suffix, StringComparison.Ordinal));
+      if (resourceName == null) {
+        throw new InvalidOperationException($"LLM prompt resource not found: {suffix}");
+      }
+      using var stream = assembly.GetManifestResourceStream(resourceName);
+      using var reader = new StreamReader(stream!);
+      return reader.ReadToEnd();
+    }
+
     private static string DescribeSelfHand(PublicGameView view) {
       var hand = view.SelfHand;
-      var sb = new StringBuilder();
-      sb.Append(TileNotation.Group(hand.freeTiles));
-      if (hand.pendingTile != null) {
+      var sb = new StringBuilder(TileNotation.Group(hand.freeTiles));
+      if (hand.pendingTile != null)
         sb.Append(" + drew ").Append(TileNotation.One(hand.pendingTile));
-      }
       if (hand.called.Count > 0) {
-        sb.Append(" | melds: ")
-          .Append(string.Join(" ", hand.called.Select(TileNotation.Meld)));
+        sb.Append(" | melds: ").Append(string.Join(" ", hand.called.Select(TileNotation.Meld)));
       }
       return sb.ToString();
     }
@@ -164,18 +175,10 @@ namespace RabiRiichi.Server.Agents.Llm {
       _ => "English",
     };
 
-    /// <summary> Language-specific tips for the cute JK speaking style. </summary>
     private static string PersonaHint(string language) => language switch {
-      AiLocalization.LangJa =>
-          "In Japanese, speak like a friendly JK: casual です/だよ・だね・かな～ " +
-          "endings, light fillers (えっと、ね、〜し), and cute vibes — but stay " +
-          "readable.",
-      AiLocalization.LangZhs =>
-          "用中文时说得软萌可爱一点：轻松口语、亲昵的语气词（呀、啦、诶嘿、" +
-          "嘛），像元气女高中生一样，但别太夸张。",
-      _ =>
-          "In English, keep it cutesy and bubbly like an anime schoolgirl " +
-          "(e.g. \"ehehe~\", \"yay!\", \"mou~\"), but still clear.",
+      AiLocalization.LangJa => "In Japanese, speak like a friendly JK: casual endings, light fillers, and cute but readable phrasing.",
+      AiLocalization.LangZhs => "用中文时说得软萌可爱一点：轻松口语、亲昵的语气词，像元气女高中生一样，但别太夸张。",
+      _ => "In English, keep it cutesy and bubbly like an anime schoolgirl (for example, ehehe~, yay!, or mou~), but still clear.",
     };
   }
 }

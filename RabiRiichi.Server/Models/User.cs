@@ -52,6 +52,8 @@ namespace RabiRiichi.Server.Models {
       }
     }
 
+    public void OnChat(int senderId, string text, string sticker) { }
+
     public void OnInquiry(MultiPlayerInquiry gameInquiry, SinglePlayerInquiry playerInquiry, TimeSpan remainingTimeout, Action<InquiryResponse> onResponse) {
       var singlePlayerInquiryMsg = gameInquiry.game.SerializeProto<SinglePlayerInquiryMsg>(playerInquiry, Seat);
       if (singlePlayerInquiryMsg != null && remainingTimeout > TimeSpan.Zero) {

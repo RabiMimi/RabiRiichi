@@ -47,6 +47,8 @@ namespace RabiRiichi.Server.Agents {
       // may override to accumulate a running transcript.
     }
 
+    public virtual void OnChat(int senderId, string text, string sticker) { }
+
     public void OnInquiry(
         MultiPlayerInquiry gameInquiry,
         SinglePlayerInquiry playerInquiry,

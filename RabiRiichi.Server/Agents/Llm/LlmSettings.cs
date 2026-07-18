@@ -1,5 +1,5 @@
-using System;
 using RabiRiichi.Server.Generated.Rpc;
+using System;
 
 namespace RabiRiichi.Server.Agents.Llm {
   /// <summary>
@@ -14,7 +14,7 @@ namespace RabiRiichi.Server.Agents.Llm {
     public static readonly TimeSpan ValidationTimeout = TimeSpan.FromSeconds(15);
 
     /// <summary> Max output tokens for an in-game decision. </summary>
-    public const int MaxDecisionTokens = 4096;
+    public const int MaxDecisionTokens = 512;
 
     /// <summary>
     /// Max output tokens for the validation ping. Kept small but not tiny:
@@ -43,6 +43,7 @@ namespace RabiRiichi.Server.Agents.Llm {
     public string BaseUrl { get; }
     public string Model { get; }
     public string Language { get; }
+    public LlmPromptTemplate PromptTemplate { get; }
 
     /// <summary>
     /// The custom display name the user chose, or empty if none. When empty the
@@ -53,13 +54,15 @@ namespace RabiRiichi.Server.Agents.Llm {
     public string CustomDisplayName { get; }
 
     private LlmSettings(LlmProvider provider, string apiToken, string baseUrl,
-                        string model, string language, string customDisplayName) {
+                        string model, string language, string customDisplayName,
+                        LlmPromptTemplate promptTemplate) {
       Provider = provider;
       ApiToken = apiToken;
       BaseUrl = baseUrl;
       Model = model;
       Language = language;
       CustomDisplayName = customDisplayName;
+      PromptTemplate = promptTemplate;
     }
 
     /// <summary>
@@ -98,9 +101,18 @@ namespace RabiRiichi.Server.Agents.Llm {
       var language = AiLocalization.NormalizeLanguage(config.Language);
       var customName = string.IsNullOrWhiteSpace(config.DisplayName)
           ? "" : config.DisplayName.Trim();
+      var promptTemplate = config.PromptTemplate switch {
+        LlmPromptTemplate.Unspecified => LlmPromptTemplate.CuteJk,
+        LlmPromptTemplate.CuteJk => LlmPromptTemplate.CuteJk,
+        _ => LlmPromptTemplate.Unspecified,
+      };
+      if (promptTemplate == LlmPromptTemplate.Unspecified) {
+        error = "prompt_template";
+        return null;
+      }
 
       return new LlmSettings(config.Provider, config.ApiToken.Trim(), baseUrl,
-          config.Model.Trim(), language, customName);
+          config.Model.Trim(), language, customName, promptTemplate);
     }
 
     /// <summary> The default API base URL for a provider. </summary>

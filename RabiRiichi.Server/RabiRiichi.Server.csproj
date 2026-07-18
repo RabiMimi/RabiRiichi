@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <Protobuf ProtoRoot="..\Protos" Include="..\Protos\Server\**\*.proto" />
+    <EmbeddedResource Include="Agents\Llm\Prompts\*.md" />
   </ItemGroup>
 
   <ItemGroup>

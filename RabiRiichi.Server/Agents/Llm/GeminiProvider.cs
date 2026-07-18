@@ -32,7 +32,7 @@ namespace RabiRiichi.Server.Agents.Llm {
     private readonly HttpClient http = http;
     private readonly LlmSettings settings = settings;
 
-    private readonly object stateLock = new();
+    private readonly Lock stateLock = new();
     /// <summary> Id of the last stored interaction, for server-side chaining. </summary>
     private string previousInteractionId;
 

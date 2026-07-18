@@ -21,6 +21,7 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
       Assert.AreEqual("gpt-4o-mini", s.Model);
       Assert.AreEqual("https://api.openai.com", s.BaseUrl);
       Assert.AreEqual("en", s.Language);
+      Assert.AreEqual(LlmPromptTemplate.CuteJk, s.PromptTemplate);
     }
 
     [TestMethod]

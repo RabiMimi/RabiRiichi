@@ -1,9 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using RabiRiichi.Events;
 using RabiRiichi.Events.InGame;
 using RabiRiichi.Generated.Core;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace RabiRiichi.Server.Agents.Llm {
   /// <summary>
@@ -18,8 +18,8 @@ namespace RabiRiichi.Server.Agents.Llm {
   /// </summary>
   public sealed class LlmEventLog(Func<int, string> nameOf) {
     private readonly Func<int, string> nameOf = nameOf;
-    private readonly List<string> lines = new();
-    private readonly object gate = new();
+    private readonly List<string> lines = [];
+    private readonly Lock gate = new();
 
     /// <summary> True once a new round has begun since the last drain. </summary>
     public bool NewRoundPending { get; private set; }
@@ -78,13 +78,15 @@ namespace RabiRiichi.Server.Agents.Llm {
           return $"{Name(c.playerId)} calls {ClaimKind(c.reason)} {TileNotation.Group(c.group)}";
 
         case KanEvent k:
-          return $"{Name(k.playerId)} declares KAN {TileNotation.Group(k.kan)}";
+          return $"{Name(k.playerId)} declares {KanKind(k.kanSource)} " +
+              $"{TileNotation.Group(k.kan)}";
 
         case NukiDoraEvent n:
           return $"{Name(n.playerId)} pulls North (nukidora)";
 
         case RevealDoraEvent dora when dora.dora != null:
-          return $"New dora indicator: {TileNotation.One(dora.dora)}";
+          return $"New dora indicator: {TileNotation.One(dora.dora)} " +
+              $"(indicates dora {TileNotation.One(dora.dora.tile.NextDora)})";
 
         case AgariEvent a:
           return TranslateAgari(a);
@@ -113,6 +115,13 @@ namespace RabiRiichi.Server.Agents.Llm {
       DiscardReason.Chii => "chii",
       DiscardReason.Pon => "pon",
       _ => "meld",
+    };
+
+    private static string KanKind(TileSource source) => source switch {
+      TileSource.Ankan => "ANKAN (closed kan)",
+      TileSource.Kakan => "KAKAN (added kan upgrading a pon)",
+      TileSource.Daiminkan => "DAIMINKAN (open kan on a discard)",
+      _ => "KAN",
     };
   }
 }
