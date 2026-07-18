@@ -13,8 +13,8 @@ namespace RabiRiichi.Server.Agents.Llm {
     /// <summary> Budget for the one-shot validation ping when adding the AI. </summary>
     public static readonly TimeSpan ValidationTimeout = TimeSpan.FromSeconds(15);
 
-    /// <summary> Max output tokens for an in-game decision (JSON is small). </summary>
-    public const int MaxDecisionTokens = 512;
+    /// <summary> Max output tokens for an in-game decision. </summary>
+    public const int MaxDecisionTokens = 4096;
 
     /// <summary>
     /// Max output tokens for the validation ping. Kept small but not tiny:
