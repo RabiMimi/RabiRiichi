@@ -86,7 +86,7 @@ namespace RabiRiichi.Server.Services {
       if (humanPlayers.Count == 0 || humanPlayers[0] != user) {
         throw new RpcException(new Status(StatusCode.PermissionDenied, "Only the room owner can add AI"));
       }
-      int aiId = -100 - room.players.Count;
+      int aiId = room.AllocateAiId();
 
       IPlayerAgent ai;
       if (request.Type == AiType.Llm) {

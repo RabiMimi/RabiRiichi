@@ -169,6 +169,28 @@ namespace RabiRiichi.Tests.Server {
     }
 
     [TestMethod]
+    public void AiIdsAreNotReusedAfterRemoval() {
+      var room = new Room(new Random(0), new GameConfig { playerCount = 4 });
+      var first = new DefaultAI(room.AllocateAiId(), room, UserStatus.InRoom);
+      var second = new DefaultAI(room.AllocateAiId(), room, UserStatus.InRoom);
+      Assert.IsTrue(room.AddPlayer(first));
+      Assert.IsTrue(room.AddPlayer(second));
+
+      Assert.IsTrue(room.RemoveRoomPlayer(first));
+      var replacement = new DefaultAI(
+          room.AllocateAiId(), room, UserStatus.InRoom);
+      Assert.IsTrue(room.AddPlayer(replacement));
+
+      Assert.AreNotEqual(first.id, replacement.id);
+      Assert.AreNotEqual(second.id, replacement.id);
+      Assert.AreEqual(
+          room.players.Count,
+          room.players.Select(player => player.id).Distinct().Count());
+      Assert.IsFalse(room.AddPlayer(
+          new DefaultAI(second.id, room, UserStatus.InRoom)));
+    }
+
+    [TestMethod]
     public void TestRemoveRoomPlayerRejectsHumanPlayer() {
       var rand = new Random(0);
       var config = new GameConfig { playerCount = 4 };

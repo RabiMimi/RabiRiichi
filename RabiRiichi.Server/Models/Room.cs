@@ -21,6 +21,19 @@ namespace RabiRiichi.Server.Models {
     private readonly Random rand = rand;
     public readonly ReplayStore replayStore = replayStore;
     private CancellationTokenSource gameCts;
+    private int nextAiId = -101;
+
+    /// <summary>
+    /// Allocates a room-lifetime AI identity. IDs are never reused, so removing
+    /// and replacing an AI cannot alias chat history or another active player.
+    /// Room mutations are serialized by RoomTaskQueue.
+    /// </summary>
+    public int AllocateAiId() {
+      while (players.Any(player => player.id == nextAiId)) {
+        nextAiId--;
+      }
+      return nextAiId--;
+    }
 
     private bool HasPlayer(IPlayerAgent player) {
       return players.Any(p => p == player);
@@ -224,7 +237,7 @@ namespace RabiRiichi.Server.Models {
       if (players.Count >= config.playerCount) {
         return false;
       }
-      if (players.Contains(player)) {
+      if (players.Contains(player) || players.Any(existing => existing.id == player.id)) {
         return false;
       }
       if (player is User user) {
