@@ -21,15 +21,20 @@ namespace RabiRiichi.Server.Agents.Llm {
     private string NameOf(int seat) =>
         seatNames.TryGetValue(seat, out var n) ? n : $"P{seat}";
 
+    private string CurrentPlayerName(PublicGameView view) =>
+        view.CurrentPlayer >= 0 && view.CurrentPlayer < view.PlayerCount
+            ? NameOf(view.CurrentPlayer)
+            : "not set";
+
     public static bool ShouldSendConsecutiveChatReminder(int consecutiveChatTurns) =>
         consecutiveChatTurns >= 2;
 
-    public string BuildSystemPrompt(int selfSeat) {
+    public string BuildSystemPrompt(int selfSeat, PublicGameView view = null) {
       var opponents = string.Join("\n", seatNames
           .Where(kv => kv.Key != selfSeat)
           .OrderBy(kv => kv.Key)
           .Select(kv => $"- seat {kv.Key}: {kv.Value}{RoleLabel(kv.Key)}"));
-      return LoadTemplate(settings.PromptTemplate)
+      var prompt = LoadTemplate(settings.PromptTemplate)
           .Replace("{{PERSONA_HINT}}",
               PersonaHint(settings.PromptTemplate, settings.Language))
           .Replace("{{SELF_NAME}}", NameOf(selfSeat))
@@ -39,10 +44,59 @@ namespace RabiRiichi.Server.Agents.Llm {
           .Replace("{{KAN_GUIDE}}", KanGuide(settings.Language))
           .Replace("{{OPPONENTS}}", opponents)
           .Replace("{{STICKER_MOODS}}", string.Join(", ", StickerRegistry.Moods));
+      return view == null ? prompt : prompt + "\n\n" + BuildGameConfiguration(view);
+    }
+
+    public string BuildGameConfiguration(PublicGameView view) {
+      var matchLength = view.TotalRound switch {
+        1 => "East-only",
+        2 => "East-South",
+        _ => $"{view.TotalRound} wind rounds",
+      };
+      var sb = new StringBuilder("== Game configuration (sent once) ==\n");
+      sb.AppendLine($"Players: {view.PlayerCount}; match length: {matchLength}; " +
+          $"minimum yaku han to win: {view.MinHan} (bonus/dora han do not count).");
+      sb.AppendLine($"Starting points: {view.InitialPoints}; target points: " +
+          $"{view.FinishPoints}; riichi deposit: {view.RiichiPoints}; " +
+          $"honba value: {view.HonbaPoints}.");
+      sb.AppendLine($"Tiles in play: {view.InitialTileCount}; action timeout: " +
+          $"{view.GameplayActionTimeout:0.##} seconds.");
+      sb.Append("Initial tile composition: ")
+        .AppendLine(TileNotation.Group(view.InitialTiles, settings.Language));
+      sb.AppendLine("Rule options: " +
+          $"renchan={view.RenchanPolicy}; endGame={view.EndGamePolicy}; " +
+          $"kuikae={view.KuikaePolicy}; riichi={view.RiichiPolicy}; " +
+          $"dora={view.DoraOptions}; agari={view.AgariOptions}; " +
+          $"scoring={view.ScoringOptions}; abortiveDraws={view.RyuukyokuTriggers}.");
+      sb.Append("Allowed yaku: ").AppendLine(view.AllowedYakus.Count == 0
+          ? "none listed"
+          : string.Join(", ", view.AllowedYakus));
+      return sb.ToString().TrimEnd();
     }
 
     private string RoleLabel(int seat) {
       if (seatRoles == null || !seatRoles.TryGetValue(seat, out var role)) return "";
+      return settings.PromptTemplate == LlmPromptTemplate.Mesugaki
+          ? MesugakiRoleLabel(role)
+          : NeutralRoleLabel(role);
+    }
+
+    private string NeutralRoleLabel(LlmSeatRole role) {
+      return (role, AiLocalization.NormalizeLanguage(settings.Language)) switch {
+        (LlmSeatRole.Human, AiLocalization.LangJa) => "（人間プレイヤー）",
+        (LlmSeatRole.Llm, AiLocalization.LangJa) => "（LLMプレイヤー）",
+        (LlmSeatRole.OtherAi, AiLocalization.LangJa) => "（AIプレイヤー）",
+        (LlmSeatRole.Human, AiLocalization.LangZhs) => "（人类玩家）",
+        (LlmSeatRole.Llm, AiLocalization.LangZhs) => "（LLM玩家）",
+        (LlmSeatRole.OtherAi, AiLocalization.LangZhs) => "（AI玩家）",
+        (LlmSeatRole.Human, _) => " (human player)",
+        (LlmSeatRole.Llm, _) => " (LLM player)",
+        (LlmSeatRole.OtherAi, _) => " (AI player)",
+        _ => "",
+      };
+    }
+
+    private string MesugakiRoleLabel(LlmSeatRole role) {
       return (role, AiLocalization.NormalizeLanguage(settings.Language)) switch {
         (LlmSeatRole.Human, AiLocalization.LangJa) =>
             "（人間プレイヤー：この名前だけ「-おじさん」と呼んでよい）",
@@ -104,10 +158,35 @@ namespace RabiRiichi.Server.Agents.Llm {
       }
 
       AppendChats(sb, chats);
+      sb.AppendLine($"Current round: {WindLabel(view.RoundWind)} " +
+          $"{view.Round % view.PlayerCount + 1}; honba: {view.Honba}; " +
+          $"riichi sticks: {view.RiichiStick}; current player: " +
+          $"{CurrentPlayerName(view)}.");
       sb.AppendLine($"Round wind (prevailing wind): {WindLabel(view.RoundWind)}. " +
           $"Your seat wind: {WindLabel(view.SelfWind)}" +
           (view.SelfIsDealer ? " (you are dealer)." : "."));
+      var doraIndicators = view.RevealedDoraIndicators;
+      sb.Append("Current dora indicator(s): ")
+        .AppendLine(doraIndicators.Count == 0
+            ? "none yet"
+            : TileNotation.Group(doraIndicators, settings.Language));
+      sb.Append("Current indicated dora tile(s): ")
+        .AppendLine(doraIndicators.Count == 0
+            ? "none yet"
+            : TileNotation.Group(
+                doraIndicators.Select(tile => tile.NextDora), settings.Language));
+      sb.Append("Players: ").AppendLine(string.Join("; ", view.AllSeats.Select(seat => {
+        var flags = new List<string>();
+        if (view.IsDealer(seat)) flags.Add("dealer");
+        if (view.IsRiichi(seat)) flags.Add("riichi");
+        if (view.IsIppatsu(seat)) flags.Add("ippatsu");
+        var suffix = flags.Count == 0 ? "" : $", {string.Join(", ", flags)}";
+        return $"{NameOf(seat)}: {view.PointsOf(seat)} points, " +
+            $"{WindLabel(view.WindOf(seat))} seat wind, jun {view.JunOf(seat)}{suffix}";
+      })));
       sb.Append("Your hand: ").AppendLine(DescribeSelfHand(view));
+      sb.Append("Hand status: ").AppendLine(DescribeSelfHandStatus(view));
+      if (view.SelfFuriten) sb.AppendLine("You are currently FURITEN.");
       sb.Append("Wall tiles left: ").Append(view.WallRemaining);
       var riichiSeats = view.OpponentSeats.Where(view.IsRiichi).Select(NameOf).ToList();
       if (riichiSeats.Count > 0) {
@@ -200,6 +279,24 @@ namespace RabiRiichi.Server.Agents.Llm {
             hand.called.Select(meld => TileNotation.Meld(meld, settings.Language))));
       }
       return sb.ToString();
+    }
+
+    private string DescribeSelfHandStatus(PublicGameView view) {
+      var shanten = view.ShantenOf(view.SelfHand.freeTiles);
+      if (shanten == int.MaxValue) return "unavailable";
+      if (shanten < 0) return "complete winning shape";
+      if (shanten > 0) return $"{shanten}-shanten (not in tenpai)";
+
+      var waits = view.SelfTenpaiInfos();
+      if (waits.Count == 0) return "TENPAI (wait/value details unavailable)";
+      return "TENPAI; waits and guaranteed-minimum ron estimates: " +
+          string.Join(", ", waits.Select(info => {
+            var value = info.yakuman > 0
+                ? $"{info.yakuman} yakuman"
+                : $"{info.han} han ({info.yaku} yaku han), {info.fu} fu";
+            return $"{TileNotation.One(info.winningTile, settings.Language)} " +
+                $"[{value}; {view.UnseenCount(info.winningTile)} unseen]";
+          }));
     }
 
     private static string WindLabel(Wind wind) => wind switch {

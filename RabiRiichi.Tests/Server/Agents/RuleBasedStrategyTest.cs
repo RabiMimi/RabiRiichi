@@ -230,6 +230,32 @@ namespace RabiRiichi.Tests.Server.Agents {
     }
 
     [TestMethod]
+    public void ShouldRiichi_DoesNotCountDoraTowardMinHan() {
+      var game = BuildGame(b => b
+          .WithConfig(c => c.SetMinHan(4))
+          .WithPlayer(0, p => p.SetFreeTiles("123m456m789p345s1z")));
+      var player = game.GetPlayer(0);
+      var draw = new GameTile(new Tile("9m"), 998) { player = player };
+      player.hand.pendingTile = draw;
+      var hand14 = new List<GameTile>(player.hand.freeTiles) { draw };
+      var riichi = new RiichiAction(player, hand14, hand14[0]);
+      // Inflate total han with bonus value while leaving yaku han at zero. Even
+      // with riichi's one yaku han, this is three han short of minHan=4.
+      riichi.candidates = riichi.options.Select(option => new DiscardCandidate {
+        tile = option.tile,
+        tenpaiInfos = [new TenpaiInfo {
+          winningTile = new Tile("7z"),
+          han = 8,
+          yaku = 0,
+          fu = 30,
+          points = 4000,
+        }],
+      }).ToList();
+
+      Assert.IsFalse(RuleBasedStrategy.ShouldRiichi(ViewFor(game, 0), riichi));
+    }
+
+    [TestMethod]
     public void ChooseDiscard_KeepsTheHandTenpai() {
       // 123456789m 1122p (13, tenpai) + drawn 2p. Discarding a 2p keeps the hand
       // tenpai; the AI's efficiency scoring should pick a tenpai (shanten 0)
@@ -389,6 +415,7 @@ namespace RabiRiichi.Tests.Server.Agents {
       // Seat 0 holds two east (round + seat wind on East round for the dealer) and
       // an otherwise fast hand; ponning the third secures a yakuhai and advances.
       var game = BuildGame(b => b
+          .WithConfig(c => c.SetMinHan(2))
           .WithPlayer(0, p => p.SetFreeTiles("11z23455p23456s7s")));
       var player = game.GetPlayer(0);
       var view = ViewFor(game, 0);
@@ -401,7 +428,28 @@ namespace RabiRiichi.Tests.Server.Agents {
       var inquiry = InquiryWith(0, pon);
       var resp = RuleBasedStrategy.Decide(view, inquiry);
       Assert.AreEqual(inquiry.actions.IndexOf(pon), resp.index,
-          "AI should pon a value honor that advances the hand");
+          "Dealer's East is double yakuhai and meets minHan=2");
+    }
+
+    [TestMethod]
+    public void Decide_DoesNotPonSingleYakuhaiBelowMinHan() {
+      var game = BuildGame(b => b
+          .WithConfig(c => c.SetMinHan(2))
+          .WithPlayer(0, p => p.SetFreeTiles("55z23455p23456s7s")));
+      var player = game.GetPlayer(0);
+      var view = ViewFor(game, 0);
+
+      var own = player.hand.freeTiles
+          .Where(t => t.tile.IsSame(new Tile("5z"))).ToList();
+      var claimed = Claimed(game, "5z", 908, 1);
+      var pon = new PonAction(0, new List<List<GameTile>> {
+        new() { own[0], own[1], claimed },
+      });
+
+      var inquiry = InquiryWith(0, pon);
+      var resp = RuleBasedStrategy.Decide(view, inquiry);
+      Assert.AreNotEqual(inquiry.actions.IndexOf(pon), resp.index,
+          "One dragon yakuhai is only one yaku han and cannot meet minHan=2");
     }
 
     [TestMethod]

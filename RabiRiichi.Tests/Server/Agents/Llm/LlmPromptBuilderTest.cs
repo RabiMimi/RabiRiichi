@@ -53,13 +53,17 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
 
     [TestMethod]
     public void SystemPrompt_ListsOpponentsAndSchemaAndLanguage() {
-      var builder = new LlmPromptBuilder(Settings("zhs"), Names());
+      var builder = new LlmPromptBuilder(Settings("zhs"), Names(), Roles());
       var prompt = builder.BuildSystemPrompt(0);
 
       StringAssert.Contains(prompt, "TestBot");
       StringAssert.Contains(prompt, "Alice");
       StringAssert.Contains(prompt, "小和和"); // localized AI name, not RULEBASED
       Assert.IsFalse(prompt.Contains("RULEBASED"));
+      Assert.IsFalse(prompt.Contains("大叔"));
+      Assert.IsFalse(prompt.Contains("ojisan"));
+      StringAssert.Contains(prompt, "Alice（人类玩家）");
+      StringAssert.Contains(prompt, "Bob（LLM玩家）");
       Assert.IsFalse(prompt.Contains("\"choice\""));
       StringAssert.Contains(prompt, "\"say\"");
       StringAssert.Contains(prompt, "Simplified Chinese");
@@ -132,6 +136,31 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
     }
 
     [TestMethod]
+    public void InitialSystemPrompt_IncludesGameConfiguration() {
+      var game = BuildGame(b => b
+          .WithConfig(c => c
+              .SetTotalRound(2)
+              .SetMinHan(2)
+              .SetInitialPoints(35000)
+              .SetFinishPoints(40000))
+          .WithPlayer(0, p => p.SetFreeTiles("123456789m1234p")));
+      var view = new PublicGameView(game, 0);
+      var builder = new LlmPromptBuilder(Settings(), Names());
+
+      var initialPrompt = builder.BuildSystemPrompt(0, view);
+
+      StringAssert.Contains(initialPrompt, "Game configuration (sent once)");
+      StringAssert.Contains(initialPrompt, "match length: East-South");
+      StringAssert.Contains(initialPrompt, "minimum yaku han to win: 2");
+      StringAssert.Contains(initialPrompt, "bonus/dora han do not count");
+      StringAssert.Contains(initialPrompt, "Starting points: 35000");
+      StringAssert.Contains(initialPrompt, "target points: 40000");
+      StringAssert.Contains(initialPrompt, "Initial tile composition:");
+      StringAssert.Contains(initialPrompt, "Allowed yaku:");
+      Assert.IsFalse(builder.BuildSystemPrompt(0).Contains("Game configuration"));
+    }
+
+    [TestMethod]
     public void RoundHeader_IncludesHandDoraAndPoints() {
       var game = BuildGame(b => b
           .WithPlayer(0, p => p.SetFreeTiles("123456789m1234p"))
@@ -170,8 +199,17 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
       StringAssert.Contains(prompt, "Recent events");
       StringAssert.Contains(prompt, "Alice discards 1z");
       StringAssert.Contains(prompt, "Alice discards: 1z(East wind)");
+      StringAssert.Contains(prompt, "Current round: East 1");
+      StringAssert.Contains(prompt, "riichi sticks:");
+      StringAssert.Contains(prompt, "current player: not set");
       StringAssert.Contains(prompt, "Round wind (prevailing wind): East");
       StringAssert.Contains(prompt, "Your seat wind: East");
+      StringAssert.Contains(prompt, "Current dora indicator(s):");
+      StringAssert.Contains(prompt, "Current indicated dora tile(s):");
+      StringAssert.Contains(prompt, "Players: TestBot:");
+      StringAssert.Contains(prompt, "Alice:");
+      StringAssert.Contains(prompt, "Hand status:");
+      StringAssert.Contains(prompt, "Wall tiles left:");
       StringAssert.Contains(prompt, "You decided to: discard 1m");
       StringAssert.Contains(prompt, "<trimmed due to length>");
       StringAssert.Contains(prompt, "<sticker: mimi/happy.png>");
@@ -192,6 +230,24 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
               view, events, "discard 1m", null, [],
               quietReminder: false, consecutiveChatReminder: false);
       StringAssert.Contains(chinesePrompt, "Alice discards: 1z(东风牌)");
+    }
+
+    [TestMethod]
+    public void DecisionPrompt_IncludesCurrentTenpaiWaitsAndValue() {
+      var game = BuildGame(b => b
+          .WithPlayer(0, p => p.SetFreeTiles("123456789m1112p")));
+      var view = new PublicGameView(game, 0);
+      var builder = new LlmPromptBuilder(Settings(), Names());
+
+      var prompt = builder.BuildDecisionPrompt(
+          view, [], "discard 9s", null, [],
+          quietReminder: false, consecutiveChatReminder: false);
+
+      StringAssert.Contains(prompt, "Hand status: TENPAI");
+      StringAssert.Contains(prompt, "2p [");
+      StringAssert.Contains(prompt, "han (");
+      StringAssert.Contains(prompt, "yaku han");
+      StringAssert.Contains(prompt, "unseen");
     }
 
     [TestMethod]

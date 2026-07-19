@@ -1,5 +1,7 @@
 using RabiRiichi.Core;
+using RabiRiichi.Actions;
 using RabiRiichi.Patterns;
+using RabiRiichi.Core.Config;
 
 namespace RabiRiichi.Server.Agents {
   /// <summary>
@@ -58,6 +60,28 @@ namespace RabiRiichi.Server.Agents {
 
     public int PlayerCount => game.config.playerCount;
 
+    #region Game configuration (public, immutable during a game)
+    public int TotalRound => game.config.totalRound;
+    public int MinHan => game.config.minHan;
+    public int InitialTileCount => game.config.initialTiles?.Count ?? 0;
+    public IReadOnlyList<Tile> InitialTiles => game.config.initialTiles ?? [];
+    public long InitialPoints => game.config.pointThreshold.initialPoints;
+    public long FinishPoints => game.config.pointThreshold.finishPoints;
+    public long RiichiPoints => game.config.pointThreshold.riichiPoints;
+    public long HonbaPoints => game.config.pointThreshold.honbaPoints;
+    public double GameplayActionTimeout => game.config.gameplayActionTimeout;
+    public string RenchanPolicy => game.config.renchanPolicy.ToString();
+    public string EndGamePolicy => game.config.endGamePolicy.ToString();
+    public string KuikaePolicy => game.config.kuikaePolicy.ToString();
+    public string RiichiPolicy => game.config.riichiPolicy.ToString();
+    public string DoraOptions => game.config.doraOption.ToString();
+    public string AgariOptions => game.config.agariOption.ToString();
+    public bool AllowsOpenTanyao => game.config.agariOption.HasFlag(AgariOption.Kuitan);
+    public string ScoringOptions => game.config.scoringOption.ToString();
+    public string RyuukyokuTriggers => game.config.ryuukyokuTrigger.ToString();
+    public IReadOnlyList<string> AllowedYakus => game.config.AllowedYakus;
+    #endregion
+
     #region Round / seat context (all public)
     public Wind RoundWind => game.info.wind;
     public Wind SelfWind => Self.Wind;
@@ -65,8 +89,10 @@ namespace RabiRiichi.Server.Agents {
     public int Dealer => game.info.dealer;
     public int Honba => game.info.honba;
     public int RiichiStick => game.info.riichiStick;
+    public int CurrentPlayer => game.info.currentPlayer;
     public bool IsAllLast => game.info.IsAllLast;
     public bool SelfIsDealer => Self.IsDealer;
+    public bool SelfFuriten => SelfHand.isFuriten;
     #endregion
 
     #region Wall (only the public count and revealed dora indicators)
@@ -209,6 +235,24 @@ namespace RabiRiichi.Server.Agents {
       }
       var resolver = game.Get<PatternResolver>();
       return resolver.ResolveShanten(tempHand, null, out _, Game.HAND_SIZE);
+    }
+
+    /// <summary>
+    /// Current waits and guaranteed-minimum ron values when the viewer's
+    /// 13-tile base hand is in tenpai. The pending draw is deliberately omitted:
+    /// this describes the stable hand before the current draw/action.
+    /// </summary>
+    public IReadOnlyList<TenpaiInfo> SelfTenpaiInfos() {
+      var tempHand = new Hand {
+        player = Self,
+        freeTiles = [.. SelfHand.freeTiles],
+        called = [.. SelfHand.called],
+      };
+      if (tempHand.Count != Game.HAND_SIZE) return [];
+      var resolver = game.Get<PatternResolver>();
+      if (resolver.ResolveShanten(tempHand, null, out var waits, 0) != 0) return [];
+      return waits.Select(wait =>
+          PlayTileAction.ComputeTenpaiInfo(resolver, tempHand, wait)).ToList();
     }
   }
 }

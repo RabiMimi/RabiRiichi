@@ -137,7 +137,7 @@ namespace RabiRiichi.Server.Agents.Llm {
       var messages = new List<LlmMessage>();
       lock (convLock) {
         if (!systemSent) {
-          var system = builder.BuildSystemPrompt(Seat);
+          var system = builder.BuildSystemPrompt(Seat, view);
           transcript.Add(LlmMessage.System(system));
           systemSent = true;
           Logger.Log($"{LogTag} >> system prompt:\n{system}");

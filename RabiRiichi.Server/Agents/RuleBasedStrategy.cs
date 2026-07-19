@@ -135,7 +135,19 @@ namespace RabiRiichi.Server.Agents {
       if (eval.Shanten == 0) {
         var candidate = action.candidates?.Find(c => c.tile.tile.IsSame(tile.tile));
         if (candidate != null && candidate.tenpaiInfos.Count > 0) {
-          int bestValue = candidate.tenpaiInfos.Max(t => t.han * 100 + (int)t.points);
+          int riichiHan = action is RiichiAction ? 1 : 0;
+          int bestDeficit = candidate.tenpaiInfos.Min(t =>
+              YakuHanDeficit(view, t, riichiHan));
+          int legalLiveWaits = candidate.tenpaiInfos
+              .Where(t => YakuHanDeficit(view, t, riichiHan) == 0)
+              .Sum(t => view.UnseenCount(t.winningTile));
+          // A wide but legally unwinnable wait is much worse than a live wait
+          // that satisfies the table's minimum-yaku requirement.
+          score += legalLiveWaits * 5000;
+          score -= bestDeficit * 20000;
+          int bestValue = candidate.tenpaiInfos
+              .Where(t => YakuHanDeficit(view, t, riichiHan) == bestDeficit)
+              .Max(t => t.han * 100 + (int)t.points);
           score += bestValue * 0.5;
         }
       }
@@ -290,13 +302,26 @@ namespace RabiRiichi.Server.Agents {
           c => idx < action.options.Count && c.tile.tile.IsSame(action.options[idx].tile.tile));
       if (candidate == null || candidate.tenpaiInfos.Count == 0) {
         // No tenpai info: fall back to declaring (the action is only offered when
-        // tenpai), riichi still adds a han and pressure.
-        return true;
+        // tenpai). At high min-han, do not lock a hand whose legality is unknown.
+        return view.MinHan <= 2;
       }
 
-      int liveWaits = candidate.tenpaiInfos.Sum(t => view.UnseenCount(t.winningTile));
-      // Avoid riichi on a fully dead wait; otherwise declare.
-      return liveWaits > 0;
+      var liveInfos = candidate.tenpaiInfos
+          .Where(t => view.UnseenCount(t.winningTile) > 0)
+          .ToList();
+      if (liveInfos.Count == 0) return false;
+
+      // Riichi itself contributes one yaku han. A one-han remaining deficit can
+      // still be filled naturally by menzen tsumo or ippatsu; a larger deficit
+      // is too unlikely, so keep the hand flexible and pursue more yaku.
+      int bestDeficit = liveInfos.Min(t => YakuHanDeficit(view, t, riichiHan: 1));
+      return bestDeficit <= 1;
+    }
+
+    private static int YakuHanDeficit(
+        PublicGameView view, TenpaiInfo info, int riichiHan = 0) {
+      if (info.yakuman > 0) return 0;
+      return System.Math.Max(0, view.MinHan - info.yaku - riichiHan);
     }
 
     #endregion
@@ -565,9 +590,9 @@ namespace RabiRiichi.Server.Agents {
         return 0;
       }
 
-      // The open hand must be able to finish with a yaku. Without a guaranteed
-      // yaku source, an open hand often cannot win at all - decline.
-      if (!OpenHandCanHaveYaku(view, calledTiles, called, remaining, isChii)) {
+      // The open hand must plausibly reach the configured minimum yaku han.
+      // Dora and red fives add value but never satisfy min-han legality.
+      if (EstimateOpenYakuHan(view, called, remaining) < view.MinHan) {
         return 0;
       }
 
@@ -581,16 +606,21 @@ namespace RabiRiichi.Server.Agents {
     }
 
     /// <summary>
-    /// Whether an open hand built with the given meld can plausibly complete with
-    /// a yaku (a hard requirement to win open). Recognizes the fast, reliable
-    /// open yaku: yakuhai, tanyao, and full flushes (honitsu / chinitsu).
+    /// Estimated yaku han an open hand can retain or pursue. This deliberately
+    /// excludes dora/akadora because bonus han cannot satisfy min-han legality.
+    /// It recognizes reliable open routes: yakuhai, kuitan, and flushes.
     /// </summary>
-    private static bool OpenHandCanHaveYaku(
-        PublicGameView view, IReadOnlyList<GameTile> calledTiles,
-        IReadOnlyList<MenLike> allCalled, IReadOnlyList<GameTile> remaining, bool isChii) {
-      // Yakuhai: ponning a value honor guarantees a yaku outright.
-      if (!isChii && IsValueHonor(view, calledTiles[0].tile)) {
-        return true;
+    private static int EstimateOpenYakuHan(
+        PublicGameView view, IReadOnlyList<MenLike> allCalled,
+        IReadOnlyList<GameTile> remaining) {
+      int yakuHan = 0;
+      // Each completed called yakuhai is guaranteed. Seat/round double wind is
+      // correctly worth two yaku han because both checks apply.
+      foreach (var meld in allCalled.Where(m => m is Kou or Kan)) {
+        var tile = meld.First.tile;
+        if (tile.IsSangen) yakuHan++;
+        if (tile.IsSame(Tile.From(view.RoundWind))) yakuHan++;
+        if (tile.IsSame(Tile.From(view.SelfWind))) yakuHan++;
       }
 
       // Gather every tile the finished hand would contain (concealed + all melds).
@@ -605,25 +635,27 @@ namespace RabiRiichi.Server.Agents {
       }
 
       // Tanyao: no terminals or honors anywhere.
-      if (all.All(t => t.IsMPS && t.Num is >= 2 and <= 8)) {
-        return true;
+      if (view.AllowsOpenTanyao &&
+          all.All(t => t.IsMPS && t.Num is >= 2 and <= 8)) {
+        yakuHan += 1;
       }
 
-      // Honitsu / chinitsu: a single suit (+ honors for honitsu).
+      // Open honitsu is 2 han; open chinitsu is 5 han.
       var suits = all.Where(t => t.IsMPS).Select(t => t.Suit).Distinct().ToList();
-      if (suits.Count <= 1) {
-        return true;
+      if (suits.Count == 0) {
+        return 13; // all honors can complete as tsuuiisou (yakuman)
+      }
+      if (suits.Count == 1) {
+        yakuHan += all.Any(t => t.IsZ) ? 2 : 5;
       }
 
-      // An already-open hand that had a yaku source keeps it; but with mixed suits
-      // and no honor/tanyao path, opening further is not clearly winnable.
-      return false;
+      return yakuHan;
     }
 
     /// <summary>
-    /// Scores a daiminkan (open kan on a discard). Like a yakuhai pon it breaks
-    /// menzen, so we only take it for a value honor that advances the hand; the
-    /// extra dora + rinshan make it slightly better than the equivalent pon.
+    /// Scores a daiminkan (open kan on a discard). It must preserve/improve
+    /// shanten and leave a route to the configured minimum yaku han; dora only
+    /// affects value after legality is established.
     /// </summary>
     private static void EvaluateDaiminkan(
         PublicGameView view, IReadOnlyList<ChooseTilesActionOption> options,
@@ -632,12 +664,30 @@ namespace RabiRiichi.Server.Agents {
       if (view.OpponentSeats.Any(view.IsRiichi) && SelfBestShanten(view) > 0) {
         return;
       }
+      int before = SelfBestShanten(view);
       for (int j = 0; j < options.Count; j++) {
         var tiles = options[j].tiles;
-        if (tiles.Count == 0 || !IsValueHonor(view, tiles[0].tile)) {
+        if (tiles.Count == 0) {
+          continue;
+        }
+        var claimed = tiles.FirstOrDefault(t => !t.IsTsumo) ?? tiles[0];
+        var remaining = new List<GameTile>(view.SelfHand.freeTiles);
+        foreach (var own in tiles.Where(t => !ReferenceEquals(t, claimed))) {
+          int at = remaining.FindIndex(t => t.tile.IsSame(own.tile));
+          if (at >= 0) remaining.RemoveAt(at);
+        }
+        var called = new List<MenLike>(view.SelfCalled) {
+          new Kan(tiles, TileSource.Daiminkan),
+        };
+        int after = view.ShantenOf(remaining, called);
+        if (after > before) {
+          continue;
+        }
+        if (EstimateOpenYakuHan(view, called, remaining) < view.MinHan) {
           continue;
         }
         double score = 90
+            + (before - after) * 40
             + tiles.Sum(t => view.CountDora(t.tile) + (t.tile.Akadora ? 1 : 0)) * 10;
         if (score > bestScore) {
           bestScore = score;
