@@ -360,6 +360,12 @@ namespace RabiRiichi.Tests.Scenario {
         return this;
       }
 
+      /// <summary> 设置初始牌山 </summary>
+      public GameConfigBuilder SetInitialTiles(Tiles tiles) {
+        config.initialTiles = tiles;
+        return this;
+      }
+
       /// <summary> 设置下一局确认超时时间（秒） </summary>
       public GameConfigBuilder SetNextRoundAckTimeout(double timeout) {
         config.nextRoundAckTimeout = timeout;

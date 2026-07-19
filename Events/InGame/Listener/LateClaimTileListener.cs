@@ -1,6 +1,7 @@
 using RabiRiichi.Actions.Resolver;
 using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
+using RabiRiichi.Generated.Core;
 using RabiRiichi.Utils;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -8,6 +9,9 @@ using System.Threading.Tasks;
 namespace RabiRiichi.Events.InGame.Listener {
   public static class LateClaimTileListener {
     public static IEnumerable<Tile> GetForbiddenTiles(GameConfig config, MenLike men, GameTile incoming) {
+      if (men is Kan) {
+        yield break;
+      }
       if (config.kuikaePolicy.HasAnyFlag(KuikaePolicy.Genbutsu)) {
         yield return incoming.tile.WithoutDora;
       }

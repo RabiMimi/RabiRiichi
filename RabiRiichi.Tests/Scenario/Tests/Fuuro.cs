@@ -297,6 +297,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
       (await scenario.WaitInquiry()).ForPlayer(2, playerInquiry => {
         playerInquiry
             .AssertSkip()
+            .AssertAction<KanAction>()
             .ApplyAction<RonAction>()
             .AssertNoMoreActions();
       }).AssertAutoFinish();
