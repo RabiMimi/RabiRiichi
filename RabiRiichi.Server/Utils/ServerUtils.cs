@@ -4,7 +4,7 @@ namespace RabiRiichi.Server.Utils {
   public static class ServerConstants {
     public const string GAME = nameof(RabiRiichi);
     public const string SERVER = "vanilla-grpc";
-    public const string MIN_CLIENT_VERSION = "0.1.1";
+    public const string MIN_CLIENT_VERSION = "0.1.3";
     public static string SERVER_VERSION => Assembly.GetExecutingAssembly().GetName().Version.ToString();
     public static readonly TimeSpan RESPONSE_TIMEOUT = TimeSpan.FromSeconds(30);
     public static readonly TimeSpan RECONNECT_GRACE_PERIOD = TimeSpan.FromMinutes(5);
