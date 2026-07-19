@@ -482,7 +482,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
           .WithPlayer(1, playerBuilder => {
             playerBuilder.SetFreeTiles("123456789p1s").AddCalled("111m", 2, 2);
           })
-          .WithWall(wall => wall.Reserve("1m"))
+          .WithWall(wall => wall.Reserve("1m").AddDoras("1z"))
           .Start(1);
 
       (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {

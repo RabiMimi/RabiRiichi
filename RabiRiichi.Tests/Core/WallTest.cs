@@ -86,7 +86,8 @@ namespace RabiRiichi.Tests.Core {
     /// </summary>
     private static void AssertInitialWallLayout(Wall wall) {
       var iw = wall.initialWall;
-      int total = wall.remaining.Count + wall.doras.Count + wall.uradoras.Count + wall.rinshan.Count;
+      int total = wall.remaining.Count + wall.doras.Count + wall.uradoras.Count
+          + wall.rinshan.Count + wall.wanpaiFillers.Count;
       Assert.AreEqual(total, iw.Count, "initialWall must contain every tile once");
       CollectionAssert.AllItemsAreUnique(iw);
 
@@ -112,7 +113,7 @@ namespace RabiRiichi.Tests.Core {
 
       // Before rinshan: (Dora5,Ura5) ... (Dora1,Ura1). Read back-to-front:
       // last dora/ura stack is (Dora1,Ura1) => bottom Ura1, top Dora1.
-      for (int k = 1; k <= Wall.NUM_DORA; k++) {
+      for (int k = 1; k <= wall.doras.Count; k++) {
         Assert.AreSame(wall.uradoras[k - 1], iw[--p], $"ura mismatch at {k}");
         Assert.AreSame(wall.doras[k - 1], iw[--p], $"dora mismatch at {k}");
       }
@@ -133,12 +134,13 @@ namespace RabiRiichi.Tests.Core {
 
     [TestMethod]
     public void TestInitialWallLayoutFlexibleRinshan() {
-      // Nukidora enlarges the rinshan pool; layout must stay consistent for any
-      // rinshan count (here 4 + number of North tiles = 8).
-      var config = new GameConfig { doraOption = DoraOption.Nukidora };
+      // Sanma physically starts with eight rinshan and three indicator pairs.
+      var config = new GameConfig { playerCount = 3, doraOption = DoraOption.Nukidora };
       var nukiWall = new Wall(new RabiRand(2024), config);
       nukiWall.Reset();
-      Assert.IsTrue(nukiWall.rinshan.Count > Wall.NUM_RINSHAN);
+      Assert.AreEqual(Wall.NUM_SANMA_RINSHAN, nukiWall.rinshan.Count);
+      Assert.AreEqual(Wall.NUM_SANMA_INITIAL_DORA, nukiWall.doras.Count);
+      Assert.AreEqual(Wall.NUM_SANMA_INITIAL_DORA, nukiWall.uradoras.Count);
       AssertInitialWallLayout(nukiWall);
     }
 
@@ -461,18 +463,61 @@ namespace RabiRiichi.Tests.Core {
 
     [TestMethod]
     public void TestRinshanSizeWithNukidora() {
-      // With nukidora enabled, the rinshan pool grows by the number of North
-      // tiles in the initial wall (standard set has 4).
-      var config = new GameConfig { doraOption = DoraOption.Nukidora };
-      int norths = config.initialTiles.Count(t => t.IsSame(Tile.North));
+      var config = new GameConfig { playerCount = 3, doraOption = DoraOption.Nukidora };
       var nukiWall = new Wall(new RabiRand(114514), config);
       nukiWall.Reset();
-      Assert.AreEqual(Wall.NUM_RINSHAN + norths, nukiWall.rinshanSize);
+      Assert.AreEqual(Wall.NUM_SANMA_RINSHAN, nukiWall.rinshanSize);
       Assert.AreEqual(nukiWall.rinshanSize, nukiWall.rinshan.Count);
-      // Live-wall accounting stays consistent with the enlarged dead wall.
-      Assert.AreEqual(
-          Tiles.All.Value.Count - (Wall.NUM_DORA * 2) - nukiWall.rinshanSize,
-          nukiWall.NumRemaining);
+      Assert.AreEqual(Tiles.All.Value.Count - Wall.NUM_WANPAI, nukiWall.NumRemaining);
+    }
+
+    [TestMethod]
+    public void TestSanmaRinshanReplenishesIndicatorSideFromHaitei() {
+      var sanma = new Wall(new RabiRand(114514), new GameConfig { playerCount = 3 });
+      sanma.Reset();
+      int live = sanma.NumRemaining;
+
+      var ura4 = sanma.remaining[0];
+      sanma.DrawRinshan();
+      Assert.AreSame(ura4, sanma.uradoras[3]);
+      Assert.AreEqual(3, sanma.doras.Count);
+
+      var dora4 = sanma.remaining[0];
+      sanma.DrawRinshan();
+      Assert.AreSame(dora4, sanma.doras[3]);
+
+      var ura5 = sanma.remaining[0];
+      sanma.DrawRinshan();
+      Assert.AreSame(ura5, sanma.uradoras[4]);
+
+      var dora5 = sanma.remaining[0];
+      sanma.DrawRinshan();
+      Assert.AreSame(dora5, sanma.doras[4]);
+      for (int i = 0; i < 4; i++) {
+        sanma.DrawRinshan();
+      }
+      Assert.AreEqual(0, sanma.rinshan.Count);
+      Assert.AreEqual(4, sanma.wanpaiFillers.Count);
+      Assert.AreEqual(live - 8, sanma.NumRemaining);
+      Assert.AreEqual(Wall.NUM_WANPAI,
+          sanma.rinshan.Count + sanma.doras.Count + sanma.uradoras.Count
+              + sanma.wanpaiFillers.Count);
+    }
+
+    [TestMethod]
+    public void TestSanmaHasEnoughIndicatorsForFourKans() {
+      var sanma = new Wall(new RabiRand(114514), new GameConfig {
+        playerCount = 3,
+        doraOption = DoraOption.All,
+      });
+      sanma.Reset();
+      Assert.IsNotNull(sanma.RevealDora(false));
+      for (int i = 0; i < 4; i++) {
+        sanma.DrawRinshan();
+        Assert.IsNotNull(sanma.RevealDora(true), $"Missing kan dora {i + 1}");
+      }
+      Assert.AreEqual(Wall.NUM_DORA, sanma.revealedDoraCount);
+      Assert.AreEqual(Wall.NUM_DORA, sanma.revealedUradoraCount);
     }
     #endregion
 
