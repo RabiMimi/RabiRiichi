@@ -14,6 +14,7 @@ namespace RabiRiichi.Server.Services {
         Server = ServerConstants.SERVER,
         ServerVersion = ServerConstants.SERVER_VERSION,
         MinClientVersion = ServerConstants.MIN_CLIENT_VERSION,
+        PasswordSalt = Environment.GetEnvironmentVariable("RABIRIICHI_PASSWORD_SALT") ?? "RABIRIICHI",
       };
     }
 

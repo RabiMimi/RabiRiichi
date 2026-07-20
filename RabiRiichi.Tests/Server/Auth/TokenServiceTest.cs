@@ -29,15 +29,15 @@ namespace RabiRiichi.Tests.Server.Auth {
     }
 
     [TestMethod]
-    public void TestTokenFromPreviousServerInstanceIsInvalid() {
+    public void TestTokenFromPreviousServerInstanceIsValid() {
       var previousServer = new TokenService();
       var restartedServer = new TokenService();
       var token = previousServer.BuildToken(123);
 
       Assert.IsTrue(previousServer.IsTokenValid(token, out var originalUserId));
       Assert.AreEqual(123, originalUserId);
-      Assert.IsFalse(restartedServer.IsTokenValid(token, out var restartedUserId));
-      Assert.AreEqual(-1, restartedUserId);
+      Assert.IsTrue(restartedServer.IsTokenValid(token, out var restartedUserId));
+      Assert.AreEqual(123, restartedUserId);
     }
   }
 }

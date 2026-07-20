@@ -25,16 +25,6 @@ services.AddCors(options => {
 services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options => {
       options.TokenValidationParameters = TokenService.ValidationParameters;
-      options.Events = new JwtBearerEvents {
-        OnTokenValidated = context => {
-          var tokenService = context.HttpContext.RequestServices
-              .GetRequiredService<TokenService>();
-          if (!tokenService.IsCurrentServerToken(context.Principal)) {
-            context.Fail("Token belongs to a previous server instance");
-          }
-          return Task.CompletedTask;
-        },
-      };
     });
 services.AddAuthorization();
 
@@ -48,6 +38,7 @@ services.AddSingleton<ILlmProviderFactory, LlmProviderFactory>();
 services.AddSingleton<LlmValidator>();
 
 // Objects for DI
+services.AddSingleton<DbService>();
 services.AddSingleton<RoomList>();
 services.AddSingleton<UserList>();
 services.AddSingleton<TokenService>();
@@ -68,6 +59,8 @@ services.AddSingleton(new Random(builder.Environment.IsDevelopment()
 
 // Build app
 var app = builder.Build();
+
+app.Services.GetRequiredService<DbService>().InitializeDatabase();
 
 // Wire the LLM provider factory into the process-wide runtime so AI agents
 // (created outside a DI scope) share the app's HttpClient factory.

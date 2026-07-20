@@ -16,7 +16,8 @@ namespace RabiRiichi.Server.WebSockets {
       InfoServiceImpl infoService,
       RoomServiceImpl roomService,
       UserServiceImpl userService,
-      ReplayStore replayStore) : ControllerBase {
+      ReplayStore replayStore,
+      DbService dbService) : ControllerBase {
     private readonly ILogger<WebSocketController> logger = logger;
     private readonly RoomTaskQueue taskQueue = taskQueue;
     private readonly TokenService tokenService = tokenService;
@@ -24,6 +25,7 @@ namespace RabiRiichi.Server.WebSockets {
     private readonly RoomServiceImpl roomService = roomService;
     private readonly UserServiceImpl userService = userService;
     private readonly ReplayStore replayStore = replayStore;
+    private readonly DbService dbService = dbService;
 
     private Task HandlePublic(Connection connection, ClientMessageDto msg) {
       return taskQueue.Execute(queue => {
@@ -33,6 +35,10 @@ namespace RabiRiichi.Server.WebSockets {
           } else if (msg.ClientRequest?.CreateUser != null) {
             var req = msg.ClientRequest.CreateUser;
             var res = userService.CreateUser(req, queue.userList);
+            connection.Queue(ProtoUtils.CreateDto(res, msg.Id));
+          } else if (msg.ClientRequest?.LoginUser != null) {
+            var req = msg.ClientRequest.LoginUser;
+            var res = userService.LoginUser(req, queue.userList);
             connection.Queue(ProtoUtils.CreateDto(res, msg.Id));
           } else if (msg.ClientRequest?.GetReplay != null) {
             var req = msg.ClientRequest.GetReplay;
@@ -125,13 +131,26 @@ namespace RabiRiichi.Server.WebSockets {
       }
 
       var user = await taskQueue.Execute(queue => {
-        return queue.userList.Get(uid);
+        var u = queue.userList.Get(uid);
+        if (u == null) {
+          var dbUser = dbService.GetUserById(uid);
+          if (dbUser != null) {
+            u = new User {
+              id = dbUser.Id,
+              nickname = dbUser.UserData.Nickname
+            };
+            u.AddRoomListeners(taskQueue);
+            queue.userList.Add(u);
+          }
+        }
+        return u;
       });
       if (user == null) {
         return await FailSignIn();
       }
-      await adapter.WriteAsync(ProtoUtils.CreateDto(
-          userService.GetMyInfo(user), current.Id));
+      var myInfo = userService.GetMyInfo(user);
+      myInfo.AccessToken = tokenService.BuildToken(user.id);
+      await adapter.WriteAsync(ProtoUtils.CreateDto(myInfo, current.Id));
       return user;
     }
 

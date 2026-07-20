@@ -351,3 +351,6 @@ MigrationBackup/
 *.psd
 dev/local/
 */dev/saves/
+
+# Test database
+*.db
