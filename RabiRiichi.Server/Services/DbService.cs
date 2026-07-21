@@ -1,5 +1,6 @@
 using Microsoft.Data.Sqlite;
 using RabiRiichi.Server.Generated.Rpc;
+using RabiRiichi.Server.Migrations;
 using RabiRiichi.Server.Utils;
 using Google.Protobuf;
 using System;
@@ -11,6 +12,9 @@ namespace RabiRiichi.Server.Services {
     public int Id { get; set; }
     public string Username { get; set; }
     public UserData UserData { get; set; }
+    // Incremented on every password change so previously issued access tokens
+    // (which embed the version they were minted with) can be invalidated.
+    public int TokenVersion { get; set; }
   }
 
 
@@ -25,19 +29,7 @@ namespace RabiRiichi.Server.Services {
     public void InitializeDatabase() {
       using var connection = new SqliteConnection(connectionString);
       connection.Open();
-
-      using var command = connection.CreateCommand();
-      command.CommandText = @"
-        CREATE TABLE IF NOT EXISTS users (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          username TEXT NOT NULL UNIQUE COLLATE NOCASE,
-          user_data BLOB NOT NULL,
-          password_hash TEXT NOT NULL,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        );
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username ON users(username);
-      ";
-      command.ExecuteNonQuery();
+      DbMigrator.Apply(connection);
     }
 
     public int CreateUser(string username, UserData userData, string passwordHash, out string error) {
@@ -91,7 +83,7 @@ namespace RabiRiichi.Server.Services {
         connection.Open();
         using var command = connection.CreateCommand();
         command.CommandText = @"
-          SELECT id, username, user_data, password_hash
+          SELECT id, username, user_data, password_hash, token_version
           FROM users
           WHERE username = $username;
         ";
@@ -108,7 +100,8 @@ namespace RabiRiichi.Server.Services {
             return new DbUser {
               Id = id,
               Username = uname,
-              UserData = userData
+              UserData = userData,
+              TokenVersion = reader.GetInt32(4)
             };
           }
         }
@@ -126,7 +119,7 @@ namespace RabiRiichi.Server.Services {
         connection.Open();
         using var command = connection.CreateCommand();
         command.CommandText = @"
-          SELECT id, username, user_data
+          SELECT id, username, user_data, token_version
           FROM users
           WHERE id = $id;
         ";
@@ -141,11 +134,83 @@ namespace RabiRiichi.Server.Services {
           return new DbUser {
             Id = id,
             Username = uname,
-            UserData = userData
+            UserData = userData,
+            TokenVersion = reader.GetInt32(3)
           };
         }
         return null;
       } catch {
+        return null;
+      }
+    }
+
+    public bool UpdateNickname(int userId, string nickname, out string error) {
+      error = null;
+      if (string.IsNullOrWhiteSpace(nickname)) {
+        error = "Nickname cannot be empty";
+        return false;
+      }
+
+      try {
+        using var connection = new SqliteConnection(connectionString);
+        connection.Open();
+
+        var existing = GetUserById(userId);
+        if (existing == null) {
+          error = "User not found";
+          return false;
+        }
+        // Merge into the stored UserData so future fields survive the update.
+        existing.UserData.Nickname = nickname.Trim();
+
+        using var command = connection.CreateCommand();
+        command.CommandText = @"
+          UPDATE users SET user_data = $user_data WHERE id = $id;
+        ";
+        command.Parameters.AddWithValue("$user_data", existing.UserData.ToByteArray());
+        command.Parameters.AddWithValue("$id", userId);
+        return command.ExecuteNonQuery() > 0;
+      } catch (Exception ex) {
+        error = ex.Message;
+        return false;
+      }
+    }
+
+    /// <summary>
+    /// Verifies the old password and, on success, sets the new password and
+    /// bumps the user's token version. Returns the new version so a fresh token
+    /// can be minted; all previously issued tokens become invalid.
+    /// </summary>
+    public DbUser ChangePassword(
+        string username, string oldPasswordHash, string newPasswordHash, out string error) {
+      error = null;
+      if (string.IsNullOrWhiteSpace(newPasswordHash)) {
+        error = "Password cannot be empty";
+        return null;
+      }
+
+      var dbUser = AuthenticateUser(username, oldPasswordHash, out error);
+      if (dbUser == null) {
+        return null;
+      }
+
+      try {
+        using var connection = new SqliteConnection(connectionString);
+        connection.Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = @"
+          UPDATE users
+          SET password_hash = $password_hash, token_version = token_version + 1
+          WHERE id = $id;
+          SELECT token_version FROM users WHERE id = $id;
+        ";
+        command.Parameters.AddWithValue("$password_hash", newPasswordHash);
+        command.Parameters.AddWithValue("$id", dbUser.Id);
+        var result = command.ExecuteScalar();
+        dbUser.TokenVersion = Convert.ToInt32(result);
+        return dbUser;
+      } catch (Exception ex) {
+        error = ex.Message;
         return null;
       }
     }

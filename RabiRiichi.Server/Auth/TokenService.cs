@@ -25,11 +25,14 @@ namespace RabiRiichi.Server.Auth {
     private const int TOKEN_DURATION_MINUTES = 60 * 24 * 7; // 7 days
     #endregion
 
+    internal const string TokenVersionClaim = "tv";
+
     private readonly JwtSecurityTokenHandler tokenHandler = new();
 
-    public string BuildToken(int userId) {
+    public string BuildToken(int userId, int tokenVersion = 0) {
       var claims = new[] {
         new Claim(ClaimTypes.NameIdentifier, userId.ToString("x")),
+        new Claim(TokenVersionClaim, tokenVersion.ToString()),
       };
 
       var tokenDescriptor = new JwtSecurityToken(
@@ -41,15 +44,29 @@ namespace RabiRiichi.Server.Auth {
       return tokenHandler.WriteToken(tokenDescriptor);
     }
 
-    public bool IsTokenValid(string token, out int userId) {
+    /// <summary>
+    /// Validates the token signature and lifetime only (no DB access), so it is
+    /// safe on the hot path. The token version is surfaced for callers that want
+    /// to additionally check it against the DB (done once per WS connection).
+    /// </summary>
+    public bool IsTokenValid(string token, out int userId, out int tokenVersion) {
+      tokenVersion = 0;
       try {
         var claims = tokenHandler.ValidateToken(token, ValidationParameters, out _);
         userId = Convert.ToInt32(claims.FindFirst(ClaimTypes.NameIdentifier).Value, 16);
+        var tv = claims.FindFirst(TokenVersionClaim)?.Value;
+        if (tv != null) {
+          tokenVersion = Convert.ToInt32(tv);
+        }
       } catch {
         userId = -1;
         return false;
       }
       return true;
+    }
+
+    public bool IsTokenValid(string token, out int userId) {
+      return IsTokenValid(token, out userId, out _);
     }
   }
 }

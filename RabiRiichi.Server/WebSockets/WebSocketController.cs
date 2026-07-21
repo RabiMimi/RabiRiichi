@@ -40,6 +40,10 @@ namespace RabiRiichi.Server.WebSockets {
             var req = msg.ClientRequest.LoginUser;
             var res = userService.LoginUser(req, queue.userList);
             connection.Queue(ProtoUtils.CreateDto(res, msg.Id));
+          } else if (msg.ClientRequest?.ChangePassword != null) {
+            var req = msg.ClientRequest.ChangePassword;
+            var res = userService.ChangePassword(req, queue.userList);
+            connection.Queue(ProtoUtils.CreateDto(res, msg.Id));
           } else if (msg.ClientRequest?.GetReplay != null) {
             var req = msg.ClientRequest.GetReplay;
             if (!ReplayStore.IsValidGameId(req.GameId)) {
@@ -91,6 +95,10 @@ namespace RabiRiichi.Server.WebSockets {
             var req = msg.ClientRequest.GetMyInfo;
             var res = userService.GetMyInfo(user);
             connection.Queue(ProtoUtils.CreateDto(res, msg.Id));
+          } else if (msg.ClientRequest?.UpdateProfile != null) {
+            var req = msg.ClientRequest.UpdateProfile;
+            var res = userService.UpdateProfile(req, user);
+            connection.Queue(ProtoUtils.CreateDto(res, msg.Id));
           }
         });
       } catch (RpcException e) {
@@ -126,22 +134,28 @@ namespace RabiRiichi.Server.WebSockets {
         return await FailSignIn();
       }
 
-      if (!tokenService.IsTokenValid(signIn.AccessToken, out var uid)) {
+      if (!tokenService.IsTokenValid(signIn.AccessToken, out var uid, out var tokenVersion)) {
+        return await FailSignIn();
+      }
+
+      // Validate the token version against the DB exactly once per connection.
+      // A password change bumps the stored version, invalidating older tokens.
+      // The DB read stays off the per-request hot path (only the JWT signature
+      // is checked there).
+      var dbUser = dbService.GetUserById(uid);
+      if (dbUser == null || dbUser.TokenVersion != tokenVersion) {
         return await FailSignIn();
       }
 
       var user = await taskQueue.Execute(queue => {
         var u = queue.userList.Get(uid);
         if (u == null) {
-          var dbUser = dbService.GetUserById(uid);
-          if (dbUser != null) {
-            u = new User {
-              id = dbUser.Id,
-              nickname = dbUser.UserData.Nickname
-            };
-            u.AddRoomListeners(taskQueue);
-            queue.userList.Add(u);
-          }
+          u = new User {
+            id = dbUser.Id,
+            nickname = dbUser.UserData.Nickname
+          };
+          u.AddRoomListeners(taskQueue);
+          queue.userList.Add(u);
         }
         return u;
       });
@@ -149,7 +163,7 @@ namespace RabiRiichi.Server.WebSockets {
         return await FailSignIn();
       }
       var myInfo = userService.GetMyInfo(user);
-      myInfo.AccessToken = tokenService.BuildToken(user.id);
+      myInfo.AccessToken = tokenService.BuildToken(user.id, dbUser.TokenVersion);
       await adapter.WriteAsync(ProtoUtils.CreateDto(myInfo, current.Id));
       return user;
     }

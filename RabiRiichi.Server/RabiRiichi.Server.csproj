@@ -14,6 +14,7 @@
   <ItemGroup>
     <Protobuf ProtoRoot="..\Protos" Include="..\Protos\Server\**\*.proto" />
     <EmbeddedResource Include="Agents\Llm\Prompts\*.md" />
+    <EmbeddedResource Include="Migrations\*.sql" />
   </ItemGroup>
 
   <ItemGroup>

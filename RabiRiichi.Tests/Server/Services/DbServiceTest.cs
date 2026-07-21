@@ -97,5 +97,51 @@ namespace RabiRiichi.Tests.Server.Services {
       var nonExistent = dbService.GetUserById(999999);
       Assert.IsNull(nonExistent);
     }
+
+    [TestMethod]
+    public void TestNewUserHasZeroTokenVersion() {
+      string error;
+      int uid = dbService.CreateUser("carol", new UserData { Nickname = "Carol" }, "pw", out error);
+      Assert.IsNull(error);
+      Assert.AreEqual(0, dbService.GetUserById(uid).TokenVersion);
+    }
+
+    [TestMethod]
+    public void TestUpdateNickname() {
+      string error;
+      int uid = dbService.CreateUser("dave", new UserData { Nickname = "Dave" }, "pw", out error);
+      Assert.IsNull(error);
+
+      Assert.IsTrue(dbService.UpdateNickname(uid, "  Dave2  ", out error));
+      Assert.IsNull(error);
+      Assert.AreEqual("Dave2", dbService.GetUserById(uid).UserData.Nickname);
+
+      // Empty nickname is rejected.
+      Assert.IsFalse(dbService.UpdateNickname(uid, "   ", out error));
+      Assert.IsNotNull(error);
+    }
+
+    [TestMethod]
+    public void TestChangePasswordBumpsTokenVersionAndRotatesCredential() {
+      string error;
+      int uid = dbService.CreateUser("erin", new UserData { Nickname = "Erin" }, "old-hash", out error);
+      Assert.IsNull(error);
+
+      // Wrong old password is rejected and leaves the version untouched.
+      Assert.IsNull(dbService.ChangePassword("erin", "wrong", "new-hash", out error));
+      Assert.IsNotNull(error);
+      Assert.AreEqual(0, dbService.GetUserById(uid).TokenVersion);
+
+      // Correct old password succeeds and bumps the version.
+      var changed = dbService.ChangePassword("erin", "old-hash", "new-hash", out error);
+      Assert.IsNull(error);
+      Assert.IsNotNull(changed);
+      Assert.AreEqual(1, changed.TokenVersion);
+      Assert.AreEqual(1, dbService.GetUserById(uid).TokenVersion);
+
+      // Old password no longer authenticates; new one does.
+      Assert.IsNull(dbService.AuthenticateUser("erin", "old-hash", out error));
+      Assert.IsNotNull(dbService.AuthenticateUser("erin", "new-hash", out error));
+    }
   }
 }

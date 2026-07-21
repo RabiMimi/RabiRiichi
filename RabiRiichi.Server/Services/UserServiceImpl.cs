@@ -3,6 +3,7 @@ using Grpc.Core;
 using Microsoft.AspNetCore.Authorization;
 using RabiRiichi.Server.Auth;
 using RabiRiichi.Server.Connections;
+using RabiRiichi.Server.Generated.Messages;
 using RabiRiichi.Server.Generated.Rpc;
 using RabiRiichi.Server.Models;
 
@@ -41,7 +42,7 @@ namespace RabiRiichi.Server.Services {
         Id = user.id,
         UserData = request.UserData,
         Status = user.status,
-        AccessToken = tokenService.BuildToken(user.id)
+        AccessToken = tokenService.BuildToken(user.id, 0)
       };
     }
 
@@ -71,7 +72,7 @@ namespace RabiRiichi.Server.Services {
         UserData = dbUser.UserData,
         Room = user.room?.CreateServerRoomStateMsg(),
         Status = user.status,
-        AccessToken = tokenService.BuildToken(user.id)
+        AccessToken = tokenService.BuildToken(user.id, dbUser.TokenVersion)
       };
     }
 
@@ -88,6 +89,53 @@ namespace RabiRiichi.Server.Services {
         Room = user.room?.CreateServerRoomStateMsg(),
         Status = user.status,
       };
+    }
+
+    public UserInfoResponse UpdateProfile(UpdateProfileRequest request, User user) {
+      var nickname = request.UserData?.Nickname;
+      if (string.IsNullOrWhiteSpace(nickname)) {
+        throw new RpcException(new Status(StatusCode.InvalidArgument, "Nickname cannot be empty"));
+      }
+      if (!dbService.UpdateNickname(user.id, nickname, out var error)) {
+        throw new RpcException(new Status(StatusCode.Internal, error ?? "Cannot update profile"));
+      }
+      user.nickname = nickname.Trim();
+      // Reflect the new nickname to anyone sharing a room with the user.
+      user.room?.BroadcastRoomState();
+      return GetMyInfo(user);
+    }
+
+    public UserInfoResponse ChangePassword(ChangePasswordRequest request, UserList userList) {
+      var dbUser = dbService.ChangePassword(
+          request.Username, request.OldPasswordHash, request.NewPasswordHash, out var error);
+      if (dbUser == null) {
+        if (error != null && error.Contains("cannot be empty")) {
+          throw new RpcException(new Status(StatusCode.InvalidArgument, error));
+        }
+        throw new RpcException(new Status(StatusCode.Unauthenticated, error ?? "Invalid username or password"));
+      }
+
+      // Mint a token carrying the bumped version; the old token is now stale and
+      // will be rejected on the next WS sign-in.
+      return new UserInfoResponse {
+        Id = dbUser.Id,
+        UserData = dbUser.UserData,
+        Status = userList.TryGet(dbUser.Id, out var user) ? user.status : UserStatus.None,
+        AccessToken = tokenService.BuildToken(dbUser.Id, dbUser.TokenVersion)
+      };
+    }
+
+    public override Task<UserInfoResponse> UpdateProfile(UpdateProfileRequest request, ServerCallContext context) {
+      return taskQueue.Execute(queue => {
+        var user = queue.userList.Fetch(context);
+        return UpdateProfile(request, user);
+      });
+    }
+
+    public override Task<UserInfoResponse> ChangePassword(ChangePasswordRequest request, ServerCallContext context) {
+      return taskQueue.Execute(queue => {
+        return ChangePassword(request, queue.userList);
+      });
     }
 
     [Authorize]
