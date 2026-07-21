@@ -58,12 +58,27 @@ namespace RabiRiichi.Server.Services {
         throw new RpcException(
             new Status(StatusCode.NotFound, "Cannot find room"));
       }
-      return !room.AddPlayer(user)
-        ? throw new RpcException(
-            new Status(StatusCode.Unavailable, "Room is full"))
-        : new ServerRoomStateResponse {
-          State = room.CreateServerRoomStateMsg()
-        };
+      if (user.room != null) {
+        if (user.room.id == room.id) {
+          return new ServerRoomStateResponse {
+            State = room.CreateServerRoomStateMsg()
+          };
+        } else {
+          throw new RpcException(
+              new Status(StatusCode.FailedPrecondition, "Player is already in another room"));
+        }
+      }
+      if (room.players.Count >= room.config.playerCount) {
+        throw new RpcException(
+            new Status(StatusCode.ResourceExhausted, "Room is full"));
+      }
+      if (!room.AddPlayer(user)) {
+        throw new RpcException(
+            new Status(StatusCode.Internal, "Failed to join room"));
+      }
+      return new ServerRoomStateResponse {
+        State = room.CreateServerRoomStateMsg()
+      };
     }
 
     public override Task<ServerRoomStateResponse> JoinRoom(JoinRoomRequest request, ServerCallContext context) {
