@@ -1,4 +1,4 @@
-# RabiRiichi (兔兔立直)
+# RabiRiichi (兔兔立直 / ラビリーチ)
 
 [![100hun](https://100hun.rabimimi.com/provider/codecov/github/RabiMimi/RabiRiichi/develop/badge.png?size=128)](https://github.com/KCFindstr/100hun)
 
@@ -17,8 +17,8 @@ See [Documentation](https://riichi-docs.rabimimi.com) for more information.
 
 | Environment | Address                                                    |
 | ----------- | ---------------------------------------------------------- |
-| Production  | [RabiRiichi 兔兔立直](https://riichi.rabimimi.com)         |
-| Development | [RabiRiichi-dev 兔兔开发](https://riichi-dev.rabimimi.com) |
+| Production  | [RabiRiichi 兔兔立直 / ラビリーチ](https://riichi.rabimimi.com)         |
+| Development | [RabiRiichi-dev 兔兔开发 / ミミ開発](https://riichi-dev.rabimimi.com) |
 
 ## Development
 
