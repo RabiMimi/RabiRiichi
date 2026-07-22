@@ -152,6 +152,10 @@ namespace RabiRiichi.Server.Agents.Llm {
     }
 
     internal static string LowestThinkingLevel(string model) {
+      if (string.Equals(model, "gemini-3.5-flash-lite", StringComparison.OrdinalIgnoreCase) ||
+          string.Equals(model, "gemini-3.6-flash", StringComparison.OrdinalIgnoreCase)) {
+        return "low";
+      }
       var isGemini3 = model?.StartsWith("gemini-3", StringComparison.OrdinalIgnoreCase) == true;
       var isFlash = model?.Contains("flash", StringComparison.OrdinalIgnoreCase) == true;
       return isGemini3 && isFlash ? "minimal" : "low";

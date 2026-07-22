@@ -1,14 +1,16 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using RabiRiichi.Actions;
 using RabiRiichi.Core;
 using RabiRiichi.Events;
+using RabiRiichi.Events.InGame;
 using RabiRiichi.Server.Agents;
 using RabiRiichi.Server.Generated.Messages;
 using RabiRiichi.Server.Models;
 using RabiRiichi.Utils;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace RabiRiichi.Server.Agents.Llm {
   /// <summary>
@@ -44,10 +46,17 @@ namespace RabiRiichi.Server.Agents.Llm {
     private string PromptName => AiLocalization.LlmPromptName(
         settings.CustomDisplayName, settings.Provider, settings.Language);
 
-    public override void OnEvent(EventBase ev) => eventLog.Record(ev);
+    public override void OnEvent(EventBase ev) {
+      eventLog.Record(ev);
+      if (ev is StopGameEvent stopEv && room?.game != null) {
+        var view = new PublicGameView(room.game, Seat);
+        Task.Run(() => HandleEndGameComment(view, stopEv));
+      }
+    }
 
     public override void OnChat(int senderId, string text, string sticker) {
-      if (senderId == id) return;
+      if (senderId == id)
+        return;
       var sender = room.players.FirstOrDefault(p => p.id == senderId);
       var name = sender == null ? $"player {senderId}" : ResolveName(sender);
       lock (chatLock) {
@@ -161,7 +170,8 @@ namespace RabiRiichi.Server.Agents.Llm {
 
 
     private bool EmitChat(LlmDecision decision) {
-      if (decision == null) return false;
+      if (decision == null)
+        return false;
       var emitted = false;
       if (!string.IsNullOrWhiteSpace(decision.Say)) {
         room.SendAgentChat(this, decision.Say, null);
@@ -176,7 +186,8 @@ namespace RabiRiichi.Server.Agents.Llm {
     }
 
     private void ClearChatsThrough(long sequence) {
-      if (sequence <= 0) return;
+      if (sequence <= 0)
+        return;
       lock (chatLock) {
         pendingChats.RemoveAll(c => c.Sequence <= sequence);
       }
@@ -191,7 +202,8 @@ namespace RabiRiichi.Server.Agents.Llm {
     }
 
     private string SeatName(int seat) {
-      if (seat == Seat) return PromptName;
+      if (seat == Seat)
+        return PromptName;
       return ResolveName(room.GetPlayerBySeat(seat));
     }
 
@@ -216,7 +228,8 @@ namespace RabiRiichi.Server.Agents.Llm {
     }
 
     private string ResolveName(IPlayerAgent agent) {
-      if (agent == null) return "?";
+      if (agent == null)
+        return "?";
       if (agent is User user) {
         return string.IsNullOrWhiteSpace(user.nickname) ? $"P{agent.Seat}" : user.nickname;
       }
@@ -225,6 +238,55 @@ namespace RabiRiichi.Server.Agents.Llm {
             llm.settings.CustomDisplayName, llm.settings.Provider, settings.Language);
       }
       return AiLocalization.AiDisplayName(agent.GetState().AiType, settings.Language);
+    }
+
+    private void HandleEndGameComment(PublicGameView view, StopGameEvent stopEv) {
+      try {
+        var recent = eventLog.Drain(out _);
+        List<LlmChatEntry> chats;
+        long chatsThrough;
+        lock (chatLock) {
+          chats = [.. pendingChats.Select(c => c.Entry)];
+          chatsThrough = pendingChats.Count == 0 ? 0 : pendingChats[^1].Sequence;
+        }
+
+        var builder = new LlmPromptBuilder(settings, SeatNames(), SeatRoles());
+        var userMessage = builder.BuildEndGamePrompt(view, recent, chats, stopEv.endGamePoints);
+
+        var messages = new List<LlmMessage>();
+        lock (convLock) {
+          if (!systemSent) {
+            var system = builder.BuildSystemPrompt(Seat, view);
+            transcript.Add(LlmMessage.System(system));
+            systemSent = true;
+            Logger.Log($"{LogTag} >> system prompt:\n{system}");
+          }
+          messages.AddRange(transcript);
+        }
+        messages.Add(LlmMessage.User(userMessage));
+
+        Logger.Log($"{LogTag} >> end-game prompt:\n{userMessage}");
+        using var cts = new CancellationTokenSource(LlmLimits.RequestTimeout);
+        var result = provider
+            .CompleteAsync(messages, LlmLimits.MaxDecisionTokens, cts.Token)
+            .GetAwaiter().GetResult();
+
+        if (!result.Success) {
+          Logger.Warn($"{LogTag} << end-game error: {result.Error}");
+          return;
+        }
+
+        Logger.Log($"{LogTag} << end-game response:\n{result.Content}");
+        lock (convLock) {
+          transcript.Add(LlmMessage.User(userMessage));
+          transcript.Add(LlmMessage.Assistant(result.Content));
+        }
+        ClearChatsThrough(chatsThrough);
+        var decision = LlmDecision.Parse(result.Content);
+        EmitChat(decision);
+      } catch (Exception e) {
+        Logger.Warn($"{LogTag} end-game chat failed: {e.Message}");
+      }
     }
   }
 }

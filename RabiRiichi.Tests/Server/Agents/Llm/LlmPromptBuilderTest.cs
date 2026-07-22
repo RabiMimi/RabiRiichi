@@ -256,5 +256,29 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
       Assert.IsTrue(LlmPromptBuilder.ShouldSendConsecutiveChatReminder(2));
       Assert.IsTrue(LlmPromptBuilder.ShouldSendConsecutiveChatReminder(3));
     }
+
+    [TestMethod]
+    public void BuildEndGamePrompt_IncludesRankingsAndInstruction() {
+      var game = BuildGame(b => b
+          .WithPlayer(0, p => p.SetFreeTiles("123456789m1234p"))
+          .WithPlayer(1, p => p.SetFreeTiles("123456789p1234s"))
+          .WithPlayer(2, p => p.SetFreeTiles("123456789s1234m"))
+          .WithPlayer(3, p => p.SetFreeTiles("123456789m1234s")));
+      var view = new PublicGameView(game, 0);
+      var builder = new LlmPromptBuilder(Settings(), Names());
+
+      var endGamePoints = new long[] { 35000, 25000, 20000, 20000 };
+      var prompt = builder.BuildEndGamePrompt(
+          view,
+          ["TestBot wins by tsumo"],
+          [new("Alice", "gg", null)],
+          endGamePoints);
+
+      StringAssert.Contains(prompt, "GAME OVER - FINAL RANKINGS");
+      StringAssert.Contains(prompt, "Rank #1: TestBot (YOU) with 35000 points");
+      StringAssert.Contains(prompt, "Rank #2: Alice with 25000 points");
+      StringAssert.Contains(prompt, "finished in rank #1 out of 4");
+      StringAssert.Contains(prompt, "end-of-game comment");
+    }
   }
 }

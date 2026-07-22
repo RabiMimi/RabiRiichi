@@ -159,12 +159,26 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
     }
 
     [TestMethod]
-    public void Gemini_UsesLowestPortableThinkingLevelForPro() {
-      var body = GeminiProvider.BuildRequestBody(Messages, 128,
+    public void Gemini_UsesLowestPortableThinkingLevelForProAndUnsupportedFlashModels() {
+      var bodyPro = GeminiProvider.BuildRequestBody(Messages, 128,
           previousInteractionId: null, model: "gemini-3.1-pro-preview");
-
       Assert.AreEqual("low",
-          body["generation_config"]["thinking_level"].GetValue<string>());
+          bodyPro["generation_config"]["thinking_level"].GetValue<string>());
+
+      var body35FlashLite = GeminiProvider.BuildRequestBody(Messages, 128,
+          previousInteractionId: null, model: "gemini-3.5-flash-lite");
+      Assert.AreEqual("low",
+          body35FlashLite["generation_config"]["thinking_level"].GetValue<string>());
+
+      var body36Flash = GeminiProvider.BuildRequestBody(Messages, 128,
+          previousInteractionId: null, model: "gemini-3.6-flash");
+      Assert.AreEqual("low",
+          body36Flash["generation_config"]["thinking_level"].GetValue<string>());
+
+      var body35Flash = GeminiProvider.BuildRequestBody(Messages, 128,
+          previousInteractionId: null, model: "gemini-3.5-flash");
+      Assert.AreEqual("minimal",
+          body35Flash["generation_config"]["thinking_level"].GetValue<string>());
     }
 
     [TestMethod]

@@ -65,9 +65,7 @@ namespace RabiRiichi.Server.Connections {
     /// <param name="msg">Message to send</param>
     public void Queue(ServerMessageWrapper msg) {
       serverMsgs.TryAdd(msg.msg.Id, msg);
-      if (currentCtx != null) {
-        currentCtx.Queue(msg);
-      }
+      currentCtx?.Queue(msg);
     }
 
     /// <summary>

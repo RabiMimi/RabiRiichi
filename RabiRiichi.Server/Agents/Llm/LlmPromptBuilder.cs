@@ -223,6 +223,44 @@ namespace RabiRiichi.Server.Agents.Llm {
       return sb.ToString();
     }
 
+    public string BuildEndGamePrompt(
+        PublicGameView view,
+        IReadOnlyList<string> recentEvents,
+        IReadOnlyList<LlmChatEntry> chats,
+        IReadOnlyList<long> endGamePoints = null) {
+      var sb = new StringBuilder();
+      if (recentEvents != null && recentEvents.Count > 0) {
+        sb.AppendLine("Recent events:");
+        foreach (var line in recentEvents) {
+          sb.Append("  - ").AppendLine(line);
+        }
+      }
+
+      AppendChats(sb, chats);
+
+      sb.AppendLine("== GAME OVER - FINAL RANKINGS ==");
+      var points = new Dictionary<int, long>();
+      for (int s = 0; s < view.PlayerCount; s++) {
+        points[s] = (endGamePoints != null && s < endGamePoints.Count)
+            ? endGamePoints[s]
+            : view.PointsOf(s);
+      }
+      var ranked = points.OrderByDescending(kv => kv.Value).ToList();
+      for (int r = 0; r < ranked.Count; r++) {
+        var seat = ranked[r].Key;
+        var p = ranked[r].Value;
+        var isSelf = (seat == view.Seat) ? " (YOU)" : "";
+        sb.AppendLine($"  Rank #{r + 1}: {NameOf(seat)}{isSelf} with {p} points");
+      }
+
+      var selfRank = ranked.FindIndex(kv => kv.Key == view.Seat) + 1;
+      sb.AppendLine($"The game is now complete. You finished in rank #{selfRank} out of {view.PlayerCount}.");
+      sb.AppendLine("Provide your final end-of-game comment or reaction to the table in persona (commenting on your final rank and the game outcome).");
+      sb.AppendLine("Return a single JSON object: {\"say\": \"<short final chat or null>\", \"sticker\": \"<mood or null>\"}.");
+
+      return sb.ToString();
+    }
+
     private static void AppendChats(StringBuilder sb, IReadOnlyList<LlmChatEntry> chats) {
       if (chats.Count == 0) {
         return;

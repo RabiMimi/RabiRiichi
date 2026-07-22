@@ -103,6 +103,9 @@ namespace RabiRiichi.Server.Agents.Llm {
         case MidGameRyuukyokuEvent m:
           return $"Abortive draw ({m.name})";
 
+        case StopGameEvent:
+          return "The game has ended (final rankings concluded).";
+
         default:
           return null;
       }
