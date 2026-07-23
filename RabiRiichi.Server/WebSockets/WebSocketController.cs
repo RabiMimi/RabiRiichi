@@ -174,6 +174,14 @@ namespace RabiRiichi.Server.WebSockets {
         using var webSocket =
             await HttpContext.WebSockets.AcceptWebSocketAsync();
         var adapter = new WebSocketAdapter(webSocket);
+
+        // Version-gate every connection, including the public one used for
+        // replays, before serving any request.
+        if (!await adapter.VersionHandShake(TimeSpan.FromSeconds(15))) {
+          await adapter.Close();
+          return;
+        }
+
         var connection = new Connection();
         void PublicListener(ClientMessageDto msg) {
           _ = HandlePublic(connection, msg);
@@ -238,7 +246,7 @@ namespace RabiRiichi.Server.WebSockets {
           user.connection.OnReceive += PublicListener;
           user.connection.OnReceive += UserListener;
 
-          if (!await rabiCtx.HandShake()) {
+          if (!await rabiCtx.VersionHandShake()) {
             rabiCtx.Close();
             return;
           }
