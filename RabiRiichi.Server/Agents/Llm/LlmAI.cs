@@ -161,7 +161,7 @@ namespace RabiRiichi.Server.Agents.Llm {
       }
       sb.Append(builder.BuildDecisionPrompt(
           view, recent, selectedAction, automaticActionNote, chats,
-          turnsSinceChat >= 10,
+          turnsSinceChat >= 5,
           LlmPromptBuilder.ShouldSendConsecutiveChatReminder(consecutiveChatTurns)));
       userMessage = sb.ToString();
       messages.Add(LlmMessage.User(userMessage));

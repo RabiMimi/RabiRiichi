@@ -27,16 +27,14 @@ namespace RabiRiichi.Server.Agents.Llm {
             : "not set";
 
     public static bool ShouldSendConsecutiveChatReminder(int consecutiveChatTurns) =>
-        consecutiveChatTurns >= 2;
+        consecutiveChatTurns >= 3;
 
     public string BuildSystemPrompt(int selfSeat, PublicGameView view = null) {
       var opponents = string.Join("\n", seatNames
           .Where(kv => kv.Key != selfSeat)
           .OrderBy(kv => kv.Key)
           .Select(kv => $"- seat {kv.Key}: {kv.Value}{RoleLabel(kv.Key)}"));
-      var prompt = LoadTemplate(settings.PromptTemplate)
-          .Replace("{{PERSONA_HINT}}",
-              PersonaHint(settings.PromptTemplate, settings.Language))
+      var prompt = LoadTemplate(settings.PromptTemplate, settings.Language)
           .Replace("{{SELF_NAME}}", NameOf(selfSeat))
           .Replace("{{SELF_SEAT}}", selfSeat.ToString())
           .Replace("{{LANGUAGE}}", LanguageLabel(settings.Language))
@@ -214,10 +212,10 @@ namespace RabiRiichi.Server.Agents.Llm {
         sb.AppendLine(automaticActionNote);
       }
       if (quietReminder) {
-        sb.AppendLine("You have been quiet for at least 10 turns. Please chat or use a sticker within the next few turns when it feels natural.");
+        sb.AppendLine("You have been quiet for at least 5 turns. Please chat or use a sticker within the next few turns when it feels natural.");
       }
       if (consecutiveChatReminder) {
-        sb.AppendLine("You have already chatted on 2 or more consecutive turns. Return say=null and sticker=null this turn. The only exception is an exceptional game event or a message directly addressed to you that genuinely requires a response.");
+        sb.AppendLine("You have already chatted on 3 or more consecutive turns. Return say=null and sticker=null this turn. The only exception is an exceptional game event or a message directly addressed to you that genuinely requires a response.");
       }
       sb.AppendLine("Return the required JSON object. For silence, return {\"say\":null,\"sticker\":null}.");
       return sb.ToString();
@@ -290,18 +288,34 @@ namespace RabiRiichi.Server.Agents.Llm {
         ? text
         : text[..ChatTextLimit] + "... <trimmed due to length>";
 
-    private static string LoadTemplate(LlmPromptTemplate template) {
-      var suffix = template switch {
-        LlmPromptTemplate.CuteJk => ".Agents.Llm.Prompts.cute-jk.md",
-        LlmPromptTemplate.Mesugaki => ".Agents.Llm.Prompts.mesugaki.md",
+    private static string LoadTemplate(LlmPromptTemplate template, string language) {
+      var baseName = template switch {
+        LlmPromptTemplate.CuteJk => "cute-jk",
+        LlmPromptTemplate.Mesugaki => "mesugaki",
         _ => throw new ArgumentOutOfRangeException(nameof(template)),
       };
+      var lang = AiLocalization.NormalizeLanguage(language);
+      
       var assembly = typeof(LlmPromptBuilder).Assembly;
-      var resourceName = assembly.GetManifestResourceNames()
-          .SingleOrDefault(name => name.EndsWith(suffix, StringComparison.Ordinal));
-      if (resourceName == null) {
-        throw new InvalidOperationException($"LLM prompt resource not found: {suffix}");
+      string resourceName = null;
+      string suffix = null;
+
+      if (lang != AiLocalization.LangEn) {
+        suffix = $".Agents.Llm.Prompts.{baseName}_{lang}.md";
+        resourceName = assembly.GetManifestResourceNames()
+            .SingleOrDefault(name => name.EndsWith(suffix, StringComparison.Ordinal));
       }
+
+      if (resourceName == null) {
+        suffix = $".Agents.Llm.Prompts.{baseName}.md";
+        resourceName = assembly.GetManifestResourceNames()
+            .SingleOrDefault(name => name.EndsWith(suffix, StringComparison.Ordinal));
+      }
+
+      if (resourceName == null) {
+        throw new InvalidOperationException($"LLM prompt resource not found for template {template} and language {language} (suffix: {suffix})");
+      }
+
       using var stream = assembly.GetManifestResourceStream(resourceName);
       using var reader = new StreamReader(stream!);
       return reader.ReadToEnd();
@@ -351,27 +365,6 @@ namespace RabiRiichi.Server.Agents.Llm {
       _ => "English",
     };
 
-    private static string PersonaHint(
-        LlmPromptTemplate template, string language) => template switch {
-          LlmPromptTemplate.CuteJk => CuteJkPersonaHint(language),
-          LlmPromptTemplate.Mesugaki => MesugakiPersonaHint(language),
-          _ => throw new ArgumentOutOfRangeException(nameof(template)),
-        };
-
-    private static string CuteJkPersonaHint(string language) => language switch {
-      AiLocalization.LangJa => "In Japanese, speak like a friendly JK: casual endings, light fillers, and cute but readable phrasing.",
-      AiLocalization.LangZhs => "用中文时说得软萌可爱一点：轻松口语、亲昵的语气词，像元气女高中生一样，但别太夸张。",
-      _ => "In English, keep it cutesy and bubbly like an anime schoolgirl (for example, ehehe~, yay!, or mou~), but still clear.",
-    };
-
-    private static string MesugakiPersonaHint(string language) => language switch {
-      AiLocalization.LangJa =>
-          "日本語では、生意気で煽り好きなメスガキ口調にしてください。「ざぁこ♡」「よわよわ♡」のような短い挑発を多用してください。「人間プレイヤー」と明記された相手だけを「<名前>-おじさん」と呼んでください。他のLLMは全員かわいい女の子なので、絶対に「おじさん」と呼んではいけません。AI・牌・字牌・風・三元牌・行動なども「おじさん」と呼んではいけません。",
-      AiLocalization.LangZhs =>
-          "用中文时保持嚣张、坏笑着挑衅的雌小鬼语气，多用“杂鱼♡”“好弱♡”之类的短句。只有明确标为“人类玩家”的对手才能称为“<名字>大叔”。其他LLM全都是可爱的女孩子，绝对不能称为大叔；AI、牌、字牌、风牌、三元牌、动作或其他游戏概念也不能称为大叔。",
-      _ =>
-          "In English, sound smug, bratty, and gleefully taunting. Frequently use short jabs such as “weakling♡” or “too easy♡”. Call only opponents explicitly labeled “human player” “<name>-ojisan”. All other LLMs are cute girls, so never call them ojisan; never apply ojisan to other AIs, tiles, honors, winds, dragons, actions, or game concepts.",
-    };
 
     private static string TileNotationHint(string language) => language switch {
       AiLocalization.LangJa =>

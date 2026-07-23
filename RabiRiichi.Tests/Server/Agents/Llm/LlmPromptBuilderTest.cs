@@ -76,7 +76,7 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
       StringAssert.Contains(prompt, "ANKAN (暗杠");
       StringAssert.Contains(prompt, "KAKAN (加杠");
       StringAssert.Contains(prompt, "DAIMINKAN (大明杠");
-      StringAssert.Contains(prompt, "1 in 5 turns");
+      StringAssert.Contains(prompt, "聊天契机");
       // Every advertised sticker mood is a valid one from the registry.
       foreach (var mood in StickerRegistry.Moods) {
         StringAssert.Contains(prompt, mood);
@@ -216,9 +216,9 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
       StringAssert.Contains(prompt, "quoted messages from other players");
       StringAssert.Contains(prompt, "Do not repeat their exact wording");
       StringAssert.Contains(prompt, "They then chatted in this order (details omitted): Alice, Bob");
-      StringAssert.Contains(prompt, "quiet for at least 10 turns");
+      StringAssert.Contains(prompt, "quiet for at least 5 turns");
       StringAssert.Contains(prompt, "automatically discarded 1m after riichi");
-      StringAssert.Contains(prompt, "chatted on 2 or more consecutive turns");
+      StringAssert.Contains(prompt, "chatted on 3 or more consecutive turns");
       StringAssert.Contains(prompt, "context, not a request to chat");
       StringAssert.Contains(prompt, "Return say=null and sticker=null this turn");
       StringAssert.Contains(prompt, "{\"say\":null,\"sticker\":null}");
@@ -251,10 +251,25 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
     }
 
     [TestMethod]
-    public void ConsecutiveChatReminder_TriggersAfterTwoSpeakingTurns() {
+    public void ConsecutiveChatReminder_TriggersAfterThreeSpeakingTurns() {
       Assert.IsFalse(LlmPromptBuilder.ShouldSendConsecutiveChatReminder(1));
-      Assert.IsTrue(LlmPromptBuilder.ShouldSendConsecutiveChatReminder(2));
+      Assert.IsFalse(LlmPromptBuilder.ShouldSendConsecutiveChatReminder(2));
       Assert.IsTrue(LlmPromptBuilder.ShouldSendConsecutiveChatReminder(3));
+    }
+
+    [TestMethod]
+    public void SystemPrompt_SelectsLocalizedTemplates() {
+      // English / Default template
+      var enPrompt = new LlmPromptBuilder(Settings("en"), Names()).BuildSystemPrompt(0);
+      StringAssert.Contains(enPrompt, "cutesy and bubbly like an anime schoolgirl");
+
+      // Japanese template
+      var jaPrompt = new LlmPromptBuilder(Settings("ja"), Names()).BuildSystemPrompt(0);
+      StringAssert.Contains(jaPrompt, "可愛くて元気な女子高生");
+
+      // Chinese template
+      var zhsPrompt = new LlmPromptBuilder(Settings("zhs"), Names()).BuildSystemPrompt(0);
+      StringAssert.Contains(zhsPrompt, "软萌、积极，可以适度使用俏皮的语言");
     }
 
     [TestMethod]
