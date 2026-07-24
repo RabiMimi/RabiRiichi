@@ -52,7 +52,6 @@ namespace RabiRiichi.Tests.Server.Arena {
           new() { Seat = 3, ModelId = "baseline-weak", DisplayName = "Rule (weak)",
                   FinalPoints = 10000, Placement = 4, EloBefore = 1400, EloAfter = 1400 },
         },
-        ReplayLink = $"https://play.example.com?server=wss://a&replay=game-{matchId}",
       };
     }
 

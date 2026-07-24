@@ -68,6 +68,8 @@ namespace RabiRiichi.Tests.Server.Arena {
       return new PublicController(cfg, runManager, arenaService);
     }
 
+    // The replay link is NOT stored on the record; the controller derives it at
+    // read-time. With a non-empty cfg.WsUrl this is the deterministic result.
     private static string ReplayLink(ArenaConfig cfg, string gameId) =>
         $"{cfg.ClientUrl}?server={cfg.WsUrl}&replay={gameId}";
 
@@ -88,7 +90,6 @@ namespace RabiRiichi.Tests.Server.Arena {
           new() { Seat = 1, ModelId = "gemini-x", DisplayName = "Gemini-X",
                   FinalPoints = 20000, Placement = 3, EloBefore = 1500, EloAfter = 1494 },
         },
-        ReplayLink = ReplayLink(cfg, gameId),
       };
     }
 

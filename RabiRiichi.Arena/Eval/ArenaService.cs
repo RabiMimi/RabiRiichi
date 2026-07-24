@@ -517,7 +517,6 @@ namespace RabiRiichi.Arena.Eval {
         Seed = unchecked((long)result.Seed),
         Config = result.Config,
         Players = players,
-        ReplayLink = BuildReplayLink(ctx, result.GameId),
       };
     }
 
@@ -539,9 +538,6 @@ namespace RabiRiichi.Arena.Eval {
 
     private static bool IsBaseline(ArenaConfig.ModelConfig m) =>
         string.Equals(m.Provider, "baseline", StringComparison.OrdinalIgnoreCase);
-
-    private static string BuildReplayLink(RunContext ctx, string gameId) =>
-        $"{ctx.Config.ClientUrl ?? ""}?server={ctx.Config.WsUrl ?? ""}&replay={gameId}";
 
     // ----- Status transitions (all under gate) ----------------------------
 

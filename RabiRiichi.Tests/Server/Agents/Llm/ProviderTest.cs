@@ -12,14 +12,16 @@ using System.Threading.Tasks;
 namespace RabiRiichi.Tests.Server.Agents.Llm {
   [TestClass]
   public class ProviderTest {
-    private static LlmSettings OpenAi(string baseUrl = null, string model = "gpt-4o-mini") => LlmSettings.FromProto(
+    private static LlmSettings OpenAi(
+        string baseUrl = null, string model = "gpt-4o-mini",
+        LlmThinkingLevel thinking = LlmThinkingLevel.Minimal) => LlmSettings.FromProto(
         new LlmAiConfig {
           Provider = LlmProvider.Openai,
           ApiToken = "sk-test",
           Model = model,
           Language = "en",
           BaseUrl = baseUrl ?? "",
-        }, out _);
+        }, out _, thinking);
 
     private static readonly IReadOnlyList<LlmMessage> Messages = new List<LlmMessage> {
       LlmMessage.System("sys"),
@@ -81,7 +83,39 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
 
       await provider.CompleteAsync(Messages, 100, CancellationToken.None);
 
-      Assert.IsNull(JsonNode.Parse(handler.LastRequestBody)["thinking"]);
+      // Minimal (default) sends neither `thinking` nor `reasoning_effort`, so
+      // plain (non-reasoning) models are unaffected.
+      var sent = JsonNode.Parse(handler.LastRequestBody);
+      Assert.IsNull(sent["thinking"]);
+      Assert.IsNull(sent["reasoning_effort"]);
+    }
+
+    [TestMethod]
+    public async Task OpenAi_SendsReasoningEffortForHigherThinkingLevels() {
+      var handler = new FakeHttpHandler(HttpStatusCode.OK,
+          "{\"choices\":[{\"message\":{\"content\":\"x\"}}]}");
+      var provider = new OpenAiProvider(handler.Client(),
+          OpenAi(model: "gpt-5", thinking: LlmThinkingLevel.High));
+
+      await provider.CompleteAsync(Messages, 100, CancellationToken.None);
+
+      var sent = JsonNode.Parse(handler.LastRequestBody);
+      Assert.AreEqual("high", sent["reasoning_effort"].GetValue<string>());
+      Assert.IsNull(sent["thinking"]); // non-DeepSeek uses reasoning_effort only
+    }
+
+    [TestMethod]
+    public async Task OpenAi_EnablesDeepSeekThinkingForHigherLevels() {
+      var handler = new FakeHttpHandler(HttpStatusCode.OK,
+          "{\"choices\":[{\"message\":{\"content\":\"x\"}}]}");
+      var provider = new OpenAiProvider(handler.Client(),
+          OpenAi("https://api.deepseek.com", "deepseek-v4", LlmThinkingLevel.Medium));
+
+      await provider.CompleteAsync(Messages, 100, CancellationToken.None);
+
+      var sent = JsonNode.Parse(handler.LastRequestBody);
+      Assert.AreEqual("enabled", sent["thinking"]["type"].GetValue<string>());
+      Assert.IsNull(sent["reasoning_effort"]); // DeepSeek uses thinking on/off
     }
 
     [TestMethod]
@@ -179,6 +213,29 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
           previousInteractionId: null, model: "gemini-3.5-flash");
       Assert.AreEqual("minimal",
           body35Flash["generation_config"]["thinking_level"].GetValue<string>());
+    }
+
+    [TestMethod]
+    public void Gemini_HonorsConfiguredThinkingLevelAboveMinimal() {
+      // Minimal maps to the model's lowest ("minimal" for 3.5 flash)...
+      var minimal = GeminiProvider.BuildRequestBody(Messages, 128,
+          previousInteractionId: null, model: "gemini-3.5-flash",
+          thinkingLevel: LlmThinkingLevel.Minimal);
+      Assert.AreEqual("minimal",
+          minimal["generation_config"]["thinking_level"].GetValue<string>());
+
+      // ...while explicit levels pass through as portable values.
+      var high = GeminiProvider.BuildRequestBody(Messages, 128,
+          previousInteractionId: null, model: "gemini-3.5-flash",
+          thinkingLevel: LlmThinkingLevel.High);
+      Assert.AreEqual("high",
+          high["generation_config"]["thinking_level"].GetValue<string>());
+
+      var medium = GeminiProvider.BuildRequestBody(Messages, 128,
+          previousInteractionId: null, model: "gemini-3.1-pro-preview",
+          thinkingLevel: LlmThinkingLevel.Medium);
+      Assert.AreEqual("medium",
+          medium["generation_config"]["thinking_level"].GetValue<string>());
     }
 
     [TestMethod]

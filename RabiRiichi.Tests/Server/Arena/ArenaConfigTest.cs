@@ -85,7 +85,7 @@ namespace RabiRiichi.Tests.Server.Arena {
       cfg.Models.Add(new ArenaConfig.ModelConfig {
         Id = "gpt-x", DisplayName = "GPT-X", Provider = "openai",
         BaseUrl = "https://api.openai.com", Model = "gpt-x",
-        ApiKey = "sk-123", Thinking = true, Enabled = true,
+        ApiKey = "sk-123", ThinkingLevel = "medium", Enabled = true,
       });
       cfg.Models.Add(new ArenaConfig.ModelConfig {
         Id = "baseline-mid", DisplayName = "Rule-based (mid)",
@@ -112,7 +112,7 @@ namespace RabiRiichi.Tests.Server.Arena {
       var gpt = loaded.Models.Single(m => m.Id == "gpt-x");
       Assert.AreEqual("openai", gpt.Provider);
       Assert.AreEqual("sk-123", gpt.ApiKey);
-      Assert.IsTrue(gpt.Thinking);
+      Assert.AreEqual("medium", gpt.ThinkingLevel);
 
       var baseline = loaded.Models.Single(m => m.Id == "baseline-mid");
       Assert.AreEqual("baseline", baseline.Provider);

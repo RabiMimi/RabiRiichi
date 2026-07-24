@@ -269,7 +269,8 @@ namespace RabiRiichi.Arena.Eval {
     /// <see cref="EvalResult"/> and the applied Elo changes, so the caller (or
     /// M4's ArenaService) can <c>Append</c> it. <paramref name="eloChanges"/> is
     /// keyed by model id; a seat with no change entry gets equal before/after.
-    /// The replay link is built from the config's clientUrl/wsUrl (§11/§12a).
+    /// The replay link is NOT stored — it is derived at read-time by the public
+    /// controller from the live clientUrl/wsUrl + gameId (§11/§12a).
     /// </summary>
     public MatchRecord BuildMatchRecord(
         EvalResult result,
@@ -305,7 +306,6 @@ namespace RabiRiichi.Arena.Eval {
         Seed = unchecked((long)result.Seed),
         Config = result.Config,
         Players = players,
-        ReplayLink = BuildReplayLink(result.GameId),
       };
     }
 
@@ -398,12 +398,6 @@ namespace RabiRiichi.Arena.Eval {
     }
 
     // ----- Helpers ---------------------------------------------------------
-
-    private string BuildReplayLink(string gameId) {
-      var clientUrl = config.ClientUrl ?? "";
-      var wsUrl = config.WsUrl ?? "";
-      return $"{clientUrl}?server={wsUrl}&replay={gameId}";
-    }
 
     private static bool IsBaseline(ArenaConfig.ModelConfig model) =>
         string.Equals(model.Provider, "baseline", StringComparison.OrdinalIgnoreCase);

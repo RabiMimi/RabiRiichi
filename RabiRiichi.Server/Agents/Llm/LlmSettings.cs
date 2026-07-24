@@ -33,6 +33,21 @@ namespace RabiRiichi.Server.Agents.Llm {
 
 
   /// <summary>
+  /// How much internal "thinking"/reasoning a provider should do before it
+  /// answers. <see cref="Minimal"/> is the provider's lowest/off setting and is
+  /// the default so the fast in-game AI is unaffected; the Arena benchmark opts
+  /// into higher levels per model. Providers map these to their own knobs
+  /// (Gemini <c>thinking_level</c>, OpenAI <c>reasoning_effort</c>, DeepSeek
+  /// <c>thinking.type</c>).
+  /// </summary>
+  public enum LlmThinkingLevel {
+    Minimal,
+    Low,
+    Medium,
+    High,
+  }
+
+  /// <summary>
   /// A validated, immutable view of an <see cref="LlmAiConfig"/> plus derived
   /// values (resolved base URL, display name, normalized language). Construct via
   /// <see cref="FromProto"/> which enforces required fields.
@@ -53,9 +68,17 @@ namespace RabiRiichi.Server.Agents.Llm {
     /// </summary>
     public string CustomDisplayName { get; }
 
+    /// <summary>
+    /// Desired provider reasoning/thinking level. Defaults to
+    /// <see cref="LlmThinkingLevel.Minimal"/> (unchanged in-game behavior); the
+    /// Arena passes a higher level per roster entry.
+    /// </summary>
+    public LlmThinkingLevel ThinkingLevel { get; }
+
     private LlmSettings(LlmProvider provider, string apiToken, string baseUrl,
                         string model, string language, string customDisplayName,
-                        LlmPromptTemplate promptTemplate) {
+                        LlmPromptTemplate promptTemplate,
+                        LlmThinkingLevel thinkingLevel) {
       Provider = provider;
       ApiToken = apiToken;
       BaseUrl = baseUrl;
@@ -63,14 +86,22 @@ namespace RabiRiichi.Server.Agents.Llm {
       Language = language;
       CustomDisplayName = customDisplayName;
       PromptTemplate = promptTemplate;
+      ThinkingLevel = thinkingLevel;
     }
 
     /// <summary>
     /// Validates and normalizes a proto config. Returns null and sets
     /// <paramref name="error"/> (a short, client-facing reason) on invalid input.
     /// This does NOT contact the provider — see <c>LlmValidator</c> for that.
+    ///
+    /// <paramref name="thinkingLevel"/> defaults to
+    /// <see cref="LlmThinkingLevel.Minimal"/> so existing callers (the in-game
+    /// AI) keep the current lowest-thinking behavior; the Arena passes an
+    /// explicit level per roster entry.
     /// </summary>
-    public static LlmSettings FromProto(LlmAiConfig config, out string error) {
+    public static LlmSettings FromProto(
+        LlmAiConfig config, out string error,
+        LlmThinkingLevel thinkingLevel = LlmThinkingLevel.Minimal) {
       error = null;
       if (config == null) {
         error = "missing";
@@ -113,7 +144,7 @@ namespace RabiRiichi.Server.Agents.Llm {
       }
 
       return new LlmSettings(config.Provider, config.ApiToken.Trim(), baseUrl,
-          config.Model.Trim(), language, customName, promptTemplate);
+          config.Model.Trim(), language, customName, promptTemplate, thinkingLevel);
     }
 
     /// <summary> The default API base URL for a provider. </summary>

@@ -41,19 +41,20 @@ namespace RabiRiichi.Arena.Storage {
     public JsonNode Config { get; set; }
 
     public List<MatchPlayer> Players { get; set; } = new();
-    public string ReplayLink { get; set; } = "";
   }
 
   /// <summary>
   /// Compact index entry (a prepended summary in <c>matches/index.json</c>) so
   /// the public page paginates without reading every match file. See §11.
+  /// The replay link is NOT stored — it is derived at read-time from the live
+  /// clientUrl/wsUrl + gameId (§11/§12a), so it stays correct across host/port
+  /// changes.
   /// </summary>
   public sealed class MatchIndexEntry {
     public string MatchId { get; set; } = "";
     public string GameId { get; set; } = "";
     public string FinishedAt { get; set; } = "";
     public List<MatchIndexPlayer> Players { get; set; } = new();
-    public string ReplayLink { get; set; } = "";
   }
 
   public sealed class MatchIndexPlayer {
@@ -187,7 +188,6 @@ namespace RabiRiichi.Arena.Storage {
       MatchId = record.MatchId,
       GameId = record.GameId,
       FinishedAt = record.FinishedAt,
-      ReplayLink = record.ReplayLink,
       Players = record.Players.Select(p => new MatchIndexPlayer {
         DisplayName = p.DisplayName,
         FinalPoints = p.FinalPoints,
@@ -201,7 +201,6 @@ namespace RabiRiichi.Arena.Storage {
       MatchId = e.MatchId,
       GameId = e.GameId,
       FinishedAt = e.FinishedAt,
-      ReplayLink = e.ReplayLink,
       Players = e.Players.Select(p => new MatchIndexPlayer {
         DisplayName = p.DisplayName,
         FinalPoints = p.FinalPoints,

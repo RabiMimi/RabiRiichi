@@ -100,6 +100,10 @@ namespace RabiRiichi.Arena.Storage {
     /// a fixed anchor rating and take no LLM settings.
     /// </summary>
     public sealed class ModelConfig {
+      /// <summary>Allowed <see cref="ThinkingLevel"/> values (case-insensitive).</summary>
+      public static readonly IReadOnlyList<string> ThinkingLevels =
+          new[] { "minimal", "low", "medium", "high" };
+
       /// <summary>Stable unique id (used as the key in ratings/stats).</summary>
       public string Id { get; set; } = "";
 
@@ -118,8 +122,13 @@ namespace RabiRiichi.Arena.Storage {
       /// <summary>Provider API key (secret; redacted for display).</summary>
       public string ApiKey { get; set; } = "";
 
-      /// <summary>Whether to enable provider "thinking"/reasoning.</summary>
-      public bool Thinking { get; set; } = false;
+      /// <summary>
+      /// Provider reasoning/thinking level: "minimal", "low", "medium", or
+      /// "high" (case-insensitive). Defaults to "high" — benchmark models should
+      /// think (ARENA_DESIGN.md §7). Baselines ignore it. See
+      /// <see cref="ThinkingLevels"/> for the allowed set.
+      /// </summary>
+      public string ThinkingLevel { get; set; } = "high";
 
       /// <summary>Optional prompt template override.</summary>
       public string PromptTemplate { get; set; } = "";
@@ -243,6 +252,13 @@ namespace RabiRiichi.Arena.Storage {
           // LLM providers need a model name to call.
           if (string.IsNullOrWhiteSpace(m.Model)) {
             errors.Add($"{where}.model must not be empty for provider '{m.Provider}'.");
+          }
+          if (!string.IsNullOrWhiteSpace(m.ThinkingLevel)
+              && !ModelConfig.ThinkingLevels.Contains(
+                  m.ThinkingLevel.Trim().ToLowerInvariant())) {
+            errors.Add(
+                $"{where}.thinkingLevel '{m.ThinkingLevel}' must be one of " +
+                "minimal, low, medium, high.");
           }
         }
       }

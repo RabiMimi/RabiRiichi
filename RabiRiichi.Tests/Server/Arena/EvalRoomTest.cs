@@ -144,7 +144,7 @@ namespace RabiRiichi.Tests.Server.Arena {
     }
 
     [TestMethod]
-    public void SharedMatch_BuildMatchRecordWiresPlacementsEloAndReplayLink() {
+    public void SharedMatch_BuildMatchRecordWiresPlacementsAndElo() {
       var store = new RatingStore(sharedWorkspace);
       var rating = new RatingService(sharedConfig.Rating);
 
@@ -161,9 +161,6 @@ namespace RabiRiichi.Tests.Server.Arena {
       Assert.AreEqual(2, record.SwissRound);
       Assert.AreEqual(unchecked((long)sharedResult.Seed), record.Seed);
       Assert.AreEqual(4, record.Players.Count);
-      Assert.AreEqual(
-          "https://play.example.com?server=wss://arena.example.com&replay=eval-shared-1",
-          record.ReplayLink);
 
       var recPlacements = record.Players.Select(p => p.Placement).OrderBy(p => p).ToList();
       CollectionAssert.AreEqual(new[] { 1, 2, 3, 4 }, recPlacements);

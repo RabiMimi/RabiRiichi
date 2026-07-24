@@ -49,7 +49,8 @@ namespace RabiRiichi.Server.Agents.Llm {
         }
 
         var url = $"{settings.BaseUrl}/v1beta/interactions";
-        var body = BuildRequestBody(messages, maxOutputTokens, prevId, settings.Model);
+        var body = BuildRequestBody(
+            messages, maxOutputTokens, prevId, settings.Model, settings.ThinkingLevel);
 
         // The body carries no secret (the key is a header), so it is safe to log.
         // This shows the exact model id, generation_config, and whether we chained
@@ -105,7 +106,8 @@ namespace RabiRiichi.Server.Agents.Llm {
     /// </summary>
     public static JsonObject BuildRequestBody(
         IReadOnlyList<LlmMessage> messages, int maxOutputTokens,
-        string previousInteractionId, string model) {
+        string previousInteractionId, string model,
+        LlmThinkingLevel thinkingLevel = LlmThinkingLevel.Minimal) {
       var systemText = new StringBuilder();
       var nonSystem = new List<LlmMessage>();
       foreach (var m in messages) {
@@ -125,10 +127,10 @@ namespace RabiRiichi.Server.Agents.Llm {
         ["generation_config"] = new JsonObject {
           ["temperature"] = 1.0,
           ["max_output_tokens"] = maxOutputTokens,
-          // Flash models support "minimal", the closest available setting to
-          // thinking-off. Pro models reject "minimal", so use their lowest
-          // portable level, "low". This keeps the small decision JSON visible.
-          ["thinking_level"] = LowestThinkingLevel(model),
+          // Minimal maps to the model's lowest available level (Flash supports
+          // "minimal"; Pro rejects it, so "low"). Higher levels pass through as
+          // the portable "low"/"medium"/"high" thinking_level values.
+          ["thinking_level"] = ThinkingLevelString(thinkingLevel, model),
         },
       };
 
@@ -150,6 +152,18 @@ namespace RabiRiichi.Server.Agents.Llm {
       }
       return body;
     }
+
+    /// <summary>
+    /// Maps a portable <see cref="LlmThinkingLevel"/> to Gemini's
+    /// <c>thinking_level</c> string. <see cref="LlmThinkingLevel.Minimal"/> uses
+    /// the model's lowest supported level (see <see cref="LowestThinkingLevel"/>).
+    /// </summary>
+    internal static string ThinkingLevelString(LlmThinkingLevel level, string model) => level switch {
+      LlmThinkingLevel.Low => "low",
+      LlmThinkingLevel.Medium => "medium",
+      LlmThinkingLevel.High => "high",
+      _ => LowestThinkingLevel(model),
+    };
 
     internal static string LowestThinkingLevel(string model) {
       if (string.Equals(model, "gemini-3.5-flash-lite", StringComparison.OrdinalIgnoreCase) ||
