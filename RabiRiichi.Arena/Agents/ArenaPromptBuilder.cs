@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using RabiRiichi.Actions;
 using RabiRiichi.Core;
 using RabiRiichi.Server.Agents;
 using RabiRiichi.Server.Agents.Llm;
+using TileSource = RabiRiichi.Generated.Core.TileSource;
 
 namespace RabiRiichi.Arena.Agents {
   /// <summary>
@@ -129,7 +129,6 @@ namespace RabiRiichi.Arena.Agents {
     public string BuildTurnMessage(
         PublicGameView view,
         IReadOnlyList<LlmChoice> menu,
-        SinglePlayerInquiry inquiry = null,
         IReadOnlyList<string> recentEvents = null,
         IReadOnlyList<ArenaChatLine> chats = null,
         string validationError = null) {
@@ -152,7 +151,7 @@ namespace RabiRiichi.Arena.Agents {
 
       AppendChats(sb, chats);
       AppendGameState(sb, view);
-      AppendToolContext(sb, view, menu, inquiry);
+      AppendToolContext(sb, view);
       AppendMenu(sb, menu);
 
       sb.AppendLine();
@@ -178,11 +177,13 @@ namespace RabiRiichi.Arena.Agents {
             : TileNotation.Group(doraIndicators, language));
 
       sb.Append("Your hand: ").AppendLine(DescribeSelfHand(view));
+
+      var selfRiver = ActiveRiver(view.DiscardsOf(view.Seat));
+      sb.Append("Your discards (river): ")
+        .AppendLine(selfRiver.Count == 0 ? "none" : TileNotation.Group(selfRiver, language));
     }
 
-    private void AppendToolContext(
-        StringBuilder sb, PublicGameView view, IReadOnlyList<LlmChoice> menu,
-        SinglePlayerInquiry inquiry) {
+    private void AppendToolContext(StringBuilder sb, PublicGameView view) {
       sb.AppendLine("== Pre-computed analysis (tools) ==");
 
       // Self summary.
@@ -210,9 +211,6 @@ namespace RabiRiichi.Arena.Agents {
         })));
       }
 
-      // Per-legal-discard shanten + ukeire, when discards are on the menu.
-      AppendDiscardAnalysis(sb, view, inquiry);
-
       // Opponents, strictly by seat label (identity-neutral).
       foreach (var seat in view.OpponentSeats.OrderBy(s => s)) {
         sb.Append("  ").Append(labeler.Label(seat)).Append(": ")
@@ -224,7 +222,7 @@ namespace RabiRiichi.Arena.Agents {
         if (flags.Count > 0) sb.Append(", ").Append(string.Join(", ", flags));
         sb.AppendLine(".");
 
-        var discards = view.DiscardsOf(seat);
+        var discards = ActiveRiver(view.DiscardsOf(seat));
         if (discards.Count > 0) {
           sb.Append("    discards: ")
             .AppendLine(TileNotation.Group(discards, language));
@@ -232,49 +230,8 @@ namespace RabiRiichi.Arena.Agents {
         var called = view.CalledOf(seat);
         if (called.Count > 0) {
           sb.Append("    melds: ")
-            .AppendLine(string.Join(" ",
-                called.Select(m => TileNotation.Meld(m, language))));
+            .AppendLine(string.Join(" ", called.Select(m => DescribeMeld(m, view))));
         }
-      }
-    }
-
-    private void AppendDiscardAnalysis(
-        StringBuilder sb, PublicGameView view, SinglePlayerInquiry inquiry) {
-      if (inquiry == null) {
-        return;
-      }
-      // Prefer a plain discard action; fall back to a riichi action's discard
-      // options. Both are PlayTileAction, so options carry the real GameTiles.
-      var play = inquiry.actions.OfType<PlayTileAction>().FirstOrDefault();
-      if (play == null || play.options.Count == 0) {
-        return;
-      }
-
-      // The 14 tiles we are choosing a discard from (own concealed + pending draw).
-      var hand14 = new List<GameTile>(view.SelfHand.freeTiles);
-      if (view.SelfHand.pendingTile != null) {
-        hand14.Add(view.SelfHand.pendingTile);
-      }
-      if (hand14.Count != Game.HAND_SIZE + 1) {
-        return; // not a normal discard turn; skip per-discard analysis
-      }
-
-      sb.AppendLine("  Per-discard outcome (shanten / ukeire = live acceptance):");
-      // De-duplicate by tile kind so each distinct discard is analyzed once.
-      var seen = new HashSet<string>();
-      foreach (var option in play.options) {
-        var tile = hand14.FirstOrDefault(t => t.tile.IsSame(option.tile.tile));
-        if (tile == null) continue;
-        var key = tile.tile.ToString();
-        if (!seen.Add(key)) continue;
-        var eval = view.EvaluateDiscard(tile, hand14);
-        if (eval.Shanten == int.MaxValue) continue;
-        var shantenText = eval.Shanten < 0 ? "win"
-            : eval.Shanten == 0 ? "tenpai"
-            : $"{eval.Shanten}-shanten";
-        sb.Append("    discard ").Append(TileNotation.One(tile, language))
-          .Append(" -> ").Append(shantenText)
-          .Append(", ukeire ").Append(eval.Ukeire).AppendLine(".");
       }
     }
 
@@ -299,6 +256,47 @@ namespace RabiRiichi.Arena.Agents {
 
     // ----- Helpers ---------------------------------------------------------
 
+    /// <summary>
+    /// A seat's LIVE discard river — the tiles still sitting in front of them.
+    /// The engine leaves a claimed tile in the discarder's river (a pon/chi/kan
+    /// only reassigns the tile's owner + source), so we drop any tile whose source
+    /// is no longer a plain discard. That called tile is instead shown inside the
+    /// caller's meld, annotated with the discarder — closer to a real table, where
+    /// a called tile is physically taken out of the river and rotated in the meld.
+    /// </summary>
+    private static IReadOnlyList<GameTile> ActiveRiver(IReadOnlyList<GameTile> discards) =>
+        discards.Where(t => t.source == TileSource.Discard).ToList();
+
+    /// <summary>
+    /// Renders a called meld like a real table would: the meld type, its tiles
+    /// (claimed tile marked by <see cref="TileNotation.Meld"/>), and — for an open
+    /// meld — WHICH tile was claimed and from WHICH player ("you" when it was the
+    /// viewer's own discard). Naming the claimed tile matters for chii, where the
+    /// meld notation alone (e.g. <c>-456m</c>) doesn't say whether 4m, 5m, or 6m
+    /// came off the discarder's river. Concealed kans (ankan) carry no source.
+    /// </summary>
+    private string DescribeMeld(MenLike meld, PublicGameView view) {
+      var body = $"{MeldTypeLabel(meld)} {TileNotation.Meld(meld, language)}";
+      var claimed = meld.FirstOrDefault(t => !t.IsTsumo && t.discardInfo != null);
+      return claimed == null
+          ? body
+          : $"{body} ({TileNotation.One(claimed, language)} from " +
+            $"{SourceLabel(claimed.discardInfo.from, view)})";
+    }
+
+    private static string MeldTypeLabel(MenLike meld) => meld switch {
+      Kan k => k.KanSource == TileSource.Ankan ? "ankan"
+          : k.KanSource == TileSource.Kakan ? "added-kan" : "kan",
+      Kou => "pon",
+      Shun => "chii",
+      Jantou => "pair",
+      _ => "meld",
+    };
+
+    /// <summary>Anonymity-safe label for the player a called tile came from.</summary>
+    private string SourceLabel(int seat, PublicGameView view) =>
+        seat == view.Seat ? "you" : labeler.Label(seat);
+
     private static int SelfShanten(PublicGameView view) {
       var hand = new List<GameTile>(view.SelfHand.freeTiles);
       if (view.SelfHand.pendingTile != null) {
@@ -315,7 +313,7 @@ namespace RabiRiichi.Arena.Agents {
       }
       if (hand.called.Count > 0) {
         sb.Append(" | melds: ").Append(string.Join(" ",
-            hand.called.Select(m => TileNotation.Meld(m, language))));
+            hand.called.Select(m => DescribeMeld(m, view))));
       }
       return sb.ToString();
     }

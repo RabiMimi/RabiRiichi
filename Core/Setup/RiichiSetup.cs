@@ -55,7 +55,6 @@ namespace RabiRiichi.Core.Setup {
       AddStdPattern<Sankantsu>();
       AddStdPattern<SanshokuDoujun>();
       AddStdPattern<SanshokuDoukou>();
-      AddStdPattern<JunchanTaiyao>();
       AddStdPattern<Shousangen>();
       AddStdPattern<Toitoi>();
 

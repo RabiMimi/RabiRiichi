@@ -79,17 +79,24 @@ namespace RabiRiichi.Server.Agents.Llm {
           : "take the selected legal action";
     }
 
+    /// <param name="annotateTenpai">
+    /// When true (default, used by the in-game chat AI), a discard/riichi option
+    /// that reaches tenpai is annotated with its resulting waits + max han. The
+    /// Arena passes false so the model is not handed per-discard tenpai/efficiency
+    /// info it should work out itself (ARENA_DESIGN.md §5/§6).
+    /// </param>
     public static IReadOnlyList<LlmChoice> Build(
-        SinglePlayerInquiry inquiry, string language = AiLocalization.LangEn) {
+        SinglePlayerInquiry inquiry, string language = AiLocalization.LangEn,
+        bool annotateTenpai = true) {
       var choices = new List<LlmChoice>();
       var actions = inquiry.actions;
       for (int ai = 0; ai < actions.Count; ai++) {
         switch (actions[ai]) {
           case RiichiAction riichi:
-            AddTileOptions(choices, ai, riichi, "riichi", language);
+            AddTileOptions(choices, ai, riichi, "riichi", language, annotateTenpai);
             break;
           case PlayTileAction play:
-            AddTileOptions(choices, ai, play, "discard", language);
+            AddTileOptions(choices, ai, play, "discard", language, annotateTenpai);
             break;
           case ChiiAction chii:
             AddTilesOptions(choices, ai, chii, "chii", language);
@@ -127,13 +134,15 @@ namespace RabiRiichi.Server.Agents.Llm {
 
     private static void AddTileOptions(
         List<LlmChoice> choices, int actionIndex, PlayTileAction action,
-        string kind, string language) {
+        string kind, string language, bool annotateTenpai = true) {
       var options = action.options;
       for (int oi = 0; oi < options.Count; oi++) {
         var tile = options[oi].tile;
         var desc = $"{kind} {TileNotation.One(tile, language)}";
         // Attach tenpai/value info when discarding this tile leaves tenpai.
-        var cand = action.candidates?.Find(c => c.tile.tile.IsSame(tile.tile));
+        var cand = annotateTenpai
+            ? action.candidates?.Find(c => c.tile.tile.IsSame(tile.tile))
+            : null;
         if (cand != null && cand.tenpaiInfos.Count > 0) {
           var best = cand.tenpaiInfos.OrderByDescending(t => t.han * 100 + t.points).First();
           var waits = string.Join("", cand.tenpaiInfos

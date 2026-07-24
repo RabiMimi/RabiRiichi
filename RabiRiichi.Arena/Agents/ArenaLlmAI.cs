@@ -153,7 +153,9 @@ namespace RabiRiichi.Arena.Agents {
       // are noisy and low-value for an eval; take the safe default rather than
       // spending a full LLM decision on whether to call. Ron/tsumo and normal
       // turns still go to the model.
-      var menu = LlmActionMenu.Build(playerInquiry, AiLocalization.LangEn);
+      // annotateTenpai:false — the model must judge tenpai/efficiency itself; we
+      // do not hand it per-discard waits/han in the menu (ARENA_DESIGN.md §5/§6).
+      var menu = LlmActionMenu.Build(playerInquiry, AiLocalization.LangEn, annotateTenpai: false);
       if (menu.Count == 0) {
         return InquiryResponse.Default(Seat);
       }
@@ -181,7 +183,7 @@ namespace RabiRiichi.Arena.Agents {
       var result = decider.Decide(
           Seat, menu, playerInquiry, seq, baseTranscript,
           error => promptBuilder.BuildTurnMessage(
-              view, menu, playerInquiry, recent, chats, error),
+              view, menu, recent, chats, error),
           remainingTimeout);
 
       // The decider appended the successful exchange to baseTranscript (its own
