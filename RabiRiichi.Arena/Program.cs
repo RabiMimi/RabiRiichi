@@ -9,7 +9,9 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using RabiRiichi.Arena.Config;
@@ -107,9 +109,38 @@ namespace RabiRiichi.Arena {
       // ----- Web pipeline -------------------------------------------------
       services.AddCors(options => options.AddPolicy("AllowAll", p =>
           p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
-      services.AddControllers();
+      services.AddControllers()
+          .ConfigureApplicationPartManager(apm => {
+            // The Arena references RabiRiichi.Server as a LIBRARY (services,
+            // agents, WS building blocks), but MVC would otherwise ALSO discover
+            // that Web app's controllers — notably a second /ws/public
+            // (WebSocketController.ConnectPublic) plus /ws/connect etc. Two
+            // handlers on /ws/public cause an AmbiguousMatchException (HTTP 500)
+            // on every replay fetch. Keep ONLY the Arena's own controllers.
+            foreach (var part in apm.ApplicationParts
+                .Where(p => p.Name == "RabiRiichi.Server").ToList()) {
+              apm.ApplicationParts.Remove(part);
+            }
+          });
 
       var app = builder.Build();
+
+      // Behind a reverse proxy, trust X-Forwarded-Proto/Host so request-derived
+      // origins (notably the replay link's "server=ws(s)://host") reflect the
+      // PUBLIC scheme + host the browser used — not the proxy's internal http
+      // forward (which the browser can't reach, and which is ws:// under an https
+      // page). Must run before anything reads Request.Scheme/Host. The Arena is
+      // expected to sit behind a trusted proxy, and this only affects link
+      // generation (not an auth boundary), so the headers are honored regardless
+      // of the proxy's address. If wsUrl is set explicitly in config, that always
+      // wins and this is irrelevant.
+      var forwarded = new ForwardedHeadersOptions {
+        ForwardedHeaders =
+            ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost,
+      };
+      forwarded.KnownNetworks.Clear();
+      forwarded.KnownProxies.Clear();
+      app.UseForwardedHeaders(forwarded);
 
       app.UseCors("AllowAll");
       app.UseWebSockets();

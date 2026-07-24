@@ -115,14 +115,18 @@ function renderNext(nm) {
     el("next").innerHTML = `<span class="muted">No match scheduled.</span>`;
     return;
   }
+  // The order shown here is the pairing order, NOT the in-game seat: the engine
+  // shuffles seats (dealer/turn order) at the start of every match, so we list
+  // the players without a seat number and say so explicitly.
   const rows = nm.seats.map((s) =>
-    `<tr><td class="num">${s.seat}</td><td>${esc(s.displayName || s.modelId)}</td></tr>`
+    `<tr><td>${esc(s.displayName || s.modelId)}</td></tr>`
   ).join("");
   el("next").innerHTML =
     `<div class="muted">Swiss round ${nm.swissRound}` +
     `${nm.padded ? " (padded with baselines)" : ""}</div>` +
-    `<table><thead><tr><th class="num">Seat</th><th>Player</th></tr></thead>` +
-    `<tbody>${rows}</tbody></table>`;
+    `<table><thead><tr><th>Players</th></tr></thead>` +
+    `<tbody>${rows}</tbody></table>` +
+    `<div class="muted">Seats (dealer &amp; turn order) are randomized when the match starts.</div>`;
 }
 
 async function loadLeaderboard() {
