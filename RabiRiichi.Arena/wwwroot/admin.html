@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RabiRiichi Arena &mdash; Admin</title>
+  <style>
+    :root { color-scheme: light dark; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      margin: 0; padding: 0 16px 48px; line-height: 1.4;
+      max-width: 1100px; margin-inline: auto;
+    }
+    h1 { margin: 24px 0 4px; }
+    h2 { margin: 32px 0 8px; border-bottom: 1px solid #8884; padding-bottom: 4px; }
+    .muted { color: #8a8a8a; font-size: 0.9em; }
+    .status { display: flex; flex-wrap: wrap; gap: 16px; align-items: baseline; }
+    .pill {
+      display: inline-block; padding: 2px 10px; border-radius: 999px;
+      background: #6cf3; font-weight: 600; font-size: 0.85em;
+    }
+    table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+    th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #8883; }
+    th { font-weight: 600; }
+    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+    a { color: #3577e0; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    button {
+      cursor: pointer; padding: 4px 12px; border-radius: 6px;
+      border: 1px solid #8886; background: #7771; font: inherit;
+    }
+    button:disabled { opacity: 0.4; cursor: default; }
+    input, textarea {
+      font: inherit; padding: 6px 8px; border-radius: 6px;
+      border: 1px solid #8886; background: #7770; color: inherit; width: 100%;
+    }
+    textarea { min-height: 320px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.85em; }
+    .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 8px 0; }
+    .err { color: #d13b3b; }
+    .ok { color: #2e9e3f; }
+    .backlink { float: right; font-size: 0.85em; margin-top: 28px; }
+    .hidden { display: none; }
+    ul.errs { margin: 6px 0; color: #d13b3b; }
+  </style>
+</head>
+<body>
+  <a class="backlink muted" href="/index.html">&lsaquo; Public page</a>
+  <h1>RabiRiichi Arena &mdash; Admin</h1>
+  <div class="muted">Config editor, run control, and per-model monitoring (§12b).</div>
+
+  <h2>Authentication</h2>
+  <div class="row">
+    <input id="password" type="password" placeholder="Admin password"
+           autocomplete="current-password" style="max-width: 320px;" />
+    <button id="connect">Connect</button>
+    <span id="authmsg" class="muted"></span>
+  </div>
+
+  <div id="panel" class="hidden">
+    <h2>Run control</h2>
+    <div id="runstatus" class="status"><span class="muted">Loading&hellip;</span></div>
+    <div class="row">
+      <button id="start">Start / resume</button>
+      <button id="new-run">New run</button>
+      <button id="stop">Stop run</button>
+    </div>
+    <div class="muted">
+      &ldquo;Start / resume&rdquo; continues the newest unfinished run. &ldquo;New
+      run&rdquo; freezes the current config into a fresh run (past runs are kept).
+    </div>
+
+    <h2>Runs</h2>
+    <div id="runs"><span class="muted">Loading&hellip;</span></div>
+
+    <h2>Monitoring (per-model)</h2>
+    <div id="monitoring"><span class="muted">Loading&hellip;</span></div>
+
+    <h2>Config editor</h2>
+    <div class="muted">
+      Secrets are shown blank; leave them blank to keep the stored value, or type a
+      new value to overwrite.
+    </div>
+    <div class="row">
+      <button id="reload-config">Reload</button>
+      <button id="save-config">Save config</button>
+      <span id="configmsg"></span>
+    </div>
+    <div id="configerrs"></div>
+    <textarea id="config" spellcheck="false" placeholder="Config JSON&hellip;"></textarea>
+    <div id="restartnote" class="muted"></div>
+  </div>
+
+  <script src="admin.js"></script>
+</body>
+</html>

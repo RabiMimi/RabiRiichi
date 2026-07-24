@@ -174,6 +174,95 @@ namespace RabiRiichi.Server.Models {
       return true;
     }
 
+    /// <summary>
+    /// Arena-only headless match runner (ARENA_DESIGN.md §10/§11b). Unlike the
+    /// normal <see cref="TryStartGame"/> lifecycle — which is private,
+    /// fire-and-forget, self-readies AIs for a next game, and saves the replay
+    /// with whatever seed the config carried — this drives exactly one game to
+    /// completion, uses an Arena-supplied <paramref name="gameId"/>, and invokes
+    /// <paramref name="beforeSaveReplay"/> AFTER the game finishes but BEFORE the
+    /// replay is saved. That hook is where the Arena stamps the real
+    /// <c>RabiRand.seed</c> into the replay log's config (the seed is left null
+    /// during play so agents never see it). The awaited task completes only after
+    /// the replay has been saved.
+    ///
+    /// The returned game is exposed via the <paramref name="onGameCreated"/>
+    /// callback (called synchronously before the game task starts) so the caller
+    /// can read post-game state (final points, the real seed) even though this
+    /// method intentionally does NOT null out <see cref="game"/> or re-ready the
+    /// agents afterwards — an eval room is single-use and owned by its EvalRoom.
+    ///
+    /// Requires all <see cref="config"/>.playerCount seats filled with agents
+    /// that are InRoom or Ready (this method transitions them to Playing itself,
+    /// so callers must NOT pre-ready via <see cref="GetReady"/> — that would
+    /// auto-start a normal game). Returns false if that precondition fails.
+    /// </summary>
+    public async Task<bool> RunHeadlessArenaMatch(
+        string gameId,
+        Action<Game> onGameCreated,
+        Action<Game, ServerActionCenter> beforeSaveReplay,
+        CancellationToken cancellationToken = default) {
+      if (isDestroyed
+          || game != null
+          || players.Count != config.playerCount
+          || players.Any(p => p.status is not (UserStatus.InRoom or UserStatus.Ready))) {
+        return false;
+      }
+      foreach (var player in players) {
+        // Normalize InRoom -> Ready first so the single transition target below
+        // is always Ready -> Playing.
+        if (player.status == UserStatus.InRoom) {
+          player.Transit(UserStatus.InRoom, UserStatus.Ready);
+        }
+        if (!player.Transit(UserStatus.Ready, UserStatus.Playing)) {
+          throw new InvalidOperationException(
+              "Player status transition failed, unexpected modification not guarded by lock?");
+        }
+      }
+      SetupSeat();
+      ServerActionCenter actionCenter = new(this);
+      config.actionCenter = actionCenter;
+      BroadcastRoomState();
+      using var linkedCts =
+          CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+      gameCts = linkedCts;
+      var startedGame = new Game(config);
+      game = startedGame;
+      if (!string.IsNullOrEmpty(gameId)) {
+        startedGame.info.gameId = gameId;
+      }
+      // Subscribe before Start so no early events are missed (mirrors TryStartGame).
+      startedGame.onGodViewEvent += actionCenter.CaptureGodViewEvent;
+      onGameCreated?.Invoke(startedGame);
+
+      try {
+        await startedGame.Start(gameCts.Token);
+      } catch (Exception ex) {
+        global::RabiRiichi.Utils.Logger.Warn("[Room] Arena game task faulted:");
+        global::RabiRiichi.Utils.Logger.Warn(ex);
+      }
+
+      // End-of-game hook (seed stamp) runs before the replay is persisted (§11b).
+      try {
+        beforeSaveReplay?.Invoke(startedGame, actionCenter);
+      } catch (Exception ex) {
+        global::RabiRiichi.Utils.Logger.Warn($"[Room] Arena beforeSaveReplay hook failed: {ex}");
+      }
+
+      if (replayStore != null && replayStore.IsEnabled) {
+        var log = actionCenter.GetReplayLog();
+        if (log != null) {
+          try {
+            replayStore.SaveReplay(log.GameId, log);
+          } catch (Exception ex) {
+            global::RabiRiichi.Utils.Logger.Warn($"Failed to save replay: {ex}");
+          }
+        }
+      }
+      gameCts = null;
+      return true;
+    }
+
     private bool TryEndGame() {
       if (players.Any(p => p.status != UserStatus.Playing)) {
         return false;
