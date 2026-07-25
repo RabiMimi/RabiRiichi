@@ -19,10 +19,12 @@ namespace RabiRiichi.Arena.Controllers {
   public sealed class PublicController(
       ArenaConfig config,
       RunManager runManager,
-      ArenaService arenaService) : ControllerBase {
+      ArenaService arenaService,
+      ReasoningStore reasoningStore) : ControllerBase {
     private readonly ArenaConfig config = config;
     private readonly RunManager runManager = runManager;
     private readonly ArenaService arenaService = arenaService;
+    private readonly ReasoningStore reasoningStore = reasoningStore;
 
     /// <summary>All runs (newest-first) for the run selector; marks the active one.</summary>
     [HttpGet("runs")]
@@ -147,6 +149,42 @@ namespace RabiRiichi.Arena.Controllers {
           EloBefore = p.EloBefore,
           EloAfter = p.EloAfter,
           EloDelta = p.EloAfter - p.EloBefore,
+        }).ToList(),
+      });
+    }
+
+    /// <summary>
+    /// The match's per-decision rationales, anchored to replay event indices so
+    /// the replay viewer can show each line at the move it explains (§9). Always
+    /// 200 — a match with no LLM seats (or one played before reasoning anchors
+    /// existed) simply has an empty track, which a viewer treats as "nothing to
+    /// show" without special-casing a 404.
+    /// </summary>
+    [HttpGet("matches/{matchId}/reasoning-track")]
+    public ActionResult<ReasoningTrackDto> GetReasoningTrack(
+        string matchId, string runId = null) {
+      if (!MatchStore.IsValidId(matchId)) {
+        return BadRequest();
+      }
+      // Replay links carry the gameId, which is also the matchId for every match
+      // the scheduler writes; when no record is found we can still serve the
+      // track (just without display names) since reasoning is keyed by gameId.
+      var record = ResolveRun(runId)?.Matches.Get(matchId);
+      var gameId = record?.GameId ?? matchId;
+      var nameBySeat = record?.Players.ToDictionary(p => p.Seat, p => p.DisplayName);
+      var seats = nameBySeat?.Keys.OrderBy(s => s).ToList()
+          ?? Enumerable.Range(0, config.Run.PlayerCount).ToList();
+
+      var entries = ReasoningTrack.Build(reasoningStore, gameId, seats,
+          seat => nameBySeat != null && nameBySeat.TryGetValue(seat, out var n) ? n : "");
+      return Ok(new ReasoningTrackDto {
+        GameId = gameId,
+        Entries = entries.Select(e => new ReasoningTrackEntryDto {
+          EventIndex = e.EventIndex,
+          Seat = e.Seat,
+          DisplayName = e.DisplayName,
+          Rationale = e.Rationale,
+          Valid = e.Valid,
         }).ToList(),
       });
     }

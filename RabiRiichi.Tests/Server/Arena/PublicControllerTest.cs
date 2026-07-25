@@ -21,6 +21,7 @@ namespace RabiRiichi.Tests.Server.Arena {
     private string workspaceDir;
     private RunManager runManager;
     private RunContext ctx;
+    private ReasoningStore reasoningStore;
 
     [TestInitialize]
     public void Setup() {
@@ -65,7 +66,8 @@ namespace RabiRiichi.Tests.Server.Arena {
       runManager = new RunManager(workspaceDir);
       ctx = runManager.CreateRun(cfg);
       var arenaService = new ArenaService(runManager, () => cfg);
-      return new PublicController(cfg, runManager, arenaService);
+      reasoningStore = new ReasoningStore(workspaceDir);
+      return new PublicController(cfg, runManager, arenaService, reasoningStore);
     }
 
     // The replay link is NOT stored on the record; the controller derives it at
@@ -246,6 +248,61 @@ namespace RabiRiichi.Tests.Server.Arena {
       Assert.AreEqual(0, Body(controller.GetLeaderboard()).Count);
       Assert.AreEqual(1, Body(controller.GetLeaderboard(ctx.RunId)).Count);
       _ = other;
+    }
+
+    // ----- Reasoning track --------------------------------------------------
+
+    [TestMethod]
+    public void TestReasoningTrackResolvesSeatNamesFromTheMatch() {
+      var cfg = MakeConfig();
+      var controller = MakeController(cfg);
+      var record = MakeRecord(cfg, "m-1", 1);
+      ctx.Matches.Append(record);
+      reasoningStore.AppendTurn(record.GameId, 0, new ReasoningTurn {
+        EventIndex = 12, Rationale = "keep the safe tile", Valid = true,
+      });
+
+      var track = Body(controller.GetReasoningTrack("m-1"));
+
+      Assert.AreEqual(record.GameId, track.GameId);
+      Assert.AreEqual(1, track.Entries.Count);
+      Assert.AreEqual(12, track.Entries[0].EventIndex);
+      Assert.AreEqual("keep the safe tile", track.Entries[0].Rationale);
+      Assert.AreEqual(record.Players[0].DisplayName, track.Entries[0].DisplayName);
+    }
+
+    [TestMethod]
+    public void TestReasoningTrackIsEmptyRatherThanMissing() {
+      var cfg = MakeConfig();
+      var controller = MakeController(cfg);
+      // An all-baseline match has no rationales at all; a viewer should get an
+      // empty track (nothing to show) instead of having to handle a 404.
+      var track = Body(controller.GetReasoningTrack("no-such-match"));
+      Assert.AreEqual(0, track.Entries.Count);
+      Assert.IsInstanceOfType(
+          controller.GetReasoningTrack("../evil").Result, typeof(BadRequestResult));
+    }
+
+    [TestMethod]
+    public void TestReasoningTrackExposesOnlyTheRationale() {
+      var cfg = MakeConfig();
+      var controller = MakeController(cfg);
+      var record = MakeRecord(cfg, "m-2", 2);
+      ctx.Matches.Append(record);
+      reasoningStore.AppendTurn(record.GameId, 1, new ReasoningTurn {
+        EventIndex = 3,
+        Rationale = "public rationale",
+        PromptDelta = "SECRET PROMPT",
+        RawResponse = "SECRET RESPONSE",
+        Reasoning = "SECRET THINKING",
+      });
+
+      var json = System.Text.Json.JsonSerializer.Serialize(
+          Body(controller.GetReasoningTrack("m-2")));
+
+      StringAssert.Contains(json, "public rationale");
+      // Full transcripts stay admin-only (§8/§12b).
+      Assert.IsFalse(json.Contains("SECRET"), json);
     }
 
     // ----- Replay link builder --------------------------------------------

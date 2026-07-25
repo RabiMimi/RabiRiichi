@@ -77,6 +77,10 @@ namespace RabiRiichi.Arena.Agents {
     /// <param name="menu">The legal-action menu (stable choice ids).</param>
     /// <param name="inquiry">The player's legal inquiry (for validation).</param>
     /// <param name="turnSeq">A monotonically increasing per-seat turn number.</param>
+    /// <param name="eventIndex">
+    /// Replay position this decision sits at (see
+    /// <see cref="ReasoningTurn.EventIndex"/>); -1 when unknown.
+    /// </param>
     /// <param name="baseTranscript">
     /// Prior conversation (system + accumulated turns) to send as context. The
     /// caller owns and mutates it across turns.
@@ -98,7 +102,8 @@ namespace RabiRiichi.Arena.Agents {
         int turnSeq,
         List<LlmMessage> baseTranscript,
         Func<string, string> turnMessageFor,
-        TimeSpan remainingTimeout) {
+        TimeSpan remainingTimeout,
+        int eventIndex = -1) {
       var sw = Stopwatch.StartNew();
       string firstPromptDelta = null;
       string lastRaw = null;
@@ -145,7 +150,7 @@ namespace RabiRiichi.Arena.Agents {
           baseTranscript.Add(LlmMessage.User(userMessage));
           baseTranscript.Add(LlmMessage.Assistant(result.Content));
           sw.Stop();
-          PersistTurn(seat, turnSeq, firstPromptDelta, result.Content, parsed,
+          PersistTurn(seat, turnSeq, eventIndex, firstPromptDelta, result.Content, parsed,
               validation.Description, valid: true, attempts: attempt,
               penalized: false, promptTokens, completionTokens, sw.ElapsedMilliseconds,
               error: null);
@@ -165,7 +170,7 @@ namespace RabiRiichi.Arena.Agents {
       // Exhausted all attempts -> penalize with the safe default option.
       sw.Stop();
       usage.RecordPenalty(modelId);
-      PersistTurn(seat, turnSeq, firstPromptDelta ?? "", lastRaw ?? "",
+      PersistTurn(seat, turnSeq, eventIndex, firstPromptDelta ?? "", lastRaw ?? "",
           ArenaLlmResponse.Parse(lastRaw ?? ""), "default (penalized)",
           valid: false, attempts: attempts, penalized: true,
           promptTokens, completionTokens, sw.ElapsedMilliseconds,
@@ -241,7 +246,7 @@ namespace RabiRiichi.Arena.Agents {
     // ----- Persistence -----------------------------------------------------
 
     private void PersistTurn(
-        int seat, int turnSeq, string promptDelta, string rawResponse,
+        int seat, int turnSeq, int eventIndex, string promptDelta, string rawResponse,
         ArenaLlmResponse parsed, string parsedAction, bool valid, int attempts,
         bool penalized, long promptTokens, long completionTokens, long latencyMs,
         string error) {
@@ -251,6 +256,7 @@ namespace RabiRiichi.Arena.Agents {
       try {
         reasoning.AppendTurn(gameId, seat, new ReasoningTurn {
           TurnSeq = turnSeq,
+          EventIndex = eventIndex,
           PromptDelta = promptDelta ?? "",
           // ILlmProvider returns final text only (no separate reasoning trace),
           // so the raw response doubles as the reasoning record.

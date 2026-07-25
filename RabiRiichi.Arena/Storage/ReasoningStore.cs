@@ -28,6 +28,17 @@ namespace RabiRiichi.Arena.Storage {
   /// </summary>
   public sealed class ReasoningTurn {
     public int TurnSeq { get; set; }
+
+    /// <summary>
+    /// Position of this decision in the replay's event stream: the index of the
+    /// first event that follows it (the game is blocked on the agent while it
+    /// thinks, so no event can slip in between). Lets a replay viewer line the
+    /// rationale up with the move it produced without the replay log carrying
+    /// any of this. -1 when unknown (no replay captured, or a turn written
+    /// before this field existed).
+    /// </summary>
+    public int EventIndex { get; set; } = -1;
+
     public string PromptDelta { get; set; } = "";
     public string Reasoning { get; set; } = "";
     public string RawResponse { get; set; } = "";

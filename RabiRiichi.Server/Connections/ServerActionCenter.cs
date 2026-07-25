@@ -18,6 +18,23 @@ namespace RabiRiichi.Server.Connections {
     private InquiryContext context;
     private GameLogMsg replayLog;
     private readonly object replayLock = new();
+    private int capturedEventCount;
+
+    /// <summary>
+    /// How many events have been captured into the replay log so far — i.e. the
+    /// index the NEXT captured event will occupy in the event-only stream a
+    /// replay viewer reconstructs (viewers keep <c>SingleLogMsg.event</c> entries
+    /// and drop inquiries). Exposed so out-of-band, non-replayable annotations
+    /// (the Arena's per-decision reasoning) can anchor themselves to an exact
+    /// replay position without being smuggled into the log itself.
+    /// </summary>
+    public int CapturedEventCount {
+      get {
+        lock (replayLock) {
+          return capturedEventCount;
+        }
+      }
+    }
 
     private void EndInquiry(InquiryContext context) {
       var oldContext = Interlocked.CompareExchange(ref this.context, null, context);
@@ -46,6 +63,7 @@ namespace RabiRiichi.Server.Connections {
         var revealedProto = room.game.SerializeProto<EventMsg>(ev, ProtoConverters.GOD_VIEW_PLAYER_ID);
         if (revealedProto != null) {
           replayLog.PlayerLogs[0].Logs.Add(new SingleLogMsg { Event = revealedProto });
+          capturedEventCount++;
         }
       }
     }

@@ -121,4 +121,27 @@ namespace RabiRiichi.Arena.Controllers {
     public double EloAfter { get; set; }
     public double EloDelta { get; set; }
   }
+
+  /// <summary>
+  /// A match's per-decision rationales, anchored to the replay's event stream so
+  /// a replay viewer can surface each one when the move it explains happens (§9).
+  /// Short rationale only — full prompt/response transcripts stay admin-only
+  /// (§8/§12b), and nothing here appears on the public leaderboard page (§12a).
+  /// </summary>
+  public sealed class ReasoningTrackDto {
+    public string GameId { get; set; } = "";
+    public List<ReasoningTrackEntryDto> Entries { get; set; } = new();
+  }
+
+  public sealed class ReasoningTrackEntryDto {
+    /// <summary>Index into the replay's event-only stream.</summary>
+    public int EventIndex { get; set; }
+
+    public int Seat { get; set; }
+    public string DisplayName { get; set; } = "";
+    public string Rationale { get; set; } = "";
+
+    /// <summary>False when the model failed and the safe default was played.</summary>
+    public bool Valid { get; set; }
+  }
 }
