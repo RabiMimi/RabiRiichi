@@ -1,10 +1,13 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
 using RabiRiichi.Server.Connections;
+using RabiRiichi.Server.Generated.Messages;
 using RabiRiichi.Server.Generated.Rpc;
 using RabiRiichi.Server.Services;
+using RabiRiichi.Server.Utils;
 using RabiRiichi.Server.WebSockets;
 using RabiRiichi.Utils;
 
@@ -13,10 +16,10 @@ namespace RabiRiichi.Arena.WebSockets {
   /// The public replay WebSocket handler for Arena's <c>/ws/public</c> endpoint
   /// (ARENA_DESIGN.md §12d). It mirrors the player server's
   /// <c>WebSocketController.ConnectPublic</c> structure so the EXISTING web
-  /// client renders Arena replays unchanged: open the socket, run the shared
-  /// <see cref="ConnectionExtensions.VersionHandShake(WebSocketAdapter, TimeSpan)"/>
-  /// version-check first, then serve <c>GetReplay</c> (required) and
-  /// <c>GetInfo</c> (drop-in). Auth, rooms, and gameplay are not needed here.
+  /// client renders Arena replays unchanged: open the socket, run the
+  /// version-check first, then serve <c>GetReplay</c> (required), <c>GetInfo</c>
+  /// (drop-in) and heartbeats (so the client keeps the socket alive). Auth,
+  /// rooms, and gameplay are not needed here.
   ///
   /// The message-handling logic lives in the pure, socket-free
   /// <see cref="HandlePublicMessage"/> so it is unit-testable (bytes/decoded
@@ -27,6 +30,15 @@ namespace RabiRiichi.Arena.WebSockets {
   /// them.
   /// </summary>
   public sealed class ArenaPublicWebSocket {
+    /// <summary>How long the client has to answer the version check.</summary>
+    public static readonly TimeSpan HandshakeTimeout = TimeSpan.FromSeconds(15);
+
+    /// <summary>
+    /// Upper bound on requests remembered while the handshake is in flight, so a
+    /// client that floods the socket before answering cannot grow this unbounded.
+    /// </summary>
+    private const int MaxPipelinedRequests = 8;
+
     private readonly ReplayStore replayStore;
     private readonly InfoServiceImpl infoService;
 
@@ -47,12 +59,21 @@ namespace RabiRiichi.Arena.WebSockets {
     public async Task HandleConnectionAsync(
         WebSocketAdapter adapter, CancellationToken requestAborted) {
       // Version-gate every connection before serving any request (§12d).
-      if (!await adapter.VersionHandShake(TimeSpan.FromSeconds(15))) {
+      var pipelined = new List<ClientMessageDto>();
+      if (!await VersionHandShake(adapter, pipelined, requestAborted)) {
         await adapter.Close();
         return;
       }
 
       try {
+        // Serve whatever the client sent while the handshake was still in
+        // flight, in arrival order, before reading anything new.
+        foreach (var early in pipelined) {
+          var earlyReply = HandlePublicMessage(early);
+          if (earlyReply != null) {
+            await adapter.WriteAsync(earlyReply, requestAborted);
+          }
+        }
         while (!requestAborted.IsCancellationRequested
             && await adapter.MoveNext(requestAborted)) {
           var reply = HandlePublicMessage(adapter.Current);
@@ -68,6 +89,60 @@ namespace RabiRiichi.Arena.WebSockets {
     }
 
     /// <summary>
+    /// Runs the version handshake, collecting into <paramref name="pipelined"/>
+    /// every non-version-check message read along the way instead of dropping it.
+    ///
+    /// This deliberately does NOT reuse
+    /// <see cref="ConnectionExtensions.VersionHandShake(WebSocketAdapter, TimeSpan)"/>:
+    /// that helper discards anything the client pipelines ahead of its version
+    /// reply, and the web client does exactly that — a second concurrent
+    /// <c>fetchReplay</c> only awaits the socket's <c>open</c>, not the
+    /// handshake, so its <c>GetReplay</c> lands first and was silently eaten.
+    /// The request then never got a response and the replay page timed out.
+    /// Version validation itself is still the server's
+    /// (<see cref="ServerUtils"/>), so the gate stays identical.
+    /// </summary>
+    private static async Task<bool> VersionHandShake(
+        WebSocketAdapter adapter,
+        List<ClientMessageDto> pipelined,
+        CancellationToken requestAborted) {
+      var request = ProtoUtils.CreateDto(new ServerVersionCheckMsg {
+        Game = ServerConstants.GAME,
+        GameVersion = RabiRiichi.VERSION,
+        Server = ServerConstants.SERVER,
+        ServerVersion = ServerConstants.SERVER_VERSION,
+        MinClientVersion = ServerConstants.MIN_CLIENT_VERSION,
+      });
+      using var timeoutCts = new CancellationTokenSource(HandshakeTimeout);
+      using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
+          timeoutCts.Token, requestAborted);
+      try {
+        await adapter.WriteAsync(request, linkedCts.Token);
+        while (await adapter.MoveNext(linkedCts.Token)) {
+          var current = adapter.Current;
+          var reply = current?.ClientMsg?.VersionCheckMsg;
+          if (reply == null) {
+            if (current == null) {
+              continue;
+            }
+            if (pipelined.Count < MaxPipelinedRequests) {
+              pipelined.Add(current);
+            } else {
+              Logger.Warn("[Arena] Dropping request pipelined before the version "
+                  + "handshake: buffer full.");
+            }
+            continue;
+          }
+          return ServerUtils.IsClientVersionSupported(reply.ClientVersion)
+              && ServerUtils.IsServerVersionSupported(reply.MinServerVersion);
+        }
+        return false;
+      } catch (OperationCanceledException) {
+        return false;
+      }
+    }
+
+    /// <summary>
     /// Pure request→response handler for the two public requests Arena serves:
     /// <c>GetReplay</c> and <c>GetInfo</c>. Returns the response DTO, or null for
     /// messages that need no reply (e.g. a version-check echo). Errors are mapped
@@ -77,6 +152,18 @@ namespace RabiRiichi.Arena.WebSockets {
     public ServerMessageDto HandlePublicMessage(ClientMessageDto msg) {
       if (msg == null) {
         return null;
+      }
+      // The client pings every few seconds and closes the socket if a ping goes
+      // unanswered, so an Arena replay socket used to die ~15s after connecting.
+      // Mirror Connection.OnReceiveHeartBeat: id -1, respond to the ping, and
+      // report maxId 0 — this handler never assigns outgoing message ids, so
+      // there is nothing for the client to consider missing and re-request.
+      if (msg.ClientMsg?.HeartBeatMsg != null) {
+        return new ServerMessageDto {
+          Id = -1,
+          RespondTo = msg.Id,
+          ServerMsg = ProtoUtils.CreateServerMsg(new TwoWayHeartBeatMsg { MaxId = 0 }),
+        };
       }
       try {
         if (msg.ClientRequest?.GetInfo != null) {
