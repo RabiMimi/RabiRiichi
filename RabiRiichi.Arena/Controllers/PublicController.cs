@@ -194,7 +194,8 @@ namespace RabiRiichi.Arena.Controllers {
         runManager.GetRun(runId ?? runManager.NewestRunId());
 
     /// <summary>
-    /// Builds a replay link (<c>{clientUrl}?server={wsBase}&amp;replay={gameId}</c>)
+    /// Builds a replay link
+    /// (<c>{clientUrl}?server={wsBase}&amp;replay={gameId}&amp;reasoning=1</c>)
     /// where the client renders the replay by connecting to <c>{wsBase}/ws/public</c>.
     ///
     /// The Arena hosts <c>/ws/public</c> on its OWN origin (the same Kestrel port
@@ -203,13 +204,18 @@ namespace RabiRiichi.Arena.Controllers {
     /// Arena actually runs on, and fixes stale links baked into old match records.
     /// A non-empty live <c>config.wsUrl</c> acts as an explicit override for
     /// reverse-proxy deployments where the WebSocket origin differs.
+    ///
+    /// <c>reasoning=1</c> tells the viewer this server also serves the
+    /// per-decision reasoning track over REST (§9). It has to be stated in the
+    /// link rather than guessed: a plain game server is WebSocket-only, and
+    /// opening a replay against one must not fire an HTTP request at it.
     /// </summary>
     private string BuildReplayLink(string gameId) {
       var clientBase = config.ClientUrl ?? "";
       var wsBase = !string.IsNullOrWhiteSpace(config.WsUrl)
           ? config.WsUrl
           : DeriveWsBaseFromRequest();
-      return $"{clientBase}?server={wsBase}&replay={gameId}";
+      return $"{clientBase}?server={wsBase}&replay={gameId}&reasoning=1";
     }
 
     /// <summary>

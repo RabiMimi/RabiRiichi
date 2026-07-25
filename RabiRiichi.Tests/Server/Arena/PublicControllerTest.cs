@@ -73,7 +73,7 @@ namespace RabiRiichi.Tests.Server.Arena {
     // The replay link is NOT stored on the record; the controller derives it at
     // read-time. With a non-empty cfg.WsUrl this is the deterministic result.
     private static string ReplayLink(ArenaConfig cfg, string gameId) =>
-        $"{cfg.ClientUrl}?server={cfg.WsUrl}&replay={gameId}";
+        $"{cfg.ClientUrl}?server={cfg.WsUrl}&replay={gameId}&reasoning=1";
 
     private static MatchRecord MakeRecord(ArenaConfig cfg, string matchId, int order) {
       var gameId = "game-" + matchId;
@@ -310,11 +310,27 @@ namespace RabiRiichi.Tests.Server.Arena {
     [TestMethod]
     public void TestReplayLinkFormat() {
       var cfg = MakeConfig();
-      // The format the public page + records use: {clientUrl}?server={wsUrl}&replay={gameId}
+      // The format the public page + records use:
+      // {clientUrl}?server={wsUrl}&replay={gameId}&reasoning=1
       var link = ReplayLink(cfg, "abc-123");
       Assert.AreEqual(
-          "https://play.example.com?server=wss://arena.example.com&replay=abc-123",
+          "https://play.example.com?server=wss://arena.example.com&replay=abc-123"
+              + "&reasoning=1",
           link);
+    }
+
+    [TestMethod]
+    public void TestReplayLinkOptsIntoTheReasoningTrack() {
+      var cfg = MakeConfig();
+      var controller = MakeController(cfg);
+      ctx.Matches.Append(MakeRecord(cfg, "m-link", 1));
+
+      var detail = Body(controller.GetMatch("m-link"));
+
+      // Only an Arena serves the track, and only this flag makes the viewer ask
+      // for it — a replay opened against a WebSocket-only game server must not
+      // trigger an HTTP request.
+      StringAssert.EndsWith(detail.ReplayLink, "&reasoning=1");
     }
   }
 }
