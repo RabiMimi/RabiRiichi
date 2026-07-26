@@ -226,5 +226,30 @@ namespace RabiRiichi.Tests.Server {
       Assert.IsFalse(room.RemoveRoomPlayer(lastAi));
       Assert.IsTrue(room.players.Contains(lastAi));
     }
+
+    [TestMethod]
+    public void LobbySeatsAndOwnerIgnoreStaleShuffledGameSeats() {
+      var room = new Room(new Random(0), new GameConfig { playerCount = 4 });
+      var first = new User { id = 1, nickname = "First" };
+      var second = new User { id = 2, nickname = "Second" };
+      Assert.IsTrue(room.AddPlayer(first));
+      Assert.IsTrue(room.AddPlayer(second));
+
+      // Simulate the shuffled array left behind by a completed game. Lobby
+      // seating and ownership must still follow room join order.
+      var seatsField = typeof(Room).GetField(
+          "seats",
+          System.Reflection.BindingFlags.NonPublic
+              | System.Reflection.BindingFlags.Instance);
+      Assert.IsNotNull(seatsField);
+      var staleSeats = (IPlayerAgent[])seatsField.GetValue(room);
+      staleSeats[0] = second;
+      staleSeats[1] = first;
+
+      Assert.AreEqual(0, room.SeatIndexOf(first));
+      Assert.AreEqual(1, room.SeatIndexOf(second));
+      Assert.IsTrue(room.IsRoomOwner(first));
+      Assert.IsFalse(room.IsRoomOwner(second));
+    }
   }
 }

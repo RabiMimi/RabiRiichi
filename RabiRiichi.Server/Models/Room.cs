@@ -386,10 +386,18 @@ namespace RabiRiichi.Server.Models {
     }
 
     public int SeatIndexOf(IPlayerAgent player) {
-      if (seats.Contains(player)) {
+      // The shuffled seat array is only authoritative while a player is
+      // actively playing. It intentionally remains populated after a game, so
+      // using it in the lobby would leak the previous game's random seating
+      // into room ownership and could make a later entrant appear to be seat 0.
+      if (player.status == UserStatus.Playing && seats.Contains(player)) {
         return Array.IndexOf(seats, player);
       }
       return players.IndexOf(player);
+    }
+
+    public bool IsRoomOwner(User user) {
+      return players.OfType<User>().FirstOrDefault() == user;
     }
 
     public IPlayerAgent GetPlayerBySeat(int seatIndex) {

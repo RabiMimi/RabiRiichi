@@ -97,8 +97,7 @@ namespace RabiRiichi.Server.Services {
     public ServerRoomStateResponse AddAi(
         AddAiRequest request, RoomList roomList, User user, LlmSettings llmSettings = null) {
       var room = user.room ?? throw new RpcException(new Status(StatusCode.FailedPrecondition, "User is not in a room"));
-      var humanPlayers = room.players.OfType<User>().OrderBy(p => room.SeatIndexOf(p)).ToList();
-      if (humanPlayers.Count == 0 || humanPlayers[0] != user) {
+      if (!room.IsRoomOwner(user)) {
         throw new RpcException(new Status(StatusCode.PermissionDenied, "Only the room owner can add AI"));
       }
       int aiId = room.AllocateAiId();
@@ -169,8 +168,7 @@ namespace RabiRiichi.Server.Services {
 
     public ServerRoomStateResponse RemoveRoomPlayer(RemoveRoomPlayerRequest request, RoomList roomList, User user) {
       var room = user.room ?? throw new RpcException(new Status(StatusCode.FailedPrecondition, "User is not in a room"));
-      var humanPlayers = room.players.OfType<User>().OrderBy(p => room.SeatIndexOf(p)).ToList();
-      if (humanPlayers.Count == 0 || humanPlayers[0] != user) {
+      if (!room.IsRoomOwner(user)) {
         throw new RpcException(new Status(StatusCode.PermissionDenied, "Only the room owner can remove players"));
       }
       var target = room.players.FirstOrDefault(p => p.id == request.Id)
