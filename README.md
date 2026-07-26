@@ -1,5 +1,9 @@
 # RabiRiichi (兔兔立直 / ラビリーチ)
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/RabiMimi/RabiRiichi-Web/main/public/assets/logo.png" alt="RabiRiichi Logo" width="200" />
+</p>
+
 [![100hun](https://100hun.rabimimi.com/provider/codecov/github/RabiMimi/RabiRiichi/develop/badge.png?size=128)](https://github.com/KCFindstr/100hun)
 
 [![build-test](https://github.com/RabiMimi/RabiRiichi/actions/workflows/build-test.yml/badge.svg)](https://github.com/RabiMimi/RabiRiichi/actions/workflows/build-test.yml)
