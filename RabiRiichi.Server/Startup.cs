@@ -54,8 +54,8 @@ if (replayOptions.IsEnabled && replayOptions.TTL.HasValue) {
   services.AddHostedService<ReplayCleanupService>();
 }
 
-services.AddSingleton(new Random(builder.Environment.IsDevelopment()
-    ? 0 : (int)(DateTimeOffset.Now.ToUnixTimeMilliseconds() & 0xffffffff)));
+services.AddSingleton(builder.Environment.IsDevelopment()
+    ? new Random(0) : Random.Shared);
 
 // Build app
 var app = builder.Build();
