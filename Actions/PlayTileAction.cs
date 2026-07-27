@@ -1,6 +1,8 @@
 using RabiRiichi.Core;
+using RabiRiichi.Core.Config;
 using RabiRiichi.Generated.Core;
 using RabiRiichi.Patterns;
+using RabiRiichi.Utils;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -13,6 +15,8 @@ namespace RabiRiichi.Actions {
     public int fu;
     public int yakuman;
     public long points;
+    /// <summary> 荣和/自摸中较高者的番数，含宝牌，役满按 13 番计 </summary>
+    public int maxHan;
   }
 
   public class DiscardCandidate {
@@ -90,28 +94,58 @@ namespace RabiRiichi.Actions {
     }
 
     /// <summary>
-    /// Computes the guaranteed-minimum score a wait can achieve, for display in
-    /// the tenpai preview. The win is scored as a ron (so tsumo-only value like
-    /// suuankou or menzen tsumo is not assumed) and accidental yaku
-    /// (PatternMask.Luck: ippatsu, haitei/houtei, rinshan, chankan) are excluded.
+    /// 听牌预览的番数区间：下限按荣和算，上限取荣和/自摸中较高者。
+    /// 两者都排除运气役（PatternMask.Luck）。
     /// </summary>
     public static TenpaiInfo ComputeTenpaiInfo(
         PatternResolver patternResolver, Hand hand, Tile winTile) {
-      var winGameTile = new GameTile(winTile, 0) {
-        discardInfo = new DiscardInfo(null, DiscardReason.Draw, 0),
-        source = TileSource.Discard,
-      };
-      var scores = patternResolver.ResolveMaxScore(
-          hand, winGameTile, PatternMask.Regular | PatternMask.Bonus);
+      const PatternMask mask = PatternMask.Regular | PatternMask.Bonus;
+
+      var ron = patternResolver.ResolveMaxScore(hand, RonTile(winTile), mask)?.result;
+      var tsumo = patternResolver.ResolveMaxScore(hand, TsumoTile(winTile), mask)?.result;
+      // 自摸要靠自己摸上来，只有荣和算保底。
+      var ceiling = Better(ron, tsumo);
 
       return new TenpaiInfo {
         winningTile = winTile,
-        han = scores?.result?.han ?? 0,
-        yaku = scores?.result?.yaku ?? 0,
-        fu = scores?.result?.fu ?? 0,
-        yakuman = scores?.result?.yakuman ?? 0,
-        points = scores?.result?.BaseScore ?? 0,
+        han = ron?.han ?? 0,
+        yaku = ron?.yaku ?? 0,
+        fu = ron?.fu ?? 0,
+        yakuman = ron?.yakuman ?? 0,
+        points = ron?.BaseScore ?? 0,
+        maxHan = EffectiveHan(ceiling),
       };
+    }
+
+    /// <summary>
+    /// 役满按每个 13 番计，使番数单值即可表达"有役满可能"。
+    /// 与 BaseScore 保持一致：青天井下役满与普通番累加且无上限，
+    /// 否则役满取代普通番。
+    /// </summary>
+    private static int EffectiveHan(ScoreCalcResult result) {
+      if (result == null) return 0;
+      int yakumanHan = result.yakuman * ScoreCalcResult.KAZOE_YAKUMAN_HAN;
+      if (!result.scoringOption.HasAnyFlag(ScoringOption.Yakuman)) {
+        return result.han + yakumanHan;
+      }
+      return result.yakuman > 0 ? yakumanHan : result.han;
+    }
+
+    /// <summary> 有 discardInfo 即他家打出（荣和） </summary>
+    private static GameTile RonTile(Tile winTile) => new(winTile, 0) {
+      discardInfo = new DiscardInfo(null, DiscardReason.Draw, 0),
+      source = TileSource.Discard,
+    };
+
+    /// <summary> IsTsumo 的判定就是 discardInfo == null </summary>
+    private static GameTile TsumoTile(Tile winTile) => new(winTile, 0) {
+      source = TileSource.Wall,
+    };
+
+    private static ScoreCalcResult Better(ScoreCalcResult a, ScoreCalcResult b) {
+      if (a == null) return b;
+      if (b == null) return a;
+      return b.CompareTo(a) > 0 ? b : a;
     }
   }
 }
