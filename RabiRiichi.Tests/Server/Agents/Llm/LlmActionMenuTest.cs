@@ -175,7 +175,57 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
     }
 
     [TestMethod]
-    public void OutOfTurnCallsSkipLlmUnlessRonIsAvailable() {
+    public void Build_DropsThePassOptionOnYourOwnTurn() {
+      // A turn inquiry carries a default skip action, but a tile must leave the
+      // hand: offering "pass" to the model would only invite an unplayable pick.
+      var game = BuildGame(b => b
+          .WithPlayer(0, p => p.SetFreeTiles("123456789m1234p")));
+      var player = game.GetPlayer(0);
+      var hand14 = player.hand.freeTiles.ToList();
+      var inquiry = InquiryWith(0, new PlayTileAction(player, hand14, hand14[0]));
+
+      Assert.IsTrue(inquiry.actions.Any(a => a is SkipAction),
+          "the inquiry itself still carries the engine's default skip");
+      var menu = LlmActionMenu.Build(inquiry);
+      Assert.IsFalse(menu.Any(c => c.Kind == "skip"));
+      for (int i = 0; i < menu.Count; i++) {
+        Assert.AreEqual(i, menu[i].Id, "ids stay contiguous after filtering");
+      }
+    }
+
+    [TestMethod]
+    public void Resolve_MapsAnIdToItsChoiceAndRejectsAnythingElse() {
+      var game = BuildGame(b => b
+          .WithPlayer(0, p => p.SetFreeTiles("123456789m1234p")));
+      var player = game.GetPlayer(0);
+      var hand14 = player.hand.freeTiles.ToList();
+      var menu = LlmActionMenu.Build(
+          InquiryWith(0, new PlayTileAction(player, hand14, hand14[0])));
+
+      Assert.AreEqual(menu[3], LlmActionMenu.Resolve(menu, 3));
+      Assert.IsNull(LlmActionMenu.Resolve(menu, menu.Count));
+      Assert.IsNull(LlmActionMenu.Resolve(menu, -1));
+      Assert.IsNull(LlmActionMenu.Resolve(menu, null));
+    }
+
+    [TestMethod]
+    public void Render_NumbersEveryChoiceAndMarksTheReference() {
+      var menu = new List<LlmChoice> {
+        new() { Id = 0, Kind = "discard", Description = "discard 1m" },
+        new() { Id = 1, Kind = "discard", Description = "discard 9p" },
+      };
+
+      var rendered = LlmActionMenu.Render(menu, menu[1]);
+
+      StringAssert.Contains(rendered, "[0] discard 1m");
+      StringAssert.Contains(rendered, "[1] discard 9p");
+      StringAssert.Contains(rendered, "reference move");
+      // Only the reference line is marked.
+      Assert.AreEqual(1, rendered.Split("reference move").Length - 1);
+    }
+
+    [TestMethod]
+    public void IsOutOfTurnCallInquiry_DetectsReactionsExceptRon() {
       var daiminkan = new KanAction(0,
           new List<List<GameTile>> { KanTiles("3m", claimed: true) });
       Assert.IsTrue(LlmActionMenu.IsOutOfTurnCallInquiry(InquiryWith(0, daiminkan)));

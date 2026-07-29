@@ -48,7 +48,12 @@ namespace RabiRiichi.Server.Agents.Llm {
   public static class LlmActionMenu {
     /// <summary>
     /// True for reaction inquiries that could expose a chii, pon, or daiminkan
-    /// opportunity. Ron is deliberately exempt so the model may react to a win.
+    /// opportunity. Ron is deliberately exempt: winning is not a "reaction" the
+    /// model should rush or stay quiet about.
+    ///
+    /// The model still decides these; the flag only tells the prompt to ask for
+    /// a quick answer and to default to silence, because they fire on every
+    /// opponent discard that offers a call.
     /// </summary>
     public static bool IsOutOfTurnCallInquiry(SinglePlayerInquiry inquiry) {
       if (inquiry.actions.Any(action => action is RonAction)) return false;
@@ -71,12 +76,46 @@ namespace RabiRiichi.Server.Agents.Llm {
     public static string DescribeSelected(
         SinglePlayerInquiry inquiry, InquiryResponse response,
         string language = AiLocalization.LangEn) {
-      var choice = Build(inquiry, language).FirstOrDefault(c => c.Matches(response));
+      return DescribeSelected(Build(inquiry, language), inquiry, response);
+    }
+
+    public static string DescribeSelected(
+        IReadOnlyList<LlmChoice> menu, SinglePlayerInquiry inquiry,
+        InquiryResponse response) {
+      var choice = Find(menu, response);
       if (choice != null) return choice.Description;
       if (response.index < 0) return "pass / take no action";
       return response.index < inquiry.actions.Count
           ? inquiry.actions[response.index].GetType().Name.Replace("Action", "")
           : "take the selected legal action";
+    }
+
+    /// <summary> The menu entry a response selects, or null. </summary>
+    public static LlmChoice Find(
+        IReadOnlyList<LlmChoice> menu, InquiryResponse response) =>
+        menu?.FirstOrDefault(c => c.Matches(response));
+
+    /// <summary> The menu entry with this id, or null when out of range. </summary>
+    public static LlmChoice Resolve(IReadOnlyList<LlmChoice> menu, int? id) {
+      if (menu == null || id == null) return null;
+      return menu.FirstOrDefault(c => c.Id == id.Value);
+    }
+
+    /// <summary>
+    /// Renders the menu as numbered lines for the prompt, marking the move the
+    /// rule-based strategy would make so the model has a reference point.
+    /// </summary>
+    public static string Render(
+        IReadOnlyList<LlmChoice> menu, LlmChoice recommended = null) {
+      var sb = new StringBuilder();
+      foreach (var choice in menu) {
+        sb.Append("  [").Append(choice.Id).Append("] ").Append(choice.Description);
+        if (recommended != null && recommended.Id == choice.Id) {
+          sb.Append("   <-- reference move");
+        }
+        sb.AppendLine();
+      }
+      return sb.ToString().TrimEnd();
     }
 
     /// <param name="annotateTenpai">
@@ -90,7 +129,14 @@ namespace RabiRiichi.Server.Agents.Llm {
         bool annotateTenpai = true) {
       var choices = new List<LlmChoice>();
       var actions = inquiry.actions;
+      // On our own turn a tile MUST leave the hand, so "pass" is not a real
+      // option even when the inquiry still carries the default skip action.
+      // Offering it to the model would only invite an illegal-looking choice.
+      bool selfTurn = actions.Any(a => a is PlayTileAction);
       for (int ai = 0; ai < actions.Count; ai++) {
+        if (selfTurn && actions[ai] is SkipAction) {
+          continue;
+        }
         switch (actions[ai]) {
           case RiichiAction riichi:
             AddTileOptions(choices, ai, riichi, "riichi", language, annotateTenpai);

@@ -14,8 +14,15 @@ using System.Threading.Tasks;
 
 namespace RabiRiichi.Server.Agents.Llm {
   /// <summary>
-  /// Uses the rule-based strategy for play and an LLM only for optional table
-  /// chat. The selected move is presented to the model as its own decision.
+  /// An LLM-driven seat: the model picks the move AND talks at the table.
+  ///
+  /// Each turn the agent builds the list of legal actions, computes what
+  /// <see cref="RuleBasedStrategy"/> would do, and shows that to the model as a
+  /// reference move it should normally follow. Whatever id the model returns is
+  /// what gets played. Anything that cannot be honoured - a missing id, an id
+  /// that is not on the menu, a provider error, a timeout, malformed JSON -
+  /// falls back to the reference move, so a bad response degrades to solid play
+  /// instead of a random or defaulted action.
   /// </summary>
   public sealed class LlmAI : AIAgent {
     private readonly LlmSettings settings;
@@ -59,8 +66,9 @@ namespace RabiRiichi.Server.Agents.Llm {
         return;
       var sender = room.players.FirstOrDefault(p => p.id == senderId);
       var name = sender == null ? $"player {senderId}" : ResolveName(sender);
+      var role = sender == null ? (LlmSeatRole?)null : RoleOf(sender);
       lock (chatLock) {
-        pendingChats.Add((++nextChatSequence, new LlmChatEntry(name, text, sticker)));
+        pendingChats.Add((++nextChatSequence, new LlmChatEntry(name, text, sticker, role)));
       }
     }
 
@@ -69,25 +77,41 @@ namespace RabiRiichi.Server.Agents.Llm {
         SinglePlayerInquiry playerInquiry,
         TimeSpan remainingTimeout) {
       var view = new PublicGameView(gameInquiry.game, Seat);
-      var selected = RuleBasedStrategy.Decide(view, playerInquiry);
-      if (LlmActionMenu.IsOutOfTurnCallInquiry(playerInquiry)) {
-        return selected;
-      }
-      var menu = LlmActionMenu.Build(playerInquiry, settings.Language);
-      var selectedAction = LlmActionMenu.DescribeSelected(
-          playerInquiry, selected, settings.Language);
-      var automaticActionNote = LlmActionMenu.DescribeAutomaticAction(
-          view.SelfRiichi, menu, selectedAction);
 
+      // The reference move, computed before the model is asked so it is always
+      // available as a fallback no matter how the call goes.
+      var fallback = RuleBasedStrategy.Decide(view, playerInquiry);
+      var menu = LlmActionMenu.Build(playerInquiry, settings.Language);
+      var reference = LlmActionMenu.Find(menu, fallback);
+      var selectedAction = LlmActionMenu.DescribeSelected(menu, playerInquiry, fallback);
+
+      // With one (or no) legal action there is nothing to decide; the model is
+      // still asked so it can react to what just happened.
+      bool needsDecision = menu.Count > 1;
+      var automaticActionNote = needsDecision
+          ? null
+          : LlmActionMenu.DescribeAutomaticAction(view.SelfRiichi, menu, selectedAction);
+
+      var response = fallback;
       try {
-        var chat = QueryModel(view, selectedAction, automaticActionNote, remainingTimeout,
+        var decision = QueryModel(
+            view,
+            needsDecision ? menu : null,
+            reference,
+            selectedAction,
+            automaticActionNote,
+            LlmActionMenu.IsOutOfTurnCallInquiry(playerInquiry),
+            remainingTimeout,
             out var chatsThrough, out var completionSucceeded);
         if (completionSucceeded) {
           // The successful exchange is now in the transcript, so these messages
           // must not be repeated as "new" on the next turn.
           ClearChatsThrough(chatsThrough);
         }
-        if (EmitChat(chat)) {
+        if (needsDecision) {
+          response = ResolveResponse(decision, menu, fallback, selectedAction);
+        }
+        if (EmitChat(decision)) {
           turnsSinceChat = 0;
           consecutiveChatTurns++;
         } else {
@@ -97,21 +121,41 @@ namespace RabiRiichi.Server.Agents.Llm {
       } catch (Exception e) {
         turnsSinceChat++;
         consecutiveChatTurns = 0;
-        Logger.Warn($"LLM chat failed: {e.Message}");
+        Logger.Warn($"{LogTag} turn failed, playing the reference move: {e.Message}");
       }
 
-      // The model response never affects game play.
-      return selected;
+      return response;
+    }
+
+    /// <summary>
+    /// Turns the model's chosen id into a response. Anything unusable - no id,
+    /// or an id that is not on this turn's menu - keeps the reference move, so a
+    /// confused model never produces a bad or defaulted action.
+    /// </summary>
+    private InquiryResponse ResolveResponse(
+        LlmDecision decision, IReadOnlyList<LlmChoice> menu,
+        InquiryResponse fallback, string fallbackDescription) {
+      var chosen = LlmActionMenu.Resolve(menu, decision?.Action);
+      if (chosen != null) {
+        Logger.Log($"{LogTag} action [{chosen.Id}] {chosen.Description}");
+        return chosen.ToResponse(Seat);
+      }
+      Logger.Warn(decision?.Action == null
+          ? $"{LogTag} no action id in response, playing reference: {fallbackDescription}"
+          : $"{LogTag} action id {decision.Action} is not on the menu, " +
+              $"playing reference: {fallbackDescription}");
+      return fallback;
     }
 
     private LlmDecision QueryModel(
-        PublicGameView view, string selectedAction, string automaticActionNote,
+        PublicGameView view, IReadOnlyList<LlmChoice> menu, LlmChoice reference,
+        string selectedAction, string automaticActionNote, bool outOfTurnReaction,
         TimeSpan remainingTimeout,
         out long chatsThrough, out bool completionSucceeded) {
       completionSucceeded = false;
       var messages = BuildTurnMessages(
-          view, selectedAction, automaticActionNote,
-          out var userMessage, out chatsThrough);
+          view, menu, reference, selectedAction, automaticActionNote, outOfTurnReaction,
+          out var userMessage, out var historyMessage, out chatsThrough);
       Logger.Log($"{LogTag} >> prompt:\n{userMessage}");
 
       using var cts = new CancellationTokenSource(ClampTimeout(remainingTimeout));
@@ -125,16 +169,42 @@ namespace RabiRiichi.Server.Agents.Llm {
 
       Logger.Log($"{LogTag} << response:\n{result.Content}");
       lock (convLock) {
-        transcript.Add(LlmMessage.User(userMessage));
+        // Store the condensed form, not the prompt we just sent: the position it
+        // describes is stale the moment the turn ends, and the next prompt
+        // restates it in full.
+        transcript.Add(LlmMessage.User(historyMessage));
         transcript.Add(LlmMessage.Assistant(result.Content));
+        TrimTranscriptLocked();
       }
       completionSucceeded = true;
       return LlmDecision.Parse(result.Content);
     }
 
+    /// <summary>
+    /// Keeps the transcript from growing without limit over a long match.
+    ///
+    /// This is a rare block cut, not a per-turn slide: nothing happens until the
+    /// transcript passes <see cref="LlmLimits.TranscriptMaxExchanges"/>, and then
+    /// it drops back to <see cref="LlmLimits.TranscriptTrimToExchanges"/> in one
+    /// go. Between cuts every request is a strict extension of the previous one,
+    /// which is what lets a stateless provider serve almost all of it from its
+    /// prompt cache. The system message is never dropped.
+    /// </summary>
+    private void TrimTranscriptLocked() {
+      // transcript[0] is the system message when one has been sent.
+      int firstTurn = systemSent ? 1 : 0;
+      int turns = transcript.Count - firstTurn;
+      if (turns <= LlmLimits.TranscriptMaxExchanges * 2) {
+        return;
+      }
+      int drop = turns - LlmLimits.TranscriptTrimToExchanges * 2;
+      transcript.RemoveRange(firstTurn, drop);
+    }
+
     private List<LlmMessage> BuildTurnMessages(
-        PublicGameView view, string selectedAction, string automaticActionNote,
-        out string userMessage, out long chatsThrough) {
+        PublicGameView view, IReadOnlyList<LlmChoice> menu, LlmChoice reference,
+        string selectedAction, string automaticActionNote, bool outOfTurnReaction,
+        out string userMessage, out string historyMessage, out long chatsThrough) {
       var builder = new LlmPromptBuilder(settings, SeatNames(), SeatRoles());
       var recent = eventLog.Drain(out var newRound);
       List<LlmChatEntry> chats;
@@ -162,8 +232,10 @@ namespace RabiRiichi.Server.Agents.Llm {
       sb.Append(builder.BuildDecisionPrompt(
           view, recent, selectedAction, automaticActionNote, chats,
           turnsSinceChat >= 5,
-          LlmPromptBuilder.ShouldSendConsecutiveChatReminder(consecutiveChatTurns)));
+          LlmPromptBuilder.ShouldSendConsecutiveChatReminder(consecutiveChatTurns),
+          menu, reference, outOfTurnReaction));
       userMessage = sb.ToString();
+      historyMessage = builder.BuildHistorySummary(view, chats);
       messages.Add(LlmMessage.User(userMessage));
       return messages;
     }
@@ -215,14 +287,16 @@ namespace RabiRiichi.Server.Agents.Llm {
       return map;
     }
 
+    private static LlmSeatRole RoleOf(IPlayerAgent agent) => agent switch {
+      User => LlmSeatRole.Human,
+      LlmAI => LlmSeatRole.Llm,
+      _ => LlmSeatRole.OtherAi,
+    };
+
     private Dictionary<int, LlmSeatRole> SeatRoles() {
       var map = new Dictionary<int, LlmSeatRole>();
       for (var seat = 0; seat < room.config.playerCount; seat++) {
-        map[seat] = room.GetPlayerBySeat(seat) switch {
-          User => LlmSeatRole.Human,
-          LlmAI => LlmSeatRole.Llm,
-          _ => LlmSeatRole.OtherAi,
-        };
+        map[seat] = RoleOf(room.GetPlayerBySeat(seat));
       }
       return map;
     }
@@ -280,6 +354,7 @@ namespace RabiRiichi.Server.Agents.Llm {
         lock (convLock) {
           transcript.Add(LlmMessage.User(userMessage));
           transcript.Add(LlmMessage.Assistant(result.Content));
+          TrimTranscriptLocked();
         }
         ClearChatsThrough(chatsThrough);
         var decision = LlmDecision.Parse(result.Content);

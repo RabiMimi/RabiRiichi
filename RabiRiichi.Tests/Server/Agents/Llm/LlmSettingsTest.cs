@@ -37,6 +37,18 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
     }
 
     [TestMethod]
+    public void FromProto_AcceptsBunnyPetPersona() {
+      var config = Valid();
+      config.PromptTemplate = LlmPromptTemplate.BunnyPet;
+
+      var settings = LlmSettings.FromProto(config, out var error);
+
+      Assert.IsNotNull(settings);
+      Assert.IsNull(error);
+      Assert.AreEqual(LlmPromptTemplate.BunnyPet, settings.PromptTemplate);
+    }
+
+    [TestMethod]
     public void FromProto_RejectsMissingToken() {
       var cfg = Valid();
       cfg.ApiToken = "";

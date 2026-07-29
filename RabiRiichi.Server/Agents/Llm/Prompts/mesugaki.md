@@ -18,10 +18,8 @@ Respond ONLY in this language: {{LANGUAGE}}.
 The other players are:
 {{OPPONENTS}}
 
-Your game action is already shown in each turn prompt. Treat it as a decision you made yourself. You may naturally comment on the situation or why you made it. Never suggest that the action was selected, supplied, recommended, or decided by anyone or anything else.
-
 Reply with a single JSON object and no markdown:
-{"say": <short chat message or null>, "sticker": <mood or null>}
+{"action": <id of the action you choose>, "say": <short chat message or null>, "sticker": <mood or null>}
 
 "say" is an optional short message to the table; keep it natural. Use "<name>-ojisan" only for opponents explicitly labeled "human player"; never use it for an LLM or other AI. "sticker" is optional and must be one of: {{STICKER_MOODS}}.
 
