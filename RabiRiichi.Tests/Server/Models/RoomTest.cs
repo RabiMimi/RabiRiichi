@@ -26,6 +26,22 @@ namespace RabiRiichi.Tests.Server {
           TimeSpan remainingTimeout) => InquiryResponse.Default(Seat);
     }
 
+    private Room activeRoom;
+
+    [TestCleanup]
+    public void Cleanup() {
+      if (activeRoom != null) {
+        var gameCtsField = typeof(Room).GetField("gameCts", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var gameCts = (System.Threading.CancellationTokenSource)gameCtsField?.GetValue(activeRoom);
+        gameCts?.Cancel();
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        while (activeRoom.game != null && watch.ElapsedMilliseconds < 1000) {
+          System.Threading.Thread.Sleep(10);
+        }
+        activeRoom = null;
+      }
+    }
+
     [TestMethod]
     public void AgentChatUsesTheEmittingAgentIdentity() {
       var room = new Room(new Random(0), new GameConfig { playerCount = 4 });
@@ -47,6 +63,7 @@ namespace RabiRiichi.Tests.Server {
       var rand = new Random(0);
       var config = new GameConfig { playerCount = 4 };
       var room = new Room(rand, config);
+      activeRoom = room;
 
       var user = new User { id = 1, nickname = "Human" };
 
@@ -79,6 +96,7 @@ namespace RabiRiichi.Tests.Server {
       var rand = new Random(0);
       var config = new GameConfig { playerCount = 4 };
       var room = new Room(rand, config);
+      activeRoom = room;
 
       var user = new User { id = 1, nickname = "Human" };
 
@@ -111,6 +129,7 @@ namespace RabiRiichi.Tests.Server {
       var rand = new Random(0);
       var config = new GameConfig { playerCount = 4 };
       var room = new Room(rand, config);
+      activeRoom = room;
 
       var user = new User { id = 1, nickname = "Human" };
       Assert.IsTrue(room.AddPlayer(user));
@@ -126,14 +145,20 @@ namespace RabiRiichi.Tests.Server {
       Assert.IsNotNull(room.game);
       Assert.AreEqual(UserStatus.Playing, user.status);
 
-      // Invoke private TryEndGame via reflection
-      var tryEndGameMethod = typeof(Room).GetMethod("TryEndGame", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-      Assert.IsNotNull(tryEndGameMethod);
-      var result = (bool)tryEndGameMethod.Invoke(room, null);
-      Assert.IsTrue(result);
+      // Cancel the game task to clean up.
+      var gameCtsField = typeof(Room).GetField("gameCts", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+      Assert.IsNotNull(gameCtsField);
+      var gameCts = (System.Threading.CancellationTokenSource)gameCtsField?.GetValue(room);
+      Assert.IsNotNull(gameCts);
+      gameCts.Cancel();
 
-      // After game ends, human should be InRoom
-      Assert.AreEqual(UserStatus.InRoom, user.status);
+      // Poll until human player transitions back to InRoom (indicating TryEndGame has run)
+      var watch = System.Diagnostics.Stopwatch.StartNew();
+      while (user.status == UserStatus.Playing && watch.ElapsedMilliseconds < 5000) {
+        System.Threading.Thread.Sleep(10);
+      }
+      Assert.AreEqual(UserStatus.InRoom, user.status, "Human player did not transition to InRoom in time");
+      Assert.IsNull(room.game, "Room.game was not cleared");
       
       // AIs should be Ready (with my proposed fix)
       var AIs = room.players.Where(p => p is not User).ToList();
@@ -209,6 +234,7 @@ namespace RabiRiichi.Tests.Server {
       var rand = new Random(0);
       var config = new GameConfig { playerCount = 4 };
       var room = new Room(rand, config);
+      activeRoom = room;
 
       var user = new User { id = 1, nickname = "Human" };
       Assert.IsTrue(room.AddPlayer(user));
