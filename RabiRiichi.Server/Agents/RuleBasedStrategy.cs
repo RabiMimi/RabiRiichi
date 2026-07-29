@@ -125,9 +125,21 @@ namespace RabiRiichi.Server.Agents {
       /// <summary> Memoized <see cref="ChooseDiscardIndex"/> per action. </summary>
       private readonly Dictionary<PlayTileAction, int> discardChoiceCache = new();
 
+      /// <summary>
+      /// Shanten + acceptance for a candidate discard, searched only as far as
+      /// it could matter.
+      ///
+      /// <see cref="Shanten"/> is already the best any discard can reach, so a
+      /// discard more than one worse is never the efficient choice; capping the
+      /// search there is what keeps a turn affordable. A capped-out option is
+      /// not removed from consideration - it reports an unreachable shanten and
+      /// is then ranked purely on safety, which is exactly what is wanted when
+      /// the hand is folding.
+      /// </summary>
       public DiscardEval Evaluate(GameTile discard) {
         if (!evalCache.TryGetValue(discard, out var eval)) {
-          eval = View.EvaluateDiscard(discard, Hand);
+          int cap = Shanten == int.MaxValue ? int.MaxValue : Shanten + 1;
+          eval = View.EvaluateDiscard(discard, Hand, cap);
           evalCache[discard] = eval;
         }
         return eval;
@@ -350,10 +362,14 @@ namespace RabiRiichi.Server.Agents {
         TurnContext ctx, PlayTileAction action, GameTile tile) {
       var view = ctx.View;
       var eval = ctx.Evaluate(tile);
-      if (eval.Shanten == int.MaxValue) {
-        return double.NegativeInfinity;
-      }
       var remaining = ctx.Hand.Where(t => !ReferenceEquals(t, tile)).ToList();
+      if (eval.Shanten == int.MaxValue) {
+        // Too far behind the best discard to be worth pursuing (or an unusable
+        // holding). It is still a legal tile, so rank it on safety alone rather
+        // than excluding it - that is what makes a fold pick the safest tile.
+        return -DefenseModel.ExpectedLoss(view, ctx.Threats, tile.tile)
+            + 0.5 * IsolationBonus(view, tile.tile, remaining);
+      }
 
       // Riichi contributes a yaku han that is ours for the taking at tenpai, so
       // it counts toward min-han legality for a hand that is still concealed.

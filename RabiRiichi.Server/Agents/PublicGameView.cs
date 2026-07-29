@@ -270,7 +270,17 @@ namespace RabiRiichi.Server.Agents {
     /// opponent's concealed tiles. Acceptance is weighted by
     /// <see cref="UnseenCount(Tile)"/>, which itself only uses public info.
     /// </summary>
-    public DiscardEval EvaluateDiscard(GameTile discard, IReadOnlyList<GameTile> hand14) {
+    /// <param name="maxShanten">
+    /// Stop searching past this shanten and report <see cref="int.MaxValue"/>
+    /// instead. The resolver's cost grows sharply with the distance it may
+    /// explore (<c>maxDist = min(13, maxShanten) + 1</c>), so a caller that only
+    /// cares about the best few discards should say so: scoring all fourteen
+    /// options uncapped costs several times as much as capping just above the
+    /// hand's current shanten.
+    /// </param>
+    public DiscardEval EvaluateDiscard(
+        GameTile discard, IReadOnlyList<GameTile> hand14,
+        int maxShanten = int.MaxValue) {
       // A temporary hand bound to our own player (so hand.game resolves), holding
       // the tiles left after the discard, plus our real called melds.
       var remaining = hand14.Where(t => !ReferenceEquals(t, discard)).ToList();
@@ -284,7 +294,8 @@ namespace RabiRiichi.Server.Agents {
       }
 
       var resolver = game.Get<PatternResolver>();
-      int shanten = resolver.ResolveShanten(tempHand, null, out var acceptance);
+      int shanten =
+          resolver.ResolveShanten(tempHand, null, out var acceptance, maxShanten);
       int ukeire = 0;
       if (acceptance != null) {
         foreach (var tile in acceptance) {
