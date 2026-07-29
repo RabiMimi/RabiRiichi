@@ -71,14 +71,17 @@ namespace RabiRiichi.Server.Agents.Llm {
           [LangZhs] = new() {
             [LlmProvider.Gemini] = "Gemi狸",
             [LlmProvider.Openai] = "OpenAI",
+            [LlmProvider.Grok] = "Grok",
           },
           [LangEn] = new() {
             [LlmProvider.Gemini] = "Gemibo",
             [LlmProvider.Openai] = "OpenAI",
+            [LlmProvider.Grok] = "Grok",
           },
           [LangJa] = new() {
             [LlmProvider.Gemini] = "Gemiヌ",
             [LlmProvider.Openai] = "OpenAI",
+            [LlmProvider.Grok] = "Grok",
           },
         };
 

@@ -31,6 +31,7 @@ namespace RabiRiichi.Server.Agents.Llm {
     public static string ProviderTag(LlmProvider provider) => provider switch {
       LlmProvider.Gemini => "gemini",
       LlmProvider.Openai => "openai",
+      LlmProvider.Grok => "grok",
       _ => "generic",
     };
   }

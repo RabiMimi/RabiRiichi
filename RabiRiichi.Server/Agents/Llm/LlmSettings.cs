@@ -133,7 +133,8 @@ namespace RabiRiichi.Server.Agents.Llm {
         error = "missing";
         return null;
       }
-      if (config.Provider is not (LlmProvider.Openai or LlmProvider.Gemini)) {
+      if (config.Provider is not
+          (LlmProvider.Openai or LlmProvider.Gemini or LlmProvider.Grok)) {
         error = "provider";
         return null;
       }
@@ -178,6 +179,8 @@ namespace RabiRiichi.Server.Agents.Llm {
     public static string DefaultBaseUrl(LlmProvider provider) => provider switch {
       LlmProvider.Openai => "https://api.openai.com",
       LlmProvider.Gemini => "https://generativelanguage.googleapis.com",
+      // The provider appends /v1/chat/completions.
+      LlmProvider.Grok => "https://api.x.ai",
       _ => null,
     };
   }

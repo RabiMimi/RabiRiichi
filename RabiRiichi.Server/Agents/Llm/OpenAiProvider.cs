@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
-using System.Net.Http.Json;
-using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,50 +21,18 @@ namespace RabiRiichi.Server.Agents.Llm {
         IReadOnlyList<LlmMessage> messages,
         int maxOutputTokens,
         CancellationToken cancellationToken) {
-      try {
-        var url = $"{settings.BaseUrl}/v1/chat/completions";
-        var body = new JsonObject {
-          ["model"] = settings.Model,
-          ["max_tokens"] = maxOutputTokens,
-          ["temperature"] = 1.0,
-          ["messages"] = BuildMessages(messages),
-        };
-        ApplyThinking(body, settings.Model, settings.ThinkingLevel);
+      var body = new JsonObject {
+        ["model"] = settings.Model,
+        ["max_tokens"] = maxOutputTokens,
+        ["temperature"] = 1.0,
+        ["messages"] = OpenAiCompatible.BuildMessages(messages),
+      };
+      ApplyThinking(body, settings.Model, settings.ThinkingLevel);
 
-        using var req = new HttpRequestMessage(HttpMethod.Post, url) {
-          Content = JsonContent.Create(body),
-        };
-        req.Headers.TryAddWithoutValidation("Authorization", $"Bearer {settings.ApiToken}");
-
-        using var resp = await http.SendAsync(req, cancellationToken);
-        var text = await resp.Content.ReadAsStringAsync(cancellationToken);
-        if (!resp.IsSuccessStatusCode) {
-          return LlmResult.Fail($"HTTP {(int)resp.StatusCode}: {Truncate(text)}");
-        }
-        return ParseContent(text);
-      } catch (OperationCanceledException) {
-        return LlmResult.Fail("timeout");
-      } catch (Exception e) {
-        return LlmResult.Fail(e.Message);
-      }
+      var exchange = await OpenAiCompatible.PostAsync(
+          http, settings.BaseUrl, settings.ApiToken, body, cancellationToken);
+      return OpenAiCompatible.ToResult(exchange);
     }
-
-    private static JsonArray BuildMessages(IReadOnlyList<LlmMessage> messages) {
-      var arr = new JsonArray();
-      foreach (var m in messages) {
-        arr.Add(new JsonObject {
-          ["role"] = RoleName(m.Role),
-          ["content"] = m.Content,
-        });
-      }
-      return arr;
-    }
-
-    private static string RoleName(LlmRole role) => role switch {
-      LlmRole.System => "system",
-      LlmRole.Assistant => "assistant",
-      _ => "user",
-    };
 
     internal static bool IsDeepSeekModel(string model) =>
         model?.StartsWith("deepseek-", StringComparison.OrdinalIgnoreCase) == true;
@@ -105,21 +71,12 @@ namespace RabiRiichi.Server.Agents.Llm {
       _ => null,
     };
 
-    /// <summary> Extracts <c>choices[0].message.content</c> from the response. </summary>
-    public static LlmResult ParseContent(string json) {
-      try {
-        var node = JsonNode.Parse(json);
-        var content = node?["choices"]?[0]?["message"]?["content"]?.GetValue<string>();
-        if (string.IsNullOrWhiteSpace(content)) {
-          return LlmResult.Fail("empty response");
-        }
-        return LlmResult.Ok(content);
-      } catch (Exception e) {
-        return LlmResult.Fail($"parse error: {e.Message}");
-      }
-    }
-
-    private static string Truncate(string s) =>
-        string.IsNullOrEmpty(s) ? s : (s.Length <= 200 ? s : s[..200]);
+    /// <summary>
+    /// Extracts <c>choices[0].message.content</c>. Kept as a forwarding shim so
+    /// existing callers keep working; the implementation is shared with every
+    /// other OpenAI-dialect provider.
+    /// </summary>
+    public static LlmResult ParseContent(string json) =>
+        OpenAiCompatible.ParseContent(json);
   }
 }

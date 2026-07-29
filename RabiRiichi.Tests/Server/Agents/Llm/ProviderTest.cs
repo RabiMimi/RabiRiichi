@@ -133,6 +133,123 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
       Assert.IsFalse(OpenAiProvider.ParseContent("garbage").Success);
     }
 
+    // ---- Grok (xAI, OpenAI chat-completions dialect) ----
+
+    private static LlmSettings Grok(
+        string model = "grok-4.3",
+        LlmThinkingLevel thinking = LlmThinkingLevel.Minimal) => LlmSettings.FromProto(
+        new LlmAiConfig {
+          Provider = LlmProvider.Grok,
+          ApiToken = "xai-test",
+          Model = model,
+          Language = "en",
+        }, out _, thinking);
+
+    private const string GrokOk = "{\"choices\":[{\"message\":{\"content\":\"hi\"}}]}";
+
+    [TestMethod]
+    public async Task Grok_UsesTheXaiEndpointAndBearerAuth() {
+      var handler = new FakeHttpHandler(HttpStatusCode.OK, GrokOk);
+      var provider = new GrokProvider(handler.Client(), Grok());
+
+      var result = await provider.CompleteAsync(Messages, 100, CancellationToken.None);
+
+      Assert.IsTrue(result.Success);
+      Assert.AreEqual("hi", result.Content);
+      Assert.AreEqual("https://api.x.ai/v1/chat/completions",
+          handler.LastRequest.RequestUri.ToString());
+      Assert.AreEqual("Bearer xai-test",
+          handler.LastRequest.Headers.GetValues("Authorization").First());
+    }
+
+    [TestMethod]
+    public async Task Grok_SendsMaxCompletionTokensNotMaxTokens() {
+      // xAI deprecates max_tokens, and the replacement excludes reasoning
+      // tokens - which is what keeps a reasoning model from spending the whole
+      // budget on thoughts and returning no JSON.
+      var handler = new FakeHttpHandler(HttpStatusCode.OK, GrokOk);
+      var provider = new GrokProvider(handler.Client(), Grok());
+
+      await provider.CompleteAsync(Messages, 256, CancellationToken.None);
+
+      var sent = JsonNode.Parse(handler.LastRequestBody);
+      Assert.AreEqual(256, sent["max_completion_tokens"].GetValue<int>());
+      Assert.IsNull(sent["max_tokens"]);
+    }
+
+    [TestMethod]
+    public async Task Grok_AsksForTheLeastReasoningAtMinimal() {
+      // Omitting reasoning_effort on Grok means "the model's default", which can
+      // be the most expensive setting - the opposite of what an in-game seat
+      // working against an action timeout wants.
+      var handler = new FakeHttpHandler(HttpStatusCode.OK, GrokOk);
+      var provider = new GrokProvider(handler.Client(), Grok());
+
+      await provider.CompleteAsync(Messages, 100, CancellationToken.None);
+
+      var sent = JsonNode.Parse(handler.LastRequestBody);
+      Assert.AreEqual("none", sent["reasoning_effort"].GetValue<string>());
+    }
+
+    [TestMethod]
+    public async Task Grok_PassesThroughExplicitThinkingLevels() {
+      var handler = new FakeHttpHandler(HttpStatusCode.OK, GrokOk);
+      var provider = new GrokProvider(
+          handler.Client(), Grok(thinking: LlmThinkingLevel.High));
+
+      await provider.CompleteAsync(Messages, 100, CancellationToken.None);
+
+      var sent = JsonNode.Parse(handler.LastRequestBody);
+      Assert.AreEqual("high", sent["reasoning_effort"].GetValue<string>());
+    }
+
+    [TestMethod]
+    public async Task Grok_NeverSendsParametersReasoningModelsReject() {
+      var handler = new FakeHttpHandler(HttpStatusCode.OK, GrokOk);
+      var provider = new GrokProvider(handler.Client(), Grok());
+
+      await provider.CompleteAsync(Messages, 100, CancellationToken.None);
+
+      var sent = JsonNode.Parse(handler.LastRequestBody);
+      foreach (var rejected in new[] { "presence_penalty", "frequency_penalty", "stop" }) {
+        Assert.IsNull(sent[rejected], $"{rejected} is rejected by Grok reasoning models");
+      }
+    }
+
+    [TestMethod]
+    public async Task Grok_MinimumReasoningFollowsTheModelAllowlist() {
+      // "none" is only accepted by models documented to allow reasoning to be
+      // switched off. Everything else - including anything we have not heard of
+      // yet - falls back to "low", which every reasoning model accepts, so an
+      // unknown model degrades to "cheap" rather than to "rejected".
+      var cases = new[] {
+        ("grok-4.3", "none"),
+        ("GROK-4.3", "none"),
+        ("grok-4.3-fast", "none"),
+        ("grok-4.5", "low"),
+        ("grok-4.20-multi-agent", "low"),
+        ("grok-9-unreleased", "low"),
+        // A longer version number is a different family, not a variant.
+        ("grok-4.30", "low"),
+      };
+
+      foreach (var (model, expected) in cases) {
+        var handler = new FakeHttpHandler(HttpStatusCode.OK, GrokOk);
+        var provider = new GrokProvider(handler.Client(), Grok(model: model));
+
+        await provider.CompleteAsync(Messages, 100, CancellationToken.None);
+
+        var sent = JsonNode.Parse(handler.LastRequestBody);
+        Assert.AreEqual(expected, sent["reasoning_effort"].GetValue<string>(), model);
+      }
+    }
+
+    [TestMethod]
+    public void Grok_DefaultBaseUrlAndProviderTag() {
+      Assert.AreEqual("https://api.x.ai", LlmSettings.DefaultBaseUrl(LlmProvider.Grok));
+      Assert.AreEqual("grok", LlmDisplayName.ProviderTag(LlmProvider.Grok));
+    }
+
     // ---- Gemini (Interactions API, raw HTTP) ----
 
     private static LlmSettings Gemini() => LlmSettings.FromProto(

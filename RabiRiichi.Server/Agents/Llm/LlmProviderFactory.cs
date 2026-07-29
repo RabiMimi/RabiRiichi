@@ -22,6 +22,7 @@ namespace RabiRiichi.Server.Agents.Llm {
       return settings.Provider switch {
         ProtoLlmProvider.Openai => new OpenAiProvider(http, settings),
         ProtoLlmProvider.Gemini => new GeminiProvider(http, settings),
+        ProtoLlmProvider.Grok => new GrokProvider(http, settings),
         _ => throw new ArgumentOutOfRangeException(nameof(settings),
             $"Unsupported LLM provider: {settings.Provider}"),
       };
