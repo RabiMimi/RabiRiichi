@@ -18,10 +18,17 @@ namespace RabiRiichi.Server.Agents {
   /// Decision policy, in priority order:
   ///  - Win whenever a valid ron/tsumo is offered.
   ///  - When tenpai and menzen, declare riichi if the wait is worthwhile.
-  ///  - On a discard, balance hand efficiency (shanten / acceptance from the
-  ///    server-computed candidates) against safety versus riichi opponents.
-  ///  - Call (chii/pon/kan) only when it clearly advances a yaku-bearing hand;
-  ///    otherwise stay concealed.
+  ///  - On a discard, compare every option in points: what the resulting hand is
+  ///    worth times its chance of completing, minus the expected cost of dealing
+  ///    in with that tile. Push/fold falls out of that comparison.
+  ///  - Call (chii/pon/kan) only when the resulting hand can still reach the
+  ///    table's minimum yaku han and is worth opening for; otherwise stay
+  ///    concealed.
+  ///
+  /// Two engines back those decisions: <see cref="HandPlan"/> (which yaku a shape
+  /// can still reach, and therefore whether it can legally win under the min-han
+  /// rule) and <see cref="DefenseModel"/> (who looks tenpai, and what each tile
+  /// risks against them).
   /// </summary>
   public class RuleBasedAI(int id, Room room, UserStatus status = UserStatus.Playing)
       : AIAgent(id, room, status) {
