@@ -27,6 +27,8 @@ namespace RabiRiichi.Core.Setup {
       AddBasePattern<Base33332>();
       AddBasePattern<Base72>();
       AddBasePattern<Base13_1>();
+      AddBasePattern<BaseShiisanputa>();
+      AddBasePattern<BaseShiisuuputa>();
 
       // 1 han
       AddStdPattern<Chankan>();
@@ -44,6 +46,12 @@ namespace RabiRiichi.Core.Setup {
       AddStdPattern<YakuhaiHaku>();
       AddStdPattern<YakuhaiHatsu>();
       AddStdPattern<YakuhaiJikaze>();
+      AddStdPattern<TsubameGaeshi>();
+      AddStdPattern<Kanburi>();
+      AddStdPattern<Ryanankan>();
+      AddStdPattern<Chaopaikou>();
+      AddStdPattern<Chinpaikou>();
+      AddStdPattern<ShiiaruRaotai>();
 
       // 2 han
       AddStdPattern<Chiitoitsu>();
@@ -57,11 +65,18 @@ namespace RabiRiichi.Core.Setup {
       AddStdPattern<SanshokuDoukou>();
       AddStdPattern<Shousangen>();
       AddStdPattern<Toitoi>();
+      AddStdPattern<Shousanfon>();
+      AddStdPattern<Sanrenkou>();
+      AddStdPattern<Sanfonkou>();
+      AddStdPattern<Sanankan>();
+      AddStdPattern<Uumensai>();
 
       // 3 han
       AddStdPattern<Honitsu>();
       AddStdPattern<JunchanTaiyao>();
       AddStdPattern<Ryanpeikou>();
+      AddStdPattern<IsshokuSandoujun>();
+      AddStdPattern<Chinpeikou>();
 
       // 4 han+
       AddStdPattern<Chinitsu>();
@@ -88,6 +103,20 @@ namespace RabiRiichi.Core.Setup {
       AddStdPattern<Suukantsu>();
       AddStdPattern<Tenhou>();
       AddStdPattern<Tsuuiisou>();
+      AddStdPattern<Suurenkou>();
+      AddStdPattern<IsshokuYondoujun>();
+      AddStdPattern<Renhou>();
+      AddStdPattern<Daisharin>();
+      AddStdPattern<Daichikurin>();
+      AddStdPattern<Daisuurin>();
+      AddStdPattern<Shiisanputa>();
+      AddStdPattern<Shiisuuputa>();
+      AddStdPattern<Paarenchan>();
+      AddStdPattern<Benikujaku>();
+      AddStdPattern<Heiiisou>();
+      AddStdPattern<Daichiishin>();
+      AddStdPattern<IshiNoUeNiMoSannen>();
+      AddStdPattern<Katengecchi>();
 
       // Bonus pattern
       AddStdPattern<Akadora>();

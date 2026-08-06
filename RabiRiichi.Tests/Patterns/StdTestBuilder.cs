@@ -16,10 +16,11 @@ namespace RabiRiichi.Tests.Patterns {
     protected List<MenLike> groups = [];
     protected List<MenLike> fuuro = [];
     protected List<GameTile> freeTiles = [];
-    protected GameTile incoming;
+    public GameTile incoming;
     protected ScoreStorage scores = [];
     protected bool? forceMenzen = null;
-    protected readonly RabiMockGame mockGame = new();
+    protected bool forceWRiichi = false;
+    public readonly RabiMockGame mockGame = new();
     public readonly Mock<Player> currentPlayer;
     public readonly Mock<Player> anotherPlayer;
 
@@ -67,6 +68,14 @@ namespace RabiRiichi.Tests.Patterns {
     }
 
     /// <summary>
+    /// 强制标注两立直情况
+    /// </summary>
+    public StdTestBuilder ForceWRiichi(bool wRiichi) {
+      forceWRiichi = wRiichi;
+      return this;
+    }
+
+    /// <summary>
     /// 添加一组手牌
     /// </summary>
     /// <param name="tiles">手牌的面子</param>
@@ -102,12 +111,15 @@ namespace RabiRiichi.Tests.Patterns {
     /// </summary>
     /// <param name="shouldResolve">是否期望成功解析</param>
     public StdTestBuilder Resolve(bool shouldResolve) {
-      bool ret = V.Resolve(groups, new Hand {
+      var hand = new Hand {
         player = currentPlayer.Object,
         freeTiles = freeTiles,
         called = fuuro,
         menzen = forceMenzen ?? fuuro.All(fuuro => fuuro.IsClose),
-      }, incoming, scores);
+        wRiichi = forceWRiichi,
+      };
+      currentPlayer.Object.hand = hand;
+      bool ret = V.Resolve(groups, hand, incoming, scores);
       if (shouldResolve) {
         Assert.IsTrue(ret, "Expect resolve but failed");
       } else {

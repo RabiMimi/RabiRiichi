@@ -21,6 +21,18 @@ namespace RabiRiichi.Tests.Scenario {
 
     protected override void InitPatterns() {
       base.InitPatterns();
+      
+      // Remove all classical yaku (Koyaku) by default in scenario tests to preserve standard game expectations
+      var classicalYakuTypes = new HashSet<Type> {
+        typeof(TsubameGaeshi), typeof(Kanburi), typeof(Ryanankan), typeof(Chaopaikou), typeof(Chinpaikou),
+        typeof(Shousanfon), typeof(Sanrenkou), typeof(Sanfonkou), typeof(Sanankan), typeof(Uumensai),
+        typeof(IsshokuSandoujun), typeof(Chinpeikou),
+        typeof(Suurenkou), typeof(IsshokuYondoujun), typeof(Renhou), typeof(Daisharin), typeof(Daichikurin), typeof(Daisuurin),
+        typeof(Shiisanputa), typeof(Shiisuuputa), typeof(Paarenchan), typeof(Benikujaku), typeof(Heiiisou), typeof(Daichiishin),
+        typeof(IshiNoUeNiMoSannen), typeof(Katengecchi), typeof(ShiiaruRaotai)
+      };
+      
+      stdPatterns.RemoveAll(t => classicalYakuTypes.Contains(t) && !extraStdPatterns.Contains(t));
       stdPatterns.AddRange(extraStdPatterns);
     }
 
