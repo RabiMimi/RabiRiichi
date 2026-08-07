@@ -52,6 +52,14 @@ namespace RabiRiichi.Tests.Scenario {
       return info;
     }
 
+    /// <summary> 断言某役种未成立 </summary>
+    public static AgariInfo AssertNoYaku<T>(this AgariInfo info) where T : StdPattern {
+      Assert.IsNull(info.scores.Find((score) => score.Source is T),
+          $"yaku {typeof(T).Name} should not be present, got: "
+              + string.Join(", ", info.scores.Select(score => score.Source.name)));
+      return info;
+    }
+
     public static AgariInfo AssertYaku<T>(this AgariInfo info, int? han = null, int? fu = null, int? yakuman = null) where T : StdPattern {
       var yaku = info.scores.Find((score) => score.Source is T);
       Assert.IsNotNull(yaku, $"yaku {typeof(T).Name} not found");

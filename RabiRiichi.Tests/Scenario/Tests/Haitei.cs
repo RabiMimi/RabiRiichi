@@ -121,18 +121,18 @@ namespace RabiRiichi.Tests.Scenario.Tests {
     }
 
 
-    private class IshiueSannenSetup : RiichiSetup {
+    private class IshiNoUeNiMoSannenSetup : RiichiSetup {
       protected override void InitPatterns() {
         base.InitPatterns();
-        AddStdPattern<IshiueSannen>();
+        AddStdPattern<IshiNoUeNiMoSannen>();
       }
     }
 
     [TestMethod]
-    public async Task IshiueSannenWithAnkan() {
+    public async Task IshiNoUeNiMoSannenWithAnkan() {
       var scenario = new ScenarioBuilder()
           .WithConfig(config => config.Setup(
-              setup => setup.AddExtraStdPattern<IshiueSannen>()))
+              setup => setup.AddExtraStdPattern<IshiNoUeNiMoSannen>()))
           .WithPlayer(1, playerBuilder => playerBuilder
               .SetFreeTiles("9m111455667999s"))
           .WithWall(wall => wall.Reserve("9s").AddRinshan("9m"))
@@ -156,7 +156,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
       await scenario.AssertEvent<AgariEvent>(ev => ev.agariInfos
           .AssertTsumo(1)
           .AssertScore(yakuman: 1)
-          .AssertYaku<IshiueSannen>()
+          .AssertYaku<IshiNoUeNiMoSannen>()
       ).Resolve();
     }
     #endregion

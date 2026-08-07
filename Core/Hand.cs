@@ -112,8 +112,8 @@ namespace RabiRiichi.Core {
       riichiStick++;
     }
 
-    public void Play(GameTile tile, DiscardReason reason) {
-      tile.discardInfo = new DiscardInfo(player, reason, game.info.timeStamp.Next, jun);
+    public void Play(GameTile tile, DiscardReason reason, bool isRiichiDeclaration = false) {
+      tile.discardInfo = new DiscardInfo(player, reason, game.info.timeStamp.Next, jun, isRiichiDeclaration);
       tile.source = TileSource.Discard;
       freeTiles.Remove(tile);
       if (reason is not DiscardReason.Chankan and not DiscardReason.Pretend) {

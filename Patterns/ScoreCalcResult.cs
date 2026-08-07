@@ -14,8 +14,12 @@ namespace RabiRiichi.Patterns {
     [RabiBroadcast] public int yaku;
     /// <summary> 符 </summary>
     [RabiBroadcast] public int fu;
-    /// <summary> 役满数，不包含累计役满 </summary>
+    /// <summary> 役满数，不包含累计役满与奖励役满 </summary>
     [RabiBroadcast] public int yakuman;
+    /// <summary> 奖励役满数，计入点数但不满足番缚。与<see cref="han"/>和<see cref="yaku"/>的关系同理 </summary>
+    [RabiBroadcast] public int bonusYakuman;
+    /// <summary> 计入点数的役满总数 </summary>
+    public int TotalYakuman => yakuman + bonusYakuman;
     /// <summary> 计分选项 </summary>
     public ScoringOption scoringOption = option;
 
@@ -24,7 +28,7 @@ namespace RabiRiichi.Patterns {
       get {
         if (!scoringOption.HasAnyFlag(ScoringOption.Yakuman)) {
           // 青天井
-          return fu * (1L << (han + (yakuman * KAZOE_YAKUMAN_HAN) + 2));
+          return fu * (1L << (han + (TotalYakuman * KAZOE_YAKUMAN_HAN) + 2));
         }
         int finalYakuman = FinalYakuman;
         if (finalYakuman > 0) {
@@ -73,9 +77,10 @@ namespace RabiRiichi.Patterns {
     [RabiBroadcast]
     public int FinalYakuman => scoringOption.HasAnyFlag(ScoringOption.Yakuman)
         ? Math.Max(
-            scoringOption.HasAnyFlag(ScoringOption.MultipleYakuman) ? yakuman : Math.Min(1, yakuman),
+            scoringOption.HasAnyFlag(ScoringOption.MultipleYakuman) ? TotalYakuman : Math.Min(1, TotalYakuman),
             KazoeYakuman) : 0;
 
+    /// <summary> 是否满足番缚。奖励番与奖励役满（宝牌、八连荘）不计入 </summary>
     public bool IsValid(int minHan) {
       return yaku + (yakuman * KAZOE_YAKUMAN_HAN) >= minHan;
     }
@@ -101,6 +106,7 @@ namespace RabiRiichi.Patterns {
         Yaku = yaku,
         Fu = fu,
         Yakuman = yakuman,
+        BonusYakuman = bonusYakuman,
         KazoeYakuman = KazoeYakuman,
         FinalYakuman = FinalYakuman,
       };

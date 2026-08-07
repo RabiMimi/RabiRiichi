@@ -60,6 +60,9 @@ namespace RabiRiichi.Patterns {
           case ScoringType.Yakuman:
             result.yakuman += score.Val;
             break;
+          case ScoringType.BonusYakuman:
+            result.bonusYakuman += score.Val;
+            break;
           default:
             Logger.Warn($"未知的计分类型: {score.Type}");
             break;

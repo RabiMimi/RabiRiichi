@@ -4,8 +4,8 @@ using RabiRiichi.Patterns;
 
 namespace RabiRiichi.Tests.Patterns {
   [TestClass]
-  public class IshiueSannenTest {
-    protected StdPattern V { get; set; } = new IshiueSannen(null, null, null, null);
+  public class IshiNoUeNiMoSannenTest {
+    protected StdPattern V { get; set; } = new IshiNoUeNiMoSannen(null, null, null, null);
 
     [TestMethod]
     public void TestResolved() {

@@ -7,7 +7,8 @@ using System.Threading.Tasks;
 namespace RabiRiichi.Events.InGame.Listener {
   public static class DiscardTileListener {
     public static Task ExecuteDiscardTile(DiscardTileEvent ev) {
-      ev.player.hand.Play(ev.discarded, ev.reason);
+      // 必须早于荣和解析：燕返し判定的正是宣言牌被荣和的这一瞬间
+      ev.player.hand.Play(ev.discarded, ev.reason, ev is RiichiEvent);
       var resolvers = GetDiscardTileResolvers(ev.game);
       foreach (var resolver in resolvers) {
         resolver.Resolve(ev.player, ev.discarded, ev.waitEvent.inquiry);

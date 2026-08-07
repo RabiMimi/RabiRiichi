@@ -263,6 +263,7 @@ namespace RabiRiichi.Communication.Proto {
         Han = info.han,
         Fu = info.fu,
         Yakuman = info.yakuman,
+        BonusYakuman = info.bonusYakuman,
         Points = info.points,
         YakuHan = info.yaku,
         MaxHan = info.maxHan,

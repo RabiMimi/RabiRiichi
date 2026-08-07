@@ -44,6 +44,10 @@ namespace RabiRiichi.Tests.Patterns {
       anotherPlayer = new(MockBehavior.Loose, 1, mockGame.Object) {
         CallBase = true
       };
+      // 依赖 Game.IsFirstJun 的役种（人和等）需要各家手牌非空
+      foreach (var player in mockGame.Object.players) {
+        player.Reset();
+      }
     }
 
     /// <summary>
@@ -82,11 +86,12 @@ namespace RabiRiichi.Tests.Patterns {
     /// </summary>
     /// <param name="tiles">和牌的面子/雀头</param>
     /// <param name="incoming">和了牌</param>
-    public StdTestBuilder AddAgari(string tiles, string incoming, bool isTsumo = false, TileSource tileSource = TileSource.Wall, DiscardReason reason = DiscardReason.Draw) {
+    /// <param name="isRiichiDeclaration">和了牌是否是放铳者的立直宣言牌（燕返し用）</param>
+    public StdTestBuilder AddAgari(string tiles, string incoming, bool isTsumo = false, TileSource tileSource = TileSource.Wall, DiscardReason reason = DiscardReason.Draw, bool isRiichiDeclaration = false) {
       this.incoming = new GameTile(new Tile(incoming), -1) {
         player = currentPlayer.Object,
         discardInfo = isTsumo ? null
-              : new DiscardInfo(anotherPlayer.Object, reason, 0),
+              : new DiscardInfo(anotherPlayer.Object, reason, 0, 0, isRiichiDeclaration),
         source = tileSource,
       };
       var group = new Tiles(tiles).ToGameTileList();
@@ -134,7 +139,7 @@ namespace RabiRiichi.Tests.Patterns {
     /// 检查是否没有更多计分结果了
     /// </summary>
     public StdTestBuilder NoMore() {
-      Assert.IsTrue(scores.Count == 0, "Expect no more scores but found");
+      Assert.AreEqual(0, scores.Count, "Expect no more scores but found");
       return this;
     }
 
@@ -151,6 +156,14 @@ namespace RabiRiichi.Tests.Patterns {
     /// </summary>
     public StdTestBuilder MockGame(Action<RabiMockGame> action) {
       action(mockGame);
+      return this;
+    }
+
+    /// <summary>
+    /// 修改和了玩家的跨局状态
+    /// </summary>
+    public StdTestBuilder MockPlayer(Action<Player> action) {
+      action(currentPlayer.Object);
       return this;
     }
 

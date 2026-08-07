@@ -15,13 +15,16 @@ namespace RabiRiichi.Tests.Scenario {
       return actionCenter.CurrentInquiry;
     }
 
+    /// <summary> 启用一个默认不注册的役种 </summary>
     public void AddExtraStdPattern<T>() where T : StdPattern {
       extraStdPatterns.Add(typeof(T));
     }
 
     protected override void InitPatterns() {
       base.InitPatterns();
-      stdPatterns.AddRange(extraStdPatterns);
+      foreach (var type in extraStdPatterns) {
+        AddStdPattern(type);
+      }
     }
 
     protected override void RegisterEvents(EventBus eventBus) {

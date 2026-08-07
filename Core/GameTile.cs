@@ -4,12 +4,14 @@ using System;
 
 namespace RabiRiichi.Core {
   [RabiMessage]
-  public class DiscardInfo(Player fromPlayer, DiscardReason reason, int time, int jun = 0) {
+  public class DiscardInfo(Player fromPlayer, DiscardReason reason, int time, int jun = 0, bool isRiichiDeclaration = false) {
     /// <summary> 哪个玩家的弃牌 </summary>
     public readonly Player fromPlayer = fromPlayer;
     [RabiBroadcast] public readonly int from = fromPlayer?.id ?? -1;
     /// <summary> 弃牌原因 </summary>
     [RabiBroadcast] public readonly DiscardReason reason = reason;
+    /// <summary> 是否是立直宣言牌。此时立直尚未成立，燕返し据此判定 </summary>
+    public readonly bool isRiichiDeclaration = isRiichiDeclaration;
     /// <summary> 弃牌时间戳 </summary>
     [RabiBroadcast] public readonly int time = time;
     /// <summary> 弃牌时的巡目（从1开始）。手切/摸切可由此与牌的 drawnJun 比较推断 </summary>

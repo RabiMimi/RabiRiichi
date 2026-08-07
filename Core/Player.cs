@@ -13,6 +13,9 @@
     /// <summary> 点数 </summary>
     public long points = game.config.pointThreshold.initialPoints;
 
+    /// <summary> 庄家连庄和了的次数，用于八连荘。跨局累计，故不在<see cref="Reset"/>中重置 </summary>
+    public int agariStreak = 0;
+
     public int NextPlayerId => game.NextPlayerId(id);
     public int PrevPlayerId => game.PrevPlayerId(id);
     public Player NextPlayer => game.GetPlayer(NextPlayerId);

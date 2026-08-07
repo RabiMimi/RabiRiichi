@@ -13,7 +13,10 @@ namespace RabiRiichi.Actions {
     /// <summary> 记作役的番数（不含宝牌），用于番缚判定 </summary>
     public int yaku;
     public int fu;
+    /// <summary> 能满足番缚的役满数 </summary>
     public int yakuman;
+    /// <summary> 奖励役满，计入点数但不满足番缚 </summary>
+    public int bonusYakuman;
     public long points;
     /// <summary> 荣和/自摸中较高者的番数，含宝牌，役满按 13 番计 </summary>
     public int maxHan;
@@ -112,6 +115,7 @@ namespace RabiRiichi.Actions {
         yaku = ron?.yaku ?? 0,
         fu = ron?.fu ?? 0,
         yakuman = ron?.yakuman ?? 0,
+        bonusYakuman = ron?.bonusYakuman ?? 0,
         points = ron?.BaseScore ?? 0,
         maxHan = EffectiveHan(ceiling),
       };
@@ -124,11 +128,12 @@ namespace RabiRiichi.Actions {
     /// </summary>
     private static int EffectiveHan(ScoreCalcResult result) {
       if (result == null) return 0;
-      int yakumanHan = result.yakuman * ScoreCalcResult.KAZOE_YAKUMAN_HAN;
+      // 上限按点数算，奖励役满也计入
+      int yakumanHan = result.TotalYakuman * ScoreCalcResult.KAZOE_YAKUMAN_HAN;
       if (!result.scoringOption.HasAnyFlag(ScoringOption.Yakuman)) {
         return result.han + yakumanHan;
       }
-      return result.yakuman > 0 ? yakumanHan : result.han;
+      return result.TotalYakuman > 0 ? yakumanHan : result.han;
     }
 
     /// <summary> 有 discardInfo 即他家打出（荣和） </summary>

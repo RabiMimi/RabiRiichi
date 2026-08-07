@@ -46,7 +46,14 @@ namespace RabiRiichi.Core.Setup {
 
     /// <summary> 注册Std Pattern </summary>
     protected void AddStdPattern<T>() where T : StdPattern {
-      stdPatterns.Add(typeof(T));
+      AddStdPattern(typeof(T));
+    }
+
+    /// <summary> 注册Std Pattern。重复注册会被忽略 </summary>
+    protected void AddStdPattern(Type type) {
+      if (!stdPatterns.Contains(type)) {
+        stdPatterns.Add(type);
+      }
     }
 
     /// <summary> 移除Base Pattern </summary>

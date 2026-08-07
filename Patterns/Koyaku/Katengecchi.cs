@@ -3,13 +3,13 @@ using RabiRiichi.Generated.Patterns;
 using System.Collections.Generic;
 
 namespace RabiRiichi.Patterns {
-  public class IshiueSannen : StdPattern {
-    public IshiueSannen(AllBasePatterns allBasePatterns, DoubleRiichi doubleRiichi, HaiteiRaoyue haiteiRaoyue, HouteiRaoyui houteiRaoyui) {
+  /// <summary> 花天月地：牌山剩最后一张时开杠，以岭上牌自摸和了。役满 </summary>
+  public class Katengecchi : StdPattern {
+    public override PatternMask type => PatternMask.Luck;
+
+    public Katengecchi(AllBasePatterns allBasePatterns, RinshanKaihou rinshanKaihou) {
       BaseOn(allBasePatterns);
-      DependOn(doubleRiichi);
-      /// Cannot depend on these patterns because RinshanKaihou can be
-      /// combined with IshiueSannen but not HaiteiRaoyue.
-      After(haiteiRaoyue, houteiRaoyui);
+      DependOn(rinshanKaihou);
     }
 
     public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
