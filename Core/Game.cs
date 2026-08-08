@@ -39,7 +39,7 @@ namespace RabiRiichi.Core {
         throw new ArgumentException("config.actionCenter must be provided");
       }
       initialEvent = new(this);
-      var rand = new RabiRand(config.seed ?? (ulong)DateTimeOffset.Now.ToUnixTimeMilliseconds());
+      var rand = new RabiRand(config.seed ?? ((ulong)DateTimeOffset.Now.ToUnixTimeMilliseconds() ^ GetRandomSharedSeed()));
       var serviceCollection = new ServiceCollection();
 
       // Existing instances
@@ -85,6 +85,12 @@ namespace RabiRiichi.Core {
 
       // Custom setup
       config.setup.Setup(diContainer);
+    }
+
+    private static ulong GetRandomSharedSeed() {
+      byte[] bytes = new byte[8];
+      Random.Shared.NextBytes(bytes);
+      return BitConverter.ToUInt64(bytes, 0);
     }
 
     #region Internal

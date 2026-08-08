@@ -27,6 +27,7 @@ namespace RabiRiichi.Core.Setup {
       AddBasePattern<Base33332>();
       AddBasePattern<Base72>();
       AddBasePattern<Base13_1>();
+      AddBasePattern<BaseButa>();
 
       // 1 han
       AddStdPattern<Chankan>();
@@ -55,7 +56,6 @@ namespace RabiRiichi.Core.Setup {
       AddStdPattern<Sankantsu>();
       AddStdPattern<SanshokuDoujun>();
       AddStdPattern<SanshokuDoukou>();
-      AddStdPattern<JunchanTaiyao>();
       AddStdPattern<Shousangen>();
       AddStdPattern<Toitoi>();
 

@@ -4,14 +4,18 @@ using System;
 
 namespace RabiRiichi.Core {
   [RabiMessage]
-  public class DiscardInfo(Player fromPlayer, DiscardReason reason, int time) {
+  public class DiscardInfo(Player fromPlayer, DiscardReason reason, int time, int jun = 0, bool isRiichiDeclaration = false) {
     /// <summary> 哪个玩家的弃牌 </summary>
     public readonly Player fromPlayer = fromPlayer;
     [RabiBroadcast] public readonly int from = fromPlayer?.id ?? -1;
     /// <summary> 弃牌原因 </summary>
     [RabiBroadcast] public readonly DiscardReason reason = reason;
+    /// <summary> 是否是立直宣言牌。此时立直尚未成立，燕返し据此判定 </summary>
+    public readonly bool isRiichiDeclaration = isRiichiDeclaration;
     /// <summary> 弃牌时间戳 </summary>
     [RabiBroadcast] public readonly int time = time;
+    /// <summary> 弃牌时的巡目（从1开始）。手切/摸切可由此与牌的 drawnJun 比较推断 </summary>
+    [RabiBroadcast] public readonly int jun = jun;
   }
 
   [RabiMessage]
@@ -22,6 +26,8 @@ namespace RabiRiichi.Core {
       public readonly Player player = tile.player;
       public readonly DiscardInfo discardInfo = tile.discardInfo;
       public readonly int formTime = tile.formTime;
+      public readonly int drawnJun = tile.drawnJun;
+      public readonly int formJun = tile.formJun;
       public readonly TileSource source = tile.source;
 
       public void Dispose() {
@@ -29,6 +35,8 @@ namespace RabiRiichi.Core {
         gameTile.player = player;
         gameTile.discardInfo = discardInfo;
         gameTile.formTime = formTime;
+        gameTile.drawnJun = drawnJun;
+        gameTile.formJun = formJun;
         gameTile.source = source;
       }
     }
@@ -44,6 +52,10 @@ namespace RabiRiichi.Core {
     [RabiBroadcast] public DiscardInfo discardInfo;
     /// <summary> 该牌成为副露或暗杠的时间戳 </summary>
     [RabiBroadcast] public int formTime = -1;
+    /// <summary> 该牌被摸进手牌时摸牌者的巡目（从1开始），0表示从未被摸进手牌 </summary>
+    [RabiBroadcast] public int drawnJun = 0;
+    /// <summary>该牌从手牌构成副露或暗杠时的巡目（从1开始），0表示未从手牌构成副露</summary>
+    [RabiBroadcast] public int formJun = 0;
     /// <summary> 是否是自摸 </summary>
     public bool IsTsumo => discardInfo == null;
     [RabiBroadcast] public TileSource source = TileSource.Hand;

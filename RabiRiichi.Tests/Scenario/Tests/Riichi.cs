@@ -161,7 +161,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
           .WithPlayer(2, playerBuilder => {
             playerBuilder.SetFreeTiles("77s1234566789p1z");
           })
-          .WithWall(wall => wall.Reserve("7s"))
+          .WithWall(wall => wall.Reserve("7s").AddDoras("1z").AddUradoras("1z"))
           .Start(1);
 
       await RiichiWith(scenario, 1, "7s");

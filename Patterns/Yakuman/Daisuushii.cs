@@ -6,8 +6,10 @@ using System.Linq;
 
 namespace RabiRiichi.Patterns {
   public class Daisuushii : StdPattern {
-    public Daisuushii(Base33332 base33332) {
+    public Daisuushii(Base33332 base33332, Sanfonkou sanfonkou) {
       BaseOn(base33332);
+      // 大四喜的牌型同时满足三風刻
+      After(sanfonkou);
     }
 
     public override bool Resolve(List<MenLike> groups, Hand hand, GameTile incoming, ScoreStorage scores) {
@@ -16,6 +18,7 @@ namespace RabiRiichi.Patterns {
           .GroupBy(gr => gr.First.tile)
           .Count() == 4;
       if (flag) {
+        scores.Remove(afterPatterns);
         scores.Add(new Scoring(ScoringType.Yakuman, 2, this));
         return true;
       }
@@ -30,7 +33,7 @@ namespace RabiRiichi.Patterns {
         return false;
       }
       var lastGroup = windGroups[^1];
-      return PaoUtil.TryGetPaoPlayer(lastGroup, out int paoPlayer) ? ApplyPao(player, paoPlayer, 64000, scoreTransfers) : false;
+      return PaoUtil.TryGetPaoPlayer(lastGroup, out int paoPlayer) && ApplyPao(player, paoPlayer, 64000, scoreTransfers);
     }
   }
 }

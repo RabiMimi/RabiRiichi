@@ -1,19 +1,69 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using RabiRiichi.Actions;
 using RabiRiichi.Core.Config;
 using RabiRiichi.Server.Models;
 using RabiRiichi.Server.Agents;
 using RabiRiichi.Server.Generated.Messages;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace RabiRiichi.Tests.Server {
   [TestClass]
   public class RoomTest {
+    private sealed class ChatRecordingAi(int id, Room room)
+        : AIAgent(id, room, UserStatus.InRoom) {
+      public readonly List<int> ChatSenders = [];
+      public override AiType aiType => AiType.Dummy;
+
+      public override void OnChat(int senderId, string text, string sticker) {
+        ChatSenders.Add(senderId);
+      }
+
+      protected override InquiryResponse Decide(
+          MultiPlayerInquiry gameInquiry,
+          SinglePlayerInquiry playerInquiry,
+          TimeSpan remainingTimeout) => InquiryResponse.Default(Seat);
+    }
+
+    private Room activeRoom;
+
+    [TestCleanup]
+    public void Cleanup() {
+      if (activeRoom != null) {
+        var gameCtsField = typeof(Room).GetField("gameCts", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var gameCts = (System.Threading.CancellationTokenSource)gameCtsField?.GetValue(activeRoom);
+        gameCts?.Cancel();
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        while (activeRoom.game != null && watch.ElapsedMilliseconds < 1000) {
+          System.Threading.Thread.Sleep(10);
+        }
+        activeRoom = null;
+      }
+    }
+
+    [TestMethod]
+    public void AgentChatUsesTheEmittingAgentIdentity() {
+      var room = new Room(new Random(0), new GameConfig { playerCount = 4 });
+      var gemini = new ChatRecordingAi(-101, room);
+      var deepSeek = new ChatRecordingAi(-102, room);
+      var observer = new ChatRecordingAi(-103, room);
+      Assert.IsTrue(room.AddPlayer(gemini));
+      Assert.IsTrue(room.AddPlayer(deepSeek));
+      Assert.IsTrue(room.AddPlayer(observer));
+
+      room.SendAgentChat(gemini, "gemini message", null);
+      room.SendAgentChat(deepSeek, "deepseek message", null);
+
+      CollectionAssert.AreEqual(new[] { -101, -102 }, observer.ChatSenders);
+    }
+
     [TestMethod]
     public void TestGameStartsWhenAiAddedLast() {
       var rand = new Random(0);
       var config = new GameConfig { playerCount = 4 };
       var room = new Room(rand, config);
+      activeRoom = room;
 
       var user = new User { id = 1, nickname = "Human" };
 
@@ -46,6 +96,7 @@ namespace RabiRiichi.Tests.Server {
       var rand = new Random(0);
       var config = new GameConfig { playerCount = 4 };
       var room = new Room(rand, config);
+      activeRoom = room;
 
       var user = new User { id = 1, nickname = "Human" };
 
@@ -78,6 +129,7 @@ namespace RabiRiichi.Tests.Server {
       var rand = new Random(0);
       var config = new GameConfig { playerCount = 4 };
       var room = new Room(rand, config);
+      activeRoom = room;
 
       var user = new User { id = 1, nickname = "Human" };
       Assert.IsTrue(room.AddPlayer(user));
@@ -93,14 +145,20 @@ namespace RabiRiichi.Tests.Server {
       Assert.IsNotNull(room.game);
       Assert.AreEqual(UserStatus.Playing, user.status);
 
-      // Invoke private TryEndGame via reflection
-      var tryEndGameMethod = typeof(Room).GetMethod("TryEndGame", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-      Assert.IsNotNull(tryEndGameMethod);
-      var result = (bool)tryEndGameMethod.Invoke(room, null);
-      Assert.IsTrue(result);
+      // Cancel the game task to clean up.
+      var gameCtsField = typeof(Room).GetField("gameCts", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+      Assert.IsNotNull(gameCtsField);
+      var gameCts = (System.Threading.CancellationTokenSource)gameCtsField?.GetValue(room);
+      Assert.IsNotNull(gameCts);
+      gameCts.Cancel();
 
-      // After game ends, human should be InRoom
-      Assert.AreEqual(UserStatus.InRoom, user.status);
+      // Poll until human player transitions back to InRoom (indicating TryEndGame has run)
+      var watch = System.Diagnostics.Stopwatch.StartNew();
+      while (user.status == UserStatus.Playing && watch.ElapsedMilliseconds < 5000) {
+        System.Threading.Thread.Sleep(10);
+      }
+      Assert.AreEqual(UserStatus.InRoom, user.status, "Human player did not transition to InRoom in time");
+      Assert.IsNull(room.game, "Room.game was not cleared");
       
       // AIs should be Ready (with my proposed fix)
       var AIs = room.players.Where(p => p is not User).ToList();
@@ -136,6 +194,28 @@ namespace RabiRiichi.Tests.Server {
     }
 
     [TestMethod]
+    public void AiIdsAreNotReusedAfterRemoval() {
+      var room = new Room(new Random(0), new GameConfig { playerCount = 4 });
+      var first = new DefaultAI(room.AllocateAiId(), room, UserStatus.InRoom);
+      var second = new DefaultAI(room.AllocateAiId(), room, UserStatus.InRoom);
+      Assert.IsTrue(room.AddPlayer(first));
+      Assert.IsTrue(room.AddPlayer(second));
+
+      Assert.IsTrue(room.RemoveRoomPlayer(first));
+      var replacement = new DefaultAI(
+          room.AllocateAiId(), room, UserStatus.InRoom);
+      Assert.IsTrue(room.AddPlayer(replacement));
+
+      Assert.AreNotEqual(first.id, replacement.id);
+      Assert.AreNotEqual(second.id, replacement.id);
+      Assert.AreEqual(
+          room.players.Count,
+          room.players.Select(player => player.id).Distinct().Count());
+      Assert.IsFalse(room.AddPlayer(
+          new DefaultAI(second.id, room, UserStatus.InRoom)));
+    }
+
+    [TestMethod]
     public void TestRemoveRoomPlayerRejectsHumanPlayer() {
       var rand = new Random(0);
       var config = new GameConfig { playerCount = 4 };
@@ -154,6 +234,7 @@ namespace RabiRiichi.Tests.Server {
       var rand = new Random(0);
       var config = new GameConfig { playerCount = 4 };
       var room = new Room(rand, config);
+      activeRoom = room;
 
       var user = new User { id = 1, nickname = "Human" };
       Assert.IsTrue(room.AddPlayer(user));
@@ -170,6 +251,31 @@ namespace RabiRiichi.Tests.Server {
       Assert.IsNotNull(room.game);
       Assert.IsFalse(room.RemoveRoomPlayer(lastAi));
       Assert.IsTrue(room.players.Contains(lastAi));
+    }
+
+    [TestMethod]
+    public void LobbySeatsAndOwnerIgnoreStaleShuffledGameSeats() {
+      var room = new Room(new Random(0), new GameConfig { playerCount = 4 });
+      var first = new User { id = 1, nickname = "First" };
+      var second = new User { id = 2, nickname = "Second" };
+      Assert.IsTrue(room.AddPlayer(first));
+      Assert.IsTrue(room.AddPlayer(second));
+
+      // Simulate the shuffled array left behind by a completed game. Lobby
+      // seating and ownership must still follow room join order.
+      var seatsField = typeof(Room).GetField(
+          "seats",
+          System.Reflection.BindingFlags.NonPublic
+              | System.Reflection.BindingFlags.Instance);
+      Assert.IsNotNull(seatsField);
+      var staleSeats = (IPlayerAgent[])seatsField.GetValue(room);
+      staleSeats[0] = second;
+      staleSeats[1] = first;
+
+      Assert.AreEqual(0, room.SeatIndexOf(first));
+      Assert.AreEqual(1, room.SeatIndexOf(second));
+      Assert.IsTrue(room.IsRoomOwner(first));
+      Assert.IsFalse(room.IsRoomOwner(second));
     }
   }
 }

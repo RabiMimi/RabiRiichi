@@ -17,7 +17,7 @@ namespace RabiRiichi.Server.Services {
       if (rabiCtx == null) {
         return;
       }
-      if (!await rabiCtx.HandShake()) {
+      if (!await rabiCtx.VersionHandShake()) {
         rabiCtx.Close();
         return;
       }

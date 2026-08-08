@@ -28,7 +28,16 @@ namespace RabiRiichi.Server.Connections {
     /// Switch to a new context. Old connection will be closed.
     /// </summary>
     protected void SwitchContext(RabiStreamingContext newCts) {
-      Interlocked.Exchange(ref currentCtx, newCts)?.Close();
+      var oldCtx = Interlocked.Exchange(ref currentCtx, newCts);
+      if (oldCtx != null) {
+        _ = Task.Run(async () => {
+          try {
+            await oldCtx.CloseWithReason("Logged in from another client");
+          } catch {
+            oldCtx.Close();
+          }
+        });
+      }
     }
 
     /// <summary>
@@ -56,9 +65,7 @@ namespace RabiRiichi.Server.Connections {
     /// <param name="msg">Message to send</param>
     public void Queue(ServerMessageWrapper msg) {
       serverMsgs.TryAdd(msg.msg.Id, msg);
-      if (currentCtx != null) {
-        currentCtx.Queue(msg);
-      }
+      currentCtx?.Queue(msg);
     }
 
     /// <summary>

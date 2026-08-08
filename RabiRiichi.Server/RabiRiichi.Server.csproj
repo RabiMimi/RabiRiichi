@@ -4,7 +4,7 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>disable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Version>0.1.2</Version>
+    <Version>0.1.3</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,11 +13,14 @@
 
   <ItemGroup>
     <Protobuf ProtoRoot="..\Protos" Include="..\Protos\Server\**\*.proto" />
+    <EmbeddedResource Include="Agents\Llm\Prompts\*.md" />
+    <EmbeddedResource Include="Migrations\*.sql" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Grpc.AspNetCore" Version="2.46.0" />
+    <PackageReference Include="Grpc.AspNetCore" Version="2.80.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.2" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.2" />
   </ItemGroup>
 
 </Project>

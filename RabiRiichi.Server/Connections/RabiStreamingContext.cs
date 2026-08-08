@@ -118,6 +118,27 @@ namespace RabiRiichi.Server.Connections {
       cts.Cancel();
     }
 
+    /// <summary>
+    /// Closes the connection after sending a reason message.
+    /// </summary>
+    internal async Task CloseWithReason(string reason) {
+      if (IsClosing.Exchange(true)) {
+        return;
+      }
+      try {
+        var msg = ProtoUtils.CreateDto(new ServerErrorResponse {
+          Status = "Unauthenticated",
+          Message = reason
+        });
+        using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        await responseStream.WriteAsync(msg, timeoutCts.Token);
+      } catch {
+        // ignore write failures
+      }
+      cts.Cancel();
+    }
+
+
     private async Task SendMsgLoop() {
       while (true) {
         try {

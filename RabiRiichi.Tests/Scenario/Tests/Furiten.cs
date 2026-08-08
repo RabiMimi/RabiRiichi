@@ -232,6 +232,9 @@ namespace RabiRiichi.Tests.Scenario.Tests {
           .WithPlayer(1, player => {
             player.SetFreeTiles("123456789m11z34s");
           })
+          .WithPlayer(2, player => {
+            player.SetFreeTiles("2222333344445z");
+          })
           .WithWall(wall => {
             wall.Reserve("r52593s");
           })

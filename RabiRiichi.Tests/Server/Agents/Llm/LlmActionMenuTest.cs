@@ -1,0 +1,247 @@
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using RabiRiichi.Actions;
+using RabiRiichi.Core;
+using RabiRiichi.Generated.Core;
+using RabiRiichi.Patterns;
+using RabiRiichi.Server.Agents.Llm;
+using RabiRiichi.Tests.Scenario;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
+
+namespace RabiRiichi.Tests.Server.Agents.Llm {
+  [TestClass]
+  public class LlmActionMenuTest {
+    private static Game BuildGame(System.Action<ScenarioBuilder> configure) {
+      var builder = new ScenarioBuilder();
+      configure(builder);
+      Game game = null;
+      builder.Build(0).WithGame(g => game = g);
+      return game;
+    }
+
+    private static SinglePlayerInquiry InquiryWith(int seat, params IPlayerAction[] actions) {
+      var inquiry = new SinglePlayerInquiry(seat);
+      foreach (var a in actions) {
+        inquiry.AddAction(a);
+      }
+      return inquiry;
+    }
+
+    private static List<GameTile> KanTiles(string tile, bool claimed, bool added = false) {
+      var tiles = Enumerable.Range(0, 4)
+          .Select(i => new GameTile(new Tile(tile), i + 1) { formTime = added && i == 3 ? -1 : 5 })
+          .ToList();
+      if (claimed) {
+        tiles[0].discardInfo = new DiscardInfo(null, DiscardReason.None, 0);
+      }
+      return tiles;
+    }
+
+    [TestMethod]
+    public void Build_IncludesSkipAndConfirmActions() {
+      var winTile = new GameTile(new Tile("1p"), 1);
+      var ron = new RonAction(0, new ScoreStorage(), winTile);
+      var inquiry = InquiryWith(0, ron);
+
+      var menu = LlmActionMenu.Build(inquiry);
+
+      // Skip (implicit) + ron.
+      Assert.IsTrue(menu.Any(c => c.Kind == "skip"));
+      var ronChoice = menu.FirstOrDefault(c => c.Kind == "ron");
+      Assert.IsNotNull(ronChoice);
+      Assert.AreEqual(-1, ronChoice.OptionIndex);
+      // Confirm actions serialize to "{}".
+      Assert.AreEqual("{}", ronChoice.ToResponse(0).response);
+      Assert.AreEqual(inquiry.actions.IndexOf(ron), ronChoice.ActionIndex);
+    }
+
+    [TestMethod]
+    public void Build_DiscardOptionsAreEnumeratedWithNotation() {
+      var game = BuildGame(b => b
+          .WithPlayer(0, p => p.SetFreeTiles("123456789m1234p")));
+      var player = game.GetPlayer(0);
+      var hand14 = player.hand.freeTiles.ToList();
+      var play = new PlayTileAction(player, hand14, hand14[0]);
+      var inquiry = InquiryWith(0, play);
+
+      var menu = LlmActionMenu.Build(inquiry);
+      var discards = menu.Where(c => c.Kind == "discard").ToList();
+      Assert.AreEqual(hand14.Count, discards.Count);
+      // Each discard maps to an option index serialized as a bare int.
+      var first = discards[0];
+      Assert.AreEqual(first.OptionIndex.ToString(), first.ToResponse(0).response);
+      // Description carries tile notation.
+      StringAssert.Contains(discards[0].Description, "discard");
+    }
+
+    [TestMethod]
+    public void Build_LocalizesHonorNamesInActionDetails() {
+      var game = BuildGame(b => b
+          .WithPlayer(0, p => p.SetFreeTiles("123456789m1112z")));
+      var player = game.GetPlayer(0);
+      var hand14 = player.hand.freeTiles.ToList();
+      var play = new PlayTileAction(player, hand14, hand14[0]);
+
+      var menu = LlmActionMenu.Build(InquiryWith(0, play), "zhs");
+
+      Assert.IsTrue(menu.Any(choice =>
+          choice.Kind == "discard" &&
+          choice.Description.StartsWith("discard 2z(南风牌)")));
+    }
+
+    [TestMethod]
+    public void Build_ChoiceIdsAreContiguousAndStable() {
+      var game = BuildGame(b => b
+          .WithPlayer(0, p => p.SetFreeTiles("123456789m1234p")));
+      var player = game.GetPlayer(0);
+      var hand14 = player.hand.freeTiles.ToList();
+      var play = new PlayTileAction(player, hand14, hand14[0]);
+      var menu = LlmActionMenu.Build(InquiryWith(0, play));
+
+      for (int i = 0; i < menu.Count; i++) {
+        Assert.AreEqual(i, menu[i].Id);
+      }
+    }
+
+    [TestMethod]
+    public void ToResponse_ChoiceSerializesOptionIndex() {
+      var choice = new LlmChoice {
+        Id = 0, ActionIndex = 2, OptionIndex = 5, Kind = "discard",
+      };
+      var resp = choice.ToResponse(3);
+      Assert.AreEqual(3, resp.playerId);
+      Assert.AreEqual(2, resp.index);
+      Assert.AreEqual(JsonSerializer.Serialize(5), resp.response);
+    }
+
+    [TestMethod]
+    public void DescribeSelected_UsesChoiceSerializationAndReturnsActionDetails() {
+      var game = BuildGame(b => b
+          .WithPlayer(0, p => p.SetFreeTiles("123456789m1234p")));
+      var player = game.GetPlayer(0);
+      var hand14 = player.hand.freeTiles.ToList();
+      var inquiry = InquiryWith(0, new PlayTileAction(player, hand14, hand14[0]));
+      var choice = LlmActionMenu.Build(inquiry)
+          .First(c => c.Kind == "discard" && c.Description.Contains("1m"));
+
+      var description = LlmActionMenu.DescribeSelected(inquiry, choice.ToResponse(0));
+
+      Assert.AreEqual(choice.Description, description);
+      StringAssert.Contains(description, "1m");
+    }
+
+    [TestMethod]
+    public void DescribeAutomaticAction_RecognizesSingleForcedRiichiDiscard() {
+      var menu = new List<LlmChoice> {
+        new() { Kind = "discard", Description = "discard 7p" },
+      };
+
+      var note = LlmActionMenu.DescribeAutomaticAction(
+          selfRiichi: true, menu, "discard 7p");
+
+      Assert.AreEqual(
+          "You automatically discarded 7p after riichi because that was the only valid action.",
+          note);
+      menu.Add(new LlmChoice { Kind = "discard", Description = "discard 8p" });
+      Assert.IsNull(LlmActionMenu.DescribeAutomaticAction(
+          selfRiichi: true, menu, "discard 7p"));
+    }
+
+    [TestMethod]
+    public void Build_DistinguishesAnkanKakanAndDaiminkan() {
+      var kan = new KanAction(0, new List<List<GameTile>> {
+        KanTiles("1m", claimed: false),
+        KanTiles("2m", claimed: true, added: true),
+        KanTiles("3m", claimed: true),
+      });
+
+      var menu = LlmActionMenu.Build(InquiryWith(0, kan));
+
+      Assert.IsTrue(menu.Any(choice => choice.Kind == "ankan" &&
+          choice.Description.Contains("four matching tiles entirely")));
+      Assert.IsTrue(menu.Any(choice => choice.Kind == "kakan" &&
+          choice.Description.Contains("existing open pon")));
+      Assert.IsTrue(menu.Any(choice => choice.Kind == "daiminkan" &&
+          choice.Description.Contains("another player's discard")));
+
+      var chineseMenu = LlmActionMenu.Build(InquiryWith(0, kan), "zhs");
+      Assert.IsTrue(chineseMenu.Any(choice => choice.Kind == "ankan" &&
+          choice.Description.Contains("暗杠：不使用他家的弃牌")));
+      Assert.IsTrue(chineseMenu.Any(choice => choice.Kind == "kakan" &&
+          choice.Description.Contains("加杠：在自己已经碰出的明刻上")));
+      Assert.IsTrue(chineseMenu.Any(choice => choice.Kind == "daiminkan" &&
+          choice.Description.Contains("大明杠：用自己手里的三张相同牌")));
+    }
+
+    [TestMethod]
+    public void Build_DropsThePassOptionOnYourOwnTurn() {
+      // A turn inquiry carries a default skip action, but a tile must leave the
+      // hand: offering "pass" to the model would only invite an unplayable pick.
+      var game = BuildGame(b => b
+          .WithPlayer(0, p => p.SetFreeTiles("123456789m1234p")));
+      var player = game.GetPlayer(0);
+      var hand14 = player.hand.freeTiles.ToList();
+      var inquiry = InquiryWith(0, new PlayTileAction(player, hand14, hand14[0]));
+
+      Assert.IsTrue(inquiry.actions.Any(a => a is SkipAction),
+          "the inquiry itself still carries the engine's default skip");
+      var menu = LlmActionMenu.Build(inquiry);
+      Assert.IsFalse(menu.Any(c => c.Kind == "skip"));
+      for (int i = 0; i < menu.Count; i++) {
+        Assert.AreEqual(i, menu[i].Id, "ids stay contiguous after filtering");
+      }
+    }
+
+    [TestMethod]
+    public void Resolve_MapsAnIdToItsChoiceAndRejectsAnythingElse() {
+      var game = BuildGame(b => b
+          .WithPlayer(0, p => p.SetFreeTiles("123456789m1234p")));
+      var player = game.GetPlayer(0);
+      var hand14 = player.hand.freeTiles.ToList();
+      var menu = LlmActionMenu.Build(
+          InquiryWith(0, new PlayTileAction(player, hand14, hand14[0])));
+
+      Assert.AreEqual(menu[3], LlmActionMenu.Resolve(menu, 3));
+      Assert.IsNull(LlmActionMenu.Resolve(menu, menu.Count));
+      Assert.IsNull(LlmActionMenu.Resolve(menu, -1));
+      Assert.IsNull(LlmActionMenu.Resolve(menu, null));
+    }
+
+    [TestMethod]
+    public void Render_NumbersEveryChoiceAndMarksTheReference() {
+      var menu = new List<LlmChoice> {
+        new() { Id = 0, Kind = "discard", Description = "discard 1m" },
+        new() { Id = 1, Kind = "discard", Description = "discard 9p" },
+      };
+
+      var rendered = LlmActionMenu.Render(menu, menu[1]);
+
+      StringAssert.Contains(rendered, "[0] discard 1m");
+      StringAssert.Contains(rendered, "[1] discard 9p");
+      StringAssert.Contains(rendered, "reference move");
+      // Only the reference line is marked.
+      Assert.AreEqual(1, rendered.Split("reference move").Length - 1);
+    }
+
+    [TestMethod]
+    public void IsOutOfTurnCallInquiry_DetectsReactionsExceptRon() {
+      var daiminkan = new KanAction(0,
+          new List<List<GameTile>> { KanTiles("3m", claimed: true) });
+      Assert.IsTrue(LlmActionMenu.IsOutOfTurnCallInquiry(InquiryWith(0, daiminkan)));
+
+      var ankan = new KanAction(0,
+          new List<List<GameTile>> { KanTiles("1m", claimed: false) });
+      Assert.IsFalse(LlmActionMenu.IsOutOfTurnCallInquiry(InquiryWith(0, ankan)));
+
+      var chiiTiles = new List<GameTile> {
+        new(new Tile("1m"), 20), new(new Tile("2m"), 21), new(new Tile("3m"), 22),
+      };
+      var chii = new ChiiAction(0, new List<List<GameTile>> { chiiTiles });
+      Assert.IsTrue(LlmActionMenu.IsOutOfTurnCallInquiry(InquiryWith(0, chii)));
+
+      var ron = new RonAction(0, new ScoreStorage(), new GameTile(new Tile("3m"), 23));
+      Assert.IsFalse(LlmActionMenu.IsOutOfTurnCallInquiry(InquiryWith(0, chii, ron)));
+    }
+  }
+}

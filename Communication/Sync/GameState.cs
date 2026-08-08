@@ -10,8 +10,9 @@ using System.Linq;
 
 namespace RabiRiichi.Communication.Sync {
   [RabiMessage]
-  public class PlayerHandState(Hand hand, int playerId) : IRabiPlayerMessage {
-    public int playerId { get; init; } = playerId;
+  public class PlayerHandState(Hand hand, int ownerId) : IRabiPlayerMessage {
+    /// <summary> The id of the player who OWNS this hand (not the receiver). </summary>
+    public int playerId { get; init; } = ownerId;
     [RabiPrivate] public readonly List<GameTile> freeTiles = [.. hand.freeTiles];
     [RabiPrivate] public readonly GameTile pendingTile = hand.pendingTile;
     [RabiBroadcast] public readonly List<MenLike> called = [.. hand.called];
@@ -77,7 +78,10 @@ namespace RabiRiichi.Communication.Sync {
     public int playerId { get; init; } = receiverId;
     [RabiBroadcast] public readonly int id = player.id;
     [RabiBroadcast] public readonly long points = player.points;
-    [RabiBroadcast] public readonly PlayerHandState hand = new PlayerHandState(player.hand, receiverId);
+    // The hand is owned by `player`; reveal is decided against the OWNER id, not
+    // the receiver. Passing receiverId here made `reveal` always true, leaking
+    // every player's concealed hand to every viewer.
+    [RabiBroadcast] public readonly PlayerHandState hand = new(player.hand, player.id);
 
     public PlayerStateMsg ToProto(int playerId) {
       return new PlayerStateMsg {

@@ -263,8 +263,10 @@ namespace RabiRiichi.Communication.Proto {
         Han = info.han,
         Fu = info.fu,
         Yakuman = info.yakuman,
+        BonusYakuman = info.bonusYakuman,
         Points = info.points,
         YakuHan = info.yaku,
+        MaxHan = info.maxHan,
       };
     }
 
@@ -616,6 +618,7 @@ namespace RabiRiichi.Communication.Proto {
         From = info.from,
         Reason = info.reason,
         Time = info.time,
+        Jun = info.jun,
       };
     }
 
@@ -627,6 +630,8 @@ namespace RabiRiichi.Communication.Proto {
         FormTime = tile.formTime,
         Source = tile.source,
         DiscardInfo = ConvertDiscardInfo(tile.discardInfo),
+        DrawnJun = tile.drawnJun,
+        FormJun = tile.formJun,
       };
     }
 

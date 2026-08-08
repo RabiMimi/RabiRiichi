@@ -4,16 +4,19 @@
     <TargetFramework>net9.0</TargetFramework>
     <Platforms>AnyCPU;x86;x64</Platforms>
     <DebugType>portable</DebugType>
-    <Version>0.1.2</Version>
+    <Version>0.1.3</Version>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Remove="RabiRiichi.Server\**" />
     <Compile Remove="RabiRiichi.Tests\**" />
+    <Compile Remove="RabiRiichi.Arena\**" />
     <EmbeddedResource Remove="RabiRiichi.Server\**" />
     <EmbeddedResource Remove="RabiRiichi.Tests\**" />
+    <EmbeddedResource Remove="RabiRiichi.Arena\**" />
     <None Remove="RabiRiichi.Server\**" />
     <None Remove="RabiRiichi.Tests\**" />
+    <None Remove="RabiRiichi.Arena\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -21,8 +24,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Google.Protobuf" Version="3.21.1" />
-    <PackageReference Include="Grpc.Tools" Version="2.47.0">
+    <PackageReference Include="Google.Protobuf" Version="3.35.1" />
+    <PackageReference Include="Grpc.Tools" Version="2.82.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

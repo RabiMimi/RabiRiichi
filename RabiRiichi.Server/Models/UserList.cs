@@ -10,7 +10,9 @@ namespace RabiRiichi.Server.Models {
     public UserList() { }
 
     public bool Add(User user) {
-      user.id = idGenerator.Next;
+      if (user.id <= 0) {
+        user.id = idGenerator.Next;
+      }
       return users.TryAdd(user.id, user);
     }
 

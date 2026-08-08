@@ -1,6 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Actions;
 using RabiRiichi.Core;
+using RabiRiichi.Core.Config;
 using RabiRiichi.Tests.Scenario;
 using System.Linq;
 using System.Threading.Tasks;
@@ -79,6 +80,116 @@ namespace RabiRiichi.Tests.Actions {
         // yaku excludes dora; han includes any dora, so han >= yaku.
         Assert.IsTrue(info.han >= info.yaku,
             "han (yaku + dora) must be at least the yaku-only count");
+      }
+    }
+
+    [TestMethod]
+    public async Task TestTenpaiInfoCeilingReachesSuuankou() {
+      // Same four-triplet shanpon: ron floor is sanankou + toitoi, tsumo
+      // ceiling is suuankou, so the wait advertises a reachable yakuman.
+      var scenario = new ScenarioBuilder()
+          .WithPlayer(1, playerBuilder => {
+            playerBuilder.SetFreeTiles("111m222m333p44s55s");
+          })
+          .WithWall(wall => wall.Reserve("9m"))
+          .Start(1);
+
+      var matcher = await scenario.WaitInquiry();
+      var playerInquiry = matcher.inquiry.GetByPlayerId(1);
+      var playTileAction = (PlayTileAction)playerInquiry.actions.Find(a => a is PlayTileAction);
+      Assert.IsNotNull(playTileAction);
+
+      var candidate = playTileAction.candidates.FirstOrDefault(c => c.tile.tile.ToString() == "9m");
+      Assert.IsNotNull(candidate);
+      Assert.IsTrue(candidate.tenpaiInfos.Count > 0);
+
+      foreach (var info in candidate.tenpaiInfos) {
+        // A yakuman is worth 13 flat; regular han do not add to it.
+        Assert.AreEqual(13, info.maxHan,
+            $"wait {info.winningTile} should reach suuankou on tsumo");
+        Assert.AreEqual(0, info.yakuman,
+            $"wait {info.winningTile} must not guarantee a yakuman");
+      }
+    }
+
+    [TestMethod]
+    public async Task TestTenpaiInfoCeilingStacksYakumanUnderAotenjou() {
+      // Under aotenjou a yakuman is not a ceiling: it adds 13 han on top of the
+      // hand's own han, matching how BaseScore is computed.
+      var scenario = new ScenarioBuilder()
+          .WithConfig(config => config.SetScoringOption(ScoringOption.Aotenjou))
+          .WithPlayer(1, playerBuilder => {
+            playerBuilder.SetFreeTiles("111m222m333p44s55s");
+          })
+          .WithWall(wall => wall.Reserve("9m"))
+          .Start(1);
+
+      var matcher = await scenario.WaitInquiry();
+      var playerInquiry = matcher.inquiry.GetByPlayerId(1);
+      var playTileAction = (PlayTileAction)playerInquiry.actions.Find(a => a is PlayTileAction);
+      Assert.IsNotNull(playTileAction);
+
+      var candidate = playTileAction.candidates.FirstOrDefault(c => c.tile.tile.ToString() == "9m");
+      Assert.IsNotNull(candidate);
+      Assert.IsTrue(candidate.tenpaiInfos.Count > 0);
+
+      foreach (var info in candidate.tenpaiInfos) {
+        Assert.IsTrue(info.maxHan > 13,
+            $"wait {info.winningTile}: aotenjou should stack han onto the yakuman, got {info.maxHan}");
+      }
+    }
+
+    [TestMethod]
+    public async Task TestTenpaiInfoCeilingCountsMenzenTsumo() {
+      // No yakuman anywhere, but tsumo is worth one more han than ron.
+      var scenario = new ScenarioBuilder()
+          .WithPlayer(1, playerBuilder => {
+            playerBuilder.SetFreeTiles("234m567m234p567p5s");
+          })
+          .WithWall(wall => wall.Reserve("9m"))
+          .Start(1);
+
+      var matcher = await scenario.WaitInquiry();
+      var playerInquiry = matcher.inquiry.GetByPlayerId(1);
+      var playTileAction = (PlayTileAction)playerInquiry.actions.Find(a => a is PlayTileAction);
+      Assert.IsNotNull(playTileAction);
+
+      var candidate = playTileAction.candidates.FirstOrDefault(c => c.tile.tile.ToString() == "9m");
+      Assert.IsNotNull(candidate);
+      Assert.IsTrue(candidate.tenpaiInfos.Count > 0);
+
+      foreach (var info in candidate.tenpaiInfos) {
+        // Ron is tanyao; tsumo adds menzen tsumo, worth exactly one more han.
+        Assert.AreEqual(info.han + 1, info.maxHan,
+            $"wait {info.winningTile}: tsumo should add exactly one han");
+      }
+    }
+
+    [TestMethod]
+    public async Task TestTenpaiInfoCeilingHasNoTenhou() {
+      // The ceiling scores a tsumo, so guard that a dealer tenpai on the first
+      // jun still cannot pick up tenhou -- that draw has already passed.
+      var scenario = new ScenarioBuilder()
+          .WithPlayer(0, playerBuilder => {
+            playerBuilder.SetFreeTiles("234m567m234p567p5s");
+          })
+          .WithWall(wall => wall.Reserve("9m"))
+          .Start(0);
+
+      var matcher = await scenario.WaitInquiry();
+      var playerInquiry = matcher.inquiry.GetByPlayerId(0);
+      var playTileAction = (PlayTileAction)playerInquiry.actions.Find(a => a is PlayTileAction);
+      Assert.IsNotNull(playTileAction);
+
+      var candidate = playTileAction.candidates.FirstOrDefault(c => c.tile.tile.ToString() == "9m");
+      Assert.IsNotNull(candidate);
+      Assert.IsTrue(candidate.tenpaiInfos.Count > 0);
+
+      foreach (var info in candidate.tenpaiInfos) {
+        Assert.IsTrue(info.maxHan < 13,
+            $"wait {info.winningTile} must not count tenhou as reachable");
+        Assert.AreEqual(0, info.yakuman,
+            $"wait {info.winningTile} must not count tenhou in the floor");
       }
     }
   }

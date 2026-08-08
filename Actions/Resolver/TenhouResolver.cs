@@ -1,4 +1,4 @@
-﻿using RabiRiichi.Core;
+using RabiRiichi.Core;
 using RabiRiichi.Patterns;
 using System.Collections.Generic;
 
@@ -14,7 +14,8 @@ namespace RabiRiichi.Actions.Resolver {
     }
 
     protected override bool ResolveAction(Player player, GameTile incoming, MultiPlayerInquiry output) {
-      var freeTiles = player.hand.freeTiles;
+      var hand = player.hand;
+      var freeTiles = hand.freeTiles;
       ScoreStorage maxScore = null;
       GameTile maxTile = null;
       freeTiles.Add(incoming);
@@ -33,6 +34,7 @@ namespace RabiRiichi.Actions.Resolver {
         if (maxTile != incoming) {
           freeTiles.Remove(maxTile);
           freeTiles.Add(incoming);
+          hand.pendingTile = maxTile;
           incoming = maxTile;
         }
         output.Add(new TsumoAction(player.id, maxScore, incoming), true);

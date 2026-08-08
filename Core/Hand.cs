@@ -112,8 +112,8 @@ namespace RabiRiichi.Core {
       riichiStick++;
     }
 
-    public void Play(GameTile tile, DiscardReason reason) {
-      tile.discardInfo = new DiscardInfo(player, reason, game.info.timeStamp.Next);
+    public void Play(GameTile tile, DiscardReason reason, bool isRiichiDeclaration = false) {
+      tile.discardInfo = new DiscardInfo(player, reason, game.info.timeStamp.Next, jun, isRiichiDeclaration);
       tile.source = TileSource.Discard;
       freeTiles.Remove(tile);
       if (reason is not DiscardReason.Chankan and not DiscardReason.Pretend) {
@@ -133,6 +133,14 @@ namespace RabiRiichi.Core {
         tile.source = source;
         if (tile.formTime == -1) {
           tile.formTime = game.Time;
+          // A call advances the caller's jun immediately after the meld is
+          // formed; self-contained kans form during the current jun. Claimed
+          // discards retain their own discard jun instead of a form jun.
+          if (tile.discardInfo == null) {
+            tile.formJun = source is TileSource.Chii or TileSource.Pon or TileSource.Daiminkan
+                ? jun + 1
+                : jun;
+          }
         }
         Remove(tile);
       }

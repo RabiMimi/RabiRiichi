@@ -143,6 +143,57 @@ namespace RabiRiichi.Tests.Patterns {
     }
     #endregion
 
+    #region BonusYakuman
+    [TestMethod]
+    public void BonusYakumanScoresButDoesNotSatisfyMinHan() {
+      var result = Create();
+      result.bonusYakuman = 1;
+
+      Assert.AreEqual(8000, result.BaseScore, "奖励役满照常计点");
+      Assert.AreEqual(1, result.FinalYakuman);
+      Assert.IsFalse(result.IsValid(1), "无役的手牌不能仅凭奖励役满宣告和了");
+    }
+
+    [TestMethod]
+    public void BonusYakumanIsValidWithAnotherYaku() {
+      var result = Create(han: 1);
+      result.bonusYakuman = 1;
+
+      Assert.AreEqual(8000, result.BaseScore);
+      Assert.AreEqual(1, result.FinalYakuman);
+      Assert.IsTrue(result.IsValid(1), "手牌自带一番即可和了，再由奖励役满加成");
+    }
+
+    [TestMethod]
+    public void BonusYakumanStacksWithRealYakuman() {
+      var result = Create(yakuman: 1);
+      result.bonusYakuman = 1;
+
+      Assert.AreEqual(16000, result.BaseScore, "与真役满叠加为两倍役满");
+      Assert.AreEqual(2, result.FinalYakuman);
+      Assert.IsTrue(result.IsValid(1));
+    }
+
+    [TestMethod]
+    public void BonusYakumanRespectsNoMultipleYakuman() {
+      var result = Create(yakuman: 1,
+          option: ScoringOption.Default & ~ScoringOption.MultipleYakuman);
+      result.bonusYakuman = 1;
+
+      Assert.AreEqual(8000, result.BaseScore);
+      Assert.AreEqual(1, result.FinalYakuman);
+    }
+
+    [TestMethod]
+    public void BonusYakumanCountsUnderAotenjou() {
+      // 青天井下役满折算为13番
+      var result = Create(han: 0, fu: 20, option: ScoringOption.Aotenjou);
+      result.bonusYakuman = 1;
+
+      Assert.AreEqual(20L * (1L << 15), result.BaseScore);
+    }
+    #endregion
+
     #region Aotenjou
     [TestMethod]
     public void SuccessAotenjou() {

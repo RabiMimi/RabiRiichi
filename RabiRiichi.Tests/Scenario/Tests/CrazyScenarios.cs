@@ -49,6 +49,33 @@ namespace RabiRiichi.Tests.Scenario.Tests {
         Assert.AreEqual(-2405181685900L, ev.scoreChange.DeltaScore(3));
       }).Resolve();
     }
+
+    [TestMethod]
+    public async Task 天地创造() {
+      var all5z = new Tiles(System.Linq.Enumerable.Repeat(new Tile("5z"), 136));
+      var scenario = new ScenarioBuilder()
+          .WithConfig(config => config
+              .SetScoringOption(ScoringOption.Aotenjou)
+              .SetInitialTiles(all5z))
+          .WithState(state => state.SetRound(Wind.E, 0, 0))
+          .WithPlayer(0, playerBuilder => playerBuilder
+              .SetFreeTiles("55555555555555z"))
+          .SetFirstJun()
+          .Start(0);
+
+      var firstInquiry = await scenario.WaitInquiry();
+      firstInquiry.ForPlayer(0, playerInquiry => playerInquiry
+          .AssertAction<TsumoAction>(tenhou => scenario.WithPlayer(0, player =>
+              Assert.AreSame(tenhou.incoming, player.hand.pendingTile,
+                  "The tile scored as the Tenhou win must also be the pending draw.")))
+          .ChooseTiles<KanAction>("5555z"))
+          .AssertAutoFinish();
+
+      // Declining Tenhou in favor of ankan must leave a valid 13-tile hand for
+      // the replacement draw's resolvers.
+      (await scenario.WaitInquiry()).ForPlayer(0, playerInquiry =>
+          playerInquiry.AssertAction<PlayTileAction>());
+    }
     #endregion
   }
 }

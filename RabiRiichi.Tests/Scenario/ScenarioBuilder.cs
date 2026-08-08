@@ -41,9 +41,15 @@ namespace RabiRiichi.Tests.Scenario {
       }
       // Wall
       Assert.IsTrue(game.wall.NumRemaining >= 0, $"Wall remaining is {game.wall.NumRemaining} < 0");
-      Assert.AreEqual(Wall.NUM_DORA, game.wall.uradoras.Count, $"Wall uradoras count is {game.wall.uradoras.Count} != {Wall.NUM_DORA}");
-      Assert.AreEqual(Wall.NUM_DORA, game.wall.doras.Count, $"Wall doras count is {game.wall.doras.Count} != {Wall.NUM_DORA}");
+      Assert.IsTrue(game.wall.uradoras.Count is >= 3 and <= Wall.NUM_DORA,
+          $"Unexpected uradora count: {game.wall.uradoras.Count}");
+      Assert.IsTrue(game.wall.doras.Count is >= 3 and <= Wall.NUM_DORA,
+          $"Unexpected dora count: {game.wall.doras.Count}");
       Assert.IsTrue(game.wall.rinshan.Count <= game.wall.rinshanSize, $"Wall rinshan count is {game.wall.rinshan.Count} > {game.wall.rinshanSize}");
+      Assert.AreEqual(Wall.NUM_WANPAI,
+          game.wall.rinshan.Count + game.wall.doras.Count + game.wall.uradoras.Count
+              + game.wall.wanpaiFillers.Count,
+          "Wanpai must remain exactly 14 tiles");
     }
 
     /// <summary> 启用或禁用游戏询问玩家时的状态检查。默认启用 </summary>
@@ -357,6 +363,12 @@ namespace RabiRiichi.Tests.Scenario {
       /// <summary> 设置计分选项 </summary>
       public GameConfigBuilder SetScoringOption(ScoringOption option) {
         config.scoringOption = option;
+        return this;
+      }
+
+      /// <summary> 设置初始牌山 </summary>
+      public GameConfigBuilder SetInitialTiles(Tiles tiles) {
+        config.initialTiles = tiles;
         return this;
       }
 
@@ -700,7 +712,8 @@ namespace RabiRiichi.Tests.Scenario {
         }
         wall.Reset();
         var players = playerBuilders.Select(builder => builder.player).ToArray();
-        var allTiles = wall.doras.Concat(wall.uradoras).Concat(wall.rinshan).Concat(wall.remaining).ToList();
+        var allTiles = wall.doras.Concat(wall.uradoras).Concat(wall.rinshan)
+            .Concat(wall.wanpaiFillers).Concat(wall.remaining).ToList();
         wall.revealedDoraCount = revealedDoraCount;
         wall.revealedUradoraCount = revealedUradoraCount;
 
@@ -730,6 +743,7 @@ namespace RabiRiichi.Tests.Scenario {
         wall.doras.Clear();
         wall.uradoras.Clear();
         wall.rinshan.Clear();
+        wall.wanpaiFillers.Clear();
         wall.remaining.Clear();
         wall.doras.AddRange(doras.Select(Draw));
         wall.uradoras.AddRange(uradoras.Select(Draw));
@@ -786,10 +800,10 @@ namespace RabiRiichi.Tests.Scenario {
         }
 
         // Fill the rest of the tiles in wall
-        for (int i = doras.Count; i < Wall.NUM_DORA; i++) {
+        for (int i = doras.Count; i < wall.initialDoraCount; i++) {
           wall.doras.Add(DrawNext());
         }
-        for (int i = uradoras.Count; i < Wall.NUM_DORA; i++) {
+        for (int i = uradoras.Count; i < wall.initialDoraCount; i++) {
           wall.uradoras.Add(DrawNext());
         }
         for (int i = rinshan.Count; i < wall.rinshanSize; i++) {
@@ -798,6 +812,7 @@ namespace RabiRiichi.Tests.Scenario {
         wall.remaining.AddRange(allTiles);
         wall.remaining.Reverse();
         wall.rinshan.Reverse();
+        wall.RebuildInitialWall();
         return wall;
       }
     }

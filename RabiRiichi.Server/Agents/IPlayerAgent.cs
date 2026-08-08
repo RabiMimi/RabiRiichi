@@ -12,6 +12,7 @@ namespace RabiRiichi.Server.Agents {
     ServerPlayerStateMsg GetState();
     bool Transit(UserStatus expected, UserStatus next);
     void OnEvent(EventBase ev);
+    void OnChat(int senderId, string text, string sticker);
     void OnInquiry(MultiPlayerInquiry gameInquiry, SinglePlayerInquiry playerInquiry, TimeSpan remainingTimeout, Action<InquiryResponse> onResponse);
   }
 }

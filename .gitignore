@@ -351,3 +351,11 @@ MigrationBackup/
 *.psd
 dev/local/
 */dev/saves/
+
+# Test database
+*.db
+
+# Arena: local config (may contain secrets) and workspace (runtime artifacts)
+arena.config.json
+**/arena.config.json
+RabiRiichi.Arena/workspace/

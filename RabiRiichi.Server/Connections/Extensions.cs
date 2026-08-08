@@ -42,16 +42,23 @@ namespace RabiRiichi.Server.Connections {
       }
     }
 
-    public static async Task<bool> HandShake(this RabiStreamingContext ctx) {
-      var msg = ctx.connection.Queue(ProtoUtils.CreateDto(new ServerVersionCheckMsg {
+    /// <summary>
+    /// The single version-handshake routine shared by every connection: builds
+    /// the server version-check message, hands it to a transport-specific
+    /// <paramref name="exchange"/> that sends it and returns the client's reply
+    /// (or null on timeout/disconnect/no-reply), and validates that reply.
+    /// Returns false (caller should close) on any incompatible/missing reply.
+    /// </summary>
+    private static async Task<bool> VersionHandShake(
+        Func<ServerMessageDto, Task<ClientVersionCheckMsg>> exchange) {
+      var request = ProtoUtils.CreateDto(new ServerVersionCheckMsg {
         Game = ServerConstants.GAME,
         GameVersion = RabiRiichi.VERSION,
         Server = ServerConstants.SERVER,
         ServerVersion = ServerConstants.SERVER_VERSION,
         MinClientVersion = ServerConstants.MIN_CLIENT_VERSION,
-      }));
-      var inMsg = await msg.WaitResponse();
-      var reply = inMsg?.ClientMsg?.VersionCheckMsg;
+      });
+      var reply = await exchange(request);
       if (reply == null) {
         return false;
       }
@@ -59,6 +66,42 @@ namespace RabiRiichi.Server.Connections {
         return false;
       }
       return ServerUtils.IsServerVersionSupported(reply.MinServerVersion);
+    }
+
+    /// <summary>
+    /// Version handshake over the authenticated streaming connection, using its
+    /// message-queue + response correlation.
+    /// </summary>
+    public static Task<bool> VersionHandShake(this RabiStreamingContext ctx) {
+      return VersionHandShake(async request => {
+        var inMsg = await ctx.connection.Queue(request).WaitResponse();
+        return inMsg?.ClientMsg?.VersionCheckMsg;
+      });
+    }
+
+    /// <summary>
+    /// Version handshake over the raw (pre-streaming) public socket, used before
+    /// any public request (e.g. replay viewing) is served, so it is version-gated
+    /// too. Reads until the version-check reply arrives (ignoring anything the
+    /// client pipelined ahead of it) or the deadline hits.
+    /// </summary>
+    public static Task<bool> VersionHandShake(
+        this WebSockets.WebSocketAdapter adapter, TimeSpan timeout) {
+      return VersionHandShake(async request => {
+        using var cts = new CancellationTokenSource(timeout);
+        try {
+          await adapter.WriteAsync(request, cts.Token);
+          while (await adapter.MoveNext(cts.Token)) {
+            var reply = adapter.Current?.ClientMsg?.VersionCheckMsg;
+            if (reply != null) {
+              return reply;
+            }
+          }
+          return null;
+        } catch (OperationCanceledException) {
+          return null;
+        }
+      });
     }
 
     public static void AddRoomListeners(this User user, RoomTaskQueue taskQueue) {

@@ -5,7 +5,7 @@ using RabiRiichi.Patterns;
 namespace RabiRiichi.Tests.Patterns {
   [TestClass]
   public class ShousuushiiTest {
-    protected StdPattern V { get; set; } = new Shousuushii(null);
+    protected StdPattern V { get; set; } = new Shousuushii(null, null, null);
 
     [TestMethod]
     public void TestResolved() {

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using RabiRiichi.Server.Agents.Llm;
 using RabiRiichi.Server.Auth;
 using RabiRiichi.Server.Models;
 using RabiRiichi.Server.Services;
@@ -31,7 +32,13 @@ services.AddAuthorization();
 services.AddGrpc();
 services.AddControllers();
 
+// LLM AI: outbound HTTP + provider factory + config validator.
+services.AddHttpClient();
+services.AddSingleton<ILlmProviderFactory, LlmProviderFactory>();
+services.AddSingleton<LlmValidator>();
+
 // Objects for DI
+services.AddSingleton<DbService>();
 services.AddSingleton<RoomList>();
 services.AddSingleton<UserList>();
 services.AddSingleton<TokenService>();
@@ -47,11 +54,18 @@ if (replayOptions.IsEnabled && replayOptions.TTL.HasValue) {
   services.AddHostedService<ReplayCleanupService>();
 }
 
-services.AddSingleton(new Random(builder.Environment.IsDevelopment()
-    ? 0 : (int)(DateTimeOffset.Now.ToUnixTimeMilliseconds() & 0xffffffff)));
+services.AddSingleton(builder.Environment.IsDevelopment()
+    ? new Random(0) : Random.Shared);
 
 // Build app
 var app = builder.Build();
+
+app.Services.GetRequiredService<DbService>().InitializeDatabase();
+
+// Wire the LLM provider factory into the process-wide runtime so AI agents
+// (created outside a DI scope) share the app's HttpClient factory.
+LlmRuntime.Factory = app.Services.GetRequiredService<ILlmProviderFactory>();
+
 app.UseRouting();
 
 // Use cors

@@ -21,6 +21,19 @@ namespace RabiRiichi.Server.Models {
     private readonly Random rand = rand;
     public readonly ReplayStore replayStore = replayStore;
     private CancellationTokenSource gameCts;
+    private int nextAiId = -101;
+
+    /// <summary>
+    /// Allocates a room-lifetime AI identity. IDs are never reused, so removing
+    /// and replacing an AI cannot alias chat history or another active player.
+    /// Room mutations are serialized by RoomTaskQueue.
+    /// </summary>
+    public int AllocateAiId() {
+      while (players.Any(player => player.id == nextAiId)) {
+        nextAiId--;
+      }
+      return nextAiId--;
+    }
 
     private bool HasPlayer(IPlayerAgent player) {
       return players.Any(p => p == player);
@@ -59,27 +72,49 @@ namespace RabiRiichi.Server.Models {
     }
 
     public void BroadcastChatMessage(User sender, PlayerChatMessage chatMsg) {
+      BroadcastChat(sender.id, chatMsg.Text, chatMsg.Sticker);
+    }
+
+    /// <summary>
+    /// Broadcasts a chat message on behalf of an in-game agent (e.g. an LLM AI).
+    /// Same validation and fan-out as a human message. Safe to call from any
+    /// thread; it only enqueues to connections.
+    /// </summary>
+    public void SendAgentChat(IPlayerAgent sender, string text, string sticker) {
+      if (!HasPlayer(sender)) {
+        return;
+      }
+      BroadcastChat(sender.id, text, sticker);
+    }
+
+    private void BroadcastChat(int senderId, string text, string sticker) {
       if (isDestroyed) {
         return;
       }
 
       // Validate sticker path to avoid path traversal / external folder access
-      var sticker = chatMsg.Sticker;
       if (!string.IsNullOrEmpty(sticker)) {
-        if (sticker.Contains("..") || sticker.StartsWith("/") || sticker.StartsWith("\\") || System.IO.Path.IsPathRooted(sticker)) {
-          return;
+        if (sticker.Contains("..") || sticker.StartsWith('/') || sticker.StartsWith('\\') || Path.IsPathRooted(sticker)) {
+          sticker = null;
         }
       }
 
-      var broadcastMsg = new PlayerChatMessage {
-        SenderId = sender.id,
-      };
-
-      if (!string.IsNullOrEmpty(chatMsg.Text)) {
-        broadcastMsg.Text = chatMsg.Text;
+      if (string.IsNullOrEmpty(text) && string.IsNullOrEmpty(sticker)) {
+        return;
       }
-      if (!string.IsNullOrEmpty(chatMsg.Sticker)) {
-        broadcastMsg.Sticker = chatMsg.Sticker;
+
+      foreach (var player in players) {
+        player.OnChat(senderId, text, sticker);
+      }
+
+      var broadcastMsg = new PlayerChatMessage {
+        SenderId = senderId,
+      };
+      if (!string.IsNullOrEmpty(text)) {
+        broadcastMsg.Text = text;
+      }
+      if (!string.IsNullOrEmpty(sticker)) {
+        broadcastMsg.Sticker = sticker;
       }
 
       var msg = ProtoUtils.CreateDto(broadcastMsg);
@@ -136,6 +171,95 @@ namespace RabiRiichi.Server.Models {
         gameCts?.Dispose();
         gameCts = null;
       });
+      return true;
+    }
+
+    /// <summary>
+    /// Arena-only headless match runner (ARENA_DESIGN.md §10/§11b). Unlike the
+    /// normal <see cref="TryStartGame"/> lifecycle — which is private,
+    /// fire-and-forget, self-readies AIs for a next game, and saves the replay
+    /// with whatever seed the config carried — this drives exactly one game to
+    /// completion, uses an Arena-supplied <paramref name="gameId"/>, and invokes
+    /// <paramref name="beforeSaveReplay"/> AFTER the game finishes but BEFORE the
+    /// replay is saved. That hook is where the Arena stamps the real
+    /// <c>RabiRand.seed</c> into the replay log's config (the seed is left null
+    /// during play so agents never see it). The awaited task completes only after
+    /// the replay has been saved.
+    ///
+    /// The returned game is exposed via the <paramref name="onGameCreated"/>
+    /// callback (called synchronously before the game task starts) so the caller
+    /// can read post-game state (final points, the real seed) even though this
+    /// method intentionally does NOT null out <see cref="game"/> or re-ready the
+    /// agents afterwards — an eval room is single-use and owned by its EvalRoom.
+    ///
+    /// Requires all <see cref="config"/>.playerCount seats filled with agents
+    /// that are InRoom or Ready (this method transitions them to Playing itself,
+    /// so callers must NOT pre-ready via <see cref="GetReady"/> — that would
+    /// auto-start a normal game). Returns false if that precondition fails.
+    /// </summary>
+    public async Task<bool> RunHeadlessArenaMatch(
+        string gameId,
+        Action<Game> onGameCreated,
+        Action<Game, ServerActionCenter> beforeSaveReplay,
+        CancellationToken cancellationToken = default) {
+      if (isDestroyed
+          || game != null
+          || players.Count != config.playerCount
+          || players.Any(p => p.status is not (UserStatus.InRoom or UserStatus.Ready))) {
+        return false;
+      }
+      foreach (var player in players) {
+        // Normalize InRoom -> Ready first so the single transition target below
+        // is always Ready -> Playing.
+        if (player.status == UserStatus.InRoom) {
+          player.Transit(UserStatus.InRoom, UserStatus.Ready);
+        }
+        if (!player.Transit(UserStatus.Ready, UserStatus.Playing)) {
+          throw new InvalidOperationException(
+              "Player status transition failed, unexpected modification not guarded by lock?");
+        }
+      }
+      SetupSeat();
+      ServerActionCenter actionCenter = new(this);
+      config.actionCenter = actionCenter;
+      BroadcastRoomState();
+      using var linkedCts =
+          CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+      gameCts = linkedCts;
+      var startedGame = new Game(config);
+      game = startedGame;
+      if (!string.IsNullOrEmpty(gameId)) {
+        startedGame.info.gameId = gameId;
+      }
+      // Subscribe before Start so no early events are missed (mirrors TryStartGame).
+      startedGame.onGodViewEvent += actionCenter.CaptureGodViewEvent;
+      onGameCreated?.Invoke(startedGame);
+
+      try {
+        await startedGame.Start(gameCts.Token);
+      } catch (Exception ex) {
+        global::RabiRiichi.Utils.Logger.Warn("[Room] Arena game task faulted:");
+        global::RabiRiichi.Utils.Logger.Warn(ex);
+      }
+
+      // End-of-game hook (seed stamp) runs before the replay is persisted (§11b).
+      try {
+        beforeSaveReplay?.Invoke(startedGame, actionCenter);
+      } catch (Exception ex) {
+        global::RabiRiichi.Utils.Logger.Warn($"[Room] Arena beforeSaveReplay hook failed: {ex}");
+      }
+
+      if (replayStore != null && replayStore.IsEnabled) {
+        var log = actionCenter.GetReplayLog();
+        if (log != null) {
+          try {
+            replayStore.SaveReplay(log.GameId, log);
+          } catch (Exception ex) {
+            global::RabiRiichi.Utils.Logger.Warn($"Failed to save replay: {ex}");
+          }
+        }
+      }
+      gameCts = null;
       return true;
     }
 
@@ -202,7 +326,7 @@ namespace RabiRiichi.Server.Models {
       if (players.Count >= config.playerCount) {
         return false;
       }
-      if (players.Contains(player)) {
+      if (players.Contains(player) || players.Any(existing => existing.id == player.id)) {
         return false;
       }
       if (player is User user) {
@@ -262,10 +386,18 @@ namespace RabiRiichi.Server.Models {
     }
 
     public int SeatIndexOf(IPlayerAgent player) {
-      if (seats.Contains(player)) {
+      // The shuffled seat array is only authoritative while a player is
+      // actively playing. It intentionally remains populated after a game, so
+      // using it in the lobby would leak the previous game's random seating
+      // into room ownership and could make a later entrant appear to be seat 0.
+      if (player.status == UserStatus.Playing && seats.Contains(player)) {
         return Array.IndexOf(seats, player);
       }
       return players.IndexOf(player);
+    }
+
+    public bool IsRoomOwner(User user) {
+      return players.OfType<User>().FirstOrDefault() == user;
     }
 
     public IPlayerAgent GetPlayerBySeat(int seatIndex) {

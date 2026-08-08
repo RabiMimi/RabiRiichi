@@ -16,14 +16,21 @@ namespace RabiRiichi.Core {
     public const int NUM_DORA = 5;
     /// <summary> 基础岭上牌数量（不含拔北扩充） </summary>
     public const int NUM_RINSHAN = 4;
+    /// <summary> 三人麻将的初始岭上牌数量。 </summary>
+    public const int NUM_SANMA_RINSHAN = 8;
+    /// <summary> 固定王牌数量。 </summary>
+    public const int NUM_WANPAI = 14;
+    /// <summary> 三人麻将初始宝牌/里宝牌指示牌对数。 </summary>
+    public const int NUM_SANMA_INITIAL_DORA = 3;
     /// <summary>
-    /// 实际岭上牌数量。启用拔北时，每张可拔的北都需要一张额外岭上牌补充，
-    /// 因此岭上牌数量为基础值加上初始牌山中的北风数量。
+    /// 初始岭上牌数量：四人麻将四张，三人麻将八张。
     /// </summary>
-    public readonly int rinshanSize =
-        NUM_RINSHAN + (config.doraOption.HasFlag(DoraOption.Nukidora)
-            ? config.initialTiles.Count(t => t.IsSame(Tile.North))
-            : 0);
+    public readonly int rinshanSize = config.playerCount == 3
+        ? NUM_SANMA_RINSHAN
+        : NUM_RINSHAN;
+    public int initialDoraCount => config.playerCount == 3
+        ? NUM_SANMA_INITIAL_DORA
+        : NUM_DORA;
     /// <summary> 初始牌山全部136张牌的顺序 </summary>
     public List<GameTile> initialWall = [];
     /// <summary> 牌山剩下的牌 </summary>
@@ -34,6 +41,8 @@ namespace RabiRiichi.Core {
     public readonly ListStack<GameTile> doras = [];
     /// <summary> 里宝牌 </summary>
     public readonly ListStack<GameTile> uradoras = [];
+    /// <summary> 从海底端补入王牌、但不作为指示牌使用的牌。 </summary>
+    public readonly ListStack<GameTile> wanpaiFillers = [];
     /// <summary> 已翻的Dora数量 </summary>
     public int revealedDoraCount = 0;
     /// <summary> 已翻的里Dora数量 </summary>
@@ -43,9 +52,10 @@ namespace RabiRiichi.Core {
         remaining
         .Concat(rinshan)
         .Concat(doras.Skip(revealedDoraCount))
-        .Concat(uradoras);
+        .Concat(uradoras)
+        .Concat(wanpaiFillers);
     /// <summary> 牌山剩下的牌数 </summary>
-    public int NumRemaining => remaining.Count - (rinshanSize - rinshan.Count);
+    public int NumRemaining => remaining.Count;
     /// <summary> 是否到了海底 </summary>
     public bool IsHaitei => NumRemaining <= 0;
 
@@ -55,15 +65,41 @@ namespace RabiRiichi.Core {
       rinshan.Clear();
       doras.Clear();
       uradoras.Clear();
+      wanpaiFillers.Clear();
       idPool.Reset();
       revealedDoraCount = 0;
       revealedUradoraCount = 0;
-      remaining.AddRange(config.initialTiles.Select(tile => new GameTile(tile, idPool.GetID())));
-      rand.Shuffle(remaining);
-      rinshan.AddRange(remaining.PopMany(rinshanSize));
-      doras.AddRange(remaining.PopMany(NUM_DORA));
-      uradoras.AddRange(remaining.PopMany(NUM_DORA));
-      initialWall = BuildInitialWall();
+      var physicalWall = new ListStack<GameTile>(
+          config.initialTiles.Select(tile => new GameTile(tile, idPool.GetID())));
+      rand.Shuffle(physicalWall);
+      Logger.Assert(physicalWall.Count >= NUM_WANPAI,
+          $"Wall must contain at least {NUM_WANPAI} tiles");
+
+      // The shuffled list is the flattened physical wall after the break: live
+      // wall in draw order, followed by the fixed 14-tile dead wall.
+      initialWall = [.. physicalWall];
+      int deadWallStart = physicalWall.Count - NUM_WANPAI;
+      for (int i = deadWallStart - 1; i >= 0; i--) {
+        remaining.Add(physicalWall[i]);
+      }
+
+      // Physical order: (DoraN,UraN) ... (Dora1,Ura1).
+      for (int k = 1; k <= initialDoraCount; k++) {
+        int pair = initialDoraCount - k;
+        doras.Add(physicalWall[deadWallStart + pair * 2]);
+        uradoras.Add(physicalWall[deadWallStart + pair * 2 + 1]);
+      }
+
+      // Then (... R3,R4,R1,R2). Store in reverse draw order so Pop returns
+      // R1, R2, ... R8.
+      int rinshanStart = deadWallStart + initialDoraCount * 2;
+      int pairCount = rinshanSize / 2;
+      for (int n = rinshanSize; n >= 1; n--) {
+        int drawPair = (n - 1) / 2;
+        int physicalPair = pairCount - 1 - drawPair;
+        int physicalIndex = rinshanStart + physicalPair * 2 + (n - 1) % 2;
+        rinshan.Add(physicalWall[physicalIndex]);
+      }
     }
 
     /// <summary>
@@ -77,6 +113,10 @@ namespace RabiRiichi.Core {
     /// 其中 DoraK/UraK 为第K张（会）翻出的指示牌（Dora1最先翻），RinshanK 为第K张
     /// （会）摸出的岭上牌（Rinshan1最先摸）。岭上牌数量可变。
     /// </summary>
+    public void RebuildInitialWall() {
+      initialWall = BuildInitialWall();
+    }
+
     private List<GameTile> BuildInitialWall() {
       var result = new List<GameTile>();
       // 牌河（可摸区）：摸牌从 remaining 末尾开始，因此摸牌顺序 = remaining 反序。
@@ -84,7 +124,7 @@ namespace RabiRiichi.Core {
         result.Add(remaining[i]);
       }
       // 王牌：Dora5..Dora1 与 Ura5..Ura1 交错成墩（上=Dora，下=Ura）。
-      for (int k = NUM_DORA; k >= 1; k--) {
+      for (int k = doras.Count; k >= 1; k--) {
         result.Add(doras[k - 1]);
         result.Add(uradoras[k - 1]);
       }
@@ -156,7 +196,38 @@ namespace RabiRiichi.Core {
     public GameTile DrawRinshan() {
       var ret = rinshan.Pop();
       ret.source = TileSource.Wanpai;
+      ReplenishWanpai();
       return ret;
+    }
+
+    /// <summary>
+    /// Move the live wall's haitei tile to the indicator side after every
+    /// replacement draw, keeping the dead wall at 14 tiles. In sanma the first
+    /// four moved tiles become Ura4, Dora4, Ura5, Dora5 in physical order.
+    /// </summary>
+    private void ReplenishWanpai() {
+      Logger.Assert(remaining.Count > 0,
+          "Cannot replenish wanpai after the live wall is exhausted");
+      var tile = remaining[0];
+      remaining.RemoveAt(0);
+
+      // Pop has already removed this replacement tile, so the difference is the
+      // 1-based replacement-draw number: 1 after the first draw, up to 8.
+      int replacementDrawNumber = rinshanSize - rinshan.Count;
+      int missingSanmaIndicatorTiles = (NUM_DORA - initialDoraCount) * 2;
+      if (config.playerCount != 3
+          || replacementDrawNumber > missingSanmaIndicatorTiles) {
+        wanpaiFillers.Add(tile);
+        return;
+      }
+
+      // Expanding the dead wall leftward encounters each physical stack from
+      // bottom to top: Ura4, Dora4, then Ura5, Dora5.
+      if (replacementDrawNumber % 2 == 1) {
+        uradoras.Add(tile);
+      } else {
+        doras.Add(tile);
+      }
     }
 
     /// <summary>
@@ -189,6 +260,11 @@ namespace RabiRiichi.Core {
         doras[index] = newTile;
         return true;
       }
+      if ((index = wanpaiFillers.IndexOf(tile)) >= 0) {
+        remaining.RemoveAt(0);
+        wanpaiFillers[index] = newTile;
+        return true;
+      }
       return false;
     }
 
@@ -218,6 +294,10 @@ namespace RabiRiichi.Core {
       }
 
       if (Swap(target, targetIndex, uradoras, tile)) {
+        return;
+      }
+
+      if (Swap(target, targetIndex, wanpaiFillers, tile)) {
         return;
       }
 

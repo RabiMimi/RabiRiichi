@@ -74,6 +74,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
     }
 
     [TestMethod]
+    [Timeout(15000)]
     public async Task NextRoundAck_TimeoutProceeds() {
       // Set a short timeout (0.5 seconds) for testing
       var scenario = new ScenarioBuilder()

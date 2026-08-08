@@ -5,10 +5,7 @@ using RabiRiichi.Generated.Actions;
 using RabiRiichi.Generated.Events;
 using RabiRiichi.Generated.Core;
 using RabiRiichi.Communication.Proto;
-using RabiRiichi.Server.Generated.Messages;
-using RabiRiichi.Server.Generated.Rpc;
 using RabiRiichi.Server.Models;
-using System.Threading;
 
 namespace RabiRiichi.Server.Connections {
   public class ServerActionCenter(Room room) : IActionCenter {
@@ -21,6 +18,23 @@ namespace RabiRiichi.Server.Connections {
     private InquiryContext context;
     private GameLogMsg replayLog;
     private readonly object replayLock = new();
+    private int capturedEventCount;
+
+    /// <summary>
+    /// How many events have been captured into the replay log so far — i.e. the
+    /// index the NEXT captured event will occupy in the event-only stream a
+    /// replay viewer reconstructs (viewers keep <c>SingleLogMsg.event</c> entries
+    /// and drop inquiries). Exposed so out-of-band, non-replayable annotations
+    /// (the Arena's per-decision reasoning) can anchor themselves to an exact
+    /// replay position without being smuggled into the log itself.
+    /// </summary>
+    public int CapturedEventCount {
+      get {
+        lock (replayLock) {
+          return capturedEventCount;
+        }
+      }
+    }
 
     private void EndInquiry(InquiryContext context) {
       var oldContext = Interlocked.CompareExchange(ref this.context, null, context);
@@ -45,28 +59,60 @@ namespace RabiRiichi.Server.Connections {
         return;
       }
       lock (replayLock) {
-        if (replayLog == null) {
-          replayLog = new GameLogMsg {
-            GameId = room.game.info.gameId,
-            CreatedAtUnixMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-            Config = room.game.config.ToProto(),
-          };
-          foreach (var player in room.players) {
-            var playerState = player.GetState();
-            replayLog.Players.Add(new GameLogPlayerMsg {
-              Id = player.id,
-              Nickname = player.nickname,
-              Seat = player.Seat,
-              AiType = playerState.AiType
-            });
-          }
-          replayLog.PlayerLogs.Add(new PlayerLogMsg());
-        }
+        EnsureReplayLog();
         var revealedProto = room.game.SerializeProto<EventMsg>(ev, ProtoConverters.GOD_VIEW_PLAYER_ID);
         if (revealedProto != null) {
           replayLog.PlayerLogs[0].Logs.Add(new SingleLogMsg { Event = revealedProto });
+          capturedEventCount++;
         }
       }
+    }
+
+    /// <summary>
+    /// Captures the per-player inquiries of a single inquiry round into the
+    /// replay log, interleaved with events. Inquiries carry the tenpai waits
+    /// (candidate <c>tenpaiInfos</c>) that events do not, so the replay client
+    /// needs them to show the tenpai indicator. Each inquiry is serialized from
+    /// its own owner's seat, since waits are only computed for the acting
+    /// player. Called once per inquiry round (from <see cref="OnInquiry"/>), so
+    /// reconnect re-syncs (<see cref="SyncInquiryTo"/>) do not duplicate them.
+    /// </summary>
+    public void CaptureGodViewInquiry(MultiPlayerInquiry inquiry) {
+      if (room.replayStore == null || !room.replayStore.IsEnabled) {
+        return;
+      }
+      lock (replayLock) {
+        EnsureReplayLog();
+        foreach (var playerInquiry in inquiry.playerInquiries) {
+          var proto = room.game.SerializeProto<SinglePlayerInquiryMsg>(
+              playerInquiry, playerInquiry.playerId);
+          if (proto != null) {
+            replayLog.PlayerLogs[0].Logs.Add(new SingleLogMsg { Inquiry = proto });
+          }
+        }
+      }
+    }
+
+    /// <summary> Lazily creates the replay log. Must be called under replayLock. </summary>
+    private void EnsureReplayLog() {
+      if (replayLog != null) {
+        return;
+      }
+      replayLog = new GameLogMsg {
+        GameId = room.game.info.gameId,
+        CreatedAtUnixMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+        Config = room.game.config.ToProto(),
+      };
+      foreach (var player in room.players) {
+        var playerState = player.GetState();
+        replayLog.Players.Add(new GameLogPlayerMsg {
+          Id = player.id,
+          Nickname = player.nickname,
+          Seat = player.Seat,
+          AiType = playerState.AiType
+        });
+      }
+      replayLog.PlayerLogs.Add(new PlayerLogMsg());
     }
 
     public GameLogMsg GetReplayLog() {
@@ -114,6 +160,11 @@ namespace RabiRiichi.Server.Connections {
       }
       if (Interlocked.CompareExchange(ref context, ctx, null) != null) {
         throw new InvalidOperationException("Inquiry already in progress");
+      }
+      // Record the inquiry (with its tenpai waits) into the replay log before
+      // sending it out. Skip empty inquiries: they carry no actions/waits.
+      if (!inquiry.IsEmpty) {
+        CaptureGodViewInquiry(inquiry);
       }
       for (int i = 0; i < inquiry.playerInquiries.Count; i++) {
         var playerInquiry = inquiry.playerInquiries[i];

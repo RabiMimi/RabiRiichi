@@ -13,7 +13,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
   [TestClass]
   public class ScenarioNukiDora {
     private static ScenarioBuilder Builder(DoraOption dora = DoraOption.Nukidora) {
-      return new ScenarioBuilder().WithConfig(config => config.SetDoraOption(dora));
+      return new ScenarioBuilder(3).WithConfig(config => config.SetDoraOption(dora));
     }
 
     #region Basic pull

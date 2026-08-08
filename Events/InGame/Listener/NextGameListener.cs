@@ -1,4 +1,5 @@
 using RabiRiichi.Actions;
+using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
 using RabiRiichi.Utils;
 using System;
@@ -7,10 +8,20 @@ using System.Threading.Tasks;
 
 namespace RabiRiichi.Events.InGame.Listener {
   public static class NextGameListener {
+    /// <summary> 更新连庄和了次数。他家和牌或流局（含听牌连庄）都清零 </summary>
+    public static void UpdateAgariStreak(Game game, bool isRyuukyoku) {
+      foreach (var player in game.players) {
+        player.agariStreak = !isRyuukyoku && player.hand.agari && player.IsDealer
+            ? player.agariStreak + 1
+            : 0;
+      }
+    }
+
     public static Task PrepareNextGame(NextGameEvent ev) {
       var info = ev.game.info;
       var renchanPolicy = info.config.renchanPolicy;
       var cEv = (ConcludeGameEvent)ev.parent;
+      UpdateAgariStreak(ev.game, cEv.IsRyuukyoku);
       bool keepDealer = false;
       if (cEv.IsRyuukyoku) {
         if (renchanPolicy.HasAnyFlag(RenchanPolicy.MidGameRyuukyoku)) {

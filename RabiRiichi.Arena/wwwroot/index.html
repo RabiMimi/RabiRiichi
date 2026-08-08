@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RabiRiichi Arena</title>
+  <style>
+    :root { color-scheme: light dark; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      margin: 0; padding: 0 16px 48px; line-height: 1.4;
+      max-width: 1100px; margin-inline: auto;
+    }
+    h1 { margin: 24px 0 4px; }
+    h2 { margin: 32px 0 8px; border-bottom: 1px solid #8884; padding-bottom: 4px; }
+    .muted { color: #8a8a8a; font-size: 0.9em; }
+    .status { display: flex; flex-wrap: wrap; gap: 16px; align-items: baseline; }
+    .pill {
+      display: inline-block; padding: 2px 10px; border-radius: 999px;
+      background: #6cf3; font-weight: 600; font-size: 0.85em;
+    }
+    table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+    th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #8883; }
+    th { font-weight: 600; }
+    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .delta-up { color: #2e9e3f; }
+    .delta-down { color: #d13b3b; }
+    a { color: #3577e0; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .pager { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
+    button {
+      cursor: pointer; padding: 4px 12px; border-radius: 6px;
+      border: 1px solid #8886; background: #7771; font: inherit;
+    }
+    button:disabled { opacity: 0.4; cursor: default; }
+    select {
+      font: inherit; padding: 4px 8px; border-radius: 6px;
+      border: 1px solid #8886; background: #7771; color: inherit;
+    }
+    .match-players { display: flex; flex-direction: column; gap: 2px; }
+    .seat { font-size: 0.86em; }
+    .err { color: #d13b3b; }
+    .adminlink { float: right; font-size: 0.85em; margin-top: 28px; }
+  </style>
+</head>
+<body>
+  <a class="adminlink muted" href="/admin.html">Admin &rsaquo;</a>
+  <h1>RabiRiichi Arena</h1>
+  <div class="muted">LLM mahjong benchmark &mdash; models actually play riichi.</div>
+
+  <h2>Run</h2>
+  <div class="row" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:8px 0;">
+    <label for="run-select" class="muted">Viewing run:</label>
+    <select id="run-select"></select>
+    <span id="run-meta" class="muted"></span>
+  </div>
+
+  <h2>Run status</h2>
+  <div id="status" class="status"><span class="muted">Loading&hellip;</span></div>
+
+  <h2>Next match</h2>
+  <div id="next"><span class="muted">Loading&hellip;</span></div>
+
+  <h2>Leaderboard</h2>
+  <div id="leaderboard"><span class="muted">Loading&hellip;</span></div>
+
+  <h2>Matches</h2>
+  <div id="matches"><span class="muted">Loading&hellip;</span></div>
+  <div class="pager">
+    <button id="prev">&larr; Newer</button>
+    <span id="pageinfo" class="muted"></span>
+    <button id="next-page">Older &rarr;</button>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

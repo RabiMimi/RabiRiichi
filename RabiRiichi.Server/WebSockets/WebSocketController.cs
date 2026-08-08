@@ -16,7 +16,8 @@ namespace RabiRiichi.Server.WebSockets {
       InfoServiceImpl infoService,
       RoomServiceImpl roomService,
       UserServiceImpl userService,
-      ReplayStore replayStore) : ControllerBase {
+      ReplayStore replayStore,
+      DbService dbService) : ControllerBase {
     private readonly ILogger<WebSocketController> logger = logger;
     private readonly RoomTaskQueue taskQueue = taskQueue;
     private readonly TokenService tokenService = tokenService;
@@ -24,6 +25,7 @@ namespace RabiRiichi.Server.WebSockets {
     private readonly RoomServiceImpl roomService = roomService;
     private readonly UserServiceImpl userService = userService;
     private readonly ReplayStore replayStore = replayStore;
+    private readonly DbService dbService = dbService;
 
     private Task HandlePublic(Connection connection, ClientMessageDto msg) {
       return taskQueue.Execute(queue => {
@@ -33,6 +35,14 @@ namespace RabiRiichi.Server.WebSockets {
           } else if (msg.ClientRequest?.CreateUser != null) {
             var req = msg.ClientRequest.CreateUser;
             var res = userService.CreateUser(req, queue.userList);
+            connection.Queue(ProtoUtils.CreateDto(res, msg.Id));
+          } else if (msg.ClientRequest?.LoginUser != null) {
+            var req = msg.ClientRequest.LoginUser;
+            var res = userService.LoginUser(req, queue.userList);
+            connection.Queue(ProtoUtils.CreateDto(res, msg.Id));
+          } else if (msg.ClientRequest?.ChangePassword != null) {
+            var req = msg.ClientRequest.ChangePassword;
+            var res = userService.ChangePassword(req, queue.userList);
             connection.Queue(ProtoUtils.CreateDto(res, msg.Id));
           } else if (msg.ClientRequest?.GetReplay != null) {
             var req = msg.ClientRequest.GetReplay;
@@ -54,9 +64,19 @@ namespace RabiRiichi.Server.WebSockets {
       });
     }
 
-    private Task HandlePrivate(User user, Connection connection, ClientMessageDto msg) {
-      return taskQueue.Execute(queue => {
-        try {
+    private async Task HandlePrivate(User user, Connection connection, ClientMessageDto msg) {
+      try {
+        // AddAi is handled separately: LLM validation makes a network call that
+        // must NOT run inside the serialized room task queue (it would stall all
+        // rooms). AddAiAsync validates outside the queue and only queues the
+        // fast room mutation.
+        if (msg.ClientRequest?.AddAi != null) {
+          var res = await roomService.AddAiAsync(msg.ClientRequest.AddAi, user);
+          connection.Queue(ProtoUtils.CreateDto(res, msg.Id));
+          return;
+        }
+
+        await taskQueue.Execute(queue => {
           if (msg.ClientRequest?.CreateRoom != null) {
             connection.Queue(ProtoUtils.CreateDto(roomService.CreateRoom(msg.ClientRequest.CreateRoom, queue.roomList, user), msg.Id));
           } else if (msg.ClientRequest?.CreateUser != null) {
@@ -67,10 +87,6 @@ namespace RabiRiichi.Server.WebSockets {
             var req = msg.ClientRequest.JoinRoom;
             var res = roomService.JoinRoom(req, queue.roomList, user);
             connection.Queue(ProtoUtils.CreateDto(res, msg.Id));
-          } else if (msg.ClientRequest?.AddAi != null) {
-            var req = msg.ClientRequest.AddAi;
-            var res = roomService.AddAi(req, queue.roomList, user);
-            connection.Queue(ProtoUtils.CreateDto(res, msg.Id));
           } else if (msg.ClientRequest?.RemoveRoomPlayer != null) {
             var req = msg.ClientRequest.RemoveRoomPlayer;
             var res = roomService.RemoveRoomPlayer(req, queue.roomList, user);
@@ -79,14 +95,18 @@ namespace RabiRiichi.Server.WebSockets {
             var req = msg.ClientRequest.GetMyInfo;
             var res = userService.GetMyInfo(user);
             connection.Queue(ProtoUtils.CreateDto(res, msg.Id));
+          } else if (msg.ClientRequest?.UpdateProfile != null) {
+            var req = msg.ClientRequest.UpdateProfile;
+            var res = userService.UpdateProfile(req, user);
+            connection.Queue(ProtoUtils.CreateDto(res, msg.Id));
           }
-        } catch (RpcException e) {
-          connection.Queue(ProtoUtils.CreateDto(new ServerErrorResponse {
-            Status = e.Status.StatusCode.ToString(),
-            Message = e.Status.Detail,
-          }, msg.Id));
-        }
-      });
+        });
+      } catch (RpcException e) {
+        connection.Queue(ProtoUtils.CreateDto(new ServerErrorResponse {
+          Status = e.Status.StatusCode.ToString(),
+          Message = e.Status.Detail,
+        }, msg.Id));
+      }
     }
 
     private async Task<User> HandleSignIn(WebSocketAdapter adapter) {
@@ -114,18 +134,37 @@ namespace RabiRiichi.Server.WebSockets {
         return await FailSignIn();
       }
 
-      if (!tokenService.IsTokenValid(signIn.AccessToken, out var uid)) {
+      if (!tokenService.IsTokenValid(signIn.AccessToken, out var uid, out var tokenVersion)) {
+        return await FailSignIn();
+      }
+
+      // Validate the token version against the DB exactly once per connection.
+      // A password change bumps the stored version, invalidating older tokens.
+      // The DB read stays off the per-request hot path (only the JWT signature
+      // is checked there).
+      var dbUser = dbService.GetUserById(uid);
+      if (dbUser == null || dbUser.TokenVersion != tokenVersion) {
         return await FailSignIn();
       }
 
       var user = await taskQueue.Execute(queue => {
-        return queue.userList.Get(uid);
+        var u = queue.userList.Get(uid);
+        if (u == null) {
+          u = new User {
+            id = dbUser.Id,
+            nickname = dbUser.UserData.Nickname
+          };
+          u.AddRoomListeners(taskQueue);
+          queue.userList.Add(u);
+        }
+        return u;
       });
       if (user == null) {
         return await FailSignIn();
       }
-      await adapter.WriteAsync(ProtoUtils.CreateDto(
-          userService.GetMyInfo(user), current.Id));
+      var myInfo = userService.GetMyInfo(user);
+      myInfo.AccessToken = tokenService.BuildToken(user.id, dbUser.TokenVersion);
+      await adapter.WriteAsync(ProtoUtils.CreateDto(myInfo, current.Id));
       return user;
     }
 
@@ -135,6 +174,14 @@ namespace RabiRiichi.Server.WebSockets {
         using var webSocket =
             await HttpContext.WebSockets.AcceptWebSocketAsync();
         var adapter = new WebSocketAdapter(webSocket);
+
+        // Version-gate every connection, including the public one used for
+        // replays, before serving any request.
+        if (!await adapter.VersionHandShake(TimeSpan.FromSeconds(15))) {
+          await adapter.Close();
+          return;
+        }
+
         var connection = new Connection();
         void PublicListener(ClientMessageDto msg) {
           _ = HandlePublic(connection, msg);
@@ -199,7 +246,7 @@ namespace RabiRiichi.Server.WebSockets {
           user.connection.OnReceive += PublicListener;
           user.connection.OnReceive += UserListener;
 
-          if (!await rabiCtx.HandShake()) {
+          if (!await rabiCtx.VersionHandShake()) {
             rabiCtx.Close();
             return;
           }
