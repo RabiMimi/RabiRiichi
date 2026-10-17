@@ -102,10 +102,10 @@ namespace RabiRiichi.Actions {
     /// </summary>
     public static TenpaiInfo ComputeTenpaiInfo(
         PatternResolver patternResolver, Hand hand, Tile winTile) {
-      const PatternMask mask = PatternMask.Regular | PatternMask.Bonus;
-
-      var ron = patternResolver.ResolveMaxScore(hand, RonTile(winTile), mask)?.result;
-      var tsumo = patternResolver.ResolveMaxScore(hand, TsumoTile(winTile), mask)?.result;
+      var ron = patternResolver.ResolveMaxScore(
+          hand, RonTile(winTile), PatternMask.All, excludedMask: PatternMask.Luck)?.result;
+      var tsumo = patternResolver.ResolveMaxScore(
+          hand, TsumoTile(winTile), PatternMask.All, excludedMask: PatternMask.Luck)?.result;
       // 自摸要靠自己摸上来，只有荣和算保底。
       var ceiling = Better(ron, tsumo);
 

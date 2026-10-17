@@ -25,11 +25,17 @@ namespace RabiRiichi.Patterns {
       public Hand hand;
       public GameTile incoming;
       public BasePattern basePattern;
+      public PatternMask excludedMask;
       public readonly HashSet<StdPattern> stdSuccess = [];
       public readonly HashSet<StdPattern> stdFailure = [];
     }
 
     private bool ResolveStdPattern(ResolutionContext context, StdPattern pattern, ScoreStorage scores) {
+      // Exclusions also apply when a pattern is reached through a dependency.
+      if (pattern.type.HasAnyFlag(context.excludedMask)) {
+        return false;
+      }
+
       // 检查是否已经计算过
       if (context.stdSuccess.Contains(pattern)) {
         return true;
@@ -71,10 +77,13 @@ namespace RabiRiichi.Patterns {
     /// <summary>
     /// 检查是否和牌并计算得分最高的牌型
     /// </summary>
-    public ScoreStorage ResolveMaxScore(Hand hand, GameTile incoming, PatternMask patternMask) {
+    /// <param name="excludedMask">匹配任意排除标记的役种不参与计算，优先于包含标记</param>
+    public ScoreStorage ResolveMaxScore(Hand hand, GameTile incoming, PatternMask patternMask,
+        PatternMask excludedMask = PatternMask.None) {
       var context = new ResolutionContext {
         hand = hand,
-        incoming = incoming
+        incoming = incoming,
+        excludedMask = excludedMask,
       };
 
       IEnumerable<ScoreStorage> CalculateScores(BasePattern pattern) {

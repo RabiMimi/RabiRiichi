@@ -5,7 +5,8 @@ using System.Linq;
 
 namespace RabiRiichi.Patterns {
   public class Uradora : StdPattern {
-    public override PatternMask type => PatternMask.Bonus;
+    // Hidden bonus han must be excluded from tenpai previews.
+    public override PatternMask type => PatternMask.Bonus | PatternMask.Luck;
 
     public Uradora(AllBasePatterns allBasePatterns) {
       BaseOn(allBasePatterns);
