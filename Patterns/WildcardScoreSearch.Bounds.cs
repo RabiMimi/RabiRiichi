@@ -48,7 +48,8 @@ namespace RabiRiichi.Patterns {
     private bool CanPrune(BasePattern family, int remainingMelds) {
       // Built-in bonus-only rules depend solely on physical tiles and context;
       // all their interpretations have the same score and no qualifying yaku.
-      if ((mask & ~PatternMask.Bonus) == 0) {
+      // A RuleYaku may be typed Bonus yet depend on the interpretation.
+      if ((mask & ~PatternMask.Bonus) == 0 && boundCustom.Length == 0) {
         if (minHan > 0) return true;
         bool allFound = true;
         foreach (var q in queries) allFound &= q.Found;
@@ -251,9 +252,37 @@ namespace RabiRiichi.Patterns {
       // value-honor triplet. Alternatively an all-honor target has no flush han.
       if (family is Base33332 && suits == 0 && flushHan > 0)
         han -= Math.Min(flushHan, remaining > 0 ? maxWeight : flushHan);
+      // A RuleYaku contributes its full (nonnegative) value unless its condition
+      // fails in every completion of this target.
+      int customBonus = 0;
+      if (boundCustom.Length > 0) {
+        PreparePartial(family, present, remaining, q);
+        foreach (var rule in boundCustom) {
+          if (!rule.Condition.MayHold(partialView)) continue;
+          var v = rule.Score(hand);
+          han += v.Yaku; customBonus += v.Han - v.Yaku; fu += v.Fu;
+          yakuman += v.Yakuman; bonusYakuman += v.BonusYakuman;
+        }
+      }
       // Count only active bonus rules; dependency-only registered bonus rules may
       // also be reached, hence the intentionally broad registered-pattern set.
-      return new(han + Bonus(q), han, fu, yakuman, bonusYakuman);
+      return new(han + customBonus + Bonus(q), han, fu, yakuman, bonusYakuman);
+    }
+
+    private void PreparePartial(BasePattern family, ulong present, int remainingMelds, Query q) {
+      partialView.SetContext(hand, q.Incoming);
+      partialView.Set(groups, count, targets, lockedCounts, required, natural, q.Index, present);
+      int tiles = 0; bool pair = false;
+      for (int n = 0; n < count; n++) { tiles += groups[n].Count; pair |= groups[n].Kind == CompactMeldKind.Pair; }
+      switch (family) {
+        case Base33332: partialView.SetRemaining(remainingMelds, pair ? 0 : 1, 0, remainingMelds * 3 + (pair ? 0 : 2)); break;
+        // Seven-pair and orphan searches pass no meld count; derive capacity from the placed groups.
+        case Base72: partialView.SetRemaining(0, 7 - count, 0, (7 - count) * 2); break;
+        case Base13_1: partialView.SetRemaining(0, 0, 0, 0); break;
+        default:
+          int left = Game.HAND_SIZE + 1 - tiles;
+          partialView.SetRemaining(0, pair || left < 2 ? 0 : 1, left, left); break;
+      }
     }
 
     private int Bonus(Query q) => q.Dora * doraFactor + q.Aka * akaFactor

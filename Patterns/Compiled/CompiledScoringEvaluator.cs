@@ -9,7 +9,8 @@ using System.Numerics;
 
 namespace RabiRiichi.Patterns.Compiled {
   // Rule IDs are compiled once, rather than resolving types or invoking LINQ
-  // callbacks for each candidate. Unknown user-defined rules use the legacy path.
+  // callbacks for each candidate. RuleYaku nodes test their condition instead;
+  // other user-defined rules use the legacy path.
   internal enum YakuRule {
     Unknown, Chankan, HaiteiRaoyue, HouteiRaoyui, Iipeikou, Ippatsu,
     MenzenchinTsumohou, Pinfu, Riichi, RinshanKaihou, Tanyao,
@@ -36,13 +37,16 @@ namespace RabiRiichi.Patterns.Compiled {
     private sealed class Node {
       internal StdPattern Pattern;
       internal YakuRule Rule;
-      internal bool Registered, RemovesAfter;
-      internal int[] Ancestors, Required;
+      internal RuleYaku Custom;
+      internal bool Registered;
+      internal int[] Ancestors, Required, Removes;
     }
     private readonly Node[] nodes;
     private readonly int[] roots;
+    private readonly bool hasCustom;
     private readonly byte[] state;
     private readonly CompactScore[] contributions;
+    private readonly WinView view = new();
     private CompactScore total;
     private BasePattern basePattern;
     private Hand hand;
@@ -68,17 +72,23 @@ namespace RabiRiichi.Patterns.Compiled {
       for (int i = 0; i < nodes.Length; i++) {
         var p = patterns[i];
         var rule = YakuRule.Unknown;
-        bool known = p.GetType().Assembly == typeof(StdPattern).Assembly
+        var custom = p as RuleYaku;
+        bool known = custom != null || p.GetType().Assembly == typeof(StdPattern).Assembly
             && Enum.TryParse(p.GetType().Name, out rule) && rule != YakuRule.Unknown;
-        if (!known || p.hasCustomPredicate) { unsupported.Add(p); rule = YakuRule.Unknown; }
+        if (!known || p.hasCustomPredicate) { unsupported.Add(p); rule = YakuRule.Unknown; custom = null; }
+        // The graph below is read once; later edits to the rule would silently diverge.
+        custom?.Freeze();
+        var ancestors = p.afterPatterns.Select(q => patterns.IndexOf(q)).ToArray();
         nodes[i] = new Node {
-          Pattern = p, Rule = rule, Registered = active.Contains(p),
-          Ancestors = p.afterPatterns.Select(q => patterns.IndexOf(q)).ToArray(),
-          RemovesAfter = RemovesAfter(rule),
+          Pattern = p, Rule = rule, Custom = custom, Registered = active.Contains(p),
+          Ancestors = ancestors,
+          Removes = custom != null ? custom.Replaced.Select(q => patterns.IndexOf(q)).ToArray()
+              : RemovesAfter(rule) ? ancestors : [],
           // Read from DependOn so the compiled graph cannot drift from the pattern classes.
           Required = p.dependencies.Select(q => patterns.IndexOf(q)).ToArray(),
         };
       }
+      hasCustom = nodes.Any(n => n.Custom != null);
       roots = active.Select(p => patterns.IndexOf(p)).ToArray();
       state = new byte[nodes.Length]; contributions = new CompactScore[nodes.Length];
       UnsupportedPatterns = unsupported.AsReadOnly();
@@ -86,7 +96,7 @@ namespace RabiRiichi.Patterns.Compiled {
     }
 
     private CompiledScoringEvaluator(CompiledScoringEvaluator plan) {
-      nodes = plan.nodes; roots = plan.roots; IsSupported = plan.IsSupported;
+      nodes = plan.nodes; roots = plan.roots; IsSupported = plan.IsSupported; hasCustom = plan.hasCustom;
       UnsupportedPatterns = plan.UnsupportedPatterns;
       state = new byte[nodes.Length]; contributions = new CompactScore[nodes.Length];
     }
@@ -110,7 +120,9 @@ namespace RabiRiichi.Patterns.Compiled {
       if (!IsSupported) throw new InvalidOperationException("This pattern set requires the custom-rule fallback");
       this.hand = hand; this.incoming = incoming; basePattern = family; excluded = excludedMask;
       this.akadora = akadora; this.dora = dora; this.uradora = uradora;
-      features = Features.Build(groups, counts, incomingGroup, incomingTileIndex, incoming.IsTsumo);      Array.Clear(state); Array.Clear(contributions); total = default;
+      features = Features.Build(groups, counts, incomingGroup, incomingTileIndex, incoming.IsTsumo);
+      if (hasCustom) view.Set(hand, incoming, groups, counts, incomingGroup, incomingTileIndex);
+      Array.Clear(state); Array.Clear(contributions); total = default;
       foreach (int root in roots) if ((nodes[root].Pattern.type & included) != 0) Resolve(root);
       return total;
     }
@@ -123,11 +135,15 @@ namespace RabiRiichi.Patterns.Compiled {
       if (!node.Pattern.basePatterns.Contains(basePattern)) return false;
       foreach (int parent in node.Ancestors) Resolve(parent);
       foreach (int parent in node.Required) if (parent < 0 || state[parent] != 2) return false;
-      if (!Apply(node.Rule, out var value)) return false;
+      CompactScore value;
+      if (node.Custom != null) {
+        if (!node.Custom.Condition.Test(view)) return false;
+        value = node.Custom.Score(hand);
+      } else if (!Apply(node.Rule, out value)) return false;
       state[index] = 2;
       if (node.Registered) {
-        if (node.RemovesAfter) foreach (int parent in node.Ancestors) {
-          AddTotals(contributions[parent], -1); contributions[parent] = default;
+        foreach (int removed in node.Removes) {
+          AddTotals(contributions[removed], -1); contributions[removed] = default;
         }
         contributions[index] = value; AddTotals(value, 1);
       }

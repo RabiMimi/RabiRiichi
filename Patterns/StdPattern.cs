@@ -90,6 +90,10 @@ namespace RabiRiichi.Patterns {
   }
 
   /// <summary> 标准役种 </summary>
+  /// <remarks>
+  /// Custom subclasses with their own Resolve score through the legacy resolver and
+  /// cannot run on wildcard tables. Define custom yaku as <see cref="RuleYaku"/> to score them there.
+  /// </remarks>
   public abstract class StdPattern {
     public virtual string name => GetType().Name;
     public virtual PatternMask type => PatternMask.Regular;

@@ -42,6 +42,8 @@ namespace RabiRiichi.Patterns {
     private readonly byte[] lockedCounts;
     private StdPattern[] boundPatterns;
     private YakuRule[] boundRules;
+    private RuleYaku[] boundCustom;
+    private readonly PartialView partialView = new();
     private int akaFactor, doraFactor, uraFactor, nukiFactor;
     private int count;
     private long visitedTargets, evaluatedInterpretations;
@@ -78,7 +80,8 @@ namespace RabiRiichi.Patterns {
     internal ScoreStorage[] Run() {
       if (hand.Count != Game.HAND_SIZE) return new ScoreStorage[queries.Length];
       if (!evaluator.IsSupported)
-        throw new NotSupportedException("Wildcard scoring requires feature rules for every registered yaku and dependency");
+        throw new NotSupportedException("Wildcard scoring needs a built-in rule or a RuleYaku for every registered pattern and dependency; unsupported: "
+            + string.Join(", ", evaluator.UnsupportedPatterns.Select(p => p.name)));
       if (hand.called.Any(g => g.Any(t => t.tile.IsWildcard)))
         throw new ArgumentException("Wildcards cannot be locked in called melds", nameof(hand));
       var reachable = new HashSet<StdPattern>();
@@ -90,7 +93,8 @@ namespace RabiRiichi.Patterns {
       foreach (var family in resolver.basePatterns) {
         if (onlyFamily != null && family != onlyFamily) continue;
         boundPatterns = resolver.stdPatterns.Where(p => reachable.Contains(p) && p.basePatterns.Contains(family) && (p.type & excluded) == 0).ToArray();
-        boundRules = boundPatterns.Select(p => Enum.Parse<YakuRule>(p.GetType().Name)).ToArray();
+        boundRules = boundPatterns.Select(p => p is RuleYaku ? YakuRule.Unknown : Enum.Parse<YakuRule>(p.GetType().Name)).ToArray();
+        boundCustom = boundPatterns.OfType<RuleYaku>().ToArray();
         akaFactor = boundRules.Count(r => r == YakuRule.Akadora);
         doraFactor = boundRules.Count(r => r == YakuRule.Dora);
         uraFactor = hand.riichi ? boundRules.Count(r => r == YakuRule.Uradora) : 0;

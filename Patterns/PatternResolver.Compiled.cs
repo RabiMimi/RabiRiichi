@@ -25,13 +25,16 @@ namespace RabiRiichi.Patterns {
 
     private static bool HasWildcardSearch(BasePattern family) => family is Base33332 or Base72 or Base13_1 or BaseButa;
 
-    /// <summary>Wildcard scoring has no legacy fallback, so check the pattern set up front.</summary>
+    /// <summary>
+    /// Wildcard scoring has no legacy fallback, so check the pattern set up front.
+    /// Custom yaku must be <see cref="RuleYaku"/>s, whose conditions bound the search.
+    /// </summary>
     internal void EnsureWildcardSupport() {
       var unsupported = GetPlan().UnsupportedPatterns.Select(p => p.name)
           .Concat(basePatterns.Where(p => !HasWildcardSearch(p)).Select(p => p.GetType().Name)).ToList();
       if (unsupported.Count > 0) {
         throw new NotSupportedException(
-            $"Wildcard tiles require built-in scoring rules; unsupported patterns: {string.Join(", ", unsupported)}");
+            $"Wildcard tiles require built-in scoring rules or RuleYaku; unsupported patterns: {string.Join(", ", unsupported)}");
       }
     }
 
