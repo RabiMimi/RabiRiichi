@@ -60,6 +60,22 @@ namespace RabiRiichi.Core.Config {
 
 
     #region Helper methods
+    private sealed record WildcardScan(Tiles Tiles, int Count, bool Value);
+    private WildcardScan wildcardScan;
+
+    /// <summary> 牌山中是否有万能牌。缓存扫描结果，initialTiles 被替换或增删后重新扫描 </summary>
+    internal bool HasWildcards {
+      get {
+        var tiles = initialTiles;
+        int count = tiles?.Count ?? -1;
+        var scan = wildcardScan;
+        if (scan == null || !ReferenceEquals(scan.Tiles, tiles) || scan.Count != count) {
+          scan = wildcardScan = new(tiles, count, tiles?.Any(t => t.IsWildcard) == true);
+        }
+        return scan.Value;
+      }
+    }
+
     public long HonbaPointsForOnePlayer(int honba) {
       return (pointThreshold.honbaPoints / (playerCount - 1) * honba).CeilTo100();
     }

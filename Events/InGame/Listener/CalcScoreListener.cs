@@ -1,6 +1,7 @@
 using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
 using RabiRiichi.Generated.Events.InGame;
+using RabiRiichi.Patterns;
 using RabiRiichi.Utils;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +18,7 @@ namespace RabiRiichi.Events.InGame.Listener {
           ev.scoreChange.AddRange(HandleTsumo(fromPlayer, ev.game, info));
         } else {
           // 荣和
-          long scoreChange = info.scores.result.BaseScore * (toPlayer.IsDealer ? 6 : 4);
+          long scoreChange = ScoreMath.Multiply(info.scores.result.BaseScore, toPlayer.IsDealer ? 6 : 4);
           long honbaChange = ev.game.config.pointThreshold.honbaPoints * ev.game.info.honba;
           ev.scoreChange.Add(new ScoreTransfer(fromPlayer.id, toPlayer.id, scoreChange, ScoreTransferReason.Ron));
           ev.scoreChange.Add(new ScoreTransfer(fromPlayer.id, toPlayer.id, honbaChange, ScoreTransferReason.Honba));
@@ -53,11 +54,11 @@ namespace RabiRiichi.Events.InGame.Listener {
     private static IEnumerable<ScoreTransfer> HandleTsumo(Player tsumoPlayer, Game game, AgariInfo info) {
       long score = info.scores.result.BaseScore;
       if (tsumoPlayer.IsDealer) {
-        score *= 2;
+        score = ScoreMath.Multiply(score, 2);
       }
       long honbaChange = game.config.HonbaPointsForOnePlayer(game.info.honba);
       foreach (var player in game.players.Where(player => !player.hand.agari)) {
-        long scoreChange = player.IsDealer ? score * 2 : score;
+        long scoreChange = player.IsDealer ? ScoreMath.Multiply(score, 2) : score;
         yield return new ScoreTransfer(player.id, tsumoPlayer.id, scoreChange, ScoreTransferReason.Tsumo);
         yield return new ScoreTransfer(player.id, tsumoPlayer.id, honbaChange, ScoreTransferReason.Honba);
       }

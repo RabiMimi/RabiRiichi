@@ -80,7 +80,7 @@ namespace RabiRiichi.Patterns {
     }
 
     private void DFSPattern(Tile curTile, int janCnt, ResolutionContext context) {
-      if (!curTile.IsValid) {
+      if (!curTile.IsValid || curTile.IsWildcard) {
         if (janCnt == 1) {
           context.AddCurrentToOutput();
         }
@@ -230,6 +230,9 @@ namespace RabiRiichi.Patterns {
 
     /// <inheritdoc/>
     public override int Shanten(Hand hand, GameTile incoming, out Tiles output, int maxShanten = 8) {
+      if (HandShapeAnalyzer.HasWildcards(hand, incoming) || HandShapeAnalyzer.WildcardsEnabled(hand)) {
+        return HandShapeAnalyzer.RegularShanten(hand, incoming, out output, maxShanten);
+      }
       int maxDist = Math.Min(Game.HAND_SIZE, maxShanten) + 1; // 最大修改距离为向听数+1
       if (maxDist < 0) {
         return Reject(out output);

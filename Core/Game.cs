@@ -85,6 +85,11 @@ namespace RabiRiichi.Core {
 
       // Custom setup
       config.setup.Setup(diContainer);
+
+      // Wildcard scoring has no legacy fallback; reject such tables before play.
+      if (config.HasWildcards) {
+        Get<PatternResolver>().EnsureWildcardSupport();
+      }
     }
 
     private static ulong GetRandomSharedSeed() {
@@ -113,7 +118,7 @@ namespace RabiRiichi.Core {
 
     public Player Dealer => GetPlayer(info.dealer);
     public Player[] PlayersByRank =>
-        [.. players.OrderBy(p => (-p.points * players.Length) + p.id)];
+        [.. players.OrderByDescending(p => p.points).ThenBy(p => p.id)];
     public int Time => info.timeStamp;
     #endregion
 

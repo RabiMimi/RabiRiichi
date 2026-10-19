@@ -47,8 +47,7 @@ namespace RabiRiichi.Communication.Sync {
         var patternResolver = hand.game.Get<PatternResolver>();
         var tenpaiTiles = hand.Tenpai;
         if (tenpaiTiles.Count > 0) {
-          foreach (var winTile in tenpaiTiles) {
-            var info = PlayTileAction.ComputeTenpaiInfo(patternResolver, hand, winTile);
+          foreach (var info in PlayTileAction.ComputeTenpaiInfos(patternResolver, hand, tenpaiTiles)) {
             ret.TenpaiWaits.Add(ProtoConverters.ConvertTenpaiInfo(info));
           }
         }

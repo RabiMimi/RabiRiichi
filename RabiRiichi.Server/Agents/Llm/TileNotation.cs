@@ -48,6 +48,7 @@ namespace RabiRiichi.Server.Agents.Llm {
 
     /// <summary> A single tile, e.g. "5p", "0p" (red), or "1z(East wind)". </summary>
     public static string One(Tile t, string language = AiLocalization.LangEn) {
+      if (t.IsWildcard) return "*";
       if (!t.IsValid) {
         return "?";
       }
@@ -87,6 +88,11 @@ namespace RabiRiichi.Server.Agents.Llm {
       if (honors.Count > 0) {
         if (sb.Length > 0) sb.Append(' ');
         sb.Append(string.Join(" ", honors.Select(tile => One(tile, language))));
+      }
+      int wildcards = list.Count(t => t.IsWildcard);
+      if (wildcards > 0) {
+        if (sb.Length > 0) sb.Append(' ');
+        sb.Append('*', wildcards);
       }
       return sb.ToString();
     }

@@ -5,7 +5,7 @@ namespace RabiRiichi.Events.InGame.Listener {
     public static Task ApplyScore(ApplyScoreEvent ev) {
       var scoreChange = ev.scoreChange;
       foreach (var player in ev.game.players) {
-        player.points += scoreChange.DeltaScore(player.id);
+        player.points = scoreChange.ApplyTo(player.id, player.points);
       }
       return Task.CompletedTask;
     }

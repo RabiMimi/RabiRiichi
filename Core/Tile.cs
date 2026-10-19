@@ -5,13 +5,16 @@ using System.Text;
 
 namespace RabiRiichi.Core {
   public enum TileSuit : byte {
-    Invalid, M, P, S, Z
+    Invalid, M, P, S, Z, Wildcard
   }
 
   public struct Tile : IComparable<Tile> {
     public static readonly Tile Empty = new(0);
     /// <summary> 北风（拔北宝牌用） </summary>
     public static readonly Tile North = new(TileSuit.Z, 4);
+    /// <summary>A physical universal wildcard, written as * in tile notation.</summary>
+    public static readonly Tile Wildcard = new(TileSuit.Wildcard, 1);
+    public readonly bool IsWildcard => NoDoraVal == 0x51;
     /// <summary>
     /// LSB to MSB:
     /// 4 bit digit
@@ -52,6 +55,9 @@ namespace RabiRiichi.Core {
     /// <summary> 是否是合法牌 </summary>
     public bool IsValid {
       get {
+        if (IsWildcard) {
+          return !Akadora;
+        }
         if (Suit is TileSuit.Invalid or > TileSuit.Z) {
           return false;
         }
@@ -95,6 +101,10 @@ namespace RabiRiichi.Core {
 
     public Tile(string str) {
       Val = 0;
+      if (str == "*") {
+        Val = Wildcard.Val;
+        return;
+      }
       string original = str;
       if (str.StartsWith("r")) {
         Akadora = true;
@@ -119,6 +129,9 @@ namespace RabiRiichi.Core {
     }
 
     public override string ToString() {
+      if (IsWildcard) {
+        return "*";
+      }
       var builder = new StringBuilder();
       if (Akadora) {
         builder.Append('r');
@@ -215,6 +228,13 @@ namespace RabiRiichi.Core {
     public Tiles(string tiles = "") : base() {
       bool isDora = false;
       foreach (char c in tiles) {
+        if (c == '*') {
+          if (isDora || (Count > 0 && this[^1].Suit == TileSuit.Invalid)) {
+            throw new ArgumentException("Invalid cast to tiles: " + tiles);
+          }
+          Add(Tile.Wildcard);
+          continue;
+        }
         if (c is >= '0' and <= '9') {
           byte num = (byte)(c - '0');
           if (num == 0) {
@@ -267,6 +287,12 @@ namespace RabiRiichi.Core {
       var builder = new StringBuilder();
       char group = '\0';
       foreach (var tile in this) {
+        if (tile.IsWildcard) {
+          if (group != '\0') builder.Append(group);
+          builder.Append('*');
+          group = '\0';
+          continue;
+        }
         string str = tile.ToString();
         if (group != str[^1]) {
           if (group != '\0') {

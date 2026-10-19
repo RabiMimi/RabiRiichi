@@ -35,7 +35,9 @@ jobs:
       - name: Build
         run: dotnet build --configuration Release --no-restore ./RabiRiichi.Tests/RabiRiichi.Tests.csproj
       - name: Test
-        run: dotnet test --no-restore --verbosity normal --collect:"XPlat Code Coverage" ./RabiRiichi.Tests/RabiRiichi.Tests.csproj
+        # Test the Release build above; without these flags dotnet test rebuilds
+        # and runs Debug, which takes the suite from ~40s to ~100s under coverage.
+        run: dotnet test --configuration Release --no-build --verbosity normal --collect:"XPlat Code Coverage" ./RabiRiichi.Tests/RabiRiichi.Tests.csproj
       - name: Upload to CodeCov
         uses: codecov/codecov-action@v4
         with:

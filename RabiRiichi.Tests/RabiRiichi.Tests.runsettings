@@ -17,10 +17,11 @@
 
 		<!-- TestSessionTimeout was introduced in Visual Studio 2017 version 15.5 -->
 		<!-- Specify timeout in milliseconds. A valid value should be greater than 0 -->
-		<!-- The suite runs in ~35s with coverage; this is headroom for a slower CI
-		     runner, not a budget to grow into. Keep individual slow tests capped
-		     with [Timeout] so one hang cannot burn the whole session. -->
-		<TestSessionTimeout>120000</TestSessionTimeout>
+		<!-- The suite runs in ~40s with coverage on a Release build (~100s on
+		     Debug). The CI VM is several times slower than a dev machine; this is
+		     headroom for it, not a budget to grow into. Keep individual slow tests
+		     capped with [Timeout] so one hang cannot burn the whole session. -->
+		<TestSessionTimeout>300000</TestSessionTimeout>
 
 		<!-- true or false -->
 		<!-- Value that specifies the exit code when no tests are discovered -->

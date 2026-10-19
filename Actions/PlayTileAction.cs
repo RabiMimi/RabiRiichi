@@ -1,6 +1,5 @@
 using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
-using RabiRiichi.Generated.Core;
 using RabiRiichi.Patterns;
 using RabiRiichi.Utils;
 using System.Collections.Generic;
@@ -8,6 +7,7 @@ using System.Linq;
 
 namespace RabiRiichi.Actions {
   public class TenpaiInfo {
+    internal TenpaiInfo Copy() => (TenpaiInfo)MemberwiseClone();
     public Tile winningTile;
     public int han;
     /// <summary> 记作役的番数（不含宝牌），用于番缚判定 </summary>
@@ -58,22 +58,23 @@ namespace RabiRiichi.Actions {
       var hand = player.hand;
       var patternResolver = player.game.Get<PatternResolver>();
 
-      var originalFreeTiles = hand.freeTiles.ToList();
-      var originalPendingTile = hand.pendingTile;
-
-      var all14Tiles = new List<GameTile>(originalFreeTiles);
+      var all14Tiles = new List<GameTile>(hand.freeTiles);
       if (incoming != null) {
         all14Tiles.Add(incoming);
       }
 
+      var cache = new Dictionary<Tile, List<TenpaiInfo>>();
+      bool canShare = patternResolver.CanShareScoring;
       foreach (var optionTile in discardOptions) {
+        if (canShare && cache.TryGetValue(optionTile.tile, out var cached)) {
+          candidates.Add(new DiscardCandidate { tile = optionTile, tenpaiInfos = cached.Select(info => info.Copy()).ToList() });
+          continue;
+        }
         var tempFreeTiles = new List<GameTile>(all14Tiles);
         tempFreeTiles.Remove(optionTile);
 
-        hand.freeTiles = tempFreeTiles;
-        hand.pendingTile = null;
-
-        int shanten = patternResolver.ResolveShanten(hand, null, out var machihai, 0);
+        var analysisHand = hand.WithFreeTiles(tempFreeTiles);
+        int shanten = patternResolver.ResolveShanten(analysisHand, null, out var machihai, 0);
 
         var candidate = new DiscardCandidate {
           tile = optionTile,
@@ -81,17 +82,12 @@ namespace RabiRiichi.Actions {
         };
 
         if (shanten == 0) {
-          foreach (var winTile in machihai) {
-            candidate.tenpaiInfos.Add(
-                ComputeTenpaiInfo(patternResolver, hand, winTile));
-          }
+          candidate.tenpaiInfos = ComputeTenpaiInfos(patternResolver, analysisHand, machihai);
         }
 
         candidates.Add(candidate);
+        cache[optionTile.tile] = candidate.tenpaiInfos;
       }
-
-      hand.freeTiles = originalFreeTiles;
-      hand.pendingTile = originalPendingTile;
 
       return candidates;
     }
@@ -101,11 +97,15 @@ namespace RabiRiichi.Actions {
     /// 两者都排除运气役（PatternMask.Luck）。
     /// </summary>
     public static TenpaiInfo ComputeTenpaiInfo(
-        PatternResolver patternResolver, Hand hand, Tile winTile) {
-      var ron = patternResolver.ResolveMaxScore(
-          hand, RonTile(winTile), PatternMask.All, excludedMask: PatternMask.Luck)?.result;
-      var tsumo = patternResolver.ResolveMaxScore(
-          hand, TsumoTile(winTile), PatternMask.All, excludedMask: PatternMask.Luck)?.result;
+        PatternResolver patternResolver, Hand hand, Tile winTile) =>
+        ComputeTenpaiInfos(patternResolver, hand, [winTile])[0];
+
+    public static List<TenpaiInfo> ComputeTenpaiInfos(PatternResolver resolver, Hand hand, Tiles winningTiles) {
+      var previews = resolver.ResolveScorePreviews(hand, winningTiles, PatternMask.All, PatternMask.Luck);
+      return winningTiles.Select(tile => FromScores(tile, previews[tile].Ron?.result, previews[tile].Tsumo?.result)).ToList();
+    }
+
+    private static TenpaiInfo FromScores(Tile winTile, ScoreCalcResult ron, ScoreCalcResult tsumo) {
       // 自摸要靠自己摸上来，只有荣和算保底。
       var ceiling = Better(ron, tsumo);
 
@@ -135,17 +135,6 @@ namespace RabiRiichi.Actions {
       }
       return result.TotalYakuman > 0 ? yakumanHan : result.han;
     }
-
-    /// <summary> 有 discardInfo 即他家打出（荣和） </summary>
-    private static GameTile RonTile(Tile winTile) => new(winTile, 0) {
-      discardInfo = new DiscardInfo(null, DiscardReason.Draw, 0),
-      source = TileSource.Discard,
-    };
-
-    /// <summary> IsTsumo 的判定就是 discardInfo == null </summary>
-    private static GameTile TsumoTile(Tile winTile) => new(winTile, 0) {
-      source = TileSource.Wall,
-    };
 
     private static ScoreCalcResult Better(ScoreCalcResult a, ScoreCalcResult b) {
       if (a == null) return b;
