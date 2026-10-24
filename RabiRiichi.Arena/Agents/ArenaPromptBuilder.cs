@@ -116,7 +116,8 @@ namespace RabiRiichi.Arena.Agents {
     private static string TileNotationHint(string language) {
       return "m = manzu (characters), p = pinzu (dots), s = souzu (bamboo), " +
           "z = honors. 1z=East, 2z=South, 3z=West, 4z=North, 5z=White dragon, " +
-          "6z=Green dragon, 7z=Red dragon. A leading 0 marks a red five (e.g. 0p).";
+          "6z=Green dragon, 7z=Red dragon. A leading 0 marks a red five (e.g. 0p). " +
+          "* marks a universal wildcard tile (can stand for any tile).";
     }
 
     /// <summary>

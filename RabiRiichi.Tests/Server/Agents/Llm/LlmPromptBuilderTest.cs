@@ -73,6 +73,7 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
       StringAssert.Contains(prompt, "5z=白");
       StringAssert.Contains(prompt, "自风");
       StringAssert.Contains(prompt, "场风");
+      StringAssert.Contains(prompt, "*表示万能牌");
       StringAssert.Contains(prompt, "不要混淆以下三种杠");
       StringAssert.Contains(prompt, "ANKAN (暗杠");
       StringAssert.Contains(prompt, "KAKAN (加杠");
@@ -91,12 +92,14 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
       StringAssert.Contains(english, "5z = white dragon");
       StringAssert.Contains(english, "seat wind");
       StringAssert.Contains(english, "prevailing round wind");
+      StringAssert.Contains(english, "* marks a universal wildcard");
 
       var japanese = new LlmPromptBuilder(Settings("ja"), Names()).BuildSystemPrompt(0);
       StringAssert.Contains(japanese, "m=萬子");
       StringAssert.Contains(japanese, "5z=白");
       StringAssert.Contains(japanese, "自風");
       StringAssert.Contains(japanese, "場風");
+      StringAssert.Contains(japanese, "*は万能牌");
     }
 
     [TestMethod]

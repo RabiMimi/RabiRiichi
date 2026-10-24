@@ -8,7 +8,7 @@ namespace RabiRiichi.Server.Agents.Llm {
   /// <summary>
   /// Compact, token-frugal tile notation for LLM prompts, matching the standard
   /// riichi shorthand: digits grouped by suit letter (m/p/s), honors as 1-7z,
-  /// and red fives as 0 (e.g. 0p = red 5 pin). Honor names are attached every
+  /// red fives as 0 (e.g. 0p = red 5 pin), and universal wildcards as *. Honor names are attached every
   /// time to prevent the model from confusing winds, dragons, and players.
   /// </summary>
   public static class TileNotation {
