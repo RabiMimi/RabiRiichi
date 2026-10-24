@@ -136,7 +136,7 @@ namespace RabiRiichi.Tests.Scenario.Tests {
               .AddRinshan("7z"))
           .Start(1);
 
-      (await scenario.WaitPlayerTurn(1)).ForPlayer(1, playerInquiry => {
+      (await scenario.WaitInquiry()).ForPlayer(1, playerInquiry => {
         // Draws the 4th 1m: ankan 1111m keeps the shanpon 5s/9s wait -> allowed.
         playerInquiry
             .AssertAction<PlayTileAction>()

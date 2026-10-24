@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace RabiRiichi.Patterns {
-  public class PatternResolver {
+  public partial class PatternResolver {
     public readonly HashSet<BasePattern> basePatterns = [];
     public readonly HashSet<StdPattern> stdPatterns = [];
 
@@ -25,11 +25,17 @@ namespace RabiRiichi.Patterns {
       public Hand hand;
       public GameTile incoming;
       public BasePattern basePattern;
+      public PatternMask excludedMask;
       public readonly HashSet<StdPattern> stdSuccess = [];
       public readonly HashSet<StdPattern> stdFailure = [];
     }
 
     private bool ResolveStdPattern(ResolutionContext context, StdPattern pattern, ScoreStorage scores) {
+      // Exclusions also apply when a pattern is reached through a dependency.
+      if (pattern.type.HasAnyFlag(context.excludedMask)) {
+        return false;
+      }
+
       // 检查是否已经计算过
       if (context.stdSuccess.Contains(pattern)) {
         return true;
@@ -71,10 +77,18 @@ namespace RabiRiichi.Patterns {
     /// <summary>
     /// 检查是否和牌并计算得分最高的牌型
     /// </summary>
-    public ScoreStorage ResolveMaxScore(Hand hand, GameTile incoming, PatternMask patternMask) {
+    /// <param name="excludedMask">匹配任意排除标记的役种不参与计算，优先于包含标记</param>
+    public ScoreStorage ResolveMaxScore(Hand hand, GameTile incoming, PatternMask patternMask,
+        PatternMask excludedMask = PatternMask.None) {
+      return ResolveScore(hand, incoming, patternMask, excludedMask, 0);
+    }
+
+    internal ScoreStorage ResolveMaxScoreLegacy(Hand hand, GameTile incoming, PatternMask patternMask,
+        PatternMask excludedMask = PatternMask.None, int minHan = 0, BasePattern onlyFamily = null) {
       var context = new ResolutionContext {
         hand = hand,
-        incoming = incoming
+        incoming = incoming,
+        excludedMask = excludedMask,
       };
 
       IEnumerable<ScoreStorage> CalculateScores(BasePattern pattern) {
@@ -91,11 +105,11 @@ namespace RabiRiichi.Patterns {
             ResolveStdPattern(context, stdPattern, scores);
           }
           scores.Calc(hand.game.config.scoringOption);
-          yield return scores;
+          if (scores.result.IsValid(minHan)) yield return scores;
         }
       }
 
-      var scoreStores = basePatterns.SelectMany(CalculateScores);
+      var scoreStores = basePatterns.Where(p => onlyFamily == null || p == onlyFamily).SelectMany(CalculateScores);
 
       return scoreStores.Max();
     }

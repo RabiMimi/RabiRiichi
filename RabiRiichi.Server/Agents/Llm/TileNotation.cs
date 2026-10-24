@@ -8,7 +8,7 @@ namespace RabiRiichi.Server.Agents.Llm {
   /// <summary>
   /// Compact, token-frugal tile notation for LLM prompts, matching the standard
   /// riichi shorthand: digits grouped by suit letter (m/p/s), honors as 1-7z,
-  /// and red fives as 0 (e.g. 0p = red 5 pin). Honor names are attached every
+  /// red fives as 0 (e.g. 0p = red 5 pin), and universal wildcards as *. Honor names are attached every
   /// time to prevent the model from confusing winds, dragons, and players.
   /// </summary>
   public static class TileNotation {
@@ -48,6 +48,7 @@ namespace RabiRiichi.Server.Agents.Llm {
 
     /// <summary> A single tile, e.g. "5p", "0p" (red), or "1z(East wind)". </summary>
     public static string One(Tile t, string language = AiLocalization.LangEn) {
+      if (t.IsWildcard) return "*";
       if (!t.IsValid) {
         return "?";
       }
@@ -87,6 +88,11 @@ namespace RabiRiichi.Server.Agents.Llm {
       if (honors.Count > 0) {
         if (sb.Length > 0) sb.Append(' ');
         sb.Append(string.Join(" ", honors.Select(tile => One(tile, language))));
+      }
+      int wildcards = list.Count(t => t.IsWildcard);
+      if (wildcards > 0) {
+        if (sb.Length > 0) sb.Append(' ');
+        sb.Append('*', wildcards);
       }
       return sb.ToString();
     }

@@ -1,6 +1,7 @@
 using RabiRiichi.Core;
 using RabiRiichi.Patterns;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace RabiRiichi.Actions.Resolver {
   /// <summary>
@@ -18,18 +19,23 @@ namespace RabiRiichi.Actions.Resolver {
       var freeTiles = hand.freeTiles;
       ScoreStorage maxScore = null;
       GameTile maxTile = null;
-      freeTiles.Add(incoming);
-      for (int i = 0; i < freeTiles.Count; i++) {
-        var tile = freeTiles[i];
-        freeTiles.RemoveAt(i);
-        var score = patternResolver.ResolveMaxScore(player.hand, tile, PatternMask.All);
+      var allTiles = freeTiles.Append(incoming).ToList();
+      var cache = new Dictionary<(Tile, Generated.Core.TileSource, DiscardInfo), ScoreStorage>();
+      bool canShare = patternResolver.CanShareScoring;
+      for (int i = 0; i < allTiles.Count; i++) {
+        var tile = allTiles[i];
+        var key = (tile.tile, tile.source, tile.discardInfo);
+        if (!canShare || !cache.TryGetValue(key, out var score)) {
+          var remaining = allTiles.ToList(); remaining.RemoveAt(i);
+          score = patternResolver.ResolveBestValidScore(hand.WithFreeTiles(remaining), tile,
+              PatternMask.All, player.game.config.minHan);
+          if (canShare) cache[key] = score;
+        }
         if (score != null && (maxScore == null || score > maxScore)) {
           maxTile = tile;
           maxScore = score;
         }
-        freeTiles.Insert(i, tile);
       }
-      freeTiles.Remove(incoming);
       if (maxScore != null && maxScore.result.IsValid(player.game.config.minHan)) {
         if (maxTile != incoming) {
           freeTiles.Remove(maxTile);

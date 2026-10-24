@@ -38,6 +38,9 @@ namespace RabiRiichi.Patterns {
 
     /// <inheritdoc/>
     public override int Shanten(Hand hand, GameTile incoming, out Tiles output, int maxShanten = 13) {
+      if (HandShapeAnalyzer.HasWildcards(hand, incoming) || HandShapeAnalyzer.WildcardsEnabled(hand)) {
+        return HandShapeAnalyzer.ThirteenOrphansShanten(hand, incoming, out output, maxShanten);
+      }
       if (hand.called.Count > 1 ||
           hand.called.Any(gr => gr is not Jantou || !gr.All(t => t.tile.Is19Z))) {
         return Reject(out output);

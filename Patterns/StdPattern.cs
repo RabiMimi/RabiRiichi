@@ -90,6 +90,10 @@ namespace RabiRiichi.Patterns {
   }
 
   /// <summary> 标准役种 </summary>
+  /// <remarks>
+  /// Custom subclasses with their own Resolve score through the legacy resolver and
+  /// cannot run on wildcard tables. Define custom yaku as <see cref="RuleYaku"/> to score them there.
+  /// </remarks>
   public abstract class StdPattern {
     public virtual string name => GetType().Name;
     public virtual PatternMask type => PatternMask.Regular;
@@ -102,6 +106,12 @@ namespace RabiRiichi.Patterns {
 
     /// <summary> 计算这些pattern后，才会计算该pattern。不保证这些pattern一定被满足 </summary>
     public readonly List<StdPattern> afterPatterns = [];
+
+    /// <summary> 必须先满足的pattern，由<see cref="DependOn(StdPattern[])"/>记录 </summary>
+    internal readonly List<StdPattern> dependencies = [];
+
+    /// <summary> 是否使用了无法静态分析的自定义依赖条件 </summary>
+    internal bool hasCustomPredicate { get; private set; }
 
     protected StdPattern BaseOn(IEnumerable<BasePattern> basePatterns) {
       if (basePatterns != null) {
@@ -120,14 +130,16 @@ namespace RabiRiichi.Patterns {
     /// </summary>
     protected StdPattern DependOn(Predicate<ICollection<StdPattern>> predicate) {
       this.predicate = predicate;
+      hasCustomPredicate = true;
       return this;
     }
 
     protected StdPattern DependOn(params StdPattern[] dependOnPatterns) {
       After(dependOnPatterns);
-      DependOn(dependOnPatterns.Aggregate(
+      dependencies.AddRange(dependOnPatterns);
+      predicate = dependOnPatterns.Aggregate(
           predicate,
-          (p, pattern) => p.And(pattern)));
+          (p, pattern) => p.And(pattern));
       return this;
     }
 

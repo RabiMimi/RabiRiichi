@@ -1,8 +1,9 @@
 using RabiRiichi.Communication;
 using RabiRiichi.Generated.Events.InGame;
+using RabiRiichi.Patterns;
 using RabiRiichi.Utils;
 using System.Collections.Generic;
-using System.Linq;
+using System.Numerics;
 
 namespace RabiRiichi.Events.InGame {
   [RabiMessage]
@@ -29,15 +30,24 @@ namespace RabiRiichi.Events.InGame {
   }
 
   public class ScoreTransferList : List<ScoreTransfer> {
+    private BigInteger NetChange(int playerId, bool extraOnly = false) {
+      BigInteger result = 0;
+      foreach (var transfer in this) {
+        if (transfer.to == playerId && (!extraOnly || transfer.from < 0)) result += transfer.points;
+        if (transfer.from == playerId && (!extraOnly || transfer.to < 0)) result -= transfer.points;
+      }
+      return result;
+    }
+
     public long DeltaScore(int playerId) {
-      return this.Where(x => x.to == playerId).Sum(x => x.points)
-                                                     - this.Where(x => x.from == playerId).Sum(x => x.points);
+      return ScoreMath.Clamp(NetChange(playerId));
     }
 
     public long ExtraScoreChange(int playerId) {
-      return this.Where(x => x.from < 0 && x.to == playerId).Sum(x => x.points)
-                                                           - this.Where(x => x.from == playerId && x.to < 0).Sum(x => x.points);
+      return ScoreMath.Clamp(NetChange(playerId, true));
     }
+
+    internal long ApplyTo(int playerId, long balance) => ScoreMath.Clamp(balance + NetChange(playerId));
   }
 
   public class CalcScoreEvent(EventBase parent, AgariInfoList agariInfos) : EventBase(parent) {

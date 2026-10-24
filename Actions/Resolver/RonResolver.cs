@@ -21,7 +21,7 @@ namespace RabiRiichi.Actions.Resolver {
       if (hand.isFuriten) {
         return false;
       }
-      var maxScore = patternResolver.ResolveMaxScore(hand, incoming, PatternMask.All);
+      var maxScore = CalculateScore(player, incoming);
       if (maxScore != null && maxScore.result.IsValid(player.game.config.minHan)) {
         output.Add(new RonAction(hand.player.id, maxScore, incoming,
             player.game.config.agariOption.HasAnyFlag(AgariOption.FirstWinner)
@@ -30,5 +30,8 @@ namespace RabiRiichi.Actions.Resolver {
       }
       return false;
     }
+
+    protected virtual ScoreStorage CalculateScore(Player player, GameTile incoming) =>
+        patternResolver.ResolveBestValidScore(player.hand, incoming, PatternMask.All, player.game.config.minHan);
   }
 }

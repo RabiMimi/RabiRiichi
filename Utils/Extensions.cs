@@ -11,7 +11,10 @@ namespace RabiRiichi.Utils {
     }
 
     public static long CeilTo100(this long val) {
-      return (val + 99) / 100 * 100;
+      long remainder = val % 100;
+      if (remainder == 0) return val;
+      long increment = remainder > 0 ? 100 - remainder : -remainder;
+      return val > long.MaxValue - increment ? long.MaxValue : val + increment;
     }
 
     public static bool HasAnyFlag<T>(this T val, T flags) where T : struct, Enum {

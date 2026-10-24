@@ -1,6 +1,7 @@
 using RabiRiichi.Communication;
 using RabiRiichi.Core.Config;
 using RabiRiichi.Generated.Patterns;
+using RabiRiichi.Patterns.Compiled;
 using RabiRiichi.Utils;
 using System;
 
@@ -23,46 +24,10 @@ namespace RabiRiichi.Patterns {
     /// <summary> 计分选项 </summary>
     public ScoringOption scoringOption = option;
 
-    /// <summary> 基本点 </summary>
-    public long BaseScore {
-      get {
-        if (!scoringOption.HasAnyFlag(ScoringOption.Yakuman)) {
-          // 青天井
-          return fu * (1L << (han + (TotalYakuman * KAZOE_YAKUMAN_HAN) + 2));
-        }
-        int finalYakuman = FinalYakuman;
-        if (finalYakuman > 0) {
-          return finalYakuman * 8000L;
-        }
-        if (han >= 11) // 三倍满
-{
-          return 6000;
-        }
+    private CompactScore Compact => new(han, yaku, fu, yakuman, bonusYakuman);
 
-        if (han >= 8) // 倍满
-{
-          return 4000;
-        }
-
-        if (han >= 6) // 跳满
-{
-          return 3000;
-        }
-
-        if (han >= 5) // 满贯
-{
-          return 2000;
-        }
-
-        long score = fu * (1L << (han + 2));
-        if (scoringOption.HasAnyFlag(ScoringOption.KiriageMangan)) {
-          if (score is > 1900 and < 2000) {
-            score = 2000;
-          }
-        }
-        return Math.Min(2000, score);
-      }
-    }
+    /// <summary> 基本点。青天井下饱和于 long.MaxValue 而非溢出，比较仍然精确 </summary>
+    public long BaseScore => ScoreMath.BaseScore(Compact, scoringOption);
 
     [RabiBroadcast]
     public int KazoeYakuman {
@@ -86,10 +51,11 @@ namespace RabiRiichi.Patterns {
     }
 
     public int CompareTo(ScoreCalcResult other) {
-      if (BaseScore != other.BaseScore) {
-        return BaseScore.CompareTo(other.BaseScore);
+      if (scoringOption == other.scoringOption) {
+        return ScoreMath.Compare(Compact, other.Compact, scoringOption);
       }
-      return han != other.han ? han.CompareTo(other.han) : fu.CompareTo(other.fu);
+      int score = BaseScore.CompareTo(other.BaseScore);
+      return score != 0 ? score : han != other.han ? han.CompareTo(other.han) : fu.CompareTo(other.fu);
     }
 
     public static bool operator <(ScoreCalcResult lhs, ScoreCalcResult rhs) {

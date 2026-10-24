@@ -489,15 +489,16 @@ namespace RabiRiichi.Server.Agents.Llm {
 
     private static string TileNotationHint(string language) => language switch {
       AiLocalization.LangJa =>
-          "牌表記: m=萬子、p=筒子、s=索子、z=字牌。" +
+          "牌表記: m=萬子、p=筒子、s=索子、z=字牌。0は赤ドラ（例: 0p）、*は万能牌（任意の牌の代用となるワイルドカード）。" +
           "1z=東、2z=南、3z=西、4z=北、5z=白、6z=發、7z=中。" +
           "風牌は1z〜4zだけで、5z〜7zは三元牌です。自風は自分の席の風、場風はその局の共通の風で、別々に示されます。同じ風なら両方に該当します。",
       AiLocalization.LangZhs =>
-          "牌张记法：m=万子，p=筒子，s=索子，z=字牌。" +
+          "牌张记法：m=万子，p=筒子，s=索子，z=字牌。0表示赤宝牌（如0p），*表示万能牌（可充当任意牌的百搭牌）。" +
           "1z=东，2z=南，3z=西，4z=北，5z=白，6z=发，7z=中。" +
           "只有1z至4z是风牌，5z至7z是三元牌。自风是你座位的风，场风是本局共同的风，两者会分别标明；相同时该风同时属于自风和场风。",
       _ =>
           "Tile notation: m = characters/manzu, p = dots/pinzu, s = bamboo/souzu, and z = honors. " +
+          "0 marks a red five (e.g. 0p). * marks a universal wildcard (can stand for any tile). " +
           "1z = East, 2z = South, 3z = West, 4z = North, 5z = white dragon, 6z = green dragon, 7z = red dragon. " +
           "Only 1z-4z are winds; 5z-7z are dragons. Your seat wind and the prevailing round wind are listed separately; if they are the same, that wind counts as both.",
     };

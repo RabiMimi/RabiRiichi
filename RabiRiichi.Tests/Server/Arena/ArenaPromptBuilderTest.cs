@@ -83,6 +83,7 @@ namespace RabiRiichi.Tests.Server.Arena {
       // Loaded from the embedded .md template and fully substituted.
       StringAssert.Contains(sys, "seat 2");
       StringAssert.Contains(sys, "manzu");
+      StringAssert.Contains(sys, "wildcard");
       Assert.IsFalse(sys.Contains("{{"), "template placeholders must be substituted");
     }
 

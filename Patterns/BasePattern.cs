@@ -1,5 +1,6 @@
 ﻿using RabiRiichi.Core;
 using RabiRiichi.Utils;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -31,12 +32,17 @@ namespace RabiRiichi.Patterns {
       if (incoming != null) {
         tiles.Add(incoming);
       }
+      if (tiles.Any(t => t.tile.IsWildcard)) {
+        throw new NotSupportedException("Eager decomposition cannot enumerate wildcard interpretations; use Shanten or PatternResolver scoring");
+      }
       return new GameTileBucket(tiles);
     }
 
     /// <summary>
     /// 计算是否和牌，输出所有和牌的组合
     /// </summary>
+    /// <remarks>Natural tiles only. Use Shanten for wildcard feasibility and
+    /// PatternResolver.ResolveBestValidScore for the best wildcard interpretation.</remarks>
     public abstract bool Resolve(Hand hand, GameTile incoming, out List<List<MenLike>> output);
 
     /// <summary>

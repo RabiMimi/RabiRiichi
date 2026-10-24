@@ -115,6 +115,7 @@ namespace RabiRiichi.Server.Agents {
       void Track(GameTile tile) {
         var t = tile.tile;
         if (!t.IsValid) return;
+        if (t.IsWildcard) { plan.TileCount++; return; }
         plan.counts[(int)t.Suit, t.Num]++;
         plan.TileCount++;
         bonus += view.CountDora(t) + (t.Akadora ? 1 : 0);

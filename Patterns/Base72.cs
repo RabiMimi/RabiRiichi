@@ -32,6 +32,9 @@ namespace RabiRiichi.Patterns {
 
     /// <inheritdoc/>
     public override int Shanten(Hand hand, GameTile incoming, out Tiles output, int maxShanten = 13) {
+      if (HandShapeAnalyzer.HasWildcards(hand, incoming) || HandShapeAnalyzer.WildcardsEnabled(hand)) {
+        return HandShapeAnalyzer.SevenPairsShanten(hand, incoming, out output, maxShanten);
+      }
       if (hand.called.Any(gr => gr is not Jantou)) {
         return Reject(out output);
       }

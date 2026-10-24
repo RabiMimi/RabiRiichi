@@ -7,6 +7,13 @@ using System.Linq;
 
 namespace RabiRiichi.Core {
   public class Hand {
+    /// <summary>Copy mutable analysis state without mutating a live hand or its tile identities.</summary>
+    internal Hand WithFreeTiles(List<GameTile> tiles) {
+      var copy = (Hand)MemberwiseClone();
+      copy.freeTiles = tiles;
+      copy.pendingTile = null;
+      return copy;
+    }
     /// <summary> 手牌（不包含副露） </summary>
     public List<GameTile> freeTiles = [];
 

@@ -258,7 +258,8 @@ namespace RabiRiichi.Server.Agents {
     /// How many copies of <paramref name="kind"/> could still be live (unseen by
     /// the viewer), out of the four in a standard set.
     /// </summary>
-    public int UnseenCount(Tile kind) => System.Math.Max(0, 4 - VisibleCount(kind));
+    public int UnseenCount(Tile kind) => System.Math.Max(0,
+        (kind.IsWildcard ? game.config.initialTiles?.Count(t => t.IsWildcard) ?? 0 : 4) - VisibleCount(kind));
 
     /// <summary>
     /// Evaluates hypothetically discarding <paramref name="discard"/> from the
@@ -399,8 +400,7 @@ namespace RabiRiichi.Server.Agents {
       if (tempHand.Count != Game.HAND_SIZE) return [];
       var resolver = game.Get<PatternResolver>();
       if (resolver.ResolveShanten(tempHand, null, out var waits, 0) != 0) return [];
-      return waits.Select(wait =>
-          PlayTileAction.ComputeTenpaiInfo(resolver, tempHand, wait)).ToList();
+      return PlayTileAction.ComputeTenpaiInfos(resolver, tempHand, waits);
     }
 
     /// <summary>

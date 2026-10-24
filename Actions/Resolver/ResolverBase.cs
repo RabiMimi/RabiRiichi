@@ -35,7 +35,7 @@ namespace RabiRiichi.Actions.Resolver {
         return false;
       }
       var tile = tiles[tileIndex];
-      if (!tile.IsValid) {
+      if (!tile.IsValid || tile.IsWildcard) {
         return false;
       }
       bool success = false;

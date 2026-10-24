@@ -36,6 +36,9 @@ namespace RabiRiichi.Patterns {
 
     [RabiBroadcast] public ScoreCalcResult result = null;
 
+    /// <summary>The immutable effective interpretation of a wildcard win, server-side only.</summary>
+    public HandResolution resolution { get; internal set; }
+
     public ScoreStorage() { }
     public ScoreStorage(IEnumerable<Scoring> scores) {
       items.AddRange(scores);
