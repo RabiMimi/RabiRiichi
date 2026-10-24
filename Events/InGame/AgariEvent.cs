@@ -19,8 +19,19 @@ namespace RabiRiichi.Events.InGame {
         Scores = scores.ToProto(),
       };
       ret.FreeTiles.AddRange(freeTiles);
+      ret.WildcardAssignments.AddRange(WildcardAssignments());
       return ret;
     }
+
+    /// <summary> 计分所用解释中，每张万能牌代表的牌。无万能牌时为空 </summary>
+    public IEnumerable<WildcardAssignmentMsg> WildcardAssignments() =>
+        scores.resolution?.Groups
+            .SelectMany(group => group.Tiles)
+            .Where(tile => tile.Physical.tile.IsWildcard)
+            .Select(tile => new WildcardAssignmentMsg {
+              TraceId = tile.Physical.traceId,
+              Tile = tile.Effective.Val,
+            }) ?? [];
   }
 
   [RabiMessage]

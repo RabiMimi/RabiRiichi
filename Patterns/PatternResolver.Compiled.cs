@@ -123,7 +123,8 @@ namespace RabiRiichi.Patterns {
     internal static (int Aka, int Dora, int Ura) PhysicalBonuses(Hand hand, GameTile incoming) {
       int aka = 0, dora = 0, ura = 0;
       foreach (var t in hand.freeTiles.Concat(hand.called.SelectMany(g => g)).Append(incoming)) {
-        if (t.tile.IsWildcard) continue;
+        // A physical wildcard is never red, but it is a dora when a wildcard
+        // indicator is revealed (NextDora maps * to *).
         if (t.tile.Akadora) aka++;
         dora += hand.game.wall.CountDora(t.tile); ura += hand.game.wall.CountUradora(t.tile);
       }

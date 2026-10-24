@@ -335,13 +335,7 @@ namespace RabiRiichi.Communication.Proto {
     }
 
     public static AgariInfoMsg ConvertAgariInfo(Hand hand, AgariInfo agariInfo) {
-      var ret = new AgariInfoMsg {
-        PlayerId = agariInfo.playerId,
-        Scores = agariInfo.scores.ToProto(),
-      };
-      ret.FreeTiles.AddRange(hand.freeTiles.Select(
-          tile => ConvertGameTile(tile, true)));
-      return ret;
+      return agariInfo.ToProto(hand.freeTiles.Select(tile => ConvertGameTile(tile, true)));
     }
 
     [Produces]

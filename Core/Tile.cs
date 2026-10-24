@@ -188,9 +188,12 @@ namespace RabiRiichi.Core {
       Akadora = false
     } : Empty;
 
-    /// <summary> 下一张牌，用于宝牌指示牌计算 </summary>
+    /// <summary> 下一张牌，用于宝牌指示牌计算。万能牌指示万能牌 </summary>
     public Tile NextDora {
       get {
+        if (IsWildcard) {
+          return Wildcard;
+        }
         if (IsMPS) {
           return new Tile { Num = (byte)((Num % 9) + 1), Suit = Suit };
         }

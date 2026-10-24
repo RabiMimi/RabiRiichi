@@ -16,7 +16,8 @@ namespace RabiRiichi.Tests.Core {
       Assert.IsTrue(Tile.Wildcard.IsWildcard);
       Assert.IsFalse(Tile.Wildcard.Is19Z);
       Assert.IsFalse(Tile.Wildcard.IsMPS);
-      Assert.AreEqual(Tile.Empty, Tile.Wildcard.NextDora);
+      // A wildcard indicator makes the wildcards themselves dora.
+      Assert.AreEqual(Tile.Wildcard, Tile.Wildcard.NextDora);
       Assert.AreEqual(Tile.Wildcard, new Tile(Tile.Wildcard.Val));
       const string text = "*123m**405p*7z*";
       Assert.AreEqual(text.Replace("0", "r5"), new Tiles(text).ToString());
