@@ -1,8 +1,10 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Actions;
 using RabiRiichi.Actions.Resolver;
+using RabiRiichi.Communication;
 using RabiRiichi.Communication.Sync;
 using RabiRiichi.Core;
+using RabiRiichi.Core.Config;
 using RabiRiichi.Generated.Core;
 using RabiRiichi.Patterns;
 using RabiRiichi.Tests.Patterns;
@@ -79,6 +81,28 @@ namespace RabiRiichi.Tests.Actions {
       Assert.AreNotSame(candidates[0].tenpaiInfos[0], candidates[1].tenpaiInfos[0]);
       Assert.AreEqual(35, new PlayerHandState(hand, 0).ToProto(0).TenpaiWaits.Count);
       System.Console.WriteLine($"all-wild discard inquiry and sync: {clock.Elapsed.TotalMilliseconds:F2} ms");
+    }
+
+    // The client's tenpai panel shows exactly these waits, so a deck without
+    // wildcards must never offer one; a wildcard deck offers it even to a
+    // natural hand, since a wildcard can be drawn.
+    [DataTestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void WildcardWaitAppearsOnlyWhenTheDeckHasWildcards(bool wildDeck) {
+      var config = new GameConfig { actionCenter = new JsonStringActionCenter(null) };
+      if (wildDeck) config.initialTiles = new Tiles(config.initialTiles) { Tile.Wildcard };
+      var game = new Game(config);
+      foreach (var p in game.players) { p.Reset(); p.hand.jun = 2; }
+      game.wall.Reset();
+      var hand = WildcardFixture.Hand(game, "123m456p789s1122z");
+      Assert.AreEqual(wildDeck, hand.Tenpai.Contains(Tile.Wildcard), "hand.Tenpai");
+      Assert.AreEqual(wildDeck, new PlayerHandState(hand, 0).ToProto(0).TenpaiWaits.Any(w => w.WinningTile == Tile.Wildcard.Val), "synced waits");
+      var incoming = WildcardFixture.Incoming("9m");
+      var candidates = PlayTileAction.ComputeDiscardCandidates(game.players[0], hand.freeTiles.Append(incoming).ToList(), incoming);
+      var waits = candidates.Single(c => c.tile == incoming).tenpaiInfos.Select(t => t.winningTile).ToList();
+      Assert.IsTrue(waits.Contains(new Tile("1z")) && waits.Contains(new Tile("2z")));
+      Assert.AreEqual(wildDeck, waits.Contains(Tile.Wildcard), "discard previews");
     }
   }
 }
