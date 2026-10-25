@@ -53,8 +53,13 @@ namespace RabiRiichi.Server.Services {
     }
 
     public UserInfoResponse LoginUser(LoginUserRequest request, UserList userList) {
-      var dbUser = dbService.AuthenticateUser(request.Username, request.PasswordHash, out var error)
-        ?? throw new RpcException(new Status(StatusCode.Unauthenticated, error ?? "Invalid username or password"));
+      var dbUser = dbService.AuthenticateUser(request.Username, request.PasswordHash, out var error);
+      if (dbUser == null) {
+        if (error != null && error.Contains("cannot be empty")) {
+          throw new RpcException(new Status(StatusCode.InvalidArgument, error));
+        }
+        throw new RpcException(new Status(StatusCode.Unauthenticated, error ?? "Invalid username or password"));
+      }
 
       if (!userList.TryGet(dbUser.Id, out var user)) {
         user = new User {

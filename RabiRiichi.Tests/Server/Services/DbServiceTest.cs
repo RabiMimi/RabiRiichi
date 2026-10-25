@@ -56,12 +56,23 @@ namespace RabiRiichi.Tests.Server.Services {
       // Authenticate failure - bad password
       var badPass = dbService.AuthenticateUser("alice", "wrongpassword", out error);
       Assert.IsNotNull(error);
+      Assert.AreEqual("Password mismatch", error);
       Assert.IsNull(badPass);
 
       // Authenticate failure - bad username
       var badUser = dbService.AuthenticateUser("unknown", "mypassword123", out error);
       Assert.IsNotNull(error);
+      Assert.AreEqual("User does not exist", error);
       Assert.IsNull(badUser);
+
+      // Authenticate failure - empty username / password
+      var emptyUser = dbService.AuthenticateUser("", "mypassword123", out error);
+      Assert.AreEqual("Username cannot be empty", error);
+      Assert.IsNull(emptyUser);
+
+      var emptyPass = dbService.AuthenticateUser("alice", "", out error);
+      Assert.AreEqual("Password cannot be empty", error);
+      Assert.IsNull(emptyPass);
     }
 
     [TestMethod]
@@ -130,6 +141,7 @@ namespace RabiRiichi.Tests.Server.Services {
       // Wrong old password is rejected and leaves the version untouched.
       Assert.IsNull(dbService.ChangePassword("erin", "wrong", "new-hash", out error));
       Assert.IsNotNull(error);
+      Assert.AreEqual("Password mismatch", error);
       Assert.AreEqual(0, dbService.GetUserById(uid).TokenVersion);
 
       // Correct old password succeeds and bumps the version.
