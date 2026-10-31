@@ -28,9 +28,10 @@ namespace RabiRiichi.Server.Agents.Llm {
   /// steps (<c>user_input</c> / <c>model_output</c>). All wire fields are
   /// snake_case (an Interactions-API convention, unlike generateContent).
   /// </summary>
-  public sealed class GeminiProvider(HttpClient http, LlmSettings settings) : ILlmProvider {
+  public sealed class GeminiProvider(HttpClient http, LlmSettings settings, bool stateful = true) : ILlmProvider {
     private readonly HttpClient http = http;
     private readonly LlmSettings settings = settings;
+    private readonly bool stateful = stateful;
 
     private readonly Lock stateLock = new();
     /// <summary> Id of the last stored interaction, for server-side chaining. </summary>
@@ -43,9 +44,11 @@ namespace RabiRiichi.Server.Agents.Llm {
         int maxOutputTokens,
         CancellationToken cancellationToken) {
       try {
-        string prevId;
-        lock (stateLock) {
-          prevId = previousInteractionId;
+        string prevId = null;
+        if (stateful) {
+          lock (stateLock) {
+            prevId = previousInteractionId;
+          }
         }
 
         var url = $"{settings.BaseUrl}/v1beta/interactions";
@@ -80,7 +83,7 @@ namespace RabiRiichi.Server.Agents.Llm {
           Logger.Warn($"{LogTag} << parse failed ({result.Error}); id={interactionId ?? "<none>"}");
         }
         // Only advance the chain when the turn produced a usable, stored result.
-        if (result.Success && !string.IsNullOrEmpty(interactionId)) {
+        if (stateful && result.Success && !string.IsNullOrEmpty(interactionId)) {
           lock (stateLock) {
             previousInteractionId = interactionId;
           }
@@ -204,8 +207,19 @@ namespace RabiRiichi.Server.Agents.Llm {
         interactionId = AsString(node["id"]) ?? AsString(node["name"]);
 
         var text = ExtractText(node);
+        var thought = TextFromContentSteps(node["steps"]?.AsArray(), "thought");
+        var usage = node["usage"] ?? node["usage_metadata"];
+        int promptTokens = AsInt(usage?["input_tokens"]) + AsInt(usage?["prompt_token_count"]);
+        int completionTokens = AsInt(usage?["output_tokens"]) + AsInt(usage?["candidates_token_count"]);
+        int reasoningTokens = AsInt(usage?["thought_tokens"]) + AsInt(usage?["thoughts_token_count"]);
+
         if (!string.IsNullOrWhiteSpace(text)) {
-          return LlmResult.Ok(text);
+          return LlmResult.Ok(
+              text,
+              promptTokens,
+              completionTokens,
+              reasoningTokens,
+              string.IsNullOrWhiteSpace(thought) ? null : thought);
         }
         // No visible text. If the server still returned a well-formed
         // interaction (it has an id), the model IS reachable/valid — it just
@@ -288,6 +302,14 @@ namespace RabiRiichi.Server.Agents.Llm {
         return node?.GetValue<string>();
       } catch {
         return null;
+      }
+    }
+
+    private static int AsInt(JsonNode node) {
+      try {
+        return node != null ? Math.Max(0, node.GetValue<int>()) : 0;
+      } catch {
+        return 0;
       }
     }
 

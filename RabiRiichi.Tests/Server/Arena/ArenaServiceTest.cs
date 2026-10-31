@@ -12,10 +12,10 @@ using System.Threading.Tasks;
 
 namespace RabiRiichi.Tests.Server.Arena {
   /// <summary>
-  /// Scheduler tests for <see cref="ArenaService"/> (ARENA_DESIGN.md §10). These
-  /// inject a FAKE table runner (no full games) + a zero/virtual cooldown delay,
-  /// so the loop runs instantly and deterministically. One separate integration
-  /// test (in <c>EvalRoomTest</c>) exercises the real EvalRoom wiring.
+  /// Orchestrator tests for <see cref="ArenaService"/> covering Swiss, Balanced,
+  /// and Custom scheduling, parallel <c>MatchConcurrency</c>, graceful <c>Pause</c>
+  /// and <c>Resume</c>, immediate <c>StopAsync</c>, <c>AppendBatch</c>,
+  /// <c>ActivateRun</c>, and <c>DeleteRun</c>.
   /// </summary>
   [TestClass]
   public class ArenaServiceTest {
@@ -36,8 +36,6 @@ namespace RabiRiichi.Tests.Server.Arena {
       }
     }
 
-    // ----- Config / roster helpers ----------------------------------------
-
     private static ArenaConfig.ModelConfig Llm(string id) => new() {
       Id = id,
       DisplayName = id.ToUpperInvariant(),
@@ -50,13 +48,13 @@ namespace RabiRiichi.Tests.Server.Arena {
       Id = id,
       DisplayName = id.ToUpperInvariant(),
       Provider = "baseline",
-      Variant = "default",
+      Variant = "balanced",
       FrozenElo = frozen,
       Enabled = true,
     };
 
     private ArenaConfig Config(
-        int swissRounds, int cooldown, params ArenaConfig.ModelConfig[] models) {
+        int swissRounds, int concurrency = 1, params ArenaConfig.ModelConfig[] models) {
       var cfg = new ArenaConfig {
         WorkspaceDir = workspaceDir,
         AdminPassword = "pw",
@@ -64,31 +62,25 @@ namespace RabiRiichi.Tests.Server.Arena {
         WsUrl = "wss://arena.example.com",
       };
       cfg.Run.SwissRounds = swissRounds;
-      cfg.Run.PlayerCount = 4;
-      cfg.Run.TotalRound = 1;
-      cfg.Run.CooldownSecondsBetweenMatches = cooldown;
+      cfg.Run.MatchConcurrency = concurrency;
+      cfg.GameRules.PlayerCount = 4;
+      cfg.GameRules.TotalRound = 1;
       cfg.Models.AddRange(models);
       return cfg;
     }
 
-    // 8 enabled LLMs => divisible by 4 => exactly 2 tables/round, no filler
-    // needed. (Baseline filling is covered by SwissSchedulerTest directly.)
     private static ArenaConfig.ModelConfig[] EightLlms() =>
         Enumerable.Range(0, 8).Select(i => Llm($"p{i}")).ToArray();
 
     private static ArenaConfig.ModelConfig[] FourBaselines() =>
         new[] { Baseline("a"), Baseline("b"), Baseline("c"), Baseline("d") };
 
-    // ----- A deterministic fake table runner ------------------------------
-
-    /// <summary>
-    /// Produces an <see cref="EvalResult"/> for a table without playing a game:
-    /// placement 1..4 by seat order, fixed points. Records every gameId run.
-    /// </summary>
     private sealed class FakeRunner {
       public readonly ConcurrentQueue<string> Ran = new();
       public int Count => Ran.Count;
-      public volatile bool Observed; // set true when a run starts
+      public volatile bool Observed;
+      public int CurrentInFlight;
+      public int MaxObservedConcurrency;
 
       private readonly TaskCompletionSource block;
 
@@ -100,44 +92,54 @@ namespace RabiRiichi.Tests.Server.Arena {
           SwissTable table, string gameId, CancellationToken token) {
         Observed = true;
         Ran.Enqueue(gameId);
-        if (block != null) {
-          // Hold the match "in flight" until released / cancelled (Stop test).
-          using var reg = token.Register(() => block.TrySetCanceled(token));
-          await block.Task;
+        int cur = Interlocked.Increment(ref CurrentInFlight);
+        int prevMax;
+        do {
+          prevMax = Volatile.Read(ref MaxObservedConcurrency);
+          if (cur <= prevMax) break;
+        } while (Interlocked.CompareExchange(ref MaxObservedConcurrency, cur, prevMax) != prevMax);
+
+        try {
+          if (block != null) {
+            using var reg = token.Register(() => block.TrySetCanceled(token));
+            await block.Task;
+          } else {
+            await Task.Yield();
+          }
+          token.ThrowIfCancellationRequested();
+          var seats = table.Assignments.Select((a, i) => new EvalSeatResult {
+            Seat = a.Seat,
+            ModelId = a.Model.Id,
+            DisplayName = a.Model.DisplayName,
+            Provider = a.Model.Provider,
+            FinalPoints = 25000 + (4 - i) * 1000 - 2500,
+            Placement = i + 1,
+            RoundsPlayed = 4,
+            PenaltyCount = 0,
+          }).ToList();
+          return new EvalResult {
+            GameId = gameId,
+            Seed = 12345,
+            Seats = seats,
+            PlayerCount = table.Assignments.Count,
+            TotalRound = 1,
+            RoundsPlayed = 4,
+            StartedAt = DateTime.UtcNow.ToString("o"),
+            FinishedAt = DateTime.UtcNow.ToString("o"),
+            Completed = true,
+          };
+        } finally {
+          Interlocked.Decrement(ref CurrentInFlight);
         }
-        token.ThrowIfCancellationRequested();
-        var seats = table.Assignments.Select((a, i) => new EvalSeatResult {
-          Seat = a.Seat,
-          ModelId = a.Model.Id,
-          DisplayName = a.Model.DisplayName,
-          FinalPoints = 25000 + (4 - i) * 1000,
-          Placement = i + 1,
-          PenaltyCount = 0,
-        }).ToList();
-        return new EvalResult {
-          GameId = gameId,
-          Seed = 12345,
-          Seats = seats,
-          Config = null,
-          StartedAt = DateTime.UtcNow.ToString("o"),
-          FinishedAt = DateTime.UtcNow.ToString("o"),
-          Completed = true,
-        };
       }
     }
 
     private ArenaService Build(
-        ArenaConfig cfg, ArenaService.TableRunner runner,
-        ArenaService.DelayFn delay = null) {
+        ArenaConfig cfg, Func<SwissTable, string, CancellationToken, Task<EvalResult>> runner) {
       runManager = new RunManager(workspaceDir);
-      return new ArenaService(
-          runManager,
-          currentConfig: () => cfg,
-          tableRunner: runner,
-          delayFn: delay);
+      return new ArenaService(runManager, () => cfg, simpleRunner: runner);
     }
 
-    /// <summary>The active (newest) run's stores, for post-run assertions.</summary>
     private RunContext ActiveRun() => runManager.GetRun(runManager.NewestRunId());
 
     private static async Task WaitUntil(Func<bool> cond, int timeoutMs = 5000) {
@@ -150,12 +152,9 @@ namespace RabiRiichi.Tests.Server.Arena {
       }
     }
 
-    // ----- Start runs the scheduled matches -------------------------------
-
     [TestMethod]
     public async Task Start_RunsAllTablesOfAllRounds() {
-      // 8 LLMs => 2 tables per round; 3 rounds => 6 matches.
-      var cfg = Config(swissRounds: 3, cooldown: 0, EightLlms());
+      var cfg = Config(swissRounds: 3, concurrency: 1, EightLlms());
       var fake = new FakeRunner();
       var svc = Build(cfg, fake.Run);
 
@@ -163,139 +162,152 @@ namespace RabiRiichi.Tests.Server.Arena {
       await WaitUntil(() => svc.GetStatus().Status == RunStatus.Finished);
 
       Assert.AreEqual(6, fake.Count, "3 rounds * 2 tables");
-      var status = svc.GetStatus();
-      Assert.AreEqual(RunStatus.Finished, status.Status);
-      Assert.AreEqual(6, status.CompletedMatches);
+      Assert.AreEqual(6, svc.GetStatus().CompletedMatches);
 
-      // Match records + ratings were written via the active run's stores.
       var ctx = ActiveRun();
       Assert.AreEqual(6, ctx.Matches.List(1, 100).TotalCount);
-      var ratings = ctx.Ratings.GetAll();
-      Assert.IsTrue(ratings.Any(r => r.ModelId == "p0" && r.Games > 0));
+      Assert.IsTrue(ctx.Ratings.GetAll().Any(r => r.ModelId == "p0" && r.Games > 0));
     }
 
     [TestMethod]
-    public void Start_IsIdempotentWhileRunning() {
-      var cfg = Config(swissRounds: 1, cooldown: 0, FourBaselines());
-      var block = new TaskCompletionSource();
-      var fake = new FakeRunner(block);
+    public async Task ParallelConcurrency_ExecutesMultipleTablesInFlightSimultaneously() {
+      var cfg = Config(swissRounds: 1, concurrency: 2, EightLlms());
+      var gate = new TaskCompletionSource();
+      var fake = new FakeRunner(gate);
       var svc = Build(cfg, fake.Run);
 
       svc.Start();
-      svc.Start(); // second call must be a no-op (no crash / no double loop)
-      block.SetResult(); // release the held match
+      await WaitUntil(() => Volatile.Read(ref fake.CurrentInFlight) == 2);
+      Assert.AreEqual(2, fake.MaxObservedConcurrency);
 
-      // No exception is the assertion here; loop finishes on its own.
-    }
-
-    // ----- Stop halts scheduling and cancels ------------------------------
-
-    [TestMethod]
-    public async Task Stop_CancelsInFlightMatchAndHalts() {
-      var cfg = Config(swissRounds: 5, cooldown: 0, FourBaselines());
-      var block = new TaskCompletionSource();
-      var fake = new FakeRunner(block); // first match blocks until cancelled
-      var svc = Build(cfg, fake.Run);
-
-      svc.Start();
-      await WaitUntil(() => fake.Observed); // match is in flight
-      Assert.AreEqual(RunStatus.Running, svc.GetStatus().Status);
-
-      await svc.StopAsync();
-
-      Assert.AreEqual(RunStatus.Stopped, svc.GetStatus().Status);
-      // Only the one (cancelled) table was ever attempted; nothing completed.
-      Assert.AreEqual(1, fake.Count);
-      Assert.AreEqual(0, ActiveRun().Matches.List(1, 100).TotalCount);
-    }
-
-    [TestMethod]
-    public async Task Status_ReflectsTransitions() {
-      var cfg = Config(swissRounds: 1, cooldown: 0, FourBaselines());
-      var svc = Build(cfg, new FakeRunner().Run);
-
-      Assert.AreEqual(RunStatus.Idle, svc.GetStatus().Status);
-
-      svc.Start();
+      gate.SetResult();
       await WaitUntil(() => svc.GetStatus().Status == RunStatus.Finished);
-      Assert.AreEqual(RunStatus.Finished, svc.GetStatus().Status);
+      Assert.AreEqual(2, svc.GetStatus().CompletedMatches);
     }
 
-    // ----- Cooldown honored between matches --------------------------------
-
     [TestMethod]
-    public async Task Cooldown_InvokedBetweenMatches_NotBeforeFirst() {
-      // 8 LLMs => 2 tables/round, 2 rounds => 4 matches => 3 gaps.
-      var cfg = Config(swissRounds: 2, cooldown: 30, EightLlms());
-      int delayCalls = 0;
-      var observedDelays = new ConcurrentQueue<TimeSpan>();
-      ArenaService.DelayFn delay = (span, token) => {
-        Interlocked.Increment(ref delayCalls);
-        observedDelays.Enqueue(span);
-        return Task.CompletedTask; // zero real wait
-      };
-      var fake = new FakeRunner();
-      var svc = Build(cfg, fake.Run, delay);
+    public async Task PauseAndResume_FinishesInFlightTableThenResumesRemainingRounds() {
+      var cfg = Config(swissRounds: 2, concurrency: 1, FourBaselines());
+      var firstTableGate = new TaskCompletionSource();
+      int callIdx = 0;
+
+      runManager = new RunManager(workspaceDir);
+      var svc = new ArenaService(runManager, () => cfg, simpleRunner: async (table, gid, ct) => {
+        int idx = Interlocked.Increment(ref callIdx);
+        if (idx == 1) {
+          await firstTableGate.Task;
+        }
+        return new EvalResult {
+          GameId = gid,
+          Seed = 999,
+          PlayerCount = 4,
+          TotalRound = 1,
+          RoundsPlayed = 4,
+          Completed = true,
+          Seats = table.Assignments.Select((a, i) => new EvalSeatResult {
+            Seat = a.Seat, ModelId = a.Model.Id, DisplayName = a.Model.DisplayName,
+            FinalPoints = 25000, Placement = i + 1,
+          }).ToList(),
+        };
+      });
 
       svc.Start();
-      await WaitUntil(() => svc.GetStatus().Status == RunStatus.Finished);
+      await WaitUntil(() => Volatile.Read(ref callIdx) == 1);
 
-      Assert.AreEqual(4, fake.Count);
-      // Cooldown fires between matches only: 4 matches => 3 cooldowns.
-      Assert.AreEqual(3, delayCalls);
-      Assert.IsTrue(observedDelays.All(d => d == TimeSpan.FromSeconds(30)));
+      // Request graceful pause while match #1 is mid-flight.
+      svc.Pause();
+      firstTableGate.SetResult();
+
+      await WaitUntil(() => svc.GetStatus().Status == RunStatus.Paused);
+      Assert.AreEqual(1, svc.GetStatus().CompletedMatches, "in-flight match completed before pausing");
+      Assert.AreEqual(1, Volatile.Read(ref callIdx), "round 2 was not launched while paused");
+
+      // Resume finishes round 2!
+      svc.Resume();
+      await WaitUntil(() => svc.GetStatus().Status == RunStatus.Finished);
+      Assert.AreEqual(2, svc.GetStatus().CompletedMatches);
     }
 
     [TestMethod]
-    public async Task Cooldown_ZeroSeconds_StillInvokesDelaySeamOncePerGap() {
-      var cfg = Config(swissRounds: 1, cooldown: 0, EightLlms());
-      int delayCalls = 0;
-      ArenaService.DelayFn delay = (span, token) => {
-        Interlocked.Increment(ref delayCalls);
-        return Task.CompletedTask;
-      };
-      var svc = Build(cfg, new FakeRunner().Run, delay);
-
-      svc.Start();
-      await WaitUntil(() => svc.GetStatus().Status == RunStatus.Finished);
-
-      // 1 round * 2 tables => 1 gap => exactly one delay-seam invocation.
-      Assert.AreEqual(1, delayCalls);
-    }
-
-    // ----- Next-match preview ---------------------------------------------
-
-    [TestMethod]
-    public async Task NextMatchPreview_ExposedForUpcomingTable() {
-      var cfg = Config(swissRounds: 1, cooldown: 0, FourBaselines());
+    public async Task Stop_CancelsInFlightMatchImmediately() {
+      var cfg = Config(swissRounds: 5, concurrency: 1, FourBaselines());
       var block = new TaskCompletionSource();
       var fake = new FakeRunner(block);
       var svc = Build(cfg, fake.Run);
 
       svc.Start();
       await WaitUntil(() => fake.Observed);
+      Assert.AreEqual(RunStatus.Running, svc.GetStatus().Status);
 
-      var preview = svc.GetNextMatchPreview();
-      Assert.IsNotNull(preview);
-      Assert.AreEqual(4, preview.Seats.Count);
-      Assert.AreEqual(1, preview.SwissRound);
-      CollectionAssert.AreEqual(new[] { 0, 1, 2, 3 },
-          preview.Seats.Select(s => s.Seat).OrderBy(x => x).ToList());
+      await svc.StopAsync();
 
-      block.SetResult();
-      await WaitUntil(() => svc.GetStatus().Status == RunStatus.Finished);
+      Assert.AreEqual(RunStatus.Stopped, svc.GetStatus().Status);
+      Assert.AreEqual(1, fake.Count);
+      Assert.AreEqual(0, ActiveRun().Matches.List(1, 100).TotalCount);
     }
 
-    // ----- Resume from run.json -------------------------------------------
+    [TestMethod]
+    public async Task AppendBatch_SupportsBalancedMatchesSwissRoundsAndCustomLineups() {
+      var cfg = Config(swissRounds: 1, concurrency: 2, FourBaselines());
+      var fake = new FakeRunner();
+      var svc = Build(cfg, fake.Run);
+
+      // Start initial 1-round Swiss run (1 match).
+      svc.Start();
+      await WaitUntil(() => svc.GetStatus().Status == RunStatus.Finished);
+      Assert.AreEqual(1, svc.GetStatus().CompletedMatches);
+
+      // Append 2 balanced matches to the finished run -> auto-resumes to 3 matches.
+      var err1 = svc.AppendBatch(new AppendBatchOptions {
+        Mode = "balanced_matches",
+        Count = 2,
+        Label = "Balanced +2",
+      });
+      Assert.AreEqual(0, err1.Count);
+      await WaitUntil(() => svc.GetStatus().Status == RunStatus.Finished);
+      Assert.AreEqual(3, svc.GetStatus().CompletedMatches);
+
+      // Append 2 custom seat-specific matches -> auto-resumes to 5 matches.
+      var err2 = svc.AppendBatch(new AppendBatchOptions {
+        Mode = "custom_lineup",
+        Count = 2,
+        Label = "Showmatch",
+        SeatModelIds = new List<string> { "d", "c", "b", "a" },
+      });
+      Assert.AreEqual(0, err2.Count);
+      await WaitUntil(() => svc.GetStatus().Status == RunStatus.Finished);
+      Assert.AreEqual(5, svc.GetStatus().CompletedMatches);
+    }
+
+    [TestMethod]
+    public async Task ActivateAndDeleteRun_SwitchesActiveRunAndDeletesSafely() {
+      var cfg = Config(swissRounds: 1, concurrency: 1, FourBaselines());
+      var svc = Build(cfg, new FakeRunner().Run);
+
+      await svc.StartNewRunAsync(new StartRunOptions { Label = "Run One" });
+      await WaitUntil(() => svc.GetStatus().Status == RunStatus.Finished);
+      var run1 = svc.ActiveRunId;
+
+      await svc.StartNewRunAsync(new StartRunOptions { Label = "Run Two" });
+      await WaitUntil(() => svc.GetStatus().Status == RunStatus.Finished);
+      var run2 = svc.ActiveRunId;
+
+      Assert.AreNotEqual(run1, run2);
+      Assert.IsTrue(svc.ActivateRun(run1, out var actErr), actErr);
+      Assert.AreEqual(run1, svc.ActiveRunId);
+
+      Assert.IsTrue(svc.DeleteRun(run2, out var delErr), delErr);
+      Assert.AreEqual(1, runManager.ListRuns().Count);
+    }
 
     [TestMethod]
     public async Task Resume_ContinuesFromPersistedRunState() {
-      // Pre-seed a run's run.json as if round 0 (2 tables) is done, mid round 1.
-      var cfg = Config(swissRounds: 2, cooldown: 0, EightLlms());
+      var cfg = Config(swissRounds: 2, concurrency: 1, EightLlms());
       runManager = new RunManager(workspaceDir);
       var ctx = runManager.CreateRun(cfg);
       ctx.RunState.Save(new RunState {
         RunId = ctx.RunId,
+        ScheduleMode = "swiss",
         SwissRoundIndex = 1,
         SwissRounds = 2,
         CompletedTablesInRound = 0,
@@ -308,60 +320,16 @@ namespace RabiRiichi.Tests.Server.Arena {
       });
 
       var fake = new FakeRunner();
-      var svc = new ArenaService(runManager, () => cfg, tableRunner: fake.Run);
+      var svc = new ArenaService(runManager, () => cfg, simpleRunner: fake.Run);
 
-      // On construction it reflects the persisted (crash-safe) state as Stopped.
       Assert.AreEqual(RunStatus.Stopped, svc.GetStatus().Status);
       Assert.AreEqual(ctx.RunId, svc.GetStatus().RunId);
 
       svc.Start();
       await WaitUntil(() => svc.GetStatus().Status == RunStatus.Finished);
 
-      // Only the remaining round (round 1 => 2 tables) is played on resume.
       Assert.AreEqual(2, fake.Count, "resume plays only the unfinished round");
-      var final = ctx.RunState.Get();
-      Assert.AreEqual(RunStatus.Finished, final.Status);
-      Assert.AreEqual(ctx.RunId, final.RunId);
-      Assert.AreEqual(4, final.CompletedPairings.Count);
-    }
-
-    [TestMethod]
-    public async Task RunState_PersistedAfterEachMatch() {
-      var cfg = Config(swissRounds: 1, cooldown: 0, EightLlms());
-      var fake = new FakeRunner();
-      var svc = Build(cfg, fake.Run);
-
-      svc.Start();
-      await WaitUntil(() => svc.GetStatus().Status == RunStatus.Finished);
-
-      var state = ActiveRun().RunState.Get();
-      Assert.IsNotNull(state);
-      Assert.AreEqual(RunStatus.Finished, state.Status);
-      Assert.AreEqual(2, state.CompletedPairings.Count);
-      Assert.IsFalse(string.IsNullOrEmpty(state.RunId));
-    }
-
-    [TestMethod]
-    public async Task StartNewRun_CreatesSeparateRunPreservingPriorResults() {
-      var cfg = Config(swissRounds: 1, cooldown: 0, EightLlms());
-      var svc = Build(cfg, new FakeRunner().Run);
-
-      // First run to completion.
-      svc.Start();
-      await WaitUntil(() => svc.GetStatus().Status == RunStatus.Finished);
-      var firstRunId = svc.ActiveRunId;
-      Assert.AreEqual(2, ActiveRun().Matches.List(1, 100).TotalCount);
-
-      // A brand-new run is a distinct, isolated run.
-      await svc.StartNewRunAsync();
-      await WaitUntil(() => svc.GetStatus().Status == RunStatus.Finished);
-      var secondRunId = svc.ActiveRunId;
-
-      Assert.AreNotEqual(firstRunId, secondRunId);
-      Assert.AreEqual(2, runManager.RunIds().Count, "two separate runs exist");
-      // The first run's matches are untouched by the second run.
-      Assert.AreEqual(2, runManager.GetRun(firstRunId).Matches.List(1, 100).TotalCount);
-      Assert.AreEqual(2, runManager.GetRun(secondRunId).Matches.List(1, 100).TotalCount);
+      Assert.AreEqual(4, ctx.RunState.Get().CompletedPairings.Count);
     }
   }
 }

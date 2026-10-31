@@ -21,9 +21,12 @@ namespace RabiRiichi.Server.Agents.Llm {
         IReadOnlyList<LlmMessage> messages,
         int maxOutputTokens,
         CancellationToken cancellationToken) {
+      string tokenKey = UsesMaxCompletionTokens(settings.Model)
+          ? "max_completion_tokens"
+          : "max_tokens";
       var body = new JsonObject {
         ["model"] = settings.Model,
-        ["max_tokens"] = maxOutputTokens,
+        [tokenKey] = maxOutputTokens,
         ["temperature"] = 1.0,
         ["messages"] = OpenAiCompatible.BuildMessages(messages),
       };
@@ -32,6 +35,15 @@ namespace RabiRiichi.Server.Agents.Llm {
       var exchange = await OpenAiCompatible.PostAsync(
           http, settings.BaseUrl, settings.ApiToken, body, cancellationToken);
       return OpenAiCompatible.ToResult(exchange);
+    }
+
+    internal static bool UsesMaxCompletionTokens(string model) {
+      if (string.IsNullOrWhiteSpace(model)) return false;
+      var m = model.Trim();
+      return m.StartsWith("o1", StringComparison.OrdinalIgnoreCase) ||
+             m.StartsWith("o3", StringComparison.OrdinalIgnoreCase) ||
+             m.StartsWith("o4", StringComparison.OrdinalIgnoreCase) ||
+             m.StartsWith("gpt-5", StringComparison.OrdinalIgnoreCase);
     }
 
     internal static bool IsDeepSeekModel(string model) =>

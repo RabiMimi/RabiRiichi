@@ -1,78 +1,392 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>RabiRiichi Arena</title>
-  <style>
-    :root { color-scheme: light dark; }
-    * { box-sizing: border-box; }
-    body {
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      margin: 0; padding: 0 16px 48px; line-height: 1.4;
-      max-width: 1100px; margin-inline: auto;
-    }
-    h1 { margin: 24px 0 4px; }
-    h2 { margin: 32px 0 8px; border-bottom: 1px solid #8884; padding-bottom: 4px; }
-    .muted { color: #8a8a8a; font-size: 0.9em; }
-    .status { display: flex; flex-wrap: wrap; gap: 16px; align-items: baseline; }
-    .pill {
-      display: inline-block; padding: 2px 10px; border-radius: 999px;
-      background: #6cf3; font-weight: 600; font-size: 0.85em;
-    }
-    table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
-    th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #8883; }
-    th { font-weight: 600; }
-    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
-    .delta-up { color: #2e9e3f; }
-    .delta-down { color: #d13b3b; }
-    a { color: #3577e0; text-decoration: none; }
-    a:hover { text-decoration: underline; }
-    .pager { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
-    button {
-      cursor: pointer; padding: 4px 12px; border-radius: 6px;
-      border: 1px solid #8886; background: #7771; font: inherit;
-    }
-    button:disabled { opacity: 0.4; cursor: default; }
-    select {
-      font: inherit; padding: 4px 8px; border-radius: 6px;
-      border: 1px solid #8886; background: #7771; color: inherit;
-    }
-    .match-players { display: flex; flex-direction: column; gap: 2px; }
-    .seat { font-size: 0.86em; }
-    .err { color: #d13b3b; }
-    .adminlink { float: right; font-size: 0.85em; margin-top: 28px; }
-  </style>
+  <title>RabiRiichi Arena — LLM Mahjong Evaluation &amp; Benchmark Suite</title>
+  <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-  <a class="adminlink muted" href="/admin.html">Admin &rsaquo;</a>
-  <h1>RabiRiichi Arena</h1>
-  <div class="muted">LLM mahjong benchmark &mdash; models actually play riichi.</div>
+  <header class="topbar">
+    <div class="topbar-brand">
+      <div class="brand-mark" aria-hidden="true">🀄</div>
+      <div class="brand-copy">
+        <div class="brand-title-row">
+          <h1 class="brand-title" data-i18n="brandTitle">RabiRiichi Arena</h1>
+          <span class="brand-tag" data-i18n="brandTag">LLM Evaluation Studio</span>
+        </div>
+        <p class="brand-subtitle" data-i18n="brandSubtitle">Riichi, Wildcards, Sanma, Koyaku &amp; Multi-Model Benchmarking</p>
+      </div>
+    </div>
 
-  <h2>Run</h2>
-  <div class="row" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:8px 0;">
-    <label for="run-select" class="muted">Viewing run:</label>
-    <select id="run-select"></select>
-    <span id="run-meta" class="muted"></span>
+    <div class="topbar-controls">
+      <label class="lang-picker" for="lang-select">
+        <span class="scope-label" data-i18n="langLabel">Language</span>
+        <select id="lang-select" class="input-select lang-select" data-i18n-aria-label="langAria" aria-label="Interface language">
+          <option value="en">English</option>
+          <option value="zhs">简体中文</option>
+          <option value="zht">繁體中文</option>
+          <option value="ja">日本語</option>
+        </select>
+      </label>
+
+      <label class="scope-picker" for="scope-select">
+        <span class="scope-label" data-i18n="scopeLabel">Dataset Scope</span>
+        <select id="scope-select" class="input-select scope-select" data-i18n-aria-label="scopeAria" aria-label="Evaluation run scope">
+          <option value="current" data-i18n="scopeCurrent">Active Run</option>
+          <option value="all" data-i18n="scopeAll">All Runs Combined</option>
+        </select>
+      </label>
+
+      <div id="global-status-pill" class="status-pill status-idle" role="status" data-i18n="statusIdle">Idle</div>
+
+      <button id="refresh-now-btn" type="button" class="btn btn-ghost btn-sm" data-i18n="refreshBtn" data-i18n-title="refreshTitle" title="Refresh arena state now">
+        Refresh
+      </button>
+
+      <button id="admin-auth-btn" type="button" class="btn btn-secondary btn-sm" data-i18n="unlockAdmin">
+        Unlock Admin
+      </button>
+    </div>
+  </header>
+
+  <div id="default-password-banner" class="security-banner hidden" role="alert">
+    <span><span data-i18n="secBannerPrefix">Default admin password (</span><code>changeme</code><span data-i18n="secBannerMid">) is currently active. Rotate it in </span><strong data-i18n="secBannerPath">Configuration Studio → Run, Elo &amp; Security</strong><span data-i18n="secBannerSuffix"> before exposing this server on a shared network.</span></span>
+    <button id="jump-security-btn" type="button" class="btn btn-ghost btn-xs" data-i18n="openSecSettings">Open Security Settings</button>
   </div>
 
-  <h2>Run status</h2>
-  <div id="status" class="status"><span class="muted">Loading&hellip;</span></div>
+  <nav class="main-tabs" data-i18n-aria-label="navAria" aria-label="Arena sections">
+    <button type="button" class="tab-btn active" data-tab="overview">
+      <span class="tab-title" data-i18n="tabOverview">Live Arena &amp; Control</span>
+      <span id="nav-badge-live" class="tab-badge hidden">0</span>
+    </button>
+    <button type="button" class="tab-btn" data-tab="scoreboard">
+      <span class="tab-title" data-i18n="tabScoreboard">Scoreboard</span>
+      <span id="nav-badge-models" class="tab-badge">0</span>
+    </button>
+    <button type="button" class="tab-btn" data-tab="analytics">
+      <span class="tab-title" data-i18n="tabAnalytics">Analytics &amp; Charts</span>
+    </button>
+    <button type="button" class="tab-btn" data-tab="matches">
+      <span class="tab-title" data-i18n="tabMatches">Matches &amp; 3D Replays</span>
+      <span id="nav-badge-matches" class="tab-badge">0</span>
+    </button>
+    <button type="button" class="tab-btn" data-tab="config">
+      <span class="tab-title" data-i18n="tabConfig">Configuration Studio</span>
+      <span id="nav-badge-dirty" class="tab-badge tab-badge-warn hidden" data-i18n="badgeUnsaved">Unsaved</span>
+    </button>
+  </nav>
 
-  <h2>Next match</h2>
-  <div id="next"><span class="muted">Loading&hellip;</span></div>
+  <main class="workspace-shell">
+    <!-- TAB 1: LIVE ARENA & RUN CONTROL -->
+    <section id="view-overview" class="tab-view">
+      <div class="overview-hero-grid">
+        <div class="card hero-control-card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title" data-i18n="heroTitle">Tournament &amp; Batch Run Controller</h2>
+              <p id="hero-run-subtitle" class="card-subtitle" data-i18n="heroSubtitleDefault">Manage live evaluation runs, parallel match workers, and custom batches.</p>
+            </div>
+            <div id="hero-rules-badges" class="badge-cluster"></div>
+          </div>
 
-  <h2>Leaderboard</h2>
-  <div id="leaderboard"><span class="muted">Loading&hellip;</span></div>
+          <div class="hero-progress-layout">
+            <div id="hero-progress-ring" class="progress-ring-slot"></div>
+            <div class="hero-metrics-col">
+              <div id="hero-kpis" class="kpi-mini-grid"></div>
+              <div id="hero-error-banner" class="inline-alert inline-alert-danger hidden"></div>
+              <div id="hero-action-bar" class="action-toolbar"></div>
+            </div>
+          </div>
+        </div>
 
-  <h2>Matches</h2>
-  <div id="matches"><span class="muted">Loading&hellip;</span></div>
-  <div class="pager">
-    <button id="prev">&larr; Newer</button>
-    <span id="pageinfo" class="muted"></span>
-    <button id="next-page">Older &rarr;</button>
-  </div>
+        <div class="card next-up-card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title" data-i18n="nextTableTitle">Next Queued Table</h2>
+              <p class="card-subtitle" data-i18n="nextTableSubtitle">Upcoming scheduler seat assignment</p>
+            </div>
+          </div>
+          <div id="next-match-slot" class="next-match-body"></div>
+        </div>
+      </div>
 
-  <script src="app.js"></script>
+      <div class="card section-card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title" data-i18n="liveTablesTitle">Live Active Tables</h2>
+            <p class="card-subtitle" data-i18n="liveTablesSubtitle">Real-time round, remaining wall, riichi declarations, and seat points across concurrent matches</p>
+          </div>
+          <span id="active-tables-count" class="badge">0 active</span>
+        </div>
+        <div id="active-tables-grid" class="live-tables-grid"></div>
+      </div>
+
+      <div class="two-col-grid">
+        <div class="card section-card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title" data-i18n="runHistoryTitle">Evaluation Run History</h2>
+              <p class="card-subtitle" data-i18n="runHistorySubtitle">Switch scope, activate an existing run to append batches, or clean up old runs</p>
+            </div>
+          </div>
+          <div id="runs-history-slot" class="table-scroll"></div>
+        </div>
+
+        <div class="card section-card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title" data-i18n="telemetryTitle">Provider Operational Telemetry</h2>
+              <p class="card-subtitle" data-i18n="telemetrySubtitle">Cumulative requests, error categories, tokens, retries, and latency</p>
+            </div>
+            <button id="reset-usage-btn" type="button" class="btn btn-ghost btn-xs hidden" data-i18n="btnResetCounters">Reset Counters</button>
+          </div>
+          <div id="usage-telemetry-slot" class="table-scroll"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: SCOREBOARD -->
+    <section id="view-scoreboard" class="tab-view hidden">
+      <div class="card section-card">
+        <div class="card-header toolbar-header">
+          <div>
+            <h2 class="card-title" data-i18n="scoreboardTitle">Comprehensive Model Scoreboard</h2>
+            <p class="card-subtitle" data-i18n="scoreboardSubtitle">Click any column header to sort, or click a model row to inspect its playstyle profile &amp; head-to-head matchups</p>
+          </div>
+          <div class="filter-bar">
+            <input id="scoreboard-search" type="search" class="input-text input-sm" data-i18n-placeholder="scoreboardSearchPlaceholder" data-i18n-aria-label="scoreboardSearchAria" placeholder="Filter model or variant…" aria-label="Search scoreboard" />
+            <select id="scoreboard-provider-filter" class="input-select input-sm" data-i18n-aria-label="scoreboardProvAria" aria-label="Filter by provider">
+              <option value="all" data-i18n="provFilterAll">All Providers</option>
+              <option value="openai">OpenAI / Compatible</option>
+              <option value="gemini">Google Gemini</option>
+              <option value="anthropic">Anthropic Claude</option>
+              <option value="grok">xAI Grok</option>
+              <option value="baseline" data-i18n="provFilterBaselines">Rule-Based Baselines</option>
+            </select>
+            <label class="checkbox-pill">
+              <input id="scoreboard-hide-baselines" type="checkbox" />
+              <span data-i18n="hideBaselinesLabel">Hide Baselines</span>
+            </label>
+          </div>
+        </div>
+        <div id="scoreboard-table-slot" class="table-scroll"></div>
+      </div>
+    </section>
+
+    <!-- TAB 3: ANALYTICS & VISUALIZATIONS -->
+    <section id="view-analytics" class="tab-view hidden">
+      <div id="analytics-kpi-strip" class="kpi-strip"></div>
+
+      <div class="analytics-grid">
+        <div class="card chart-card chart-span-2">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title" data-i18n="chartEloTitle">Elo Rating Trajectory</h2>
+              <p class="card-subtitle" data-i18n="chartEloSubtitle">Match-by-match rating evolution (click legend chips to isolate models)</p>
+            </div>
+          </div>
+          <div id="chart-elo-trajectory" class="chart-stage"></div>
+        </div>
+
+        <div class="card chart-card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title" data-i18n="chartPlaceTitle">Placement Distribution</h2>
+              <p class="card-subtitle" data-i18n="chartPlaceSubtitle">1st / 2nd / 3rd / 4th finish share per contender</p>
+            </div>
+          </div>
+          <div id="chart-placements" class="chart-stage"></div>
+        </div>
+
+        <div class="card chart-card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title" data-i18n="chartScatterTitle">Mahjong Playstyle &amp; Efficiency Map</h2>
+              <p class="card-subtitle" data-i18n="chartScatterSubtitle">Compare tactical aggression, defense, meld calling, and operational speed</p>
+            </div>
+            <select id="scatter-mode-select" class="input-select input-sm" data-i18n-aria-label="scatterAria" aria-label="Scatter plot axes">
+              <option value="agari_vs_dealin" data-i18n="scatterOptAgariDeal">Agari Rate vs Deal-In Rate</option>
+              <option value="riichi_vs_open" data-i18n="scatterOptRiichiOpen">Riichi Rate vs Open Call Rate</option>
+              <option value="elo_vs_latency" data-i18n="scatterOptEloLatency">Elo Rating vs Avg Latency (ms)</option>
+              <option value="elo_vs_tokens" data-i18n="scatterOptEloTokens">Elo Rating vs Tokens / Decision</option>
+            </select>
+          </div>
+          <div id="chart-playstyle-scatter" class="chart-stage"></div>
+        </div>
+
+        <div class="card chart-card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title" data-i18n="chartH2HTitle">Pairwise Head-to-Head Matrix</h2>
+              <p class="card-subtitle" data-i18n="chartH2HSubtitle">Row model finish-ahead rate &amp; average point differential against column model</p>
+            </div>
+          </div>
+          <div id="chart-h2h-matrix" class="chart-stage"></div>
+        </div>
+
+        <div class="card chart-card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title" data-i18n="chartYakuTitle">Yaku &amp; Classical Koyaku Breakdown</h2>
+              <p class="card-subtitle" data-i18n="chartYakuSubtitle">Winning hand pattern frequencies (Koyaku &amp; Yakuman highlighted)</p>
+            </div>
+            <select id="yaku-model-filter" class="input-select input-sm" data-i18n-aria-label="yakuFilterAria" aria-label="Filter yaku by model">
+              <option value="all" data-i18n="filterAllModels">All Models</option>
+            </select>
+          </div>
+          <div id="chart-yaku-breakdown" class="chart-stage"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: MATCHES, 3D REPLAYS & REASONING -->
+    <section id="view-matches" class="tab-view hidden">
+      <div class="card section-card">
+        <div class="card-header toolbar-header">
+          <div>
+            <h2 class="card-title" data-i18n="matchesTitle">Completed Matches &amp; 3D Replays</h2>
+            <p class="card-subtitle" data-i18n="matchesSubtitle">Launch interactive 3D WebGL replays (with seat perspectives &amp; reasoning bubbles) or inspect turn-by-turn LLM transcripts</p>
+          </div>
+          <div class="filter-bar">
+            <input id="matches-search" type="search" class="input-text input-sm" data-i18n-placeholder="matchesSearchPlaceholder" data-i18n-aria-label="matchesSearchAria" placeholder="Search match ID, preset, model…" aria-label="Search matches" />
+            <select id="matches-model-filter" class="input-select input-sm" data-i18n-aria-label="matchesModelFilterAria" aria-label="Filter matches by model">
+              <option value="" data-i18n="filterAllModels">All Models</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="matches-list-slot" class="matches-list"></div>
+        <div id="matches-pagination-slot" class="pagination-bar"></div>
+      </div>
+    </section>
+
+    <!-- TAB 5: CONFIGURATION STUDIO -->
+    <section id="view-config" class="tab-view hidden">
+      <div id="config-studio-root"></div>
+    </section>
+  </main>
+
+  <!-- ADMIN LOGIN DIALOG -->
+  <dialog id="login-dialog" class="modal-dialog modal-sm">
+    <form id="login-form" class="modal-card" method="dialog">
+      <div class="modal-header">
+        <h3 class="modal-title" data-i18n="loginTitle">Unlock Arena Admin</h3>
+        <button id="login-cancel-btn" type="button" class="icon-close" data-i18n-aria-label="closeAria" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body">
+        <p class="muted-text" data-i18n="loginDesc">Authenticate with an HttpOnly session cookie to control runs, test models, and save Arena configurations.</p>
+        <label class="field-group">
+          <span class="field-label" data-i18n="loginPwdLabel">Admin Password</span>
+          <input id="login-password-input" type="password" class="input-text" autocomplete="current-password" data-i18n-placeholder="loginPwdPlaceholder" placeholder="Enter admin password" required />
+        </label>
+        <div id="login-error-box" class="inline-alert inline-alert-danger hidden"></div>
+      </div>
+      <div class="modal-footer">
+        <button id="login-dismiss-btn" type="button" class="btn btn-ghost" data-i18n="cancelBtn">Cancel</button>
+        <button id="login-submit-btn" type="submit" class="btn btn-primary" data-i18n="loginSubmitBtn">Sign In</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- START NEW RUN DIALOG -->
+  <dialog id="new-run-dialog" class="modal-dialog modal-md">
+    <form id="new-run-form" class="modal-card" method="dialog">
+      <div class="modal-header">
+        <h3 class="modal-title" data-i18n="newRunTitle">Start New Evaluation Run</h3>
+        <button id="new-run-close-btn" type="button" class="icon-close" data-i18n-aria-label="closeAria" aria-label="Close">×</button>
+      </div>
+      <div id="new-run-body" class="modal-body"></div>
+      <div class="modal-footer">
+        <button id="new-run-cancel-btn" type="button" class="btn btn-ghost" data-i18n="cancelBtn">Cancel</button>
+        <button type="submit" class="btn btn-primary" data-i18n="newRunLaunchBtn">Launch New Run</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- START / APPEND BATCH DIALOG -->
+  <dialog id="batch-dialog" class="modal-dialog modal-md">
+    <form id="batch-form" class="modal-card" method="dialog">
+      <div class="modal-header">
+        <h3 class="modal-title" data-i18n="batchTitle">Schedule &amp; Start Match Batch</h3>
+        <button id="batch-close-btn" type="button" class="icon-close" data-i18n-aria-label="closeAria" aria-label="Close">×</button>
+      </div>
+      <div id="batch-body" class="modal-body"></div>
+      <div class="modal-footer">
+        <button id="batch-cancel-btn" type="button" class="btn btn-ghost" data-i18n="cancelBtn">Cancel</button>
+        <button type="submit" class="btn btn-primary" data-i18n="batchSubmitBtn">Queue &amp; Start Batch</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- MODEL DEEP-DIVE DIALOG -->
+  <dialog id="model-detail-dialog" class="modal-dialog modal-lg">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="model-detail-title" class="modal-title" data-i18n="modelProfileDefaultTitle">Model Profile</h3>
+        <button id="model-detail-close-btn" type="button" class="icon-close" data-i18n-aria-label="closeAria" aria-label="Close">×</button>
+      </div>
+      <div id="model-detail-body" class="modal-body"></div>
+    </div>
+  </dialog>
+
+  <!-- MATCH DETAIL & REASONING INSPECTOR DIALOG -->
+  <dialog id="match-detail-dialog" class="modal-dialog modal-xl">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <h3 id="match-detail-title" class="modal-title" data-i18n="matchInspectorDefaultTitle">Match Inspector</h3>
+          <p id="match-detail-subtitle" class="modal-subtitle"></p>
+        </div>
+        <button id="match-detail-close-btn" type="button" class="icon-close" data-i18n-aria-label="closeAria" aria-label="Close">×</button>
+      </div>
+      <div id="match-detail-body" class="modal-body"></div>
+    </div>
+  </dialog>
+
+  <!-- IMPORT CONFIG JSON DIALOG -->
+  <dialog id="import-json-dialog" class="modal-dialog modal-md">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title" data-i18n="importJsonTitle">Import Arena Configuration JSON</h3>
+        <button id="import-json-close-btn" type="button" class="icon-close" data-i18n-aria-label="closeAria" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body">
+        <p class="muted-text"><span data-i18n="importJsonPrefix">Paste an exported </span><code>arena.config.json</code><span data-i18n="importJsonMid"> payload or load a local JSON file into the studio editor. Existing stored API keys are preserved unless explicitly replaced.</span></p>
+        <label class="field-group">
+          <span class="field-label" data-i18n="importJsonFileLabel">Load from file</span>
+          <input id="import-json-file" type="file" accept="application/json,.json" class="input-text" />
+        </label>
+        <label class="field-group">
+          <span class="field-label" data-i18n="importJsonTextLabel">Configuration JSON</span>
+          <textarea id="import-json-textarea" rows="10" class="input-textarea code-textarea" placeholder="{ &quot;models&quot;: [...], &quot;gameRules&quot;: {...} }"></textarea>
+        </label>
+      </div>
+      <div class="modal-footer">
+        <button id="import-json-cancel-btn" type="button" class="btn btn-ghost" data-i18n="cancelBtn">Cancel</button>
+        <button id="import-json-apply-btn" type="button" class="btn btn-primary" data-i18n="importJsonApplyBtn">Load into Editor</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- GENERIC CONFIRMATION DIALOG -->
+  <dialog id="confirm-dialog" class="modal-dialog modal-sm">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="confirm-dialog-title" class="modal-title" data-i18n="confirmDefaultTitle">Confirm</h3>
+      </div>
+      <div class="modal-body">
+        <p id="confirm-dialog-message" class="confirm-message"></p>
+      </div>
+      <div class="modal-footer">
+        <button id="confirm-dialog-cancel" type="button" class="btn btn-ghost" data-i18n="cancelBtn">Cancel</button>
+        <button id="confirm-dialog-ok" type="button" class="btn btn-primary" data-i18n="confirmBtn">Confirm</button>
+      </div>
+    </div>
+  </dialog>
+
+  <div id="toast-container" class="toast-stack" aria-live="polite"></div>
+
+  <script type="module" src="/app.js"></script>
 </body>
 </html>

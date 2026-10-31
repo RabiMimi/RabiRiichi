@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -5,9 +6,6 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace RabiRiichi.Arena.Storage {
-  /// <summary>
-  /// Categories used to break down provider-call failures. See §12c.
-  /// </summary>
   [JsonConverter(typeof(JsonStringEnumConverter))]
   public enum UsageErrorCategory {
     Network,
@@ -19,9 +17,8 @@ namespace RabiRiichi.Arena.Storage {
   }
 
   /// <summary>
-  /// Per-model usage counters (requests/tokens/errors), persisted to
-  /// <c>{workspace}/stats.json</c>. Incremented around every provider call.
-  /// See ARENA_DESIGN.md §12c. This is a serializable snapshot type.
+  /// Per-model operational counters (requests, tokens, latency, errors) persisted to
+  /// <c>{workspace}/stats.json</c>.
   /// </summary>
   public sealed class ModelUsage {
     public string ModelId { get; set; } = "";
@@ -29,7 +26,6 @@ namespace RabiRiichi.Arena.Storage {
     public long Successes { get; set; }
     public long Failures { get; set; }
 
-    // Failure breakdown by category.
     public long NetworkErrors { get; set; }
     public long TimeoutErrors { get; set; }
     public long InvalidResponseErrors { get; set; }
@@ -39,7 +35,9 @@ namespace RabiRiichi.Arena.Storage {
 
     public long PromptTokens { get; set; }
     public long CompletionTokens { get; set; }
+    public long ReasoningTokens { get; set; }
     public long TotalTokens { get; set; }
+    public long TotalLatencyMs { get; set; }
 
     public long Retries { get; set; }
     public long Penalties { get; set; }
@@ -57,7 +55,9 @@ namespace RabiRiichi.Arena.Storage {
       OtherErrors = OtherErrors,
       PromptTokens = PromptTokens,
       CompletionTokens = CompletionTokens,
+      ReasoningTokens = ReasoningTokens,
       TotalTokens = TotalTokens,
+      TotalLatencyMs = TotalLatencyMs,
       Retries = Retries,
       Penalties = Penalties,
     };
@@ -75,9 +75,7 @@ namespace RabiRiichi.Arena.Storage {
   }
 
   /// <summary>
-  /// Thread-safe per-model usage counters with write-through persistence to
-  /// <c>{workspace}/stats.json</c>. Increment methods persist after mutating;
-  /// <see cref="Snapshot"/> returns a deep copy safe to serialize elsewhere.
+  /// Thread-safe per-model usage counters persisted to <c>{workspace}/stats.json</c>.
   /// </summary>
   public sealed class UsageStats {
     private static readonly JsonSerializerOptions JsonOptions = new() {
@@ -123,38 +121,51 @@ namespace RabiRiichi.Arena.Storage {
       return u;
     }
 
-    /// <summary>Records a request attempt (incremented before the call).</summary>
     public void RecordRequest(string modelId) {
       Mutate(modelId, u => u.Requests++);
     }
 
-    /// <summary>Records a successful provider call plus optional token usage.</summary>
     public void RecordSuccess(
-        string modelId, long promptTokens = 0, long completionTokens = 0) {
+        string modelId,
+        long promptTokens = 0,
+        long completionTokens = 0,
+        long reasoningTokens = 0,
+        long latencyMs = 0) {
       Mutate(modelId, u => {
         u.Successes++;
         u.PromptTokens += promptTokens;
         u.CompletionTokens += completionTokens;
+        u.ReasoningTokens += reasoningTokens;
         u.TotalTokens += promptTokens + completionTokens;
+        u.TotalLatencyMs += Math.Max(0, latencyMs);
       });
     }
 
-    /// <summary>Records a failed provider call, tallied by category.</summary>
-    public void RecordFailure(string modelId, UsageErrorCategory category) {
+    public void RecordFailure(string modelId, UsageErrorCategory category, long latencyMs = 0) {
       Mutate(modelId, u => {
         u.Failures++;
+        u.TotalLatencyMs += Math.Max(0, latencyMs);
         u.AddErrorLocked(category);
       });
     }
 
-    /// <summary>Records a retry attempt.</summary>
     public void RecordRetry(string modelId, long count = 1) {
       Mutate(modelId, u => u.Retries += count);
     }
 
-    /// <summary>Records a penalty (default option auto-selected after retries).</summary>
     public void RecordPenalty(string modelId, long count = 1) {
       Mutate(modelId, u => u.Penalties += count);
+    }
+
+    public void Reset(string modelId = null) {
+      lock (gate) {
+        if (string.IsNullOrWhiteSpace(modelId)) {
+          byModel.Clear();
+        } else {
+          byModel.Remove(modelId);
+        }
+        SaveLocked();
+      }
     }
 
     private void Mutate(string modelId, Action<ModelUsage> action) {
@@ -167,14 +178,12 @@ namespace RabiRiichi.Arena.Storage {
       }
     }
 
-    /// <summary>Returns a deep-copied snapshot of one model, or null.</summary>
     public ModelUsage Get(string modelId) {
       lock (gate) {
         return byModel.TryGetValue(modelId, out var u) ? u.Copy() : null;
       }
     }
 
-    /// <summary>Returns a deep-copied snapshot of all models' usage.</summary>
     public IReadOnlyList<ModelUsage> Snapshot() {
       lock (gate) {
         return byModel.Values.OrderBy(u => u.ModelId).Select(u => u.Copy()).ToList();

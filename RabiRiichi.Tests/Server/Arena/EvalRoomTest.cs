@@ -11,13 +11,10 @@ using System.Threading.Tasks;
 
 namespace RabiRiichi.Tests.Server.Arena {
   /// <summary>
-  /// Integration-style tests that run a full headless all-BASELINE
-  /// (<c>RuleBasedAI</c>) match to completion. No network. See ARENA_DESIGN.md
-  /// §10/§11b.
-  ///
-  /// A full rule-based game is heavy (seconds), so a single shared match is run
-  /// once in <see cref="ClassInit"/> and multiple assertions read its result;
-  /// only the cheap validation tests run their own (tiny / no) game.
+  /// Full headless integration tests for <see cref="EvalRoom"/> covering all 5
+  /// <c>ArenaBaselineAI</c> profiles, post-game replay seed &amp; DisplayName
+  /// stamping, round/Mahjong telemetry tracking, and Wildcard + Classical Koyaku
+  /// non-standard Sanma matches.
   /// </summary>
   [TestClass]
   public class EvalRoomTest {
@@ -36,7 +33,7 @@ namespace RabiRiichi.Tests.Server.Arena {
       sharedReplayDir = Path.Combine(sharedWorkspace, "replays");
       Directory.CreateDirectory(sharedReplayDir);
 
-      sharedConfig = BaselineConfig(totalRound: 1);
+      sharedConfig = BaselineConfig(sharedWorkspace, totalRound: 1);
       sharedTable = Table(sharedConfig);
       sharedReplayStore = new ReplayStore(new ReplayOptions(sharedReplayDir, null));
       var reasoning = new ReasoningStore(sharedWorkspace);
@@ -54,30 +51,31 @@ namespace RabiRiichi.Tests.Server.Arena {
       }
     }
 
-    private static ArenaConfig BaselineConfig(int totalRound = 1) {
+    private static ArenaConfig BaselineConfig(string wsDir, int totalRound = 1) {
       var cfg = new ArenaConfig {
-        WorkspaceDir = "/tmp/arena",
+        WorkspaceDir = wsDir,
         AdminPassword = "pw",
         ClientUrl = "https://play.example.com",
         WsUrl = "wss://arena.example.com",
       };
-      cfg.Run.TotalRound = totalRound;
-      cfg.Run.PlayerCount = 4;
+      cfg.GameRules.TotalRound = totalRound;
+      cfg.GameRules.PlayerCount = 4;
+      cfg.Prompts.RevealOpponentIdentity = false; // Anonymous mid-game, stamped post-game!
       cfg.Decision.TimeoutSeconds = 30;
       cfg.Models.AddRange(new[] {
-        Baseline("base-a", 1500),
-        Baseline("base-b", 1500),
-        Baseline("base-c", 1500),
-        Baseline("base-d", 1500),
+        Baseline("base-a", "balanced", 1500),
+        Baseline("base-b", "aggressive", 1500),
+        Baseline("base-c", "defensive", 1500),
+        Baseline("base-d", "fast_open", 1500),
       });
       return cfg;
     }
 
-    private static ArenaConfig.ModelConfig Baseline(string id, double frozen) => new() {
+    private static ArenaConfig.ModelConfig Baseline(string id, string variant, double? frozen) => new() {
       Id = id,
       DisplayName = id.ToUpperInvariant(),
       Provider = "baseline",
-      Variant = "default",
+      Variant = variant,
       FrozenElo = frozen,
       Enabled = true,
     };
@@ -89,33 +87,25 @@ namespace RabiRiichi.Tests.Server.Arena {
     // ----- Assertions against the shared finished match --------------------
 
     [TestMethod]
-    public void SharedMatch_FinishesWithValidPlacements() {
+    public void SharedMatch_FinishesWithValidPlacementsAndRoundSummaries() {
       Assert.IsTrue(sharedResult.Completed, "match should run to completion");
       Assert.AreEqual("eval-shared-1", sharedResult.GameId);
       Assert.AreEqual(4, sharedResult.Seats.Count);
+      Assert.IsTrue(sharedResult.RoundsPlayed >= 1);
+      Assert.AreEqual(sharedResult.RoundsPlayed, sharedResult.Rounds.Count);
 
-      // Placements are a permutation of {1,2,3,4}.
       var placements = sharedResult.Seats.Select(s => s.Placement).OrderBy(p => p).ToList();
       CollectionAssert.AreEqual(new[] { 1, 2, 3, 4 }, placements);
 
-      // Each seat maps to a distinct roster model id.
       var ids = sharedResult.Seats.Select(s => s.ModelId).OrderBy(x => x).ToList();
       CollectionAssert.AreEqual(new[] { "base-a", "base-b", "base-c", "base-d" }, ids);
 
-      // Points are conserved across the table (4 * 25000 default).
       long total = sharedResult.Seats.Sum(s => s.FinalPoints);
       Assert.AreEqual(100000, total, "points are conserved across the table");
     }
 
     [TestMethod]
-    public void SharedMatch_CapturedRealSeed() {
-      // The engine derived a clock seed (non-zero in practice) and it was
-      // captured and returned (§11b).
-      Assert.AreNotEqual(0UL, sharedResult.Seed, "captured seed should be the real seed");
-    }
-
-    [TestMethod]
-    public void SharedMatch_SavesWebCompatibleReplayWithStampedSeed() {
+    public void SharedMatch_SavesWebCompatibleReplayWithStampedSeedAndRealDisplayNames() {
       var path = Path.Combine(sharedReplayDir, "eval-shared-1.pb");
       Assert.IsTrue(File.Exists(path), "replay should be saved to disk");
 
@@ -123,28 +113,31 @@ namespace RabiRiichi.Tests.Server.Arena {
       Assert.IsNotNull(saved, "replay should parse as a GameLogMsg (web-compatible)");
       Assert.AreEqual("eval-shared-1", saved.GameId);
 
-      // The seed stamped into the replay equals the captured real seed (§11b
-      // end-of-game stamp round-trips), and is non-zero.
-      Assert.AreEqual(sharedResult.Seed, saved.Config.Seed,
-          "replay config seed must equal the captured real seed");
-      Assert.AreNotEqual(0UL, saved.Config.Seed);
+      Assert.AreNotEqual(0UL, sharedResult.Seed);
+      Assert.AreEqual(sharedResult.Seed, saved.Config.Seed);
       Assert.AreEqual(4, saved.Players.Count);
+
+      // Even though RevealOpponentIdentity=false hid names mid-game, and Room shuffles
+      // seats on game start, every seat in the saved 3D replay must display the real
+      // DisplayName of the contender that played in that seat.
+      var expectedBySeat = sharedResult.Seats.OrderBy(s => s.Seat).Select(s => s.DisplayName).ToList();
+      var nicknames = saved.Players.OrderBy(p => p.Seat).Select(p => p.Nickname).ToList();
+      CollectionAssert.AreEqual(expectedBySeat, nicknames);
+      CollectionAssert.AreEquivalent(new[] { "BASE-A", "BASE-B", "BASE-C", "BASE-D" }, nicknames);
     }
 
     [TestMethod]
     public void SharedMatch_ConfigSnapshotHasSeedAndRounds() {
-      Assert.IsNotNull(sharedResult.Config, "a config snapshot should be produced");
-      // Protobuf JSON encodes 64-bit ints as decimal strings, so seed is a string.
+      Assert.IsNotNull(sharedResult.Config);
       var seedNode = sharedResult.Config["seed"];
       Assert.IsNotNull(seedNode);
       Assert.AreEqual(sharedResult.Seed, ulong.Parse(seedNode.GetValue<string>()));
-      // playerCount / totalRound are int32 -> JSON numbers.
       Assert.AreEqual(1, sharedResult.Config["totalRound"].GetValue<int>());
       Assert.AreEqual(4, sharedResult.Config["playerCount"].GetValue<int>());
     }
 
     [TestMethod]
-    public void SharedMatch_BuildMatchRecordWiresPlacementsAndElo() {
+    public void SharedMatch_BuildMatchRecordWiresPlacementsEloAndMahjongStats() {
       var store = new RatingStore(sharedWorkspace);
       var rating = new RatingService(sharedConfig.Rating);
 
@@ -161,30 +154,83 @@ namespace RabiRiichi.Tests.Server.Arena {
       Assert.AreEqual(2, record.SwissRound);
       Assert.AreEqual(unchecked((long)sharedResult.Seed), record.Seed);
       Assert.AreEqual(4, record.Players.Count);
+      Assert.AreEqual(sharedResult.RoundsPlayed, record.RoundsPlayed);
 
-      var recPlacements = record.Players.Select(p => p.Placement).OrderBy(p => p).ToList();
-      CollectionAssert.AreEqual(new[] { 1, 2, 3, 4 }, recPlacements);
-
-      // Frozen baselines stay at 1500.
       foreach (var p in record.Players) {
         Assert.AreEqual(1500.0, p.EloAfter, 1e-9);
+        Assert.AreEqual(sharedResult.RoundsPlayed, p.RoundsPlayed);
       }
 
-      // The record appends cleanly to a MatchStore.
       var matchStore = new MatchStore(sharedWorkspace);
       matchStore.Append(record);
       Assert.IsNotNull(matchStore.Get("match-shared"));
     }
 
-    // ----- Cheap validation tests (no full game) ---------------------------
+    // ----- Wildcard + Classical Koyaku + Sanma headless integration --------
+
+    [TestMethod]
+    [Timeout(60_000)]
+    public async Task WildcardSanmaKoyakuMatch_RunsToCompletionAndSavesReplay() {
+      var ws = Path.Combine(
+          AppDomain.CurrentDomain.BaseDirectory, $"arena_eval_wild_{Guid.NewGuid():N}");
+      var replayDir = Path.Combine(ws, "replays");
+      Directory.CreateDirectory(replayDir);
+      try {
+        var cfg = new ArenaConfig {
+          WorkspaceDir = ws,
+          AdminPassword = "pw",
+        };
+        cfg.GameRules.PlayerCount = 3;
+        cfg.GameRules.TotalRound = 1;
+        cfg.GameRules.TileSet.Preset = "Sanma";
+        cfg.GameRules.TileSet.ExtraWildcards = 2;
+        cfg.GameRules.AllowedYakus.Add("TsubameGaeshi");
+        cfg.GameRules.AllowedYakus.Add("Kanburi");
+        cfg.Models.AddRange(new[] {
+          Baseline("sanma-bal", "balanced", null),
+          Baseline("sanma-agg", "aggressive", null),
+          Baseline("sanma-tsumo", "tsumogiri", 1350),
+        });
+
+        var replayStore = new ReplayStore(new ReplayOptions(replayDir, null));
+        var room = new EvalRoom(cfg, replayStore, new ReasoningStore(ws), new UsageStats(ws));
+        var progressObserved = 0;
+
+        var res = await room.RunAsync(
+            Table(cfg),
+            gameId: "eval-wild-sanma-1",
+            cancellationToken: CancellationToken.None,
+            onProgress: _ => Interlocked.Increment(ref progressObserved));
+
+        Assert.IsTrue(res.Completed);
+        Assert.AreEqual(3, res.PlayerCount);
+        Assert.AreEqual("Sanma", res.TileSetPreset);
+        Assert.IsTrue(res.HasWildcards);
+        Assert.AreEqual(2, res.WildcardCount);
+        Assert.IsTrue(progressObserved > 0, "live progress callback should fire during play");
+
+        var saved = replayStore.GetReplay("eval-wild-sanma-1");
+        Assert.IsNotNull(saved);
+        Assert.AreEqual(3, saved.Players.Count);
+        foreach (var seatRes in res.Seats) {
+          Assert.AreEqual(
+              seatRes.DisplayName,
+              saved.Players.Single(p => p.Seat == seatRes.Seat).Nickname);
+        }
+      } finally {
+        try { Directory.Delete(ws, recursive: true); } catch { }
+      }
+    }
+
+    // ----- Cheap validation tests ------------------------------------------
 
     [TestMethod]
     public async Task Cancellation_BeforeRun_StopsWithoutCompletion() {
-      var cfg = BaselineConfig(totalRound: 1);
       var replayDir = Path.Combine(
           AppDomain.CurrentDomain.BaseDirectory, $"arena_eval_cancel_{Guid.NewGuid():N}");
       Directory.CreateDirectory(replayDir);
       try {
+        var cfg = BaselineConfig(replayDir, totalRound: 1);
         var room = new EvalRoom(cfg, new ReplayStore(new ReplayOptions(replayDir, null)));
         using var cts = new CancellationTokenSource();
         cts.Cancel();
@@ -199,7 +245,7 @@ namespace RabiRiichi.Tests.Server.Arena {
 
     [TestMethod]
     public async Task RunAsync_RejectsWrongSeatCount() {
-      var cfg = BaselineConfig(totalRound: 1);
+      var cfg = BaselineConfig(sharedWorkspace, totalRound: 1);
       var room = new EvalRoom(cfg, new ReplayStore(new ReplayOptions(null, null)));
       var bad = Table(cfg).Take(3).ToList();
 

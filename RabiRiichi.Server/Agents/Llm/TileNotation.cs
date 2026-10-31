@@ -24,6 +24,17 @@ namespace RabiRiichi.Server.Agents.Llm {
       "东风牌", "南风牌", "西风牌", "北风牌",
       "白，三元牌", "发，三元牌", "中，三元牌",
     ];
+    private static readonly string[] TraditionalChineseHonorNames = [
+      "東風牌", "南風牌", "西風牌", "北風牌",
+      "白，三元牌", "發，三元牌", "中，三元牌",
+    ];
+
+    /// <summary> Whether a locale tag explicitly targets Traditional Chinese. </summary>
+    public static bool IsTraditionalChinese(string language) {
+      if (string.IsNullOrWhiteSpace(language)) return false;
+      var tag = language.Trim().ToLowerInvariant();
+      return tag is "zht" or "zh-tw" or "zh-hk" or "zh-mo" || tag.Contains("hant");
+    }
 
     /// <summary> Suit letter for a tile. </summary>
     private static char SuitChar(TileSuit suit) => suit switch {
@@ -38,11 +49,13 @@ namespace RabiRiichi.Server.Agents.Llm {
     private static char Digit(Tile t) => (t.Akadora && t.Num == 5) ? '0' : (char)('0' + t.Num);
 
     private static string HonorName(int number, string language) {
-      var names = AiLocalization.NormalizeLanguage(language) switch {
-        AiLocalization.LangJa => JapaneseHonorNames,
-        AiLocalization.LangZhs => ChineseHonorNames,
-        _ => EnglishHonorNames,
-      };
+      var names = IsTraditionalChinese(language)
+          ? TraditionalChineseHonorNames
+          : AiLocalization.NormalizeLanguage(language) switch {
+            AiLocalization.LangJa => JapaneseHonorNames,
+            AiLocalization.LangZhs => ChineseHonorNames,
+            _ => EnglishHonorNames,
+          };
       return number is >= 1 and <= 7 ? names[number - 1] : "unknown honor";
     }
 

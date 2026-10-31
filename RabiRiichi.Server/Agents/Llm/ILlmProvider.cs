@@ -22,15 +22,37 @@ namespace RabiRiichi.Server.Agents.Llm {
   }
 
   /// <summary> The outcome of an LLM completion request. </summary>
-  public readonly struct LlmResult(bool success, string content, string error) {
+  public readonly struct LlmResult(
+      bool success,
+      string content,
+      string error,
+      int promptTokens = 0,
+      int completionTokens = 0,
+      int reasoningTokens = 0,
+      string reasoningContent = null) {
     /// <summary> True if the provider returned a usable completion. </summary>
     public bool Success { get; } = success;
     /// <summary> The raw text content of the completion (may be JSON). </summary>
     public string Content { get; } = content;
     /// <summary> A short human-readable error when <see cref="Success"/> is false. </summary>
     public string Error { get; } = error;
+    /// <summary> Input/prompt tokens reported by the provider, or 0 when omitted. </summary>
+    public int PromptTokens { get; } = promptTokens;
+    /// <summary> Output/completion tokens reported by the provider, or 0 when omitted. </summary>
+    public int CompletionTokens { get; } = completionTokens;
+    /// <summary> Internal reasoning/thought tokens reported by the provider, or 0 when omitted. </summary>
+    public int ReasoningTokens { get; } = reasoningTokens;
+    /// <summary> Optional reasoning/thought trace returned alongside the visible content. </summary>
+    public string ReasoningContent { get; } = reasoningContent;
 
-    public static LlmResult Ok(string content) => new(true, content, null);
+    public static LlmResult Ok(
+        string content,
+        int promptTokens = 0,
+        int completionTokens = 0,
+        int reasoningTokens = 0,
+        string reasoningContent = null) =>
+        new(true, content, null, promptTokens, completionTokens, reasoningTokens, reasoningContent);
+
     public static LlmResult Fail(string error) => new(false, null, error);
   }
 

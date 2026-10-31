@@ -255,11 +255,24 @@ namespace RabiRiichi.Server.Agents {
     }
 
     /// <summary>
-    /// How many copies of <paramref name="kind"/> could still be live (unseen by
-    /// the viewer), out of the four in a standard set.
+    /// Total copies of <paramref name="kind"/> (akadora-normalized) present in the
+    /// match's configured tile set, falling back to standard 4-copy counts when
+    /// <c>initialTiles</c> is unpopulated.
     /// </summary>
-    public int UnseenCount(Tile kind) => System.Math.Max(0,
-        (kind.IsWildcard ? game.config.initialTiles?.Count(t => t.IsWildcard) ?? 0 : 4) - VisibleCount(kind));
+    public int DeckCount(Tile kind) {
+      if (game.config.initialTiles is { Count: > 0 } tiles) {
+        var target = kind.WithoutDora;
+        return tiles.Count(t => t.WithoutDora == target);
+      }
+      return kind.IsWildcard ? 0 : 4;
+    }
+
+    /// <summary>
+    /// How many copies of <paramref name="kind"/> could still be live (unseen by
+    /// the viewer), out of the configured deck.
+    /// </summary>
+    public int UnseenCount(Tile kind) =>
+        System.Math.Max(0, DeckCount(kind) - VisibleCount(kind));
 
     /// <summary>
     /// Evaluates hypothetically discarding <paramref name="discard"/> from the

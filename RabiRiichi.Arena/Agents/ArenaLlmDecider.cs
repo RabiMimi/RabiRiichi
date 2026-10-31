@@ -10,37 +10,30 @@ using RabiRiichi.Server.Agents.Llm;
 
 namespace RabiRiichi.Arena.Agents {
   /// <summary>
-  /// The outcome of one Arena decision: the chosen <see cref="InquiryResponse"/>
-  /// (a valid legal action, or <see cref="InquiryResponse.Default(int)"/> after
-  /// exhausting retries), the rationale to broadcast, and bookkeeping flags.
+  /// Outcome of one LLM decision turn, including telemetry for per-seat match summaries.
   /// </summary>
   public sealed class ArenaDecision {
     public InquiryResponse Response { get; init; }
+    public string ChosenDescription { get; init; } = "";
     public string Rationale { get; init; }
+    public string TableChat { get; init; }
     public bool Valid { get; init; }
     public bool Penalized { get; init; }
     public int Attempts { get; init; }
+    public long PromptTokens { get; init; }
+    public long CompletionTokens { get; init; }
+    public long ReasoningTokens { get; init; }
+    public long LatencyMs { get; init; }
   }
 
   /// <summary>
-  /// The pure retry/penalty state machine for an Arena playing agent
-  /// (ARENA_DESIGN.md §5). It calls the LLM to choose a legal action, parses
-  /// <c>{ action, rationale }</c>, validates the choice against the player's
-  /// legal inquiry, and RETRIES up to <c>maxRetries</c> total attempts. After
-  /// the final failure it returns <see cref="InquiryResponse.Default(int)"/> and
-  /// records a penalty. Provider errors are mapped to
-  /// <see cref="UsageErrorCategory"/> for monitoring (§12c).
-  ///
-  /// This class has no dependency on <c>Room</c> / <c>Game</c> internals beyond
-  /// the seat, menu, and inquiry, so it is directly unit-testable with a fake
-  /// <see cref="ILlmProvider"/> (no network). It appends every decision to the
-  /// <see cref="ReasoningStore"/> as a per-turn delta (§8) and updates
-  /// <see cref="UsageStats"/> around each provider call.
+  /// Pure retry/validation/penalty state machine for an Arena LLM decision turn.
+  /// Tracks token usage, reasoning traces, retries, and latency across attempts.
   /// </summary>
   public sealed class ArenaLlmDecider {
     private readonly ILlmProvider provider;
     private readonly string modelId;
-    private readonly int maxRetries;
+    private readonly int maxAttempts;
     private readonly int maxOutputTokens;
     private readonly TimeSpan decisionTimeout;
     private readonly ReasoningStore reasoning;
@@ -48,8 +41,7 @@ namespace RabiRiichi.Arena.Agents {
     private readonly string gameId;
 
     /// <param name="maxRetries">
-    /// Total attempts before penalizing (design default 3). Values &lt; 1 are
-    /// clamped to 1 so at least one attempt is always made.
+    /// Number of additional retries after the initial attempt (0 = 1 attempt total, 2 = up to 3 attempts).
     /// </param>
     public ArenaLlmDecider(
         ILlmProvider provider,
@@ -60,131 +52,133 @@ namespace RabiRiichi.Arena.Agents {
         TimeSpan decisionTimeout,
         ReasoningStore reasoning,
         UsageStats usage) {
-      this.provider = provider;
-      this.modelId = modelId;
-      this.gameId = gameId;
-      this.maxRetries = Math.Max(1, maxRetries);
-      this.maxOutputTokens = maxOutputTokens;
+      this.provider = provider ?? throw new ArgumentNullException(nameof(provider));
+      this.modelId = modelId ?? "";
+      this.gameId = gameId ?? "";
+      this.maxAttempts = Math.Max(1, maxRetries + 1);
+      this.maxOutputTokens = Math.Max(64, maxOutputTokens);
       this.decisionTimeout = decisionTimeout;
       this.reasoning = reasoning;
       this.usage = usage;
     }
 
-    /// <summary>
-    /// Runs the decision loop for one turn.
-    /// </summary>
-    /// <param name="seat">The deciding seat / player id.</param>
-    /// <param name="menu">The legal-action menu (stable choice ids).</param>
-    /// <param name="inquiry">The player's legal inquiry (for validation).</param>
-    /// <param name="turnSeq">A monotonically increasing per-seat turn number.</param>
-    /// <param name="eventIndex">
-    /// Replay position this decision sits at (see
-    /// <see cref="ReasoningTurn.EventIndex"/>); -1 when unknown.
-    /// </param>
-    /// <param name="baseTranscript">
-    /// Prior conversation (system + accumulated turns) to send as context. The
-    /// caller owns and mutates it across turns.
-    /// </param>
-    /// <param name="turnMessageFor">
-    /// Builds the user message for an attempt: the first attempt gets a null
-    /// validation error; retries pass the prior rejection so the model can
-    /// correct itself. The returned string is the promptDelta persisted for the
-    /// turn's FIRST attempt (§8).
-    /// </param>
-    /// <param name="remainingTimeout">
-    /// The engine's remaining budget; the decision timeout is clamped to it when
-    /// smaller so the engine never preempts.
-    /// </param>
     public ArenaDecision Decide(
         int seat,
         IReadOnlyList<LlmChoice> menu,
         SinglePlayerInquiry inquiry,
         int turnSeq,
-        List<LlmMessage> baseTranscript,
+        IReadOnlyList<LlmMessage> baseTranscript,
         Func<string, string> turnMessageFor,
         TimeSpan remainingTimeout,
-        int eventIndex = -1) {
-      var sw = Stopwatch.StartNew();
+        int eventIndex = -1,
+        string roundLabel = "") {
+      var totalSw = Stopwatch.StartNew();
       string firstPromptDelta = null;
       string lastRaw = null;
+      string lastThinking = null;
       string lastError = null;
       string lastRationale = null;
-      long promptTokens = 0, completionTokens = 0;
+      string lastChat = null;
+      long totalPromptTokens = 0;
+      long totalCompletionTokens = 0;
+      long totalReasoningTokens = 0;
       int attempts = 0;
 
-      for (int attempt = 1; attempt <= maxRetries; attempt++) {
+      for (int attempt = 1; attempt <= maxAttempts; attempt++) {
         attempts = attempt;
         if (attempt > 1) {
-          usage.RecordRetry(modelId);
+          usage?.RecordRetry(modelId);
         }
 
         var userMessage = turnMessageFor(lastError);
         firstPromptDelta ??= userMessage;
 
-        var messages = new List<LlmMessage>(baseTranscript) {
-          LlmMessage.User(userMessage),
-        };
+        var messages = new List<LlmMessage>(baseTranscript.Count + 1);
+        messages.AddRange(baseTranscript);
+        messages.Add(LlmMessage.User(userMessage));
 
-        usage.RecordRequest(modelId);
+        usage?.RecordRequest(modelId);
+        var callSw = Stopwatch.StartNew();
         var result = CallProvider(messages, remainingTimeout);
+        callSw.Stop();
+
         if (!result.Success) {
           lastError = result.Error;
           lastRaw = null;
-          usage.RecordFailure(modelId, ClassifyError(result.Error));
+          usage?.RecordFailure(modelId, ClassifyError(result.Error), callSw.ElapsedMilliseconds);
           continue;
         }
 
         lastRaw = result.Content;
-        // A successful transport is a success for usage accounting; token usage
-        // is not surfaced by ILlmProvider, so it is recorded as 0.
-        usage.RecordSuccess(modelId, promptTokens, completionTokens);
+        lastThinking = result.ReasoningContent;
+        totalPromptTokens += result.PromptTokens;
+        totalCompletionTokens += result.CompletionTokens;
+        totalReasoningTokens += result.ReasoningTokens;
+
+        usage?.RecordSuccess(
+            modelId,
+            result.PromptTokens,
+            result.CompletionTokens,
+            result.ReasoningTokens,
+            callSw.ElapsedMilliseconds);
 
         var parsed = ArenaLlmResponse.Parse(result.Content);
         lastRationale = parsed.Rationale;
+        lastChat = parsed.Chat;
 
         var validation = Validate(parsed, menu, seat);
         if (validation.Valid) {
-          // Commit the successful exchange to the running transcript so the next
-          // turn sees it (and is not duplicated on disk — only the delta is
-          // stored).
-          baseTranscript.Add(LlmMessage.User(userMessage));
-          baseTranscript.Add(LlmMessage.Assistant(result.Content));
-          sw.Stop();
-          PersistTurn(seat, turnSeq, eventIndex, firstPromptDelta, result.Content, parsed,
-              validation.Description, valid: true, attempts: attempt,
-              penalized: false, promptTokens, completionTokens, sw.ElapsedMilliseconds,
-              error: null);
+          totalSw.Stop();
+          PersistTurn(
+              seat, turnSeq, eventIndex, roundLabel, firstPromptDelta,
+              lastThinking, result.Content, parsed, validation.Description,
+              valid: true, attempts: attempt, penalized: false,
+              totalPromptTokens, totalCompletionTokens, totalReasoningTokens,
+              totalSw.ElapsedMilliseconds, error: null);
+
           return new ArenaDecision {
             Response = validation.Response,
+            ChosenDescription = validation.Description,
             Rationale = parsed.Rationale,
+            TableChat = parsed.Chat,
             Valid = true,
             Penalized = false,
             Attempts = attempt,
+            PromptTokens = totalPromptTokens,
+            CompletionTokens = totalCompletionTokens,
+            ReasoningTokens = totalReasoningTokens,
+            LatencyMs = totalSw.ElapsedMilliseconds,
           };
         }
 
-        // Parsed but illegal: feed the error back for the next attempt.
         lastError = validation.Description;
       }
 
-      // Exhausted all attempts -> penalize with the safe default option.
-      sw.Stop();
-      usage.RecordPenalty(modelId);
-      PersistTurn(seat, turnSeq, eventIndex, firstPromptDelta ?? "", lastRaw ?? "",
-          ArenaLlmResponse.Parse(lastRaw ?? ""), "default (penalized)",
+      totalSw.Stop();
+      usage?.RecordPenalty(modelId);
+      var fallbackParsed = ArenaLlmResponse.Parse(lastRaw ?? "");
+      PersistTurn(
+          seat, turnSeq, eventIndex, roundLabel, firstPromptDelta ?? "",
+          lastThinking, lastRaw ?? "", fallbackParsed, "default (penalized)",
           valid: false, attempts: attempts, penalized: true,
-          promptTokens, completionTokens, sw.ElapsedMilliseconds,
+          totalPromptTokens, totalCompletionTokens, totalReasoningTokens,
+          totalSw.ElapsedMilliseconds,
           error: lastError ?? "no valid action after retries");
+
       return new ArenaDecision {
         Response = InquiryResponse.Default(seat),
+        ChosenDescription = "default (penalized)",
         Rationale = lastRationale,
+        TableChat = lastChat,
         Valid = false,
         Penalized = true,
         Attempts = attempts,
+        PromptTokens = totalPromptTokens,
+        CompletionTokens = totalCompletionTokens,
+        ReasoningTokens = totalReasoningTokens,
+        LatencyMs = totalSw.ElapsedMilliseconds,
       };
     }
-
-    // ----- Provider call ---------------------------------------------------
 
     private LlmResult CallProvider(
         IReadOnlyList<LlmMessage> messages, TimeSpan remainingTimeout) {
@@ -202,17 +196,13 @@ namespace RabiRiichi.Arena.Agents {
     }
 
     private TimeSpan ClampTimeout(TimeSpan remaining) {
-      // Use the long per-decision budget, but never exceed the engine's own
-      // remaining budget (leaving a small margin so we cancel before it does).
       var budget = decisionTimeout;
       if (remaining > TimeSpan.Zero && remaining < budget) {
-        var margin = TimeSpan.FromSeconds(2);
+        var margin = TimeSpan.FromSeconds(1.5);
         budget = remaining > margin ? remaining - margin : remaining;
       }
       return budget <= TimeSpan.Zero ? decisionTimeout : budget;
     }
-
-    // ----- Validation ------------------------------------------------------
 
     private readonly struct ValidationOutcome(
         bool valid, InquiryResponse response, string description) {
@@ -221,14 +211,7 @@ namespace RabiRiichi.Arena.Agents {
       public string Description { get; } = description;
     }
 
-    /// <summary>
-    /// Validates a parsed answer against the legal menu, producing the concrete
-    /// <see cref="InquiryResponse"/> when valid. Also confirms the produced
-    /// response is accepted by the engine's own per-action check (the same
-    /// gate the live inquiry uses), so a menu bug can never yield an illegal
-    /// response.
-    /// </summary>
-    private ValidationOutcome Validate(
+    private static ValidationOutcome Validate(
         ArenaLlmResponse parsed, IReadOnlyList<LlmChoice> menu, int seat) {
       if (!parsed.HasAction) {
         return new ValidationOutcome(false, null,
@@ -243,13 +226,12 @@ namespace RabiRiichi.Arena.Agents {
       return new ValidationOutcome(true, choice.ToResponse(seat), choice.Description);
     }
 
-    // ----- Persistence -----------------------------------------------------
-
     private void PersistTurn(
-        int seat, int turnSeq, int eventIndex, string promptDelta, string rawResponse,
+        int seat, int turnSeq, int eventIndex, string roundLabel,
+        string promptDelta, string thinkingText, string rawResponse,
         ArenaLlmResponse parsed, string parsedAction, bool valid, int attempts,
-        bool penalized, long promptTokens, long completionTokens, long latencyMs,
-        string error) {
+        bool penalized, long promptTokens, long completionTokens, long reasoningTokens,
+        long latencyMs, string error) {
       if (reasoning == null || !ReasoningStore.IsValidGameId(gameId)) {
         return;
       }
@@ -257,18 +239,20 @@ namespace RabiRiichi.Arena.Agents {
         reasoning.AppendTurn(gameId, seat, new ReasoningTurn {
           TurnSeq = turnSeq,
           EventIndex = eventIndex,
+          RoundLabel = roundLabel ?? "",
           PromptDelta = promptDelta ?? "",
-          // ILlmProvider returns final text only (no separate reasoning trace),
-          // so the raw response doubles as the reasoning record.
-          Reasoning = rawResponse ?? "",
+          ThinkingText = thinkingText ?? "",
+          Reasoning = !string.IsNullOrWhiteSpace(thinkingText) ? thinkingText : (rawResponse ?? ""),
           RawResponse = rawResponse ?? "",
           ParsedAction = parsedAction ?? "",
           Rationale = parsed?.Rationale ?? "",
+          TableChat = parsed?.Chat,
           Valid = valid,
           Attempts = attempts,
           Penalized = penalized,
           PromptTokens = promptTokens,
           CompletionTokens = completionTokens,
+          ReasoningTokens = reasoningTokens,
           LatencyMs = latencyMs,
           Error = error,
           Timestamp = DateTime.UtcNow.ToString("o"),
@@ -278,13 +262,6 @@ namespace RabiRiichi.Arena.Agents {
       }
     }
 
-    // ----- Error classification --------------------------------------------
-
-    /// <summary>
-    /// Maps a raw provider error string to a <see cref="UsageErrorCategory"/>
-    /// for the monitoring dashboard (§12c). Mirrors the buckets used by the
-    /// server's <c>LlmValidator.ClassifyError</c> reason codes.
-    /// </summary>
     public static UsageErrorCategory ClassifyError(string error) {
       if (string.IsNullOrEmpty(error)) {
         return UsageErrorCategory.Other;
@@ -295,7 +272,7 @@ namespace RabiRiichi.Arena.Agents {
         return UsageErrorCategory.Timeout;
       }
       if (e.Contains("429") || e.Contains("rate limit") || e.Contains("rate_limit")
-          || e.Contains("too many requests")) {
+          || e.Contains("too many requests") || e.Contains("overloaded")) {
         return UsageErrorCategory.RateLimited;
       }
       if (e.Contains("401") || e.Contains("403") || e.Contains("unauthor")

@@ -66,8 +66,8 @@ namespace RabiRiichi.Tests.Server.Arena {
         WorkspaceDir = matchWorkspace,
         AdminPassword = "pw",
       };
-      config.Run.TotalRound = 1;
-      config.Run.PlayerCount = 4;
+      config.GameRules.TotalRound = 1;
+      config.GameRules.PlayerCount = 4;
       config.Decision.TimeoutSeconds = 30;
       var llm = new ArenaConfig.ModelConfig {
         Id = "llm-seat",

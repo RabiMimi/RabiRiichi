@@ -1,104 +1,115 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using Google.Protobuf;
-using RabiRiichi.Core;
-using RabiRiichi.Core.Config;
 using RabiRiichi.Arena.Agents;
 using RabiRiichi.Arena.Storage;
+using RabiRiichi.Core;
+using RabiRiichi.Core.Config;
+using RabiRiichi.Events;
+using RabiRiichi.Events.InGame;
+using RabiRiichi.Generated.Core;
+using RabiRiichi.Generated.Patterns;
 using RabiRiichi.Server.Agents;
 using RabiRiichi.Server.Agents.Llm;
-using RabiRiichi.Server.Connections;
 using RabiRiichi.Server.Generated.Messages;
 using RabiRiichi.Server.Models;
 using RabiRiichi.Server.Services;
 using RabiRiichi.Utils;
 
 namespace RabiRiichi.Arena.Eval {
-  /// <summary>
-  /// Per-seat outcome of a finished Arena match. Placement is 1-based (1 =
-  /// winner). See ARENA_DESIGN.md §10/§11.
-  /// </summary>
+  public sealed class LiveSeatProgress {
+    public int Seat { get; init; }
+    public string ModelId { get; init; } = "";
+    public string DisplayName { get; init; } = "";
+    public long Points { get; init; }
+    public bool InRiichi { get; init; }
+  }
+
+  public sealed class LiveMatchProgress {
+    public string GameId { get; init; } = "";
+    public string RoundLabel { get; init; } = "";
+    public int WallRemaining { get; init; }
+    public int TurnCount { get; init; }
+    public string StartedAt { get; init; } = "";
+    public IReadOnlyList<LiveSeatProgress> Seats { get; init; } = Array.Empty<LiveSeatProgress>();
+  }
+
   public sealed class EvalSeatResult {
     public int Seat { get; init; }
     public string ModelId { get; init; } = "";
     public string DisplayName { get; init; } = "";
+    public string Provider { get; init; } = "";
     public long FinalPoints { get; init; }
     public int Placement { get; init; }
+
+    public int RoundsPlayed { get; init; }
+    public int AgariCount { get; init; }
+    public int TsumoCount { get; init; }
+    public int RonCount { get; init; }
+    public int DealInCount { get; init; }
+    public int DealInPoints { get; init; }
+    public int TotalWinPoints { get; init; }
+    public int TotalWinHan { get; init; }
+    public int MaxWinPoints { get; init; }
+    public int RiichiCount { get; init; }
+    public int OpenHandCount { get; init; }
+    public int CallCount { get; init; }
+    public int KanCount { get; init; }
+    public int NukiCount { get; init; }
+    public int TenpaiAtDrawCount { get; init; }
+    public int WildcardWinCount { get; init; }
+    public Dictionary<string, int> YakuCounts { get; init; } = new();
+
+    public int DecisionsCount { get; init; }
+    public int AutoDecisionsCount { get; init; }
+    public int ValidFirstTryCount { get; init; }
+    public int RetryCount { get; init; }
     public int PenaltyCount { get; init; }
+    public long PromptTokens { get; init; }
+    public long CompletionTokens { get; init; }
+    public long ReasoningTokens { get; init; }
+    public long TotalLatencyMs { get; init; }
+    public long MaxLatencyMs { get; init; }
   }
 
-  /// <summary>
-  /// The full result of running one headless eval match. Returned by
-  /// <see cref="EvalRoom.RunAsync"/> and consumed by the rating/match wiring
-  /// (§11). <see cref="Seed"/> is the REAL post-game seed read from
-  /// <c>RabiRand</c> at game end (never exposed mid-game, §11b).
-  /// </summary>
   public sealed class EvalResult {
     public string GameId { get; init; } = "";
-
-    /// <summary>Real seed the engine used (stamped into the replay + this result).</summary>
     public ulong Seed { get; init; }
-
-    /// <summary>Per-seat results, ordered by seat index.</summary>
     public IReadOnlyList<EvalSeatResult> Seats { get; init; } = Array.Empty<EvalSeatResult>();
-
-    /// <summary>Full GameConfig snapshot (with the real seed) as JSON (§11).</summary>
+    public IReadOnlyList<MatchRoundSummary> Rounds { get; init; } = Array.Empty<MatchRoundSummary>();
+    public int RoundsPlayed { get; init; }
+    public int ExhaustiveDraws { get; init; }
+    public int AbortedDraws { get; init; }
+    public int PlayerCount { get; init; }
+    public int TotalRound { get; init; }
+    public string TileSetPreset { get; init; } = "Regular";
+    public bool HasWildcards { get; init; }
+    public int WildcardCount { get; init; }
+    public long DurationMs { get; init; }
     public JsonNode Config { get; init; }
-
     public string StartedAt { get; init; } = "";
     public string FinishedAt { get; init; } = "";
-
-    /// <summary>True if the game ran to completion; false if it was cancelled.</summary>
     public bool Completed { get; init; }
 
     public EvalSeatResult SeatOf(int seat) => Seats.FirstOrDefault(s => s.Seat == seat);
   }
 
-  /// <summary>
-  /// A single table assignment: seat index (0..playerCount-1) mapped to the
-  /// roster entry (LLM model or baseline) that occupies it.
-  /// </summary>
   public sealed class EvalSeatAssignment {
     public int Seat { get; init; }
     public ArenaConfig.ModelConfig Model { get; init; }
   }
 
   /// <summary>
-  /// A headless, humanless single-match runner (ARENA_DESIGN.md §10/§11b).
-  ///
-  /// Given four seat assignments and the <see cref="ArenaConfig"/>, it:
-  ///  - builds a <see cref="GameConfig"/> with the config's playerCount /
-  ///    totalRound and <c>seed = null</c> so the engine derives a clock seed the
-  ///    agents can NEVER see during play (§2/§11b);
-  ///  - attaches the right agent per seat — <see cref="ArenaLlmAI"/> for LLM
-  ///    models (its <see cref="ILlmProvider"/> built from the model via an
-  ///    injected factory), <see cref="RuleBasedAI"/> for baselines — wiring
-  ///    reasoning + usage + exposure + seat→wind / seat→displayName resolvers;
-  ///  - drives the game to completion via
-  ///    <see cref="Room.RunHeadlessArenaMatch"/>;
-  ///  - at game end, reads the real seed from <c>game.Get&lt;RabiRand&gt;()</c>,
-  ///    stamps it into the replay log's config, and saves the replay (§11b);
-  ///  - collects per-seat final points + placements and returns an
-  ///    <see cref="EvalResult"/>.
-  ///
-  /// A <see cref="CancellationToken"/> can stop a run mid-match (M4 uses this).
-  ///
-  /// Tie-break rule for placement: players are ranked by final points DESCENDING;
-  /// ties are broken by SEAT WIND ORDER (East &lt; South &lt; West &lt; North),
-  /// i.e. the player closer to the dealer places higher. This mirrors the
-  /// engine's own <c>PlayersByRank</c> convention (points desc, then id) applied
-  /// to seat winds, and is fully deterministic.
+  /// Headless single-match Arena runner with full custom ruleset/wildcard/koyaku support,
+  /// live table progress reporting, rich Mahjong event telemetry, and post-game replay
+  /// DisplayName + seed stamping.
   /// </summary>
   public sealed class EvalRoom {
-    /// <summary>
-    /// Builds the <see cref="ILlmProvider"/> for an LLM roster entry. Injected so
-    /// tests never touch the network and so production can plug in the real
-    /// <c>LlmProviderFactory</c>. Never called for baseline entries.
-    /// </summary>
     public delegate ILlmProvider LlmProviderResolver(ArenaConfig.ModelConfig model);
 
     private readonly ArenaConfig config;
@@ -107,17 +118,6 @@ namespace RabiRiichi.Arena.Eval {
     private readonly UsageStats usageStats;
     private readonly LlmProviderResolver llmProviderResolver;
 
-    /// <param name="config">The Arena config (run/decision/exposure/rating/urls).</param>
-    /// <param name="replayStore">
-    /// Where the web-compatible replay is saved; may be a disabled store (then no
-    /// replay is written, but the seed is still captured).
-    /// </param>
-    /// <param name="reasoningStore">Per-decision reasoning persistence (§8); may be null.</param>
-    /// <param name="usageStats">Per-model usage counters (§12c); may be null for baselines.</param>
-    /// <param name="llmProviderResolver">
-    /// Builds a provider for an LLM model; defaults to a resolver that throws if
-    /// an LLM seat is requested without one (so an all-baseline match needs none).
-    /// </param>
     public EvalRoom(
         ArenaConfig config,
         ReplayStore replayStore,
@@ -130,34 +130,23 @@ namespace RabiRiichi.Arena.Eval {
       this.usageStats = usageStats;
       this.llmProviderResolver = llmProviderResolver
           ?? (m => throw new InvalidOperationException(
-              $"No LLM provider resolver supplied for model '{m?.Id}'. " +
-              "All-baseline matches need none; LLM matches must inject one."));
+              $"No LLM provider resolver supplied for model '{m?.Id}'."));
     }
 
-    /// <summary>
-    /// Runs one match to completion and returns its result.
-    /// </summary>
-    /// <param name="assignments">
-    /// Exactly playerCount seat assignments (seats 0..playerCount-1, each once).
-    /// </param>
-    /// <param name="gameId">
-    /// Arena-controlled game id (must be path-safe; keys the replay + reasoning).
-    /// If null/empty a fresh one is generated.
-    /// </param>
-    /// <param name="cancellationToken">Stops the match mid-run (M4).</param>
     public async Task<EvalResult> RunAsync(
         IReadOnlyList<EvalSeatAssignment> assignments,
         string gameId = null,
-        CancellationToken cancellationToken = default) {
-      if (assignments == null) {
-        throw new ArgumentNullException(nameof(assignments));
-      }
-      int playerCount = config.Run.PlayerCount;
+        CancellationToken cancellationToken = default,
+        Action<LiveMatchProgress> onProgress = null) {
+      if (assignments == null) throw new ArgumentNullException(nameof(assignments));
+      var rules = config.GameRules ?? new ArenaConfig.GameRulesConfig();
+      int playerCount = rules.PlayerCount;
       if (assignments.Count != playerCount) {
         throw new ArgumentException(
             $"Expected {playerCount} seat assignments, got {assignments.Count}.",
             nameof(assignments));
       }
+
       var bySeat = assignments.OrderBy(a => a.Seat).ToList();
       for (int i = 0; i < bySeat.Count; i++) {
         if (bySeat[i].Seat != i) {
@@ -174,113 +163,155 @@ namespace RabiRiichi.Arena.Eval {
         gameId = NewGameId();
       }
 
-      // Build the live config: seed stays NULL so the engine derives a clock seed
-      // that agents can never see (§11b). A large action timeout keeps the engine
-      // from preempting long LLM thinking (§7).
-      var gameConfig = new GameConfig {
-        playerCount = playerCount,
-        totalRound = config.Run.TotalRound,
-        seed = null,
-        gameplayActionTimeout = Math.Max(
-            5.0, Math.Min(3600.0, config.Decision.TimeoutSeconds + 10.0)),
-      };
+      double actionTimeout = Math.Clamp((config.Decision?.TimeoutSeconds ?? 60) + 15.0, 5.0, 3600.0);
+      var gameConfig = rules.BuildGameConfig(actionTimeout);
+      int wildcardCount = gameConfig.initialTiles?.Count(t => t.IsWildcard) ?? 0;
 
       var room = new Room(new Random(), gameConfig, replayStore);
-
-      // The engine shuffles seats, but every agent reports its true engine Seat
-      // via room.SeatIndexOf, so identities are resolved through the agents.
       var agents = new IPlayerAgent[playerCount];
 
-      // Resolvers used by LLM agents. windOf reads the live game (available once
-      // started); seatDisplayName resolves each engine SEAT's model display name
-      // (only consulted when exposure.revealOpponentIdentity is on).
       Func<int, Wind> windOf = seat => room.game != null
           ? room.game.GetPlayer(seat).Wind
           : Wind.E;
       Func<int, string> seatDisplayName = seat =>
           ModelForSeat(agents, bySeat, seat)?.DisplayName ?? "";
 
+      var promptsCfg = config.Prompts ?? new ArenaConfig.PromptConfig();
+      var decisionCfg = config.Decision ?? new ArenaConfig.DecisionConfig();
+
       for (int i = 0; i < playerCount; i++) {
         var model = bySeat[i].Model;
         int aiId = room.AllocateAiId();
-        IPlayerAgent agent = IsBaseline(model)
-            ? new RuleBasedAI(aiId, room, UserStatus.InRoom)
+        IPlayerAgent agent = model.IsBaseline
+            ? new ArenaBaselineAI(
+                aiId,
+                room,
+                model.Variant,
+                promptsCfg.RevealOpponentIdentity ? model.DisplayName : null,
+                UserStatus.InRoom)
             : new ArenaLlmAI(
-                aiId, room, model, config.Decision, config.Exposure,
-                llmProviderResolver(model), reasoningStore, usageStats, gameId,
-                windOf, seatDisplayName, UserStatus.InRoom);
+                aiId,
+                room,
+                model,
+                decisionCfg,
+                promptsCfg,
+                llmProviderResolver(model),
+                reasoningStore,
+                usageStats,
+                gameId,
+                windOf,
+                seatDisplayName,
+                UserStatus.InRoom);
         agents[i] = agent;
         if (!room.AddPlayer(agent)) {
           throw new InvalidOperationException($"Failed to add agent for seat {i}.");
         }
       }
 
-      // Do NOT call room.GetReady here: readying the last agent would auto-start
-      // a normal game via the private TryStartGame. RunHeadlessArenaMatch takes
-      // agents that are still InRoom and drives the single eval game itself.
-
       var startedAt = DateTime.UtcNow;
+      var startedIso = startedAt.ToString("o");
+      var sw = Stopwatch.StartNew();
       Game capturedGame = null;
       ulong capturedSeed = 0;
 
+      var tracker = new MatchEventTracker(playerCount);
+
+      void EmitProgress(Game g) {
+        if (onProgress == null || g == null) return;
+        try {
+          var seatsSnap = new List<LiveSeatProgress>(playerCount);
+          for (int s = 0; s < playerCount; s++) {
+            var m = ModelForSeat(agents, bySeat, s);
+            seatsSnap.Add(new LiveSeatProgress {
+              Seat = s,
+              ModelId = m?.Id ?? "",
+              DisplayName = m?.DisplayName ?? $"Seat {s + 1}",
+              Points = g.players[s].points,
+              InRiichi = g.players[s].hand.riichi,
+            });
+          }
+          onProgress(new LiveMatchProgress {
+            GameId = gameId,
+            RoundLabel = FormatRoundLabel(g),
+            WallRemaining = g.wall?.NumRemaining ?? 0,
+            TurnCount = tracker.TotalTurns,
+            StartedAt = startedIso,
+            Seats = seatsSnap,
+          });
+        } catch {
+          // Progress reporting must never interrupt gameplay.
+        }
+      }
+
       bool started = await room.RunHeadlessArenaMatch(
           gameId,
-          onGameCreated: g => capturedGame = g,
+          onGameCreated: g => {
+            capturedGame = g;
+            g.onGodViewEvent += ev => {
+              tracker.OnEvent(g, ev);
+              if (ev is BeginGameEvent or DiscardTileEvent or AgariEvent or RyuukyokuEvent) {
+                EmitProgress(g);
+              }
+            };
+          },
           beforeSaveReplay: (g, sac) => {
-            // §11b: read the real seed at game end and stamp it into the replay
-            // log's embedded config BEFORE it is saved. Never earlier.
             var rand = g.Get<RabiRand>();
             capturedSeed = rand?.seed ?? 0;
             g.config.seed = capturedSeed;
             var log = sac.GetReplayLog();
-            if (log?.Config != null) {
-              log.Config.Seed = capturedSeed;
+            if (log != null) {
+              if (log.Config != null) {
+                log.Config.Seed = capturedSeed;
+              }
+              foreach (var p in log.Players) {
+                var m = ModelForSeat(agents, bySeat, p.Seat);
+                if (m != null && !string.IsNullOrWhiteSpace(m.DisplayName)) {
+                  p.Nickname = m.DisplayName;
+                }
+              }
             }
           },
           cancellationToken);
 
+      sw.Stop();
       var finishedAt = DateTime.UtcNow;
       bool completed = started
           && capturedGame != null
           && capturedGame.info.phase == GamePhase.Finished
           && !cancellationToken.IsCancellationRequested;
 
-      var seats = BuildSeatResults(capturedGame, agents, bySeat);
-
-      // Config snapshot (with the real seed) for the match record (§11).
-      JsonNode configSnapshot = null;
-      if (capturedGame != null) {
-        configSnapshot = ConfigToJson(capturedGame.config);
-      }
+      var seats = BuildSeatResults(capturedGame, agents, bySeat, tracker);
+      JsonNode configSnapshot = capturedGame != null ? ConfigToJson(capturedGame.config) : null;
 
       return new EvalResult {
         GameId = gameId,
         Seed = capturedSeed,
         Seats = seats,
+        Rounds = tracker.Rounds,
+        RoundsPlayed = tracker.RoundsPlayed,
+        ExhaustiveDraws = tracker.ExhaustiveDraws,
+        AbortedDraws = tracker.AbortedDraws,
+        PlayerCount = playerCount,
+        TotalRound = rules.TotalRound,
+        TileSetPreset = rules.TileSet?.Preset ?? "Regular",
+        HasWildcards = wildcardCount > 0,
+        WildcardCount = wildcardCount,
+        DurationMs = sw.ElapsedMilliseconds,
         Config = configSnapshot,
-        StartedAt = startedAt.ToString("o"),
+        StartedAt = startedIso,
         FinishedAt = finishedAt.ToString("o"),
         Completed = completed,
       };
     }
 
-    /// <summary>
-    /// Builds a <see cref="MatchRecord"/> from a finished match's
-    /// <see cref="EvalResult"/> and the applied Elo changes, so the caller (or
-    /// M4's ArenaService) can <c>Append</c> it. <paramref name="eloChanges"/> is
-    /// keyed by model id; a seat with no change entry gets equal before/after.
-    /// The replay link is NOT stored — it is derived at read-time by the public
-    /// controller from the live clientUrl/wsUrl + gameId (§11/§12a).
-    /// </summary>
     public MatchRecord BuildMatchRecord(
         EvalResult result,
         IReadOnlyDictionary<string, EloChange> eloChanges,
         string matchId = null,
         string runId = null,
-        int swissRound = 0) {
-      if (result == null) {
-        throw new ArgumentNullException(nameof(result));
-      }
+        int swissRound = 0,
+        string batchLabel = "") {
+      if (result == null) throw new ArgumentNullException(nameof(result));
       matchId ??= result.GameId;
       var players = result.Seats.Select(s => {
         eloChanges.TryGetValue(s.ModelId, out var change);
@@ -288,11 +319,38 @@ namespace RabiRiichi.Arena.Eval {
           Seat = s.Seat,
           ModelId = s.ModelId,
           DisplayName = s.DisplayName,
+          Provider = s.Provider,
           FinalPoints = (int)s.FinalPoints,
           Placement = s.Placement,
-          PenaltyCount = s.PenaltyCount,
           EloBefore = change?.EloBefore ?? 0,
           EloAfter = change?.EloAfter ?? 0,
+          RoundsPlayed = s.RoundsPlayed,
+          AgariCount = s.AgariCount,
+          TsumoCount = s.TsumoCount,
+          RonCount = s.RonCount,
+          DealInCount = s.DealInCount,
+          DealInPoints = s.DealInPoints,
+          TotalWinPoints = s.TotalWinPoints,
+          TotalWinHan = s.TotalWinHan,
+          MaxWinPoints = s.MaxWinPoints,
+          RiichiCount = s.RiichiCount,
+          OpenHandCount = s.OpenHandCount,
+          CallCount = s.CallCount,
+          KanCount = s.KanCount,
+          NukiCount = s.NukiCount,
+          TenpaiAtDrawCount = s.TenpaiAtDrawCount,
+          WildcardWinCount = s.WildcardWinCount,
+          YakuCounts = new Dictionary<string, int>(s.YakuCounts),
+          DecisionsCount = s.DecisionsCount,
+          AutoDecisionsCount = s.AutoDecisionsCount,
+          ValidFirstTryCount = s.ValidFirstTryCount,
+          RetryCount = s.RetryCount,
+          PenaltyCount = s.PenaltyCount,
+          PromptTokens = s.PromptTokens,
+          CompletionTokens = s.CompletionTokens,
+          ReasoningTokens = s.ReasoningTokens,
+          TotalLatencyMs = s.TotalLatencyMs,
+          MaxLatencyMs = s.MaxLatencyMs,
         };
       }).ToList();
 
@@ -301,20 +359,25 @@ namespace RabiRiichi.Arena.Eval {
         GameId = result.GameId,
         RunId = runId ?? "",
         SwissRound = swissRound,
+        BatchLabel = batchLabel ?? "",
         StartedAt = result.StartedAt,
         FinishedAt = result.FinishedAt,
+        DurationMs = result.DurationMs,
         Seed = unchecked((long)result.Seed),
+        PlayerCount = result.PlayerCount,
+        TotalRound = result.TotalRound,
+        TileSetPreset = result.TileSetPreset,
+        HasWildcards = result.HasWildcards,
+        WildcardCount = result.WildcardCount,
+        RoundsPlayed = result.RoundsPlayed,
+        ExhaustiveDraws = result.ExhaustiveDraws,
+        AbortedDraws = result.AbortedDraws,
         Config = result.Config,
         Players = players,
+        Rounds = result.Rounds.ToList(),
       };
     }
 
-    /// <summary>
-    /// Builds the rating participants (current Elo, placement, frozen anchors)
-    /// for a finished match, reading current Elo from <paramref name="store"/>.
-    /// New models default to <paramref name="initialElo"/>; baselines carry their
-    /// <c>FrozenElo</c>. Consumed by <see cref="RatingService.ApplyMatch"/>.
-    /// </summary>
     public IReadOnlyList<RatingParticipant> BuildRatingParticipants(
         EvalResult result,
         IReadOnlyList<EvalSeatAssignment> assignments,
@@ -322,8 +385,10 @@ namespace RabiRiichi.Arena.Eval {
         double initialElo) {
       var modelBySeat = assignments.ToDictionary(a => a.Seat, a => a.Model);
       return result.Seats.Select(s => {
-        modelBySeat.TryGetValue(s.Seat, out var model);
-        double? frozen = model != null && IsBaseline(model) ? model.FrozenElo : null;
+        // Resolve the model from the seat's ModelId (since seats shuffle on game start).
+        var model = assignments.Select(a => a.Model).FirstOrDefault(m => m.Id == s.ModelId)
+            ?? modelBySeat.GetValueOrDefault(s.Seat);
+        double? frozen = model != null && model.IsBaseline ? model.FrozenElo : null;
         double current = store?.Get(s.ModelId)?.Elo ?? frozen ?? initialElo;
         return new RatingParticipant {
           ModelId = s.ModelId,
@@ -335,37 +400,30 @@ namespace RabiRiichi.Arena.Eval {
       }).ToList();
     }
 
-    // ----- Placement + result assembly -------------------------------------
-
     private static IReadOnlyList<EvalSeatResult> BuildSeatResults(
-        Game game, IPlayerAgent[] agents, List<EvalSeatAssignment> bySeat) {
+        Game game,
+        IPlayerAgent[] agents,
+        List<EvalSeatAssignment> bySeat,
+        MatchEventTracker tracker) {
       if (game == null) {
-        // Never started (e.g. immediate cancel) — return zeroed placements.
         return bySeat.Select(a => new EvalSeatResult {
           Seat = a.Seat,
           ModelId = a.Model.Id,
           DisplayName = a.Model.DisplayName,
-          FinalPoints = 0,
-          Placement = 0,
-          PenaltyCount = 0,
+          Provider = a.Model.Provider,
         }).ToList();
       }
 
       int playerCount = game.players.Length;
-      // Map each engine seat -> its roster model via the agent occupying that seat.
       var modelForSeat = new ArenaConfig.ModelConfig[playerCount];
-      var penaltyForSeat = new int[playerCount];
+      var agentForSeat = new IPlayerAgent[playerCount];
       for (int slot = 0; slot < agents.Length; slot++) {
         int seat = agents[slot].Seat;
-        if (seat < 0 || seat >= playerCount) {
-          continue;
-        }
+        if (seat < 0 || seat >= playerCount) continue;
         modelForSeat[seat] = bySeat[slot].Model;
-        penaltyForSeat[seat] = PenaltyOf(agents[slot]);
+        agentForSeat[seat] = agents[slot];
       }
 
-      // Placement: sort seats by (final points desc, then seat wind asc). Seat
-      // wind order (E<S<W<N) is the deterministic tie-break (§ class doc).
       var ordered = Enumerable.Range(0, playerCount)
           .OrderByDescending(seat => game.players[seat].points)
           .ThenBy(seat => (int)game.players[seat].Wind)
@@ -378,29 +436,58 @@ namespace RabiRiichi.Arena.Eval {
       var results = new List<EvalSeatResult>(playerCount);
       for (int seat = 0; seat < playerCount; seat++) {
         var model = modelForSeat[seat];
+        var llm = agentForSeat[seat] as ArenaLlmAI;
+        var st = tracker.StatsOf(seat);
         results.Add(new EvalSeatResult {
           Seat = seat,
           ModelId = model?.Id ?? "",
           DisplayName = model?.DisplayName ?? "",
+          Provider = model?.Provider ?? "",
           FinalPoints = game.players[seat].points,
           Placement = placementForSeat[seat],
-          PenaltyCount = penaltyForSeat[seat],
+          RoundsPlayed = tracker.RoundsPlayed,
+          AgariCount = st.AgariCount,
+          TsumoCount = st.TsumoCount,
+          RonCount = st.RonCount,
+          DealInCount = st.DealInCount,
+          DealInPoints = st.DealInPoints,
+          TotalWinPoints = st.TotalWinPoints,
+          TotalWinHan = st.TotalWinHan,
+          MaxWinPoints = st.MaxWinPoints,
+          RiichiCount = st.RiichiCount,
+          OpenHandCount = st.OpenHandCount,
+          CallCount = st.CallCount,
+          KanCount = st.KanCount,
+          NukiCount = st.NukiCount,
+          TenpaiAtDrawCount = st.TenpaiAtDrawCount,
+          WildcardWinCount = st.WildcardWinCount,
+          YakuCounts = new Dictionary<string, int>(st.YakuCounts),
+          DecisionsCount = llm?.DecisionsCount ?? 0,
+          AutoDecisionsCount = llm?.AutoDecisionsCount ?? 0,
+          ValidFirstTryCount = llm?.ValidFirstTryCount ?? 0,
+          RetryCount = llm?.RetryCount ?? 0,
+          PenaltyCount = llm?.PenaltyCount ?? 0,
+          PromptTokens = llm?.PromptTokens ?? 0,
+          CompletionTokens = llm?.CompletionTokens ?? 0,
+          ReasoningTokens = llm?.ReasoningTokens ?? 0,
+          TotalLatencyMs = llm?.TotalLatencyMs ?? 0,
+          MaxLatencyMs = llm?.MaxLatencyMs ?? 0,
         });
       }
       return results.OrderBy(r => r.Seat).ToList();
     }
 
-    private static int PenaltyOf(IPlayerAgent agent) {
-      // Penalties are tracked in UsageStats per model (across the whole run), not
-      // per agent instance. Per-match, per-seat penalty attribution is derived by
-      // the caller from reasoning artifacts if needed; baselines never penalize.
-      return 0;
+    private static string FormatRoundLabel(Game g) {
+      string wind = g.info.wind switch {
+        Wind.E => "East",
+        Wind.S => "South",
+        Wind.W => "West",
+        Wind.N => "North",
+        _ => g.info.wind.ToString(),
+      };
+      int kyoku = g.info.round % Math.Max(1, g.config.playerCount) + 1;
+      return g.info.honba > 0 ? $"{wind} {kyoku} (H{g.info.honba})" : $"{wind} {kyoku}";
     }
-
-    // ----- Helpers ---------------------------------------------------------
-
-    private static bool IsBaseline(ArenaConfig.ModelConfig model) =>
-        string.Equals(model.Provider, "baseline", StringComparison.OrdinalIgnoreCase);
 
     private static ArenaConfig.ModelConfig ModelForSeat(
         IPlayerAgent[] agents, List<EvalSeatAssignment> bySeat, int seat) {
@@ -425,6 +512,221 @@ namespace RabiRiichi.Arena.Eval {
     }
 
     private static string NewGameId() =>
-        $"{DateTime.UtcNow:yyyyMMdd'T'HHmmss}-{Guid.NewGuid():N}".Substring(0, 40);
+        $"{DateTime.UtcNow:yyyyMMdd'T'HHmmss}-{Guid.NewGuid():N}"[..40];
+
+    /// <summary>
+    /// Aggregates per-seat and per-round Mahjong statistics directly from engine events.
+    /// </summary>
+    private sealed class MatchEventTracker {
+      public sealed class SeatStats {
+        public int AgariCount;
+        public int TsumoCount;
+        public int RonCount;
+        public int DealInCount;
+        public int DealInPoints;
+        public int TotalWinPoints;
+        public int TotalWinHan;
+        public int MaxWinPoints;
+        public int RiichiCount;
+        public int OpenHandCount;
+        public int CallCount;
+        public int KanCount;
+        public int NukiCount;
+        public int TenpaiAtDrawCount;
+        public int WildcardWinCount;
+        public readonly Dictionary<string, int> YakuCounts = new(StringComparer.Ordinal);
+      }
+
+      private readonly int playerCount;
+      private readonly SeatStats[] stats;
+      private readonly bool[] openedInCurrentRound;
+      private string currentRoundLabel = "East 1";
+      private MatchRoundSummary pendingRound;
+      private bool roundConcluded;
+
+      public int RoundsPlayed { get; private set; }
+      public int ExhaustiveDraws { get; private set; }
+      public int AbortedDraws { get; private set; }
+      public int TotalTurns { get; private set; }
+      public List<MatchRoundSummary> Rounds { get; } = new();
+
+      public MatchEventTracker(int playerCount) {
+        this.playerCount = playerCount;
+        stats = Enumerable.Range(0, playerCount).Select(_ => new SeatStats()).ToArray();
+        openedInCurrentRound = new bool[playerCount];
+      }
+
+      public SeatStats StatsOf(int seat) =>
+          seat >= 0 && seat < playerCount ? stats[seat] : new SeatStats();
+
+      public void OnEvent(Game g, EventBase ev) {
+        switch (ev) {
+          case BeginGameEvent:
+            RoundsPlayed++;
+            Array.Clear(openedInCurrentRound);
+            roundConcluded = false;
+            pendingRound = null;
+            currentRoundLabel = FormatRoundLabel(g);
+            break;
+
+          case DiscardTileEvent:
+            TotalTurns++;
+            break;
+
+          case SetRiichiEvent riichi when ValidSeat(riichi.playerId):
+            stats[riichi.playerId].RiichiCount++;
+            break;
+
+          case ClaimTileEvent claim when ValidSeat(claim.playerId):
+            stats[claim.playerId].CallCount++;
+            openedInCurrentRound[claim.playerId] = true;
+            break;
+
+          case KanEvent kan when ValidSeat(kan.playerId):
+            stats[kan.playerId].KanCount++;
+            if (kan.kanSource != TileSource.Ankan) {
+              openedInCurrentRound[kan.playerId] = true;
+            }
+            break;
+
+          case NukiDoraEvent nuki when ValidSeat(nuki.playerId):
+            stats[nuki.playerId].NukiCount++;
+            break;
+
+          case AgariEvent agari: {
+            FinalizeOpenHandsOnce();
+            bool isTsumo = agari.isTsumo;
+            int fromSeat = agari.agariInfos.fromPlayer;
+            if (!isTsumo && ValidSeat(fromSeat)) {
+              stats[fromSeat].DealInCount++;
+            }
+
+            var winners = new List<int>();
+            var yakuNames = new List<string>();
+            int topHan = 0, topFu = 0, topYakuman = 0;
+            bool anyWildcard = false;
+
+            foreach (var info in agari.agariInfos) {
+              if (!ValidSeat(info.playerId)) continue;
+              winners.Add(info.playerId);
+              var s = stats[info.playerId];
+              s.AgariCount++;
+              if (isTsumo) s.TsumoCount++; else s.RonCount++;
+
+              bool usedWild = info.WildcardAssignments().Any();
+              if (usedWild) {
+                anyWildcard = true;
+                s.WildcardWinCount++;
+              }
+
+              if (info.scores != null) {
+                int han = info.scores.result?.han ?? 0;
+                int fu = info.scores.result?.fu ?? 0;
+                int ym = (info.scores.result?.yakuman ?? 0) + (info.scores.result?.bonusYakuman ?? 0);
+                s.TotalWinHan += ym > 0 ? ym * 13 : han;
+                if (han > topHan) { topHan = han; topFu = fu; }
+                if (ym > topYakuman) topYakuman = ym;
+
+                foreach (var sc in info.scores) {
+                  if (sc.Source != null &&
+                      sc.Type is ScoringType.Han or ScoringType.Yakuman or ScoringType.BonusYakuman) {
+                    var yName = sc.Source.GetType().Name;
+                    s.YakuCounts[yName] = s.YakuCounts.GetValueOrDefault(yName) + 1;
+                    if (!yakuNames.Contains(yName)) yakuNames.Add(yName);
+                  }
+                }
+              }
+            }
+
+            pendingRound = new MatchRoundSummary {
+              RoundIndex = RoundsPlayed,
+              Label = currentRoundLabel,
+              Outcome = isTsumo ? "tsumo" : "ron",
+              WinnerSeats = winners,
+              LoserSeat = !isTsumo && ValidSeat(fromSeat) ? fromSeat : null,
+              Yaku = yakuNames,
+              Han = topHan,
+              Fu = topFu,
+              Yakuman = topYakuman,
+              UsedWildcard = anyWildcard,
+            };
+            Rounds.Add(pendingRound);
+            break;
+          }
+
+          case EndGameRyuukyokuEvent draw: {
+            FinalizeOpenHandsOnce();
+            ExhaustiveDraws++;
+            var tenpaiList = new List<int>();
+            if (draw.tenpaiPlayers != null) {
+              foreach (var seat in draw.tenpaiPlayers) {
+                if (ValidSeat(seat)) {
+                  stats[seat].TenpaiAtDrawCount++;
+                  tenpaiList.Add(seat);
+                }
+              }
+            }
+            pendingRound = new MatchRoundSummary {
+              RoundIndex = RoundsPlayed,
+              Label = currentRoundLabel,
+              Outcome = "exhaustive_draw",
+              TenpaiSeats = tenpaiList,
+            };
+            Rounds.Add(pendingRound);
+            break;
+          }
+
+          case MidGameRyuukyokuEvent abort: {
+            FinalizeOpenHandsOnce();
+            AbortedDraws++;
+            pendingRound = new MatchRoundSummary {
+              RoundIndex = RoundsPlayed,
+              Label = currentRoundLabel,
+              Outcome = "abortive_draw",
+              AbortReason = abort.name,
+            };
+            Rounds.Add(pendingRound);
+            break;
+          }
+
+          case ApplyScoreEvent apply when pendingRound != null: {
+            var deltas = new List<int>(playerCount);
+            for (int seat = 0; seat < playerCount; seat++) {
+              int d = (int)apply.scoreChange.DeltaScore(seat);
+              deltas.Add(d);
+            }
+            pendingRound.ScoreDeltas = deltas;
+
+            if (pendingRound.Outcome is "tsumo" or "ron") {
+              int wonTotal = 0;
+              foreach (var w in pendingRound.WinnerSeats) {
+                int gain = Math.Max(0, deltas[w]);
+                wonTotal += gain;
+                stats[w].TotalWinPoints += gain;
+                if (gain > stats[w].MaxWinPoints) stats[w].MaxWinPoints = gain;
+              }
+              pendingRound.PointsWon = wonTotal;
+              if (pendingRound.LoserSeat is int loser && ValidSeat(loser)) {
+                stats[loser].DealInPoints += Math.Max(0, -deltas[loser]);
+              }
+            }
+            pendingRound = null;
+            break;
+          }
+        }
+      }
+
+      private void FinalizeOpenHandsOnce() {
+        if (roundConcluded) return;
+        roundConcluded = true;
+        for (int s = 0; s < playerCount; s++) {
+          if (openedInCurrentRound[s]) {
+            stats[s].OpenHandCount++;
+          }
+        }
+      }
+
+      private bool ValidSeat(int seat) => seat >= 0 && seat < playerCount;
+    }
   }
 }

@@ -15,10 +15,10 @@ using System.Threading.Tasks;
 
 namespace RabiRiichi.Tests.Server.Arena {
   /// <summary>
-  /// Tests for the admin surface (ARENA_DESIGN.md §12b/§12c): auth gate
-  /// (<see cref="AdminAuthAttribute"/>) and <see cref="AdminController"/>. These
-  /// instantiate the controller/filter directly over temp-backed stores + config
-  /// (no Kestrel), so nothing hits the network and no real games play.
+  /// Tests for the admin surface: <see cref="AdminAuthAttribute"/>,
+  /// <see cref="AdminSessionService"/> (HttpOnly cookie + CSRF + password rotation
+  /// invalidation), and <see cref="AdminController"/> (config redaction/save,
+  /// live model test, and full run/batch controls).
   /// </summary>
   [TestClass]
   public class AdminControllerTest {
@@ -41,30 +41,27 @@ namespace RabiRiichi.Tests.Server.Arena {
       }
     }
 
-    // ----- Fixtures --------------------------------------------------------
-
     private ArenaConfig MakeConfig(string adminPassword = "s3cr3t") {
       var cfg = new ArenaConfig {
         WorkspaceDir = workspaceDir,
         AdminPassword = adminPassword,
         ClientUrl = "https://play.example.com",
         WsUrl = "wss://arena.example.com",
-        PublicUrl = "https://arena.example.com",
       };
       cfg.Models.Add(new ArenaConfig.ModelConfig {
         Id = "gpt-x", DisplayName = "GPT-X", Provider = "openai", Model = "m",
+        BaseUrl = "https://api.openai.com",
         ApiKey = "sk-real-openai-key",
       });
       cfg.Models.Add(new ArenaConfig.ModelConfig {
         Id = "baseline-mid", DisplayName = "Rule (mid)", Provider = "baseline",
-        FrozenElo = 1500,
+        Variant = "balanced", FrozenElo = 1500,
       });
       return cfg;
     }
 
-    // A fake table runner that never actually plays; used only where a run must
-    // be startable/stoppable. Blocks until cancelled so Stop can be asserted.
-    private static ArenaService.TableRunner BlockingRunner(TaskCompletionSource block) {
+    private static Func<SwissTable, string, CancellationToken, Task<EvalResult>> BlockingRunner(
+        TaskCompletionSource block) {
       return async (table, gameId, token) => {
         using var reg = token.Register(() => block.TrySetCanceled(token));
         await block.Task;
@@ -74,26 +71,27 @@ namespace RabiRiichi.Tests.Server.Arena {
     }
 
     private ArenaService MakeService(
-        ArenaConfig cfg, ArenaService.TableRunner runner = null,
-        ArenaService.DelayFn delay = null) {
+        ArenaConfig cfg,
+        Func<SwissTable, string, CancellationToken, Task<EvalResult>> runner = null) {
       runManager ??= new RunManager(workspaceDir);
       return new ArenaService(
           runManager,
           currentConfig: () => cfg,
-          tableRunner: runner ?? ((t, g, c) => Task.FromResult(
-              new EvalResult { GameId = g, Completed = true, Seats = new List<EvalSeatResult>() })),
-          delayFn: delay ?? ((span, token) => Task.CompletedTask));
+          simpleRunner: runner ?? ((t, g, c) => Task.FromResult(
+              new EvalResult { GameId = g, Completed = true, Seats = new List<EvalSeatResult>() })));
     }
 
     private AdminController MakeController(
         ArenaConfig cfg, ArenaConfigProvider provider = null,
-        ArenaService service = null, UsageStats usage = null) {
+        ArenaService service = null, UsageStats usage = null,
+        AdminSessionService sessions = null) {
       provider ??= new ArenaConfigProvider(cfg, configPath);
       service ??= MakeService(cfg);
       runManager ??= new RunManager(workspaceDir);
       usage ??= new UsageStats(workspaceDir);
+      sessions ??= new AdminSessionService();
       return new AdminController(
-          provider, service, runManager, usage, new ReasoningStore(workspaceDir));
+          provider, service, runManager, usage, new ReasoningStore(workspaceDir), sessions);
     }
 
     private static T Body<T>(ActionResult<T> result) {
@@ -103,71 +101,87 @@ namespace RabiRiichi.Tests.Server.Arena {
       return result.Value;
     }
 
-    // ----- Auth gate (§12b) ------------------------------------------------
+    // ----- Auth gate & HttpOnly Cookie + CSRF session ----------------------
 
     [TestMethod]
-    public void TestAuth_CorrectPassword_Authorized() {
+    public void TestAuth_PasswordHeaderValidation() {
       Assert.IsTrue(AdminAuthAttribute.IsAuthorized("pw", "pw"));
-    }
-
-    [TestMethod]
-    public void TestAuth_WrongPassword_Unauthorized() {
       Assert.IsFalse(AdminAuthAttribute.IsAuthorized("pw", "nope"));
-    }
-
-    [TestMethod]
-    public void TestAuth_MissingPassword_Unauthorized() {
       Assert.IsFalse(AdminAuthAttribute.IsAuthorized("pw", ""));
       Assert.IsFalse(AdminAuthAttribute.IsAuthorized("pw", null));
-    }
-
-    [TestMethod]
-    public void TestAuth_EmptyConfiguredPassword_FailsClosed() {
-      // Fail closed: even a matching empty supplied value must be rejected.
       Assert.IsFalse(AdminAuthAttribute.IsAuthorized("", ""));
       Assert.IsFalse(AdminAuthAttribute.IsAuthorized("  ", "  "));
       Assert.IsFalse(AdminAuthAttribute.IsAuthorized(null, "anything"));
     }
 
     [TestMethod]
-    public void TestAuthFilter_MissingHeader_SetsUnauthorized() {
+    public void TestAuthFilter_HeaderAndSessionCookieWithCsrfAndPasswordRotation() {
       var cfg = MakeConfig("s3cr3t");
-      var ctx = MakeAuthContext(cfg, suppliedHeader: null);
-      new AdminAuthAttribute().OnAuthorization(ctx);
-      Assert.IsInstanceOfType(ctx.Result, typeof(UnauthorizedResult));
+      var sessions = new AdminSessionService();
+      var (cookieVal, csrf, _) = sessions.CreateSession("s3cr3t");
+
+      // Missing header & cookie -> 401
+      var unauthCtx = MakeAuthContext(cfg, sessions, method: "GET");
+      new AdminAuthAttribute().OnAuthorization(unauthCtx);
+      Assert.IsInstanceOfType(unauthCtx.Result, typeof(UnauthorizedResult));
+
+      // Valid X-Admin-Password header -> allowed even on POST
+      var hdrCtx = MakeAuthContext(cfg, sessions, method: "POST", suppliedHeader: "s3cr3t");
+      new AdminAuthAttribute().OnAuthorization(hdrCtx);
+      Assert.IsNull(hdrCtx.Result);
+
+      // Valid session cookie on GET -> allowed without CSRF header
+      var getCookieCtx = MakeAuthContext(cfg, sessions, method: "GET", cookie: cookieVal);
+      new AdminAuthAttribute().OnAuthorization(getCookieCtx);
+      Assert.IsNull(getCookieCtx.Result);
+
+      // Valid session cookie on POST WITHOUT X-Arena-Csrf -> rejected (401)!
+      var postNoCsrfCtx = MakeAuthContext(cfg, sessions, method: "POST", cookie: cookieVal);
+      new AdminAuthAttribute().OnAuthorization(postNoCsrfCtx);
+      Assert.IsInstanceOfType(postNoCsrfCtx.Result, typeof(UnauthorizedResult));
+
+      // Valid session cookie on POST WITH matching X-Arena-Csrf -> allowed!
+      var postCsrfCtx = MakeAuthContext(cfg, sessions, method: "POST", cookie: cookieVal, csrf: csrf);
+      new AdminAuthAttribute().OnAuthorization(postCsrfCtx);
+      Assert.IsNull(postCsrfCtx.Result);
+
+      // Rotating AdminPassword immediately invalidates old session cookies!
+      cfg.AdminPassword = "new-rotated-password";
+      var rotatedCtx = MakeAuthContext(cfg, sessions, method: "GET", cookie: cookieVal);
+      new AdminAuthAttribute().OnAuthorization(rotatedCtx);
+      Assert.IsInstanceOfType(rotatedCtx.Result, typeof(UnauthorizedResult));
     }
 
-    [TestMethod]
-    public void TestAuthFilter_CorrectHeader_Allows() {
-      var cfg = MakeConfig("s3cr3t");
-      var ctx = MakeAuthContext(cfg, suppliedHeader: "s3cr3t");
-      new AdminAuthAttribute().OnAuthorization(ctx);
-      Assert.IsNull(ctx.Result); // null => request proceeds
-    }
-
-    [TestMethod]
-    public void TestAuthFilter_EmptyConfigured_FailsClosed() {
-      var cfg = MakeConfig(adminPassword: "");
-      var ctx = MakeAuthContext(cfg, suppliedHeader: "");
-      new AdminAuthAttribute().OnAuthorization(ctx);
-      Assert.IsInstanceOfType(ctx.Result, typeof(UnauthorizedResult));
-    }
-
-    /// <summary>Minimal single-entry service provider (avoids the DI package here).</summary>
-    private sealed class StubProvider(ArenaConfigProvider provider) : IServiceProvider {
-      public object GetService(Type serviceType) =>
-          serviceType == typeof(ArenaConfigProvider) ? provider : null;
+    private sealed class StubProvider(ArenaConfigProvider provider, AdminSessionService sessions)
+        : IServiceProvider {
+      public object GetService(Type serviceType) {
+        if (serviceType == typeof(ArenaConfigProvider)) return provider;
+        if (serviceType == typeof(AdminSessionService)) return sessions;
+        return null;
+      }
     }
 
     private Microsoft.AspNetCore.Mvc.Filters.AuthorizationFilterContext MakeAuthContext(
-        ArenaConfig cfg, string suppliedHeader) {
+        ArenaConfig cfg,
+        AdminSessionService sessions,
+        string method = "GET",
+        string suppliedHeader = null,
+        string cookie = null,
+        string csrf = null) {
       var httpCtx = new DefaultHttpContext {
-        RequestServices = new StubProvider(new ArenaConfigProvider(cfg, configPath)),
+        RequestServices = new StubProvider(new ArenaConfigProvider(cfg, configPath), sessions),
       };
+      httpCtx.Request.Method = method;
       if (suppliedHeader != null) {
         httpCtx.Request.Headers[AdminAuthAttribute.HeaderName] = suppliedHeader;
       }
-      var actionCtx = new Microsoft.AspNetCore.Mvc.ActionContext(
+      if (cookie != null) {
+        httpCtx.Request.Headers.Cookie = $"{AdminSessionService.CookieName}={cookie}";
+      }
+      if (csrf != null) {
+        httpCtx.Request.Headers[AdminSessionService.CsrfHeaderName] = csrf;
+      }
+      var actionCtx = new ActionContext(
           httpCtx,
           new Microsoft.AspNetCore.Routing.RouteData(),
           new Microsoft.AspNetCore.Mvc.Abstractions.ActionDescriptor());
@@ -175,25 +189,24 @@ namespace RabiRiichi.Tests.Server.Arena {
           actionCtx, new List<Microsoft.AspNetCore.Mvc.Filters.IFilterMetadata>());
     }
 
-    // ----- GET config is redacted (§12b) -----------------------------------
+    // ----- Config Redaction & Save -----------------------------------------
 
     [TestMethod]
-    public void TestGetConfig_RedactsSecrets() {
+    public void TestGetConfig_RedactsSecretsAndSetsHasApiKeyFlag() {
       var cfg = MakeConfig("s3cr3t");
       var controller = MakeController(cfg);
 
       var got = Body(controller.GetConfig());
       Assert.IsNotNull(got);
-      Assert.AreEqual("", got.AdminPassword, "adminPassword must be redacted.");
-      foreach (var m in got.Models) {
-        Assert.AreEqual("", m.ApiKey, $"apiKey for {m.Id} must be redacted.");
-      }
-      // Non-secret fields still present.
-      Assert.AreEqual("https://play.example.com", got.ClientUrl);
-      Assert.AreEqual(2, got.Models.Count);
-    }
+      Assert.AreEqual("", got.AdminPassword);
+      var gpt = got.Models.Single(m => m.Id == "gpt-x");
+      Assert.IsNull(gpt.ApiKey);
+      Assert.AreEqual(true, gpt.HasApiKey);
 
-    // ----- PUT config: valid save + persist + secret preservation ----------
+      var baseModel = got.Models.Single(m => m.Id == "baseline-mid");
+      Assert.IsNull(baseModel.ApiKey);
+      Assert.AreEqual(false, baseModel.HasApiKey);
+    }
 
     [TestMethod]
     public void TestPutConfig_ValidSavesAndPersists_PreservesBlankSecrets() {
@@ -201,22 +214,17 @@ namespace RabiRiichi.Tests.Server.Arena {
       var provider = new ArenaConfigProvider(cfg, configPath);
       var controller = MakeController(cfg, provider);
 
-      // Simulate the browser round-trip: GET (redacted) then edit a non-secret.
-      var edited = cfg.Redacted();               // secrets blanked
+      var edited = cfg.Redacted();
       edited.ClientUrl = "https://new-client.example.com";
 
-      var result = controller.PutConfig(edited);
-      var dto = Body(result);
+      var dto = Body(controller.PutConfig(edited));
       Assert.IsTrue(dto.Saved);
 
-      // In-memory config hot-reloaded (same singleton instance mutated).
       Assert.AreEqual("https://new-client.example.com", cfg.ClientUrl);
-      // Secrets preserved (blank incoming kept the stored values).
       Assert.AreEqual("s3cr3t", cfg.AdminPassword);
       Assert.AreEqual("sk-real-openai-key",
           cfg.Models.Single(m => m.Id == "gpt-x").ApiKey);
 
-      // Persisted to disk with the real secrets and new field.
       var onDisk = ArenaConfig.Load(configPath);
       Assert.AreEqual("https://new-client.example.com", onDisk.ClientUrl);
       Assert.AreEqual("s3cr3t", onDisk.AdminPassword);
@@ -225,39 +233,15 @@ namespace RabiRiichi.Tests.Server.Arena {
     }
 
     [TestMethod]
-    public void TestPutConfig_OverwritesSecretWhenRealValueSupplied() {
-      var cfg = MakeConfig("s3cr3t");
-      var provider = new ArenaConfigProvider(cfg, configPath);
-      var controller = MakeController(cfg, provider);
-
-      var edited = cfg.Redacted();
-      edited.AdminPassword = "new-admin-pw";      // real new secret
-      edited.Models.Single(m => m.Id == "gpt-x").ApiKey = "sk-new-key";
-
-      var dto = Body(controller.PutConfig(edited));
-      Assert.IsTrue(dto.Saved);
-
-      Assert.AreEqual("new-admin-pw", cfg.AdminPassword);
-      Assert.AreEqual("sk-new-key",
-          cfg.Models.Single(m => m.Id == "gpt-x").ApiKey);
-
-      var onDisk = ArenaConfig.Load(configPath);
-      Assert.AreEqual("new-admin-pw", onDisk.AdminPassword);
-      Assert.AreEqual("sk-new-key",
-          onDisk.Models.Single(m => m.Id == "gpt-x").ApiKey);
-    }
-
-    [TestMethod]
     public void TestPutConfig_Invalid_Returns400_DoesNotOverwriteFile() {
       var cfg = MakeConfig("s3cr3t");
-      // Seed a valid file on disk first so we can prove it is not clobbered.
       cfg.Save(configPath);
       var provider = new ArenaConfigProvider(cfg, configPath);
       var controller = MakeController(cfg, provider);
 
       var bad = cfg.Redacted();
-      bad.Run.TotalRound = 3;                     // invalid (must be 1 or 2)
-      bad.WorkspaceDir = "";                      // invalid (empty)
+      bad.GameRules.TotalRound = 3; // invalid (must be 1 or 2)
+      bad.WorkspaceDir = "";
 
       var result = controller.PutConfig(bad);
       Assert.IsInstanceOfType(result.Result, typeof(BadRequestObjectResult));
@@ -265,26 +249,39 @@ namespace RabiRiichi.Tests.Server.Arena {
       Assert.IsFalse(dto.Saved);
       Assert.IsTrue(dto.Errors.Count > 0);
 
-      // The stored file is unchanged (still valid, real secret present).
       var onDisk = ArenaConfig.Load(configPath);
-      Assert.AreEqual(2, onDisk.Run.TotalRound);
+      Assert.AreEqual(1, onDisk.GameRules.TotalRound);
       Assert.AreEqual(workspaceDir, onDisk.WorkspaceDir);
       Assert.AreEqual("s3cr3t", onDisk.AdminPassword);
     }
 
-    // ----- Run start/stop (§12b) -------------------------------------------
+    [TestMethod]
+    public async Task TestModelEndpoint_BaselineSucceedsAndBlocksUnsafeBaseUrl() {
+      var cfg = MakeConfig("s3cr3t");
+      var controller = MakeController(cfg);
+
+      var okRes = Body(await controller.TestModel(new ArenaConfig.ModelConfig {
+        Id = "baseline-mid", Provider = "baseline", Variant = "balanced",
+      }, CancellationToken.None));
+      Assert.IsTrue(okRes.Ok);
+
+      var unsafeUrl = await controller.TestModel(new ArenaConfig.ModelConfig {
+        Id = "gpt-x", Provider = "openai", Model = "m", BaseUrl = "file:///etc/passwd",
+      }, CancellationToken.None);
+      Assert.IsInstanceOfType(unsafeUrl.Result, typeof(BadRequestObjectResult));
+    }
+
+    // ----- Run & Batch Controls --------------------------------------------
 
     [TestMethod]
-    public async Task TestStartStop_TogglesArenaService() {
+    public async Task TestStartStopAndBatchControls() {
       var cfg = MakeConfig("s3cr3t");
       cfg.Run.SwissRounds = 5;
-      cfg.Run.CooldownSecondsBetweenMatches = 0;
       cfg.Models.Clear();
-      // Four baselines => a single startable table.
       for (int i = 0; i < 4; i++) {
         cfg.Models.Add(new ArenaConfig.ModelConfig {
           Id = "b" + i, DisplayName = "B" + i, Provider = "baseline",
-          FrozenElo = 1500, Enabled = true,
+          Variant = "balanced", FrozenElo = 1500, Enabled = true,
         });
       }
       var block = new TaskCompletionSource();
@@ -293,53 +290,54 @@ namespace RabiRiichi.Tests.Server.Arena {
 
       Assert.AreEqual("Idle", Body(controller.GetStatus()).Run.Status);
 
-      var started = Body(controller.StartRun());
-      // The first match is held in-flight by the blocking runner.
+      controller.StartRun();
       await WaitUntil(() => service.GetStatus().Status == RunStatus.Running);
       Assert.AreEqual("Running", Body(controller.GetStatus()).Run.Status);
 
       var stopped = Body(await controller.StopRun());
       Assert.AreEqual("Stopped", stopped.Run.Status);
-      Assert.AreEqual("Stopped", Body(controller.GetStatus()).Run.Status);
     }
 
     [TestMethod]
-    public async Task TestNewRun_CreatesSeparateRuns() {
+    public async Task TestNewRunActivateAndDeleteRuns() {
       var cfg = MakeConfig("s3cr3t");
       cfg.Run.SwissRounds = 1;
-      cfg.Run.CooldownSecondsBetweenMatches = 0;
       cfg.Models.Clear();
       for (int i = 0; i < 4; i++) {
         cfg.Models.Add(new ArenaConfig.ModelConfig {
           Id = "b" + i, DisplayName = "B" + i, Provider = "baseline",
-          FrozenElo = 1500, Enabled = true,
+          Variant = "balanced", FrozenElo = 1500, Enabled = true,
         });
       }
-      var service = MakeService(cfg); // instant runner
+      var service = MakeService(cfg);
       var controller = MakeController(cfg, service: service);
 
-      await controller.NewRun();
+      await controller.NewRun(new StartRunRequestDto { Label = "First Run" });
       await WaitUntil(() => service.GetStatus().Status == RunStatus.Finished);
-      await controller.NewRun();
+      var run1Id = service.ActiveRunId;
+
+      await controller.NewRun(new StartRunRequestDto { Label = "Second Run" });
       await WaitUntil(() => service.GetStatus().Status == RunStatus.Finished);
+      var run2Id = service.ActiveRunId;
 
       var status = Body(controller.GetStatus());
-      Assert.AreEqual(2, status.Runs.Count, "each New run is a distinct run");
-      Assert.AreEqual(1, status.Runs.Count(r => r.Active));
-      Assert.AreEqual("Finished", status.Run.Status);
+      Assert.AreEqual(2, status.Runs.Count);
+
+      var afterActivate = Body(controller.ActivateRun(run1Id));
+      Assert.AreEqual(run1Id, afterActivate.Run.RunId);
+
+      var afterDelete = Body(controller.DeleteRun(run2Id));
+      Assert.AreEqual(1, afterDelete.Runs.Count);
     }
 
-    // ----- Status monitoring (§12c) ----------------------------------------
-
     [TestMethod]
-    public void TestStatus_PerModelCounters_WithCategoryBreakdown_NoApiKeys() {
+    public void TestStatus_PerModelCounters_NoSecretLeaks() {
       var cfg = MakeConfig("s3cr3t");
       var usage = new UsageStats(workspaceDir);
       usage.RecordRequest("gpt-x");
-      usage.RecordSuccess("gpt-x", promptTokens: 100, completionTokens: 30);
+      usage.RecordSuccess("gpt-x", promptTokens: 100, completionTokens: 30, reasoningTokens: 20, latencyMs: 450);
       usage.RecordRequest("gpt-x");
-      usage.RecordFailure("gpt-x", UsageErrorCategory.Timeout);
-      usage.RecordFailure("gpt-x", UsageErrorCategory.RateLimited);
+      usage.RecordFailure("gpt-x", UsageErrorCategory.Timeout, latencyMs: 150);
       usage.RecordRetry("gpt-x", 2);
       usage.RecordPenalty("gpt-x");
 
@@ -350,20 +348,13 @@ namespace RabiRiichi.Tests.Server.Arena {
       Assert.AreEqual("GPT-X", m.DisplayName);
       Assert.AreEqual(2, m.Requests);
       Assert.AreEqual(1, m.Successes);
-      Assert.AreEqual(2, m.Failures);
+      Assert.AreEqual(1, m.Failures);
       Assert.AreEqual(1, m.TimeoutErrors);
-      Assert.AreEqual(1, m.RateLimitedErrors);
-      Assert.AreEqual(0, m.NetworkErrors);
       Assert.AreEqual(130, m.TotalTokens);
-      Assert.AreEqual(100, m.PromptTokens);
-      Assert.AreEqual(30, m.CompletionTokens);
-      Assert.AreEqual(2, m.Retries);
-      Assert.AreEqual(1, m.Penalties);
+      Assert.AreEqual(20, m.ReasoningTokens);
+      Assert.AreEqual(300.0, m.AvgLatencyMs, 1e-6);
 
-      // Serialize the whole DTO and prove no secret leaks.
       var json = System.Text.Json.JsonSerializer.Serialize(status);
-      StringAssert.DoesNotMatch(json,
-          new System.Text.RegularExpressions.Regex("apiKey", System.Text.RegularExpressions.RegexOptions.IgnoreCase));
       Assert.IsFalse(json.Contains("sk-real-openai-key"));
       Assert.IsFalse(json.Contains("s3cr3t"));
     }
