@@ -11,12 +11,15 @@
     <Compile Remove="RabiRiichi.Server\**" />
     <Compile Remove="RabiRiichi.Tests\**" />
     <Compile Remove="RabiRiichi.Arena\**" />
+    <Compile Remove="RabiRiichi.Benchmarks\**" />
     <EmbeddedResource Remove="RabiRiichi.Server\**" />
     <EmbeddedResource Remove="RabiRiichi.Tests\**" />
     <EmbeddedResource Remove="RabiRiichi.Arena\**" />
+    <EmbeddedResource Remove="RabiRiichi.Benchmarks\**" />
     <None Remove="RabiRiichi.Server\**" />
     <None Remove="RabiRiichi.Tests\**" />
     <None Remove="RabiRiichi.Arena\**" />
+    <None Remove="RabiRiichi.Benchmarks\**" />
   </ItemGroup>
 
   <ItemGroup>
