@@ -341,9 +341,17 @@ namespace RabiRiichi.Server.Agents {
         return 0;
       }
       return ctx.ChoiceFor(action, () => {
+        // A wildcard can stand in for any tile we would keep instead, so holding
+        // it never shapes the hand worse. Throwing it deals into every tenpai
+        // opponent and leaves us furiten on any wait we reach later, since every
+        // tenpai hand also waits on a wildcard. It only goes when nothing else can.
+        bool keepWildcards = options.Any(option => !option.tile.tile.IsWildcard);
         int bestIdx = 0;
         double bestScore = double.NegativeInfinity;
         for (int i = 0; i < options.Count; i++) {
+          if (keepWildcards && options[i].tile.tile.IsWildcard) {
+            continue;
+          }
           double score = ScoreDiscard(ctx, action, options[i].tile);
           if (score > bestScore) {
             bestScore = score;

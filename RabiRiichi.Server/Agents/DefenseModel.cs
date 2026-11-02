@@ -221,8 +221,9 @@ namespace RabiRiichi.Server.Agents {
         return 0;
       }
 
-      double chance = tile.IsZ
-          ? HonorDanger(view, threat.Seat, tile)
+      // A wildcard completes any tenpai hand, so no read of the river helps.
+      double chance = tile.IsWildcard ? 1
+          : tile.IsZ ? HonorDanger(view, threat.Seat, tile)
           : NumberDanger(view, threat.Seat, tile);
 
       // A non-riichi hand may not be tenpai at all and may also simply decline a
