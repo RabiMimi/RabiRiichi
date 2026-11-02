@@ -158,6 +158,34 @@ namespace RabiRiichi.Tests.Patterns {
       Assert.AreEqual(0, best.CompareTo(actual), $"{freeTiles} + {winningTile}");
     }
 
+    // Scattered tiles exercise the search's coverage pruning, including hands it must reject.
+    [DataTestMethod]
+    [DataRow("12m45p789s113z***", "3z")]
+    [DataRow("19m19p19s1234z***", "5z")]
+    [DataRow("1m4m7m1p4p7p1s4s7s1z***", "2z")]
+    [DataRow("1m5m9m1p5p9p1s5s1z2z***", "9s")]
+    [DataRow("1122m3344p556s***", "6s")]
+    [Timeout(60_000)]
+    public void ThreeWildcardSearchMatchesCompleteSubstitutionOracle(string freeTiles, string winningTile) {
+      var game = WildcardFixture.Game();
+      var hand = WildcardFixture.Hand(game, freeTiles);
+      var resolver = game.Get<PatternResolver>();
+      var free = hand.freeTiles.Select(t => new GameTile(t.tile, t.traceId)).ToList();
+      var wild = free.Where(t => t.tile.IsWildcard).ToArray();
+      Assert.AreEqual(3, wild.Length);
+      var incoming = WildcardFixture.Incoming(winningTile, false);
+      ScoreStorage best = null;
+      foreach (var a in Tiles.AllDistinct) foreach (var b in Tiles.AllDistinct) foreach (var c in Tiles.AllDistinct) {
+        wild[0].tile = a; wild[1].tile = b; wild[2].tile = c;
+        var score = resolver.ResolveMaxScore(hand.WithFreeTiles(free), incoming, PatternMask.All);
+        if (score != null && (best == null || score.CompareTo(best) > 0)) best = score;
+      }
+      var actual = resolver.ResolveMaxScore(hand, incoming, PatternMask.All);
+      if (best == null) { Assert.IsNull(actual, freeTiles); return; }
+      Assert.IsNotNull(actual, freeTiles);
+      Assert.AreEqual(0, best.CompareTo(actual), $"{freeTiles} + {winningTile}");
+    }
+
     [TestMethod]
     public void NaturalCalledMeldsRemainFixedAndBonusCannotQualifyAWin() {
       var game = WildcardFixture.Game(true);

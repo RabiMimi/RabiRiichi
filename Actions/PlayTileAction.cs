@@ -50,6 +50,17 @@ namespace RabiRiichi.Actions {
       candidates = ComputeDiscardCandidates(player, tiles, defaultTile);
     }
 
+    /// <summary>Independent copies of the previews for these tiles, or null if any was not computed.</summary>
+    internal List<DiscardCandidate> CopyCandidates(List<GameTile> tiles) {
+      var result = new List<DiscardCandidate>(tiles.Count);
+      foreach (var tile in tiles) {
+        var candidate = candidates.Find(c => ReferenceEquals(c.tile, tile));
+        if (candidate == null) return null;
+        result.Add(new DiscardCandidate { tile = tile, tenpaiInfos = candidate.tenpaiInfos.ConvertAll(info => info.Copy()) });
+      }
+      return result;
+    }
+
     public static List<DiscardCandidate> ComputeDiscardCandidates(
         Player player,
         List<GameTile> discardOptions,
@@ -65,7 +76,13 @@ namespace RabiRiichi.Actions {
 
       var cache = new Dictionary<Tile, List<TenpaiInfo>>();
       bool canShare = patternResolver.CanShareScoring;
+      // Most turns no discard stays tenpai, and one query over all the tiles says so.
+      var tenpaiDiscards = patternResolver.ResolveTenpaiDiscards(hand.WithFreeTiles(all14Tiles));
       foreach (var optionTile in discardOptions) {
+        if (tenpaiDiscards != null && !tenpaiDiscards.Contains(optionTile.tile.WithoutDora)) {
+          candidates.Add(new DiscardCandidate { tile = optionTile, tenpaiInfos = [] });
+          continue;
+        }
         if (canShare && cache.TryGetValue(optionTile.tile, out var cached)) {
           candidates.Add(new DiscardCandidate { tile = optionTile, tenpaiInfos = cached.Select(info => info.Copy()).ToList() });
           continue;

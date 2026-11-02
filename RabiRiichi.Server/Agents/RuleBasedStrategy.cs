@@ -130,9 +130,8 @@ namespace RabiRiichi.Server.Agents {
       /// it could matter.
       ///
       /// <see cref="Shanten"/> is already the best any discard can reach, so a
-      /// discard more than one worse is never the efficient choice; capping the
-      /// search there is what keeps a turn affordable. A capped-out option is
-      /// not removed from consideration - it reports an unreachable shanten and
+      /// discard more than one worse is never the efficient choice. A capped-out
+      /// option is not removed from consideration - it reports an unreachable shanten and
       /// is then ranked purely on safety, which is exactly what is wanted when
       /// the hand is folding.
       /// </summary>

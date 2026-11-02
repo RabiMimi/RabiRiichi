@@ -3,6 +3,7 @@ using RabiRiichi.Core.Config;
 using RabiRiichi.Generated.Core;
 using RabiRiichi.Generated.Patterns;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -34,6 +35,7 @@ namespace RabiRiichi.Patterns.Compiled {
   /// storage so concurrent queries never share mutable scoring state.
   /// </summary>
   public sealed class CompiledScoringEvaluator {
+    private readonly record struct StepKey(BasePattern Family, PatternMask Included, PatternMask Excluded);
     private sealed class Node {
       internal StdPattern Pattern;
       internal YakuRule Rule;
@@ -44,15 +46,16 @@ namespace RabiRiichi.Patterns.Compiled {
     private readonly Node[] nodes;
     private readonly int[] roots;
     private readonly bool hasCustom;
-    private readonly byte[] state;
+    private readonly bool[] passed;
     private readonly CompactScore[] contributions;
+    private readonly ConcurrentDictionary<StepKey, int[]> stepCache;
     private readonly WinView view = new();
+    private StepKey stepKey;
+    private int[] steps = [];
     private CompactScore total;
-    private BasePattern basePattern;
     private Hand hand;
     private GameTile incoming;
-    private PatternMask excluded;
-    private Features features;
+    private Features target, features;
     private int akadora, dora, uradora;
     public bool IsSupported { get; }
     /// <summary>Registered or dependency patterns without a compiled rule.</summary>
@@ -90,15 +93,16 @@ namespace RabiRiichi.Patterns.Compiled {
       }
       hasCustom = nodes.Any(n => n.Custom != null);
       roots = active.Select(p => patterns.IndexOf(p)).ToArray();
-      state = new byte[nodes.Length]; contributions = new CompactScore[nodes.Length];
+      passed = new bool[nodes.Length]; contributions = new CompactScore[nodes.Length];
+      stepCache = new();
       UnsupportedPatterns = unsupported.AsReadOnly();
       IsSupported = unsupported.Count == 0;
     }
 
     private CompiledScoringEvaluator(CompiledScoringEvaluator plan) {
       nodes = plan.nodes; roots = plan.roots; IsSupported = plan.IsSupported; hasCustom = plan.hasCustom;
-      UnsupportedPatterns = plan.UnsupportedPatterns;
-      state = new byte[nodes.Length]; contributions = new CompactScore[nodes.Length];
+      UnsupportedPatterns = plan.UnsupportedPatterns; stepCache = plan.stepCache;
+      passed = new bool[nodes.Length]; contributions = new CompactScore[nodes.Length];
     }
     public CompiledScoringEvaluator Fork() => new(this);
 
@@ -117,37 +121,73 @@ namespace RabiRiichi.Patterns.Compiled {
         ReadOnlySpan<CompactMeld> groups, ReadOnlySpan<byte> counts, int incomingGroup,
         int incomingTileIndex, PatternMask included, PatternMask excludedMask,
         int akadora, int dora, int uradora) {
+      PrepareTarget(groups, counts);
+      return EvaluatePrepared(family, hand, incoming, groups, counts, incomingGroup, incomingTileIndex,
+          included, excludedMask, akadora, dora, uradora);
+    }
+
+    /// <summary>Caches the features shared by every winning-tile role within one target.</summary>
+    internal void PrepareTarget(ReadOnlySpan<CompactMeld> groups, ReadOnlySpan<byte> counts) =>
+        target = Features.ForTarget(groups, counts);
+
+    /// <summary>Scores the target given to <see cref="PrepareTarget"/>; the spans must be the same.</summary>
+    internal CompactScore EvaluatePrepared(BasePattern family, Hand hand, GameTile incoming,
+        ReadOnlySpan<CompactMeld> groups, ReadOnlySpan<byte> counts, int incomingGroup,
+        int incomingTileIndex, PatternMask included, PatternMask excludedMask,
+        int akadora, int dora, int uradora) {
       if (!IsSupported) throw new InvalidOperationException("This pattern set requires the custom-rule fallback");
-      this.hand = hand; this.incoming = incoming; basePattern = family; excluded = excludedMask;
+      this.hand = hand; this.incoming = incoming;
       this.akadora = akadora; this.dora = dora; this.uradora = uradora;
-      features = Features.Build(groups, counts, incomingGroup, incomingTileIndex, incoming.IsTsumo);
+      features = target;
+      features.SetIncoming(groups, counts, incomingGroup, incomingTileIndex, incoming.IsTsumo);
       if (hasCustom) view.Set(hand, incoming, groups, counts, incomingGroup, incomingTileIndex);
-      Array.Clear(state); Array.Clear(contributions); total = default;
-      foreach (int root in roots) if ((nodes[root].Pattern.type & included) != 0) Resolve(root);
+      var key = new StepKey(family, included, excludedMask);
+      if (key != stepKey) {
+        Array.Clear(passed); Array.Clear(contributions);
+        stepKey = key;
+        steps = stepCache.GetOrAdd(key, BuildSteps);
+      } else {
+        foreach (int index in steps) { passed[index] = false; contributions[index] = default; }
+      }
+      total = default;
+      foreach (int index in steps) Run(index);
       return total;
     }
 
-    private bool Resolve(int index) {
+    /// <summary>
+    /// The nodes a query can score, dependencies first. Pattern types and base
+    /// families are fixed, so the graph is only walked once per query shape.
+    /// </summary>
+    private int[] BuildSteps(StepKey key) {
+      var result = new List<int>();
+      var visited = new bool[nodes.Length];
+      void Visit(int index) {
+        var node = nodes[index];
+        if ((node.Pattern.type & key.Excluded) != 0 || visited[index]) return;
+        visited[index] = true;
+        if (!node.Pattern.basePatterns.Contains(key.Family)) return;
+        foreach (int parent in node.Ancestors) Visit(parent);
+        result.Add(index);
+      }
+      foreach (int root in roots) if ((nodes[root].Pattern.type & key.Included) != 0) Visit(root);
+      return result.ToArray();
+    }
+
+    private void Run(int index) {
       var node = nodes[index];
-      if ((node.Pattern.type & excluded) != 0) return false;
-      if (state[index] != 0) return state[index] == 2;
-      state[index] = 1;
-      if (!node.Pattern.basePatterns.Contains(basePattern)) return false;
-      foreach (int parent in node.Ancestors) Resolve(parent);
-      foreach (int parent in node.Required) if (parent < 0 || state[parent] != 2) return false;
+      foreach (int parent in node.Required) if (parent < 0 || !passed[parent]) return;
       CompactScore value;
       if (node.Custom != null) {
-        if (!node.Custom.Condition.Test(view)) return false;
+        if (!node.Custom.Condition.Test(view)) return;
         value = node.Custom.Score(hand);
-      } else if (!Apply(node.Rule, out value)) return false;
-      state[index] = 2;
+      } else if (!Apply(node.Rule, out value)) return;
+      passed[index] = true;
       if (node.Registered) {
         foreach (int removed in node.Removes) {
           AddTotals(contributions[removed], -1); contributions[removed] = default;
         }
         contributions[index] = value; AddTotals(value, 1);
       }
-      return true;
     }
 
     private void AddTotals(CompactScore s, int sign) => total = new(total.Han + sign * s.Han,
@@ -160,7 +200,7 @@ namespace RabiRiichi.Patterns.Compiled {
         var s = contributions[i]; var p = nodes[i].Pattern;
         if (s.Yaku != 0) result.Add(new(ScoringType.Han, s.Yaku, p));
         // Uradora deliberately reports a successful zero-valued entry too.
-        if (s.Han != s.Yaku || nodes[i].Rule == YakuRule.Uradora && state[i] == 2 && nodes[i].Registered)
+        if (s.Han != s.Yaku || nodes[i].Rule == YakuRule.Uradora && passed[i] && nodes[i].Registered)
           result.Add(new(ScoringType.BonusHan, s.Han - s.Yaku, p));
         if (s.Fu != 0) result.Add(new(ScoringType.Fu, s.Fu, p));
         if (s.Yakuman != 0) result.Add(new(ScoringType.Yakuman, s.Yakuman, p));
@@ -171,7 +211,7 @@ namespace RabiRiichi.Patterns.Compiled {
     }
 
     private bool Apply(YakuRule rule, out CompactScore score) {
-      var f = features;
+      ref readonly Features f = ref features;
       bool match = false;
       int han = 0, fu = 0, yakuman = 0, bonus = 0, bonusYakuman = 0;
       bool closed = hand.menzen;
@@ -271,6 +311,7 @@ namespace RabiRiichi.Patterns.Compiled {
       internal UInt128 TripletMultiplicities;
       internal int Pair, Sequences, SequenceTypes, MaxSequenceCopies, ClosedTriplets, Quads, ClosedQuads, WindTriplets;
       internal int SuitedSuits, MeldFu, WaitFu, IncomingCopies;
+      internal ulong RankCounts;
       internal bool No19, Only19, EveryGroup19, HasHonors, AllSequenceOrPair, AllSingles;
       internal bool HasIttsu, SameSequenceRanks, NineGates, PureNineGates, HelloWorld;
       internal CompactMeldKind IncomingKind;
@@ -289,8 +330,8 @@ namespace RabiRiichi.Patterns.Compiled {
       internal static bool Terminal(int i) => i < 27 && i % 9 is 0 or 8;
       internal static bool TerminalOrHonor(int i) => i >= 27 || Terminal(i);
 
-      internal static Features Build(ReadOnlySpan<CompactMeld> groups, ReadOnlySpan<byte> counts,
-          int incomingGroup, int incomingTile, bool tsumo) {
+      /// <summary>Everything that does not depend on the winning tile, as if its group stays concealed.</summary>
+      internal static Features ForTarget(ReadOnlySpan<CompactMeld> groups, ReadOnlySpan<byte> counts) {
         var f = new Features { Pair = -1, No19 = true, Only19 = true, EveryGroup19 = true, AllSequenceOrPair = true, AllSingles = true };
         UInt128 sequences = 0;
         for (int n = 0; n < groups.Length; n++) {
@@ -306,7 +347,7 @@ namespace RabiRiichi.Patterns.Compiled {
             f.MaxSequenceCopies = Math.Max(f.MaxSequenceCopies, (int)((sequences >> (i * 3)) & 7));
           }
           if (g.Kind is CompactMeldKind.Triplet or CompactMeldKind.Quad) {
-            bool close = g.IsClose && (n != incomingGroup || tsumo);
+            bool close = g.IsClose;
             f.TripletMask |= 1UL << i; f.TripletMultiplicities += (UInt128)1 << (i * 3);
             if (close) f.ClosedTriplets++;
             if (i is >= 27 and <= 30) f.WindTriplets++;
@@ -325,21 +366,38 @@ namespace RabiRiichi.Patterns.Compiled {
           if (i < 27) f.SuitedSuits |= 1 << (i / 9); else f.HasHonors = true;
           if (TerminalOrHonor(i)) f.No19 = false; else f.Only19 = false;
         }
-        ulong gates = 3UL | (3UL << 40);
-        for (int r = 1; r < 8; r++) gates |= 1UL << (r * 5);
+        f.RankCounts = rankCounts;
         f.NineGates = BitOperations.PopCount((uint)f.SuitedSuits) == 1 && !f.HasHonors;
         for (int r = 0; r < 9; r++) f.NineGates &= ((rankCounts >> (r * 5)) & 31) >= (r is 0 or 8 ? 3UL : 1UL);
-        f.PureNineGates = rankCounts - (1UL << (incomingTile % 9 * 5)) == gates;
         ulong hello = (3UL << 5) | (4UL << 25) | (3UL << 30) | (1UL << 35) | (3UL << 40);
         f.HelloWorld = rankCounts == hello;
-        var winning = groups[incomingGroup]; f.IncomingKind = winning.Kind;
-        f.IncomingCopies = counts[incomingTile];
-        if (winning.Kind == CompactMeldKind.Pair) f.WaitFu = 2;
+        return f;
+      }
+
+      private static readonly ulong Gates = BuildGates();
+      private static ulong BuildGates() {
+        ulong gates = 3UL | (3UL << 40);
+        for (int r = 1; r < 8; r++) gates |= 1UL << (r * 5);
+        return gates;
+      }
+
+      /// <summary>Applies where the winning tile landed. A ron opens the group it completes.</summary>
+      internal void SetIncoming(ReadOnlySpan<CompactMeld> groups, ReadOnlySpan<byte> counts,
+          int incomingGroup, int incomingTile, bool tsumo) {
+        var winning = groups[incomingGroup]; IncomingKind = winning.Kind;
+        if (!tsumo && winning.IsClose && winning.Kind is CompactMeldKind.Triplet or CompactMeldKind.Quad) {
+          bool quad = winning.Kind == CompactMeldKind.Quad;
+          ClosedTriplets--;
+          if (quad) ClosedQuads--;
+          MeldFu -= (TerminalOrHonor(winning.TileIndex) ? 4 : 2) * (quad ? 4 : 1);
+        }
+        PureNineGates = RankCounts - (1UL << (incomingTile % 9 * 5)) == Gates;
+        IncomingCopies = counts[incomingTile];
+        if (winning.Kind == CompactMeldKind.Pair) WaitFu = 2;
         if (winning.Kind == CompactMeldKind.Sequence) {
           int start = winning.TileIndex;
-          f.WaitFu = incomingTile == start + 1 || start % 9 == 0 && incomingTile != start || start % 9 == 6 && incomingTile != start + 2 ? 2 : 0;
+          WaitFu = incomingTile == start + 1 || start % 9 == 0 && incomingTile != start || start % 9 == 6 && incomingTile != start + 2 ? 2 : 0;
         }
-        return f;
       }
     }
   }
