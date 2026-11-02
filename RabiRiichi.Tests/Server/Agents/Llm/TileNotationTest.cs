@@ -26,6 +26,46 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
     }
 
     [TestMethod]
+    public void One_RedFiveSpellingsAllRenderAsZero() {
+      Assert.AreEqual("0m", TileNotation.One(new Tile("r5m")));
+      Assert.AreEqual("0p", TileNotation.One(new Tile("r5p")));
+      Assert.AreEqual("0s", TileNotation.One(new Tile("r5s")));
+    }
+
+    [TestMethod]
+    public void One_RedNonFiveUsesRPrefix() {
+      Assert.AreEqual("r1m", TileNotation.One(new Tile("r1m")));
+      Assert.AreEqual("r3p", TileNotation.One(new Tile("r3p")));
+      Assert.AreEqual("r9s", TileNotation.One(new Tile("r9s")));
+      Assert.AreEqual("r7z(Red dragon)", TileNotation.One(new Tile("r7z")));
+      Assert.AreEqual("r7z(中・三元牌)", TileNotation.One(new Tile("r7z"), "ja"));
+      Assert.AreEqual("r7z(中，三元牌)", TileNotation.One(new Tile("r7z"), "zhs"));
+      Assert.AreEqual("r7z(中，三元牌)", TileNotation.One(new Tile("r7z"), "zht"));
+    }
+
+    [TestMethod]
+    public void One_RedWhiteDragonIsNotARedFive() {
+      // 5z is an honor: "0z" would read as a tile that does not exist.
+      Assert.AreEqual("r5z(White dragon)", TileNotation.One(new Tile("r5z")));
+    }
+
+    [TestMethod]
+    public void Group_KeepsRedAndPlainCopiesApart() {
+      var tiles = new List<Tile> {
+        new("3p"), new("r3p"), new("5p"), new("0p"), new("7z"), new("r7z"),
+      };
+      Assert.AreEqual(
+          "r3305p r7z(Red dragon) 7z(Red dragon)",
+          TileNotation.Group(tiles));
+    }
+
+    [TestMethod]
+    public void Group_SuitedNotationParsesBackToTheSameTiles() {
+      var tiles = new Tiles("r33405pr1m");
+      CollectionAssert.AreEquivalent(tiles, new Tiles(TileNotation.Group(tiles)));
+    }
+
+    [TestMethod]
     public void Group_SortsAndGroupsBySuit() {
       var tiles = new List<Tile> {
         new("3m"), new("1m"), new("2m"),

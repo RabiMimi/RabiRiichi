@@ -336,6 +336,88 @@ namespace RabiRiichi.Tests.Server.Arena {
       Assert.IsFalse(genbutsuLine.Contains("*"));
     }
 
+    // ----- Red tiles beyond the standard fives ------------------------------
+
+    [TestMethod]
+    public void TurnMessage_RedNonFiveTiles_AreDistinctFromPlainCopies() {
+      var game = DiscardGame();
+      var p0 = game.GetPlayer(0);
+      var p1 = game.GetPlayer(1);
+
+      // Seat 0 holds a red and a plain copy of both a numbered tile and an honor.
+      p0.hand.freeTiles[0] = new GameTile(new Tile("r3m"), 997) { player = p0 };
+      p0.hand.freeTiles[1] = new GameTile(new Tile("7z"), 998) { player = p0 };
+      p0.hand.pendingTile = new GameTile(new Tile("r7z"), 999) { player = p0 };
+      p1.hand.discarded.Add(GT("r9s", p1, TileSource.Discard, trace: 30, time: 5));
+
+      var (view, _, menu) = DiscardSetup(game);
+      var builder = new ArenaPromptBuilder(
+          new ArenaSeatLabeler(false, 0, s => game.GetPlayer(s).Wind));
+      var msg = builder.BuildTurnMessage(view, menu);
+
+      StringAssert.Contains(msg, "r33m");
+      StringAssert.Contains(msg, "+ drew r7z(Red dragon)");
+      StringAssert.Contains(msg, "r9s");
+      StringAssert.Contains(msg, "] discard r3m");
+      StringAssert.Contains(msg, "] discard 3m");
+      StringAssert.Contains(msg, "] discard r7z(Red dragon)");
+      StringAssert.Contains(msg, "] discard 7z(Red dragon)");
+    }
+
+    [DataTestMethod]
+    [DataRow("en", "1x 0m, 0x 0p, 0x 0s", "Other red tiles", "1x r3m, 2x r7z(Red dragon)")]
+    [DataRow("zhs", "1x 0m，0x 0p，0x 0s", "其他红宝牌", "1x r3m, 2x r7z(中，三元牌)")]
+    [DataRow("zht", "1x 0m，0x 0p，0x 0s", "其他紅寶牌", "1x r3m, 2x r7z(中，三元牌)")]
+    [DataRow("ja", "1x 0m, 0x 0p, 0x 0s", "その他の赤ドラ", "1x r3m, 2x r7z(中・三元牌)")]
+    public void DeckRules_ListNonFiveRedsSeparatelyFromRedFives(
+        string language, string fives, string label, string others) {
+      var game = DiscardGame();
+      game.config.initialTiles = new Tiles("0mr3mr7r7z");
+      var builder = new ArenaPromptBuilder(
+          new ArenaSeatLabeler(false, 0, s => game.GetPlayer(s).Wind, language: language),
+          language: language);
+
+      var rules = builder.BuildDeckRules(new PublicGameView(game, 0));
+
+      StringAssert.Contains(rules, fives);
+      StringAssert.Contains(rules, label);
+      StringAssert.Contains(rules, others);
+    }
+
+    [TestMethod]
+    public void DeckRules_StandardWallHasOnlyTheRedFiveLine() {
+      var game = DiscardGame();
+      game.config.initialTiles = new Tiles(Tiles.All.Value);
+      var builder = new ArenaPromptBuilder(
+          new ArenaSeatLabeler(false, 0, s => game.GetPlayer(s).Wind));
+
+      var rules = builder.BuildDeckRules(new PublicGameView(game, 0));
+
+      StringAssert.Contains(
+          rules, "- Red fives (akadora, +1 bonus dora han each): 1x 0m, 1x 0p, 1x 0s.");
+      Assert.IsFalse(rules.Contains("Other red tiles"));
+    }
+
+    [DataTestMethod]
+    [DataRow("en", "Digit `0` denotes a red five", "Prefix `r` denotes any other red tile")]
+    [DataRow("zhs", "数字 `0` 表示红五宝牌", "前缀 `r` 表示其他红宝牌")]
+    [DataRow("zht", "數字 `0` 表示紅五寶牌", "前綴 `r` 表示其他紅寶牌")]
+    [DataRow("ja", "数字 `0` は赤五ドラ", "接頭辞 `r` はそれ以外の赤ドラ")]
+    public void SystemPrompt_LegendExplainsBothRedSpellings(
+        string language, string redFive, string otherRed) {
+      var game = DiscardGame();
+      var builder = new ArenaPromptBuilder(
+          new ArenaSeatLabeler(false, 0, s => game.GetPlayer(s).Wind, language: language),
+          language: language);
+
+      var sys = builder.BuildSystemPrompt(0, new PublicGameView(game, 0));
+
+      StringAssert.Contains(sys, redFive);
+      StringAssert.Contains(sys, otherRed);
+      StringAssert.Contains(sys, "`r3p`");
+      StringAssert.Contains(sys, "`r7z`");
+    }
+
     // ----- ArenaLlmResponse ------------------------------------------------
 
     [TestMethod]

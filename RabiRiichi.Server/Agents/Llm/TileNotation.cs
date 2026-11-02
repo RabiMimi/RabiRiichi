@@ -8,7 +8,8 @@ namespace RabiRiichi.Server.Agents.Llm {
   /// <summary>
   /// Compact, token-frugal tile notation for LLM prompts, matching the standard
   /// riichi shorthand: digits grouped by suit letter (m/p/s), honors as 1-7z,
-  /// red fives as 0 (e.g. 0p = red 5 pin), and universal wildcards as *. Honor names are attached every
+  /// red fives as 0 (e.g. 0p = red 5 pin), any other red tile with an r prefix (e.g. r3p, r7z),
+  /// and universal wildcards as *. Honor names are attached every
   /// time to prevent the model from confusing winds, dragons, and players.
   /// </summary>
   public static class TileNotation {
@@ -45,8 +46,9 @@ namespace RabiRiichi.Server.Agents.Llm {
       _ => '?',
     };
 
-    /// <summary> The digit for a single tile (0 for a red five). </summary>
-    private static char Digit(Tile t) => (t.Akadora && t.Num == 5) ? '0' : (char)('0' + t.Num);
+    /// <summary> The digit for a single tile (0 for a red five, r3 for any other red tile). </summary>
+    private static string Digit(Tile t) =>
+        !t.Akadora ? t.Num.ToString() : (t.IsMPS && t.Num == 5) ? "0" : $"r{t.Num}";
 
     private static string HonorName(int number, string language) {
       var names = IsTraditionalChinese(language)
@@ -59,7 +61,7 @@ namespace RabiRiichi.Server.Agents.Llm {
       return number is >= 1 and <= 7 ? names[number - 1] : "unknown honor";
     }
 
-    /// <summary> A single tile, e.g. "5p", "0p" (red), or "1z(East wind)". </summary>
+    /// <summary> A single tile, e.g. "5p", "0p" (red), "r3p" (red), or "1z(East wind)". </summary>
     public static string One(Tile t, string language = AiLocalization.LangEn) {
       if (t.IsWildcard) return "*";
       if (!t.IsValid) {
@@ -97,7 +99,8 @@ namespace RabiRiichi.Server.Agents.Llm {
         }
         sb.Append(SuitChar(suit));
       }
-      var honors = list.Where(t => t.Suit == TileSuit.Z).OrderBy(t => t.Num).ToList();
+      var honors = list.Where(t => t.Suit == TileSuit.Z)
+          .OrderBy(t => t.Num).ThenByDescending(t => t.Akadora).ToList();
       if (honors.Count > 0) {
         if (sb.Length > 0) sb.Append(' ');
         sb.Append(string.Join(" ", honors.Select(tile => One(tile, language))));

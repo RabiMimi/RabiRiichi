@@ -206,9 +206,14 @@ namespace RabiRiichi.Arena.Agents {
       var sb = new StringBuilder();
       int total = tiles.Count;
       int wildcards = tiles.Count(t => t.IsWildcard);
-      int redM = tiles.Count(t => t.Suit == TileSuit.M && t.Akadora);
-      int redP = tiles.Count(t => t.Suit == TileSuit.P && t.Akadora);
-      int redS = tiles.Count(t => t.Suit == TileSuit.S && t.Akadora);
+      int redM = tiles.Count(t => t.Suit == TileSuit.M && t.Num == 5 && t.Akadora);
+      int redP = tiles.Count(t => t.Suit == TileSuit.P && t.Num == 5 && t.Akadora);
+      int redS = tiles.Count(t => t.Suit == TileSuit.S && t.Num == 5 && t.Akadora);
+      var otherReds = tiles.Where(t => t.Akadora && !(t.IsMPS && t.Num == 5))
+          .GroupBy(t => t)
+          .OrderBy(g => g.Key)
+          .Select(g => $"{g.Count()}x {TileNotation.One(g.Key, language)}")
+          .ToList();
 
       switch (language) {
         case "zhs":
@@ -227,6 +232,15 @@ namespace RabiRiichi.Arena.Agents {
           sb.AppendLine($"- Total deck size: {total} tiles (dead wall: 14 tiles).");
           sb.AppendLine($"- Red fives (akadora, +1 bonus dora han each): {redM}x 0m, {redP}x 0p, {redS}x 0s.");
           break;
+      }
+      if (otherReds.Count > 0) {
+        var reds = string.Join(", ", otherReds);
+        sb.AppendLine(language switch {
+          "zhs" => $"- 其他红宝牌（每张和牌 +1 番）：{reds}。",
+          "zht" => $"- 其他紅寶牌（每張和牌 +1 飜）：{reds}。",
+          "ja" => $"- その他の赤ドラ（各 +1 飜）: {reds}。",
+          _ => $"- Other red tiles (akadora, +1 bonus dora han each): {reds}.",
+        });
       }
 
       var missing = new List<string>();
@@ -1095,21 +1109,25 @@ namespace RabiRiichi.Arena.Agents {
           "花色：`m` = 万子（1m-9m），`p` = 筒子（1p-9p），`s` = 索子（1s-9s），`z` = 字牌。" +
           "字牌：`1z`=东风，`2z`=南风，`3z`=西风，`4z`=北风，`5z`=白，`6z`=发，`7z`=中。" +
           "数字 `0` 表示红五宝牌（`0m`、`0p`、`0s` = 红5万/红5筒/红5索，和牌各 +1 番）。" +
+          "前缀 `r` 表示其他红宝牌（如 `r3p`、`r7z`，和牌各 +1 番）。" +
           "符号 `*` 表示万能牌（绝非立直标记；立直宣言牌标记为 `[riichi]`）。",
       "zht" =>
           "花色：`m` = 萬子（1m-9m），`p` = 筒子（1p-9p），`s` = 索子（1s-9s），`z` = 字牌。" +
           "字牌：`1z`=東風，`2z`=南風，`3z`=西風，`4z`=北風，`5z`=白，`6z`=發，`7z`=中。" +
           "數字 `0` 表示紅五寶牌（`0m`、`0p`、`0s` = 紅5萬/紅5筒/紅5索，和牌各 +1 飜）。" +
+          "前綴 `r` 表示其他紅寶牌（如 `r3p`、`r7z`，和牌各 +1 飜）。" +
           "符號 `*` 表示萬能牌（絕非立直標記；立直宣言牌標記為 `[riichi]`）。",
       "ja" =>
           "スート: `m` = 萬子（1m-9m）、`p` = 筒子（1p-9p）、`s` = 索子（1s-9s）、`z` = 字牌。" +
           "字牌: `1z`=東、`2z`=南、`3z`=西、`4z`=北、`5z`=白、`6z`=發、`7z`=中。" +
           "数字 `0` は赤五ドラ（`0m`・`0p`・`0s` = 赤5萬/赤5筒/赤5索、各+1飜）を表します。" +
+          "接頭辞 `r` はそれ以外の赤ドラ（例: `r3p`・`r7z`、各+1飜）を表します。" +
           "記号 `*` はオールマイティ万能牌を表します（リーチ記号ではありません。リーチ宣言牌は `[riichi]` と表記されます）。",
       _ =>
           "Suits: `m` = Manzu (characters 1m-9m), `p` = Pinzu (dots 1p-9p), `s` = Souzu (bamboo 1s-9s), `z` = Honors. " +
           "Honors: `1z`=East wind, `2z`=South wind, `3z`=West wind, `4z`=North wind, `5z`=White dragon (Haku), `6z`=Green dragon (Hatsu), `7z`=Red dragon (Chun). " +
           "Digit `0` denotes a red five (`0m`, `0p`, `0s` = red 5m/5p/5s, worth +1 akadora han). " +
+          "Prefix `r` denotes any other red tile (e.g. `r3p`, `r7z`, also worth +1 akadora han). " +
           "Symbol `*` denotes a universal WILDCARD tile (never a riichi marker; riichi discards are marked `[riichi]`).",
     };
 
