@@ -105,7 +105,9 @@ namespace RabiRiichi.Patterns {
           activeQueries[index] = false; continue;
         }
         anyActive = true;
-        if (!trackEveryQuery) return false;
+        // A complete target is evaluated next for every query still active, so
+        // only there is it worth retiring the rest of them too.
+        if (!trackEveryQuery && (remainingMelds > 0 || family is not Base33332)) return false;
       }
       return !anyActive;
     }

@@ -285,12 +285,7 @@ namespace RabiRiichi.Server.Agents {
     /// <see cref="UnseenCount(Tile)"/>, which itself only uses public info.
     /// </summary>
     /// <param name="maxShanten">
-    /// Stop searching past this shanten and report <see cref="int.MaxValue"/>
-    /// instead. The resolver's cost grows sharply with the distance it may
-    /// explore (<c>maxDist = min(13, maxShanten) + 1</c>), so a caller that only
-    /// cares about the best few discards should say so: scoring all fourteen
-    /// options uncapped costs several times as much as capping just above the
-    /// hand's current shanten.
+    /// Report <see cref="int.MaxValue"/> instead of any shanten past this.
     /// </param>
     public DiscardEval EvaluateDiscard(
         GameTile discard, IReadOnlyList<GameTile> hand14,

@@ -38,7 +38,10 @@ namespace RabiRiichi.Actions.Resolver {
       }
       var handRiichiTiles = hand.freeTiles.Append(incoming).Where(t => riichiTiles.Contains(t.tile.WithoutDora)).ToList();
       if (handRiichiTiles.Count > 0) {
-        output.Add(new RiichiAction(player, handRiichiTiles, incoming));
+        // The play action for this draw has already previewed these discards.
+        var previews = output.GetByPlayerId(player.id)?.actions.OfType<PlayTileAction>().FirstOrDefault()?.CopyCandidates(handRiichiTiles);
+        output.Add(previews == null ? new RiichiAction(player, handRiichiTiles, incoming)
+            : new RiichiAction(player.id, handRiichiTiles, incoming) { candidates = previews });
         return true;
       }
       return false;
