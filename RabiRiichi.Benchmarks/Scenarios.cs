@@ -51,6 +51,7 @@ namespace RabiRiichi.Benchmarks {
       var turns = wins.ConvertAll(fixtures.WithRandomDraw);
       var called = Enumerable.Range(0, cases).Select(_ => fixtures.CalledTriplet()).ToList();
       var openDealt = Enumerable.Range(0, cases).Select(_ => fixtures.Dealt(10)).ToList();
+      var redWins = wins.ConvertAll(fixtures.WithRedTile);
       var resolver = table.resolver;
       T At<T>(List<T> list, int i) => list[i % cases];
 
@@ -75,6 +76,11 @@ namespace RabiRiichi.Benchmarks {
       yield return new("natural/draw/near-win", i => {
         table.Holding(At(turns, i).Take(13));
         return DrawInquiry(table, At(turns, i));
+      });
+      // The one draw where riichi may discard any tile, since every discard stays tenpai.
+      yield return new("natural/draw/win", i => {
+        table.Holding(At(redWins, i).Take(13));
+        return DrawInquiry(table, At(redWins, i));
       });
       // What SetFuritenListener does per discard: every seat's waits, with only
       // the discarder's hand having changed since the previous discard.

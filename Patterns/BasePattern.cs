@@ -65,7 +65,9 @@ namespace RabiRiichi.Patterns {
         ret.Add(incoming.tile);
       }
       if (!keepDora) {
-        ret.ForEach(t => t.Akadora = false);
+        for (int i = 0; i < ret.Count; i++) {
+          ret[i] = ret[i].WithoutDora;
+        }
       }
       return ret;
     }

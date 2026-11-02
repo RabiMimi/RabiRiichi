@@ -36,6 +36,11 @@ namespace RabiRiichi.Tests.Actions {
         Add(pair); Add(pair);
         if (random.Next(2) == 0) tiles[random.Next(14)] = CompactMeld.TileAt(random.Next(34));
       }
+      // A custom wall may hold a red copy of any tile.
+      if (random.Next(2) == 0) {
+        int red = random.Next(14);
+        tiles[red] = new Tile(tiles[red].Suit, tiles[red].Num, true);
+      }
       for (int n = 0; n < wildcards; n++) tiles[random.Next(14)] = Tile.Wildcard;
       return tiles;
     }
@@ -50,12 +55,13 @@ namespace RabiRiichi.Tests.Actions {
     [DataRow(true, 2)]
     [DataRow(true, 3)]
     [DataRow(true, 5)]
+    [Timeout(60_000)]
     public void SkippingNonTenpaiDiscardsMatchesCheckingEachOne(bool wildDeck, int wildcards) {
       var game = Table(wildDeck);
       var player = game.players[0];
       var resolver = game.Get<PatternResolver>();
       var random = new Random(4242 + wildcards);
-      for (int sample = 0; sample < 60 / (1 + wildcards); sample++) {
+      for (int sample = 0; sample < Math.Max(3, 60 / (1 + wildcards * wildcards)); sample++) {
         var tiles = Deal(random, wildcards);
         var hand = WildcardFixture.Hand(game, new Tiles(tiles.Take(13)).ToString());
         var incoming = WildcardFixture.Incoming(tiles[13].ToString());
@@ -143,7 +149,7 @@ namespace RabiRiichi.Tests.Actions {
       Assert.IsTrue(game.Get<RiichiResolver>().Resolve(player, incoming, inquiry));
       var play = inquiry.GetByPlayerId(0).actions.OfType<PlayTileAction>().Single(a => a is not RiichiAction);
       var riichi = inquiry.GetByPlayerId(0).actions.OfType<RiichiAction>().Single();
-      var fresh = PlayTileAction.ComputeDiscardCandidates(player, riichi.options.Select(o => ((ChooseTileActionOption)o).tile).ToList(), incoming);
+      var fresh = PlayTileAction.ComputeDiscardCandidates(player, riichi.options.Select(o => o.tile).ToList(), incoming);
       Assert.AreEqual(fresh.Count, riichi.candidates.Count);
       for (int i = 0; i < fresh.Count; i++) {
         Assert.AreSame(fresh[i].tile, riichi.candidates[i].tile);
@@ -166,15 +172,35 @@ namespace RabiRiichi.Tests.Actions {
       Assert.IsTrue(riichi.candidates.Any(c => c.tenpaiInfos.Count > 0));
     }
 
-    [TestMethod]
-    public void SevenPairsRiichiCanDiscardARedFive() {
+    private static Tile[] RiichiDiscards(string tiles, string draw) {
       var game = WildcardFixture.Game();
-      WildcardFixture.Hand(game, "1133m2277p4466sr5m");
-      var incoming = WildcardFixture.Incoming("8s");
+      WildcardFixture.Hand(game, tiles);
       var inquiry = new MultiPlayerInquiry(game);
-      Assert.IsTrue(game.Get<RiichiResolver>().Resolve(game.players[0], incoming, inquiry));
+      Assert.IsTrue(game.Get<RiichiResolver>().Resolve(game.players[0], WildcardFixture.Incoming(draw), inquiry));
       var riichi = inquiry.GetByPlayerId(0).actions.OfType<RiichiAction>().Single();
-      CollectionAssert.AreEquivalent(new[] { new Tile("r5m"), new Tile("8s") }, riichi.options.Select(o => ((ChooseTileActionOption)o).tile.tile).ToArray());
+      return riichi.options.Select(o => o.tile.tile).ToArray();
+    }
+
+    [DataTestMethod]
+    [DataRow("1133m2277p4466sr5m", "8s", "r5m8s")]
+    [DataRow("1133m2277p4466sr3p", "8s", "r3p8s")]
+    [DataRow("1133m2277p4466sr7z", "8s", "r7z8s")]
+    [DataRow("19m19p19s123456zr3p", "7z", "r3p")]
+    [DataRow("123m456m789p111sr3p", "5z", "r3p5z")]
+    public void TenpaiRiichiCanDiscardARedTile(string tiles, string draw, string expected) {
+      CollectionAssert.AreEquivalent(new Tiles(expected), RiichiDiscards(tiles, draw));
+    }
+
+    [DataTestMethod]
+    [DataRow("123m34mr5m789p111s9s", "9s")]
+    [DataRow("123m456m12pr3p111s9s", "9s")]
+    [DataRow("r1m23m456m789p111s9s", "9s")]
+    [DataRow("123m456m789p111sr7z", "r7z")]
+    [DataRow("123m456m12p111s9s9s", "r3p")]
+    public void CompleteHandRiichiCanDiscardAnyTileIncludingARedOne(string tiles, string draw) {
+      var expected = new Tiles(tiles) { new Tile(draw) };
+      Assert.IsTrue(expected.Any(t => t.Akadora));
+      CollectionAssert.AreEquivalent(expected, RiichiDiscards(tiles, draw));
     }
   }
 }

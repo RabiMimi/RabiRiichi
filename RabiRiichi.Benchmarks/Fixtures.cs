@@ -100,6 +100,14 @@ namespace RabiRiichi.Benchmarks {
       return result;
     }
 
+    /// <summary>Marks one random tile red. A custom wall may hold a red copy of any tile.</summary>
+    internal List<GameTile> WithRedTile(List<GameTile> tiles) {
+      var result = tiles.ToList();
+      int i = rng.Next(result.Count);
+      result[i] = New(new Tile(result[i].tile.Suit, result[i].tile.Num, true));
+      return result;
+    }
+
     /// <summary>A pon called from another seat.</summary>
     internal MenLike CalledTriplet() {
       var tile = CompactMeld.TileAt(rng.Next(34));
