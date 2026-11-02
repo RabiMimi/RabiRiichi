@@ -301,6 +301,25 @@ namespace RabiRiichi.Tests.Server.Arena {
     }
 
     [TestMethod]
+    public async Task Stop_BeforeATableStarts_LeavesTheRunResumable() {
+      var cfg = Config(swissRounds: 3, concurrency: 1, FourBaselines());
+      var fake = new FakeRunner();
+      var svc = Build(cfg, fake.Run);
+
+      // Nothing is in flight to throw, so the loop just sees the cancelled token.
+      svc.Start();
+      await svc.StopAsync();
+
+      Assert.AreEqual(RunStatus.Stopped, svc.GetStatus().Status);
+      Assert.AreEqual(RunStatus.Stopped, ActiveRun().RunState.Get().Status);
+
+      svc.Start();
+      await WaitUntil(() => svc.GetStatus().Status == RunStatus.Finished);
+
+      Assert.AreEqual(3, ActiveRun().RunState.Get().CompletedPairings.Count);
+    }
+
+    [TestMethod]
     public async Task Resume_ContinuesFromPersistedRunState() {
       var cfg = Config(swissRounds: 2, concurrency: 1, EightLlms());
       runManager = new RunManager(workspaceDir);

@@ -556,6 +556,11 @@ namespace RabiRiichi.Arena.Eval {
         }
 
         lock (gate) {
+          // A stop that lands between tables exits the loop without anything
+          // throwing, and it must not read as the run having finished.
+          if (!pauseRequested && HasRemainingWorkInState(liveState)) {
+            token.ThrowIfCancellationRequested();
+          }
           activeMatches.Clear();
           nextMatch = null;
           if (pauseRequested && HasRemainingWorkInState(liveState)) {
