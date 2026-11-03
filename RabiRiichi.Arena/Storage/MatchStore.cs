@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -14,7 +15,8 @@ namespace RabiRiichi.Arena.Storage {
     public string ModelId { get; set; } = "";
     public string DisplayName { get; set; } = "";
     public string Provider { get; set; } = "";
-    public int FinalPoints { get; set; }
+    [System.Text.Json.Serialization.JsonConverter(typeof(global::RabiRiichi.Communication.Json.BigIntegerJsonConverter))]
+    public BigInteger FinalPoints { get; set; }
     public int Placement { get; set; }
     public double EloBefore { get; set; }
     public double EloAfter { get; set; }
@@ -25,10 +27,13 @@ namespace RabiRiichi.Arena.Storage {
     public int TsumoCount { get; set; }
     public int RonCount { get; set; }
     public int DealInCount { get; set; }
-    public int DealInPoints { get; set; }
-    public int TotalWinPoints { get; set; }
+    [System.Text.Json.Serialization.JsonConverter(typeof(global::RabiRiichi.Communication.Json.BigIntegerJsonConverter))]
+    public BigInteger DealInPoints { get; set; }
+    [System.Text.Json.Serialization.JsonConverter(typeof(global::RabiRiichi.Communication.Json.BigIntegerJsonConverter))]
+    public BigInteger TotalWinPoints { get; set; }
     public int TotalWinHan { get; set; }
-    public int MaxWinPoints { get; set; }
+    [System.Text.Json.Serialization.JsonConverter(typeof(global::RabiRiichi.Communication.Json.BigIntegerJsonConverter))]
+    public BigInteger MaxWinPoints { get; set; }
     public int RiichiCount { get; set; }
     public int OpenHandCount { get; set; }
     public int CallCount { get; set; }
@@ -67,9 +72,10 @@ namespace RabiRiichi.Arena.Storage {
     public int Han { get; set; }
     public int Fu { get; set; }
     public int Yakuman { get; set; }
-    public int PointsWon { get; set; }
+    [System.Text.Json.Serialization.JsonConverter(typeof(global::RabiRiichi.Communication.Json.BigIntegerJsonConverter))]
+    public BigInteger PointsWon { get; set; }
     public bool UsedWildcard { get; set; }
-    public List<int> ScoreDeltas { get; set; } = new();
+    public List<BigInteger> ScoreDeltas { get; set; } = new();
   }
 
   /// <summary>
@@ -121,7 +127,8 @@ namespace RabiRiichi.Arena.Storage {
     public string ModelId { get; set; } = "";
     public string DisplayName { get; set; } = "";
     public string Provider { get; set; } = "";
-    public int FinalPoints { get; set; }
+    [System.Text.Json.Serialization.JsonConverter(typeof(global::RabiRiichi.Communication.Json.BigIntegerJsonConverter))]
+    public BigInteger FinalPoints { get; set; }
     public int Placement { get; set; }
     public double EloAfter { get; set; }
     public double EloDelta { get; set; }
@@ -145,6 +152,7 @@ namespace RabiRiichi.Arena.Storage {
       WriteIndented = true,
       PropertyNameCaseInsensitive = true,
       PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+      Converters = { new global::RabiRiichi.Communication.Json.BigIntegerJsonConverter() },
     };
 
     private readonly string matchesDir;

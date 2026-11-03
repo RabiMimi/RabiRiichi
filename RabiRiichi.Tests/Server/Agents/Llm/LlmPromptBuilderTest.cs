@@ -1,3 +1,4 @@
+using System.Numerics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Core;
 using RabiRiichi.Server.Agents;
@@ -473,7 +474,7 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
       var view = new PublicGameView(game, 0);
       var builder = new LlmPromptBuilder(Settings(), Names());
 
-      var endGamePoints = new long[] { 35000, 25000, 20000, 20000 };
+      var endGamePoints = new BigInteger[] { 35000, 25000, 20000, 20000 };
       var prompt = builder.BuildEndGamePrompt(
           view,
           ["TestBot wins by tsumo"],

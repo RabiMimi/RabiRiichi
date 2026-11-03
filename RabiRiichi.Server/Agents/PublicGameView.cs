@@ -1,3 +1,4 @@
+using System.Numerics;
 using RabiRiichi.Core;
 using RabiRiichi.Actions;
 using RabiRiichi.Patterns;
@@ -147,7 +148,7 @@ namespace RabiRiichi.Server.Agents {
     public bool IsRiichi(int seat) => PlayerAt(seat).hand.riichi;
     public bool IsIppatsu(int seat) => PlayerAt(seat).hand.ippatsu;
     public int JunOf(int seat) => PlayerAt(seat).hand.jun;
-    public long PointsOf(int seat) => PlayerAt(seat).points;
+    public BigInteger PointsOf(int seat) => PlayerAt(seat).points;
     public Wind WindOf(int seat) => PlayerAt(seat).Wind;
     public bool IsDealer(int seat) => PlayerAt(seat).IsDealer;
 
@@ -210,7 +211,7 @@ namespace RabiRiichi.Server.Agents {
     /// <summary>
     /// Points the viewer leads the next-best seat by (negative when trailing).
     /// </summary>
-    public long SelfPointLead {
+    public BigInteger SelfPointLead {
       get {
         var others = OpponentSeats.Select(PointsOf).ToList();
         return others.Count == 0 ? 0 : PointsOf(Seat) - others.Max();

@@ -1,3 +1,4 @@
+using System.Numerics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Arena.Eval;
 using RabiRiichi.Arena.Storage;
@@ -100,7 +101,8 @@ namespace RabiRiichi.Tests.Server.Arena {
       var ids = sharedResult.Seats.Select(s => s.ModelId).OrderBy(x => x).ToList();
       CollectionAssert.AreEqual(new[] { "base-a", "base-b", "base-c", "base-d" }, ids);
 
-      long total = sharedResult.Seats.Sum(s => s.FinalPoints);
+      // Points are conserved across the table (4 * 25000 default).
+      var total = sharedResult.Seats.Aggregate(BigInteger.Zero, (sum, s) => sum + s.FinalPoints);
       Assert.AreEqual(100000, total, "points are conserved across the table");
     }
 

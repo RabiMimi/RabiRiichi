@@ -1,3 +1,4 @@
+using System.Numerics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -57,7 +58,8 @@ namespace RabiRiichi.Arena.Eval {
     public double AvgWinPoints { get; init; }
     public double AvgDealInPoints { get; init; }
     public double AvgWinHan { get; init; }
-    public int MaxWinPoints { get; init; }
+    [System.Text.Json.Serialization.JsonConverter(typeof(global::RabiRiichi.Communication.Json.BigIntegerJsonConverter))]
+    public BigInteger MaxWinPoints { get; init; }
     public int KanCount { get; init; }
     public int NukiCount { get; init; }
     public int WildcardWins { get; init; }
@@ -451,7 +453,7 @@ namespace RabiRiichi.Arena.Eval {
       if (a.Placement < b.Placement) h.ABeatB++;
       else if (a.Placement > b.Placement) h.BBeatA++;
       else h.Ties++;
-      h.PointDiffSum += (long)a.FinalPoints - b.FinalPoints;
+      h.PointDiffSum += a.FinalPoints - b.FinalPoints;
     }
 
     private sealed class H2HAccumulator {
@@ -461,7 +463,7 @@ namespace RabiRiichi.Arena.Eval {
       public int ABeatB;
       public int BBeatA;
       public int Ties;
-      public long PointDiffSum;
+      public BigInteger PointDiffSum;
     }
 
     private sealed class ModelAccumulator(string modelId, string displayName, string provider) {
@@ -473,11 +475,12 @@ namespace RabiRiichi.Arena.Eval {
 
       public int Games;
       public int Place1, Place2, Place3, Place4;
-      public long TotalFinalPoints;
+      public BigInteger TotalFinalPoints;
       public int RoundsPlayed;
       public int AgariCount, TsumoCount, RonCount, DealInCount;
-      public long DealInPoints, TotalWinPoints, TotalWinHan;
-      public int MaxWinPoints;
+      public BigInteger DealInPoints, TotalWinPoints;
+      public long TotalWinHan;
+      public BigInteger MaxWinPoints;
       public int RiichiCount, OpenHandCount, CallCount, KanCount, NukiCount, TenpaiAtDrawCount, WildcardWins;
 
       public long Decisions, AutoDecisions, ValidFirstTry, Retries;

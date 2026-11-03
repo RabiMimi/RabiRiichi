@@ -23,7 +23,7 @@ namespace RabiRiichi.Actions.Resolver {
           && hand.game.wall.NumRemaining < config.playerCount) {
         return false;
       }
-      if (player.points < config.MinRiichiPoints) {
+      if (config.MinRiichiPoints is { } minimumPoints && player.points < minimumPoints) {
         return false;
       }
       if (hand.riichi || !hand.menzen || incoming == null || !incoming.IsTsumo) {

@@ -1,3 +1,4 @@
+using System.Numerics;
 using RabiRiichi.Communication;
 using RabiRiichi.Core.Config;
 using RabiRiichi.Generated.Patterns;
@@ -26,8 +27,8 @@ namespace RabiRiichi.Patterns {
 
     private CompactScore Compact => new(han, yaku, fu, yakuman, bonusYakuman);
 
-    /// <summary> 基本点。青天井下饱和于 long.MaxValue 而非溢出，比较仍然精确 </summary>
-    public long BaseScore => ScoreMath.BaseScore(Compact, scoringOption);
+    /// <summary> 基本点。使用任意精度整数，青天井下无固定点数上限 </summary>
+    public BigInteger BaseScore => ScoreMath.BaseScore(Compact, scoringOption);
 
     [RabiBroadcast]
     public int KazoeYakuman {

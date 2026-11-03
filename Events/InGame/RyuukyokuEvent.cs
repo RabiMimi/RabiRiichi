@@ -1,3 +1,4 @@
+using System.Numerics;
 using RabiRiichi.Communication;
 using RabiRiichi.Core;
 using RabiRiichi.Generated.Events.InGame;
@@ -15,7 +16,7 @@ namespace RabiRiichi.Events.InGame {
 
     #endregion
 
-    public void AddScoreTransfer(int from, int to, long points, ScoreTransferReason reason) {
+    public void AddScoreTransfer(int from, int to, BigInteger points, ScoreTransferReason reason) {
       scoreChange.Add(new ScoreTransfer(from, to, points, reason));
     }
   }

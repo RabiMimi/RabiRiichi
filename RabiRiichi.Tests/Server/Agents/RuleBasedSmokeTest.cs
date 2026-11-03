@@ -1,3 +1,4 @@
+using System.Numerics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
@@ -53,7 +54,7 @@ namespace RabiRiichi.Tests.Server.Agents {
       // Points are only ever moved between seats, never created or destroyed.
       Assert.AreEqual(
           config.pointThreshold.initialPoints * playerCount,
-          game.players.Sum(p => p.points)
+          game.players.Aggregate(BigInteger.Zero, (sum, p) => sum + p.points)
               + game.info.riichiStick * config.pointThreshold.riichiPoints);
     }
 

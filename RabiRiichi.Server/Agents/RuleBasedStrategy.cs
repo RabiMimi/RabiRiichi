@@ -314,7 +314,8 @@ namespace RabiRiichi.Server.Agents {
         liveTiles += unseen;
         // TenpaiInfo.points is the base score (基本点); a ron pays 4x that, 6x
         // for the dealer.
-        double value = info.points * (view.SelfIsDealer ? 6 : 4);
+        // Heuristic utility is floating point; balances and payments remain exact.
+        double value = (double)info.points * (view.SelfIsDealer ? 6 : 4);
         if (value > best) best = value;
       }
       if (liveTiles == 0) return 0;

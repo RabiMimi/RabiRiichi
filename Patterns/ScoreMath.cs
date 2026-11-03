@@ -7,24 +7,17 @@ namespace RabiRiichi.Patterns {
   internal static class ScoreMath {
     private const int KazoeHan = ScoreCalcResult.KAZOE_YAKUMAN_HAN;
 
-    // The wire format and player balances are signed 64-bit values. Search
-    // comparisons remain exact; values crossing that boundary saturate.
-    internal static long Clamp(BigInteger value) => value > long.MaxValue ? long.MaxValue
-        : value < long.MinValue ? long.MinValue : (long)value;
-
-    internal static long Multiply(long value, int factor) => Clamp((BigInteger)value * factor);
-
-    internal static long BaseScore(CompactScore s, ScoringOption option) {
+    internal static BigInteger BaseScore(CompactScore s, ScoringOption option) {
       int yakuman = s.Yakuman + s.BonusYakuman;
       if ((option & ScoringOption.Yakuman) == 0) {
         long exponent = (long)s.Han + (long)KazoeHan * yakuman + 2;
         if (s.Fu == 0) return 0;
-        if (exponent >= 63 || exponent >= 0 && s.Fu > (long.MaxValue >> (int)exponent)) return long.MaxValue;
-        return exponent < 0 ? s.Fu >> (int)Math.Min(63, -exponent) : (long)s.Fu << (int)exponent;
+        return exponent < 0 ? (BigInteger)s.Fu >> checked((int)-exponent)
+            : (BigInteger)s.Fu << checked((int)exponent);
       }
       int final = (option & ScoringOption.MultipleYakuman) != 0 ? yakuman : Math.Min(1, yakuman);
       if ((option & ScoringOption.KazoeYakuman) != 0 && s.Han >= KazoeHan) final = Math.Max(final, 1);
-      if (final > 0) return final * 8000L;
+      if (final > 0) return (BigInteger)final * 8000;
       if (s.Han >= 11) return 6000;
       if (s.Han >= 8) return 4000;
       if (s.Han >= 6) return 3000;

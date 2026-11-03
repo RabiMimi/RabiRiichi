@@ -264,7 +264,7 @@ namespace RabiRiichi.Communication.Proto {
         Fu = info.fu,
         Yakuman = info.yakuman,
         BonusYakuman = info.bonusYakuman,
-        Points = info.points,
+        Points = info.points.ToString(System.Globalization.CultureInfo.InvariantCulture),
         YakuHan = info.yaku,
         MaxHan = info.maxHan,
       };
@@ -569,7 +569,7 @@ namespace RabiRiichi.Communication.Proto {
     [Produces]
     public static StopGameEventMsg ConvertStopGameEvent([Consumes] StopGameEvent ev) {
       var ret = new StopGameEventMsg();
-      ret.EndGamePoints.AddRange(ev.endGamePoints);
+      ret.EndGamePoints.AddRange(ev.endGamePoints.Select(p => p.ToString(System.Globalization.CultureInfo.InvariantCulture)));
       return ret;
     }
 

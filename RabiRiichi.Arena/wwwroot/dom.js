@@ -94,12 +94,26 @@ export function safeExternalHref(rawUrl) {
   return null;
 }
 
+function exactInteger(val) {
+  if (typeof val === 'bigint') return val;
+  return typeof val === 'string' && /^-?\d+$/.test(val) ? BigInt(val) : null;
+}
+
 export function formatInt(val) {
+  const integer = exactInteger(val);
+  if (integer !== null) return new Intl.NumberFormat(getBcp47Locale()).format(integer);
   if (val === null || val === undefined || Number.isNaN(Number(val))) return '0';
   return new Intl.NumberFormat(getBcp47Locale()).format(Math.round(Number(val)));
 }
 
 export function formatSigned(val, digits = 0) {
+  const integer = exactInteger(val);
+  if (integer !== null) {
+    const abs = new Intl.NumberFormat(getBcp47Locale(), {
+      minimumFractionDigits: digits, maximumFractionDigits: digits,
+    }).format(integer < 0n ? -integer : integer);
+    return integer > 0n ? `+${abs}` : integer < 0n ? `-${abs}` : abs;
+  }
   const n = Number(val);
   if (!Number.isFinite(n)) return '0';
   const locale = getBcp47Locale();

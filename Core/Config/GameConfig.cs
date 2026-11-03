@@ -1,3 +1,4 @@
+using System.Numerics;
 using RabiRiichi.Communication;
 using RabiRiichi.Core.Setup;
 using RabiRiichi.Generated.Core.Config;
@@ -76,16 +77,16 @@ namespace RabiRiichi.Core.Config {
       }
     }
 
-    public long HonbaPointsForOnePlayer(int honba) {
-      return (pointThreshold.honbaPoints / (playerCount - 1) * honba).CeilTo100();
+    public BigInteger HonbaPointsForOnePlayer(int honba) {
+      return ((BigInteger)pointThreshold.honbaPoints / (playerCount - 1) * honba).CeilTo100();
     }
 
-    public long MinRiichiPoints {
+    public BigInteger? MinRiichiPoints {
       get {
         if (riichiPolicy.HasFlag(RiichiPolicy.SufficientPoints)) {
-          return pointThreshold.validPointsRange[0] + pointThreshold.riichiPoints;
+          return (BigInteger)pointThreshold.validPointsRange[0] + pointThreshold.riichiPoints;
         }
-        return riichiPolicy.HasFlag(RiichiPolicy.ValidPoints) ? pointThreshold.validPointsRange[0] : long.MinValue;
+        return riichiPolicy.HasFlag(RiichiPolicy.ValidPoints) ? pointThreshold.validPointsRange[0] : null;
       }
     }
 

@@ -1,3 +1,4 @@
+using System.Numerics;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -26,7 +27,8 @@ namespace RabiRiichi.Arena.Eval {
     public int Seat { get; init; }
     public string ModelId { get; init; } = "";
     public string DisplayName { get; init; } = "";
-    public long Points { get; init; }
+    [System.Text.Json.Serialization.JsonConverter(typeof(global::RabiRiichi.Communication.Json.BigIntegerJsonConverter))]
+    public BigInteger Points { get; init; }
     public bool InRiichi { get; init; }
   }
 
@@ -44,7 +46,7 @@ namespace RabiRiichi.Arena.Eval {
     public string ModelId { get; init; } = "";
     public string DisplayName { get; init; } = "";
     public string Provider { get; init; } = "";
-    public long FinalPoints { get; init; }
+    public BigInteger FinalPoints { get; init; }
     public int Placement { get; init; }
 
     public int RoundsPlayed { get; init; }
@@ -52,10 +54,13 @@ namespace RabiRiichi.Arena.Eval {
     public int TsumoCount { get; init; }
     public int RonCount { get; init; }
     public int DealInCount { get; init; }
-    public int DealInPoints { get; init; }
-    public int TotalWinPoints { get; init; }
+    [System.Text.Json.Serialization.JsonConverter(typeof(global::RabiRiichi.Communication.Json.BigIntegerJsonConverter))]
+    public BigInteger DealInPoints { get; init; }
+    [System.Text.Json.Serialization.JsonConverter(typeof(global::RabiRiichi.Communication.Json.BigIntegerJsonConverter))]
+    public BigInteger TotalWinPoints { get; init; }
     public int TotalWinHan { get; init; }
-    public int MaxWinPoints { get; init; }
+    [System.Text.Json.Serialization.JsonConverter(typeof(global::RabiRiichi.Communication.Json.BigIntegerJsonConverter))]
+    public BigInteger MaxWinPoints { get; init; }
     public int RiichiCount { get; init; }
     public int OpenHandCount { get; init; }
     public int CallCount { get; init; }
@@ -320,7 +325,7 @@ namespace RabiRiichi.Arena.Eval {
           ModelId = s.ModelId,
           DisplayName = s.DisplayName,
           Provider = s.Provider,
-          FinalPoints = (int)s.FinalPoints,
+          FinalPoints = s.FinalPoints,
           Placement = s.Placement,
           EloBefore = change?.EloBefore ?? 0,
           EloAfter = change?.EloAfter ?? 0,
@@ -523,10 +528,10 @@ namespace RabiRiichi.Arena.Eval {
         public int TsumoCount;
         public int RonCount;
         public int DealInCount;
-        public int DealInPoints;
-        public int TotalWinPoints;
+        public BigInteger DealInPoints;
+        public BigInteger TotalWinPoints;
         public int TotalWinHan;
-        public int MaxWinPoints;
+        public BigInteger MaxWinPoints;
         public int RiichiCount;
         public int OpenHandCount;
         public int CallCount;
@@ -690,24 +695,24 @@ namespace RabiRiichi.Arena.Eval {
           }
 
           case ApplyScoreEvent apply when pendingRound != null: {
-            var deltas = new List<int>(playerCount);
+            var deltas = new List<BigInteger>(playerCount);
             for (int seat = 0; seat < playerCount; seat++) {
-              int d = (int)apply.scoreChange.DeltaScore(seat);
+              var d = apply.scoreChange.DeltaScore(seat);
               deltas.Add(d);
             }
             pendingRound.ScoreDeltas = deltas;
 
             if (pendingRound.Outcome is "tsumo" or "ron") {
-              int wonTotal = 0;
+              BigInteger wonTotal = 0;
               foreach (var w in pendingRound.WinnerSeats) {
-                int gain = Math.Max(0, deltas[w]);
+                var gain = BigInteger.Max(0, deltas[w]);
                 wonTotal += gain;
                 stats[w].TotalWinPoints += gain;
                 if (gain > stats[w].MaxWinPoints) stats[w].MaxWinPoints = gain;
               }
               pendingRound.PointsWon = wonTotal;
               if (pendingRound.LoserSeat is int loser && ValidSeat(loser)) {
-                stats[loser].DealInPoints += Math.Max(0, -deltas[loser]);
+                stats[loser].DealInPoints += BigInteger.Max(0, -deltas[loser]);
               }
             }
             pendingRound = null;

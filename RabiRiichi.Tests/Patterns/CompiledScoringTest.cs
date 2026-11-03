@@ -1,3 +1,4 @@
+using System.Numerics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Communication;
 using RabiRiichi.Core;
@@ -98,11 +99,11 @@ namespace RabiRiichi.Tests.Patterns {
     }
 
     [TestMethod]
-    public void UncappedComparisonRemainsExactAfterLongScoreSaturates() {
+    public void UncappedComparisonAndBasePointsExceedLongRange() {
       var lower = new ScoreCalcResult(ScoringOption.Aotenjou) { fu = 40, han = 100 };
       var higher = new ScoreCalcResult(ScoringOption.Aotenjou) { fu = 30, han = 101 };
-      Assert.AreEqual(long.MaxValue, lower.BaseScore);
-      Assert.AreEqual(long.MaxValue, higher.BaseScore);
+      Assert.AreEqual((BigInteger)40 << 102, lower.BaseScore);
+      Assert.AreEqual((BigInteger)30 << 103, higher.BaseScore);
       Assert.IsTrue(higher.CompareTo(lower) > 0);
       var tie = new ScoreCalcResult(ScoringOption.Aotenjou) { fu = 60, han = 100 };
       Assert.IsTrue(higher.CompareTo(tie) > 0, "Equal exact base points retain the han tie-break");

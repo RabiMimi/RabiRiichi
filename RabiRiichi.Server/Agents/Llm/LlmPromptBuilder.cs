@@ -1,3 +1,4 @@
+using System.Numerics;
 using RabiRiichi.Core;
 using RabiRiichi.Generated.Core;
 using RabiRiichi.Server.Generated.Rpc;
@@ -307,7 +308,7 @@ namespace RabiRiichi.Server.Agents.Llm {
         PublicGameView view,
         IReadOnlyList<string> recentEvents,
         IReadOnlyList<LlmChatEntry> chats,
-        IReadOnlyList<long> endGamePoints = null) {
+        IReadOnlyList<BigInteger> endGamePoints = null) {
       var sb = new StringBuilder();
       if (recentEvents != null && recentEvents.Count > 0) {
         sb.AppendLine("Recent events:");
@@ -319,7 +320,7 @@ namespace RabiRiichi.Server.Agents.Llm {
       AppendChats(sb, chats);
 
       sb.AppendLine("== GAME OVER - FINAL RANKINGS ==");
-      var points = new Dictionary<int, long>();
+      var points = new Dictionary<int, BigInteger>();
       for (int s = 0; s < view.PlayerCount; s++) {
         points[s] = (endGamePoints != null && s < endGamePoints.Count)
             ? endGamePoints[s]

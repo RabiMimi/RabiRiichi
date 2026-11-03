@@ -1,3 +1,4 @@
+using System.Numerics;
 using RabiRiichi.Communication.Proto;
 using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
@@ -76,7 +77,7 @@ namespace RabiRiichi.Communication.Sync {
   public class PlayerState(Player player, int receiverId) : IRabiPlayerMessage {
     public int playerId { get; init; } = receiverId;
     [RabiBroadcast] public readonly int id = player.id;
-    [RabiBroadcast] public readonly long points = player.points;
+    [RabiBroadcast] public readonly BigInteger points = player.points;
     // The hand is owned by `player`; reveal is decided against the OWNER id, not
     // the receiver. Passing receiverId here made `reveal` always true, leaking
     // every player's concealed hand to every viewer.
@@ -85,7 +86,7 @@ namespace RabiRiichi.Communication.Sync {
     public PlayerStateMsg ToProto(int playerId) {
       return new PlayerStateMsg {
         Id = id,
-        Points = points,
+        Points = points.ToString(System.Globalization.CultureInfo.InvariantCulture),
         Hand = hand.ToProto(playerId)
       };
     }

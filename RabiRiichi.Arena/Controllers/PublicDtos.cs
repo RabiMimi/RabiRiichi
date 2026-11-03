@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Collections.Generic;
 using System.Text.Json.Nodes;
 using RabiRiichi.Arena.Config;
@@ -41,7 +42,8 @@ namespace RabiRiichi.Arena.Controllers {
     public int Seat { get; set; }
     public string ModelId { get; set; } = "";
     public string DisplayName { get; set; } = "";
-    public long Points { get; set; }
+    [System.Text.Json.Serialization.JsonConverter(typeof(global::RabiRiichi.Communication.Json.BigIntegerJsonConverter))]
+    public BigInteger Points { get; set; }
     public bool InRiichi { get; set; }
   }
 
@@ -116,7 +118,8 @@ namespace RabiRiichi.Arena.Controllers {
     public string ModelId { get; set; } = "";
     public string DisplayName { get; set; } = "";
     public string Provider { get; set; } = "";
-    public int FinalPoints { get; set; }
+    [System.Text.Json.Serialization.JsonConverter(typeof(global::RabiRiichi.Communication.Json.BigIntegerJsonConverter))]
+    public BigInteger FinalPoints { get; set; }
     public int Placement { get; set; }
     public double EloAfter { get; set; }
     public double EloDelta { get; set; }
@@ -158,7 +161,8 @@ namespace RabiRiichi.Arena.Controllers {
     public string ModelId { get; set; } = "";
     public string DisplayName { get; set; } = "";
     public string Provider { get; set; } = "";
-    public int FinalPoints { get; set; }
+    [System.Text.Json.Serialization.JsonConverter(typeof(global::RabiRiichi.Communication.Json.BigIntegerJsonConverter))]
+    public BigInteger FinalPoints { get; set; }
     public int Placement { get; set; }
     public double EloBefore { get; set; }
     public double EloAfter { get; set; }
@@ -169,10 +173,13 @@ namespace RabiRiichi.Arena.Controllers {
     public int TsumoCount { get; set; }
     public int RonCount { get; set; }
     public int DealInCount { get; set; }
-    public int DealInPoints { get; set; }
-    public int TotalWinPoints { get; set; }
+    [System.Text.Json.Serialization.JsonConverter(typeof(global::RabiRiichi.Communication.Json.BigIntegerJsonConverter))]
+    public BigInteger DealInPoints { get; set; }
+    [System.Text.Json.Serialization.JsonConverter(typeof(global::RabiRiichi.Communication.Json.BigIntegerJsonConverter))]
+    public BigInteger TotalWinPoints { get; set; }
     public int TotalWinHan { get; set; }
-    public int MaxWinPoints { get; set; }
+    [System.Text.Json.Serialization.JsonConverter(typeof(global::RabiRiichi.Communication.Json.BigIntegerJsonConverter))]
+    public BigInteger MaxWinPoints { get; set; }
     public int RiichiCount { get; set; }
     public int OpenHandCount { get; set; }
     public int CallCount { get; set; }

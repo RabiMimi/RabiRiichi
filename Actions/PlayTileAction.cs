@@ -1,3 +1,4 @@
+using System.Numerics;
 using RabiRiichi.Core;
 using RabiRiichi.Core.Config;
 using RabiRiichi.Patterns;
@@ -17,7 +18,7 @@ namespace RabiRiichi.Actions {
     public int yakuman;
     /// <summary> 奖励役满，计入点数但不满足番缚 </summary>
     public int bonusYakuman;
-    public long points;
+    public BigInteger points;
     /// <summary> 荣和/自摸中较高者的番数，含宝牌，役满按 13 番计 </summary>
     public int maxHan;
   }

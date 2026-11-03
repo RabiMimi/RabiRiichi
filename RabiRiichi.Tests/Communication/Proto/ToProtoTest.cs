@@ -12,6 +12,7 @@ using RabiRiichi.Tests.Helper;
 using RabiRiichi.Tests.Scenario;
 using RabiRiichi.Communication.Sync;
 using System;
+using System.Numerics;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -46,6 +47,7 @@ namespace RabiRiichi.Tests.Communication.Proto {
                 true,
                 0,
                 0L,
+                BigInteger.Zero,
                 game.config.scoringOption,
                 ScoringType.None,
                 DiscardReason.None,

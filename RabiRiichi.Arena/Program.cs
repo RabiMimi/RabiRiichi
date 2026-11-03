@@ -76,6 +76,8 @@ namespace RabiRiichi.Arena {
       });
 
       services.AddControllers()
+          .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(
+              new global::RabiRiichi.Communication.Json.BigIntegerJsonConverter()))
           .ConfigureApplicationPartManager(apm => {
             foreach (var part in apm.ApplicationParts
                 .Where(p => p.Name == "RabiRiichi.Server").ToList()) {
