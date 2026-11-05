@@ -89,17 +89,39 @@ namespace RabiRiichi.Server.Agents.Llm {
       return ParseContent(exchange.Body);
     }
 
-    /// <summary> Extracts <c>choices[0].message.content</c> from the response. </summary>
+    /// <summary> Extracts <c>choices[0].message.content</c>, reasoning text, and token usage from the response. </summary>
     public static LlmResult ParseContent(string json) {
       try {
         var node = JsonNode.Parse(json);
-        var content = node?["choices"]?[0]?["message"]?["content"]?.GetValue<string>();
+        var msg = node?["choices"]?[0]?["message"];
+        var content = AsString(msg?["content"]);
         if (string.IsNullOrWhiteSpace(content)) {
           return LlmResult.Fail("empty response");
         }
-        return LlmResult.Ok(content);
+        var reasoning = AsString(msg?["reasoning_content"]) ?? AsString(msg?["reasoning"]);
+        var usage = node?["usage"];
+        int promptTokens = AsInt(usage?["prompt_tokens"]);
+        int completionTokens = AsInt(usage?["completion_tokens"]);
+        int reasoningTokens = AsInt(usage?["completion_tokens_details"]?["reasoning_tokens"]);
+        return LlmResult.Ok(content, promptTokens, completionTokens, reasoningTokens, reasoning);
       } catch (Exception e) {
         return LlmResult.Fail($"parse error: {e.Message}");
+      }
+    }
+
+    private static string AsString(JsonNode node) {
+      try {
+        return node?.GetValue<string>();
+      } catch {
+        return null;
+      }
+    }
+
+    private static int AsInt(JsonNode node) {
+      try {
+        return node != null ? Math.Max(0, node.GetValue<int>()) : 0;
+      } catch {
+        return 0;
       }
     }
 

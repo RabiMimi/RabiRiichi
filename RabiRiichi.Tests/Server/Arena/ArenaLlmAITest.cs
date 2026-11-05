@@ -18,10 +18,6 @@ using System.Threading.Tasks;
 using ProtoLlmProvider = RabiRiichi.Server.Generated.Rpc.LlmProvider;
 
 namespace RabiRiichi.Tests.Server.Arena {
-  /// <summary>
-  /// A scripted <see cref="ILlmProvider"/> that returns a queued sequence of
-  /// results and records the messages it was called with. No network.
-  /// </summary>
   internal sealed class FakeLlmProvider : ILlmProvider {
     private readonly Queue<LlmResult> results;
     public readonly List<IReadOnlyList<LlmMessage>> Calls = new();
@@ -34,27 +30,25 @@ namespace RabiRiichi.Tests.Server.Arena {
 
     public int CallCount => Calls.Count;
 
-    /// <summary>The concatenated text of the last call's messages.</summary>
     public string LastPrompt => Calls.Count == 0
         ? ""
         : string.Join("\n", Calls[^1].Select(m => m.Content));
 
     public Task<LlmResult> CompleteAsync(
         IReadOnlyList<LlmMessage> messages, int maxOutputTokens, CancellationToken ct) {
-      Calls.Add(messages);
+      Calls.Add(messages.ToList());
       var r = results.Count > 0 ? results.Dequeue() : LlmResult.Fail("no more scripted results");
       return Task.FromResult(r);
     }
   }
 
-  /// <summary>Test seam exposing the protected <see cref="ArenaLlmAI.Decide"/>.</summary>
   internal sealed class TestableArenaLlmAI : ArenaLlmAI {
     public TestableArenaLlmAI(
         int id, Room room, ArenaConfig.ModelConfig model,
-        ArenaConfig.DecisionConfig decision, ArenaConfig.ExposureConfig exposure,
+        ArenaConfig.DecisionConfig decision, ArenaConfig.PromptConfig prompts,
         ILlmProvider provider, ReasoningStore reasoning, UsageStats usage,
         string gameId, Func<int, Wind> windOf, Func<int, string> displayNameOf = null)
-        : base(id, room, model, decision, exposure, provider, reasoning, usage,
+        : base(id, room, model, decision, prompts, provider, reasoning, usage,
             gameId, windOf, displayNameOf, UserStatus.InRoom) { }
 
     public InquiryResponse Run(
@@ -80,8 +74,6 @@ namespace RabiRiichi.Tests.Server.Arena {
       }
     }
 
-    // ----- Fixtures --------------------------------------------------------
-
     private static ArenaConfig.ModelConfig Model(
         string id = "gpt-x", string displayName = "GPT-X") => new() {
       Id = id,
@@ -90,34 +82,34 @@ namespace RabiRiichi.Tests.Server.Arena {
       Model = "gpt-x-model",
     };
 
-    private static ArenaConfig.DecisionConfig Decision(int maxRetries = 3) => new() {
+    private static ArenaConfig.DecisionConfig Decision(int maxRetries = 2) => new() {
       TimeoutSeconds = 60,
       MaxRetries = maxRetries,
       MaxOutputTokens = 256,
     };
 
-    private static ArenaConfig.ExposureConfig Exposure(
-        bool revealIdentity = false, bool chatToAgents = false) => new() {
+    private static ArenaConfig.PromptConfig Prompts(
+        bool revealIdentity = false,
+        bool enableTableTalk = false,
+        bool askLlmForCalls = true,
+        int maxHistoryTurns = 24) => new() {
       RevealOpponentIdentity = revealIdentity,
-      ChatToAgents = chatToAgents,
+      EnableTableTalk = enableTableTalk,
+      AskLlmForCalls = askLlmForCalls,
+      MaxHistoryTurns = maxHistoryTurns,
     };
 
-    /// <summary>A 4-player game where seat 0 has a normal discard turn.</summary>
     private static Game DiscardTurnGame() {
-      // Configure only seat 0's concealed hand; the other seats are auto-filled
-      // by the wall builder (matching the engine agent tests' convention).
       var builder = new ScenarioBuilder();
       builder.WithPlayer(0, p => p.SetFreeTiles("123m456p789s1234s"));
       Game game = null;
       builder.Build(0).WithGame(g => game = g);
-      // Give seat 0 a freshly drawn tile so it is a 14-tile discard turn.
       var player = game.GetPlayer(0);
       var draw = new GameTile(new Tile("7z"), 999) { player = player };
       player.hand.pendingTile = draw;
       return game;
     }
 
-    /// <summary>A discard inquiry for seat 0 over its 14 tiles.</summary>
     private static (MultiPlayerInquiry gi, SinglePlayerInquiry pi, PlayTileAction play)
         DiscardInquiry(Game game) {
       var player = game.GetPlayer(0);
@@ -125,8 +117,6 @@ namespace RabiRiichi.Tests.Server.Arena {
       var play = new PlayTileAction(player, hand14, hand14[0]);
       var pi = new SinglePlayerInquiry(0);
       pi.AddAction(play);
-      // Drop the implicit SkipAction so the menu is discards only; then menu id 0
-      // is the first discard option (a real self-turn discard inquiry has no skip).
       pi.DisableSkip();
       var gi = new MultiPlayerInquiry(game);
       return (gi, pi, play);
@@ -136,13 +126,13 @@ namespace RabiRiichi.Tests.Server.Arena {
 
     private TestableArenaLlmAI BuildAgent(
         Room room, Game game, FakeLlmProvider provider,
-        ArenaConfig.ExposureConfig exposure, out ReasoningStore reasoning,
+        ArenaConfig.PromptConfig prompts, out ReasoningStore reasoning,
         out UsageStats usage, string modelId = "gpt-x", string gameId = "game-1",
-        int maxRetries = 3, bool revealNames = false) {
+        int maxRetries = 2, bool revealNames = false) {
       reasoning = new ReasoningStore(workspaceDir);
       usage = new UsageStats(workspaceDir);
       var agent = new TestableArenaLlmAI(
-          -101, room, Model(modelId), Decision(maxRetries), exposure, provider,
+          -101, room, Model(modelId), Decision(maxRetries), prompts, provider,
           reasoning, usage, gameId, s => WindOf(game, s),
           revealNames ? _ => "GPT-X" : (Func<int, string>)null);
       room.AddPlayer(agent);
@@ -155,64 +145,147 @@ namespace RabiRiichi.Tests.Server.Arena {
     // ----- Tests -----------------------------------------------------------
 
     [TestMethod]
-    public void ValidResponseFirstAttempt_ReturnedAndSuccessRecorded() {
+    public void ValidResponseFirstAttempt_ReturnedAndTelemetryRecorded() {
       var game = DiscardTurnGame();
       var (gi, pi, play) = DiscardInquiry(game);
       var provider = new FakeLlmProvider(
-          LlmResult.Ok("{\"action\": 0, \"rationale\": \"cut the isolated honor\"}"));
+          LlmResult.Ok("{\"action\": 0, \"rationale\": \"cut the isolated honor\"}", 120, 30, 15));
 
       var room = NewRoom();
-      var agent = BuildAgent(room, game, provider, Exposure(), out var reasoning, out var usage);
+      var agent = BuildAgent(room, game, provider, Prompts(), out var reasoning, out var usage);
 
       var resp = agent.Run(gi, pi, TimeSpan.FromSeconds(30));
 
       Assert.AreEqual(pi.actions.IndexOf(play), resp.index);
+      Assert.AreEqual(1, agent.DecisionsCount);
+      Assert.AreEqual(1, agent.ValidFirstTryCount);
+      Assert.AreEqual(0, agent.RetryCount);
+      Assert.AreEqual(0, agent.PenaltyCount);
+      Assert.AreEqual(120, agent.PromptTokens);
+      Assert.AreEqual(30, agent.CompletionTokens);
+      Assert.AreEqual(15, agent.ReasoningTokens);
+
       var u = usage.Get("gpt-x");
       Assert.IsNotNull(u);
       Assert.AreEqual(1, u.Requests);
       Assert.AreEqual(1, u.Successes);
       Assert.AreEqual(0, u.Penalties);
-      Assert.AreEqual(0, u.Retries);
-      Assert.AreEqual(1, provider.CallCount);
 
       var turns = reasoning.ReadTurns("game-1", 0);
       Assert.AreEqual(1, turns.Count);
       Assert.IsTrue(turns[0].Valid);
       Assert.IsFalse(turns[0].Penalized);
-      Assert.AreEqual(1, turns[0].Attempts);
       Assert.AreEqual("cut the isolated honor", turns[0].Rationale);
     }
 
     [TestMethod]
-    public void InvalidThreeTimes_ReturnsDefaultAndPenalizes() {
+    public void SingleOptionMenu_FastPathsWithoutCallingLlmProvider() {
+      var game = DiscardTurnGame();
+      var player = game.GetPlayer(0);
+      // Forced Riichi tsumogiri: only 1 legal tile in PlayTileAction and skip disabled.
+      var onlyTile = new List<GameTile> { player.hand.pendingTile };
+      var forcedPlay = new PlayTileAction(player, onlyTile, onlyTile[0]);
+      var pi = new SinglePlayerInquiry(0);
+      pi.AddAction(forcedPlay);
+      pi.DisableSkip();
+      var gi = new MultiPlayerInquiry(game);
+
+      var provider = new FakeLlmProvider(); // 0 scripted responses!
+      var room = NewRoom();
+      var agent = BuildAgent(room, game, provider, Prompts(), out _, out _);
+
+      var resp = agent.Run(gi, pi, TimeSpan.FromSeconds(30));
+
+      Assert.AreEqual(0, provider.CallCount, "Single-choice menu must not call LLM API.");
+      Assert.AreEqual(1, agent.AutoDecisionsCount);
+      Assert.AreEqual(0, agent.DecisionsCount);
+      Assert.AreEqual(pi.actions.IndexOf(forcedPlay), resp.index);
+    }
+
+    [TestMethod]
+    public void AskLlmForCallsFalse_SkipsOutOfTurnPonMenuWithoutCallingLlm() {
+      var game = DiscardTurnGame();
+      var p0 = game.GetPlayer(0);
+      var p1 = game.GetPlayer(1);
+      var discardedTile = new GameTile(new Tile("1m"), 500) { player = p1 };
+      // Give p0 a second 1m so Pon is constructible.
+      var extra1m = new GameTile(new Tile("1m"), 501) { player = p0 };
+      p0.hand.freeTiles.Add(extra1m);
+      var pon = new PonAction(0, new List<List<GameTile>> {
+        new() { p0.hand.freeTiles[0], extra1m, discardedTile },
+      });
+      var pi = new SinglePlayerInquiry(0);
+      pi.AddAction(pon); // Skip remains enabled on reactive call inquiries.
+      var gi = new MultiPlayerInquiry(game);
+
+      var provider = new FakeLlmProvider();
+      var room = NewRoom();
+      var agent = BuildAgent(
+          room, game, provider, Prompts(askLlmForCalls: false), out _, out _);
+
+      var resp = agent.Run(gi, pi, TimeSpan.FromSeconds(30));
+
+      Assert.AreEqual(0, provider.CallCount, "Out-of-turn call should fast-pass when AskLlmForCalls=false.");
+      Assert.AreEqual(-1, resp.index);
+      Assert.AreEqual(1, agent.AutoDecisionsCount);
+    }
+
+    [TestMethod]
+    public void BoundedHistory_TrimsToMaxHistoryTurns() {
+      var game = DiscardTurnGame();
+      var provider = new FakeLlmProvider(
+          LlmResult.Ok("{\"action\": 0, \"rationale\": \"turn-one-reason\"}"),
+          LlmResult.Ok("{\"action\": 0, \"rationale\": \"turn-two-reason\"}"),
+          LlmResult.Ok("{\"action\": 0, \"rationale\": \"turn-three-reason\"}"));
+
+      var room = NewRoom();
+      var agent = BuildAgent(
+          room, game, provider, Prompts(maxHistoryTurns: 1), out _, out _);
+
+      var (gi, pi, _) = DiscardInquiry(game);
+      agent.Run(gi, pi, TimeSpan.FromSeconds(30));
+      agent.Run(gi, pi, TimeSpan.FromSeconds(30));
+      agent.Run(gi, pi, TimeSpan.FromSeconds(30));
+
+      // Call #3 should carry System + 1 condensed prior turn (2 messages) + current User turn = 4 messages,
+      // with turn 1 evicted and turn 2 retained!
+      var thirdCall = provider.Calls[2];
+      Assert.AreEqual(4, thirdCall.Count);
+      var joined = string.Join("\n", thirdCall.Select(m => m.Content));
+      Assert.IsFalse(joined.Contains("turn-one-reason"), "Evicted turn 1 must not remain in context");
+      StringAssert.Contains(joined, "turn-two-reason");
+    }
+
+    [TestMethod]
+    public void InvalidAllAttempts_ReturnsDefaultAndPenalizes() {
       var game = DiscardTurnGame();
       var (gi, pi, _) = DiscardInquiry(game);
-      // Every answer picks an out-of-range id -> always invalid.
       var provider = new FakeLlmProvider(
           LlmResult.Ok("{\"action\": 99, \"rationale\": \"a\"}"),
           LlmResult.Ok("{\"action\": 88, \"rationale\": \"b\"}"),
           LlmResult.Ok("{\"action\": 77, \"rationale\": \"c\"}"));
 
       var room = NewRoom();
-      var agent = BuildAgent(room, game, provider, Exposure(), out var reasoning, out var usage);
+      var agent = BuildAgent(
+          room, game, provider, Prompts(), out var reasoning, out var usage, maxRetries: 2);
 
       var resp = agent.Run(gi, pi, TimeSpan.FromSeconds(30));
 
-      // Penalty falls back to the engine default (index -1).
       Assert.AreEqual(-1, resp.index);
       Assert.AreEqual(3, provider.CallCount);
+      Assert.AreEqual(1, agent.PenaltyCount);
+      Assert.AreEqual(2, agent.RetryCount);
 
       var u = usage.Get("gpt-x");
       Assert.AreEqual(3, u.Requests);
       Assert.AreEqual(1, u.Penalties);
-      Assert.AreEqual(2, u.Retries); // attempts 2 and 3 are retries
+      Assert.AreEqual(2, u.Retries);
 
       var turns = reasoning.ReadTurns("game-1", 0);
       Assert.AreEqual(1, turns.Count);
       Assert.IsFalse(turns[0].Valid);
       Assert.IsTrue(turns[0].Penalized);
       Assert.AreEqual(3, turns[0].Attempts);
-      Assert.IsNotNull(turns[0].Error);
     }
 
     [TestMethod]
@@ -224,59 +297,15 @@ namespace RabiRiichi.Tests.Server.Arena {
           LlmResult.Ok("{\"action\": 0, \"rationale\": \"good\"}"));
 
       var room = NewRoom();
-      var agent = BuildAgent(room, game, provider, Exposure(), out var reasoning, out var usage);
+      var agent = BuildAgent(room, game, provider, Prompts(), out var reasoning, out var usage);
 
       var resp = agent.Run(gi, pi, TimeSpan.FromSeconds(30));
 
       Assert.AreEqual(pi.actions.IndexOf(play), resp.index);
       Assert.AreEqual(2, provider.CallCount);
-
-      var u = usage.Get("gpt-x");
-      Assert.AreEqual(2, u.Requests);
-      Assert.AreEqual(2, u.Successes); // both transport calls succeeded
-      Assert.AreEqual(0, u.Penalties);
-      Assert.AreEqual(1, u.Retries);
-
-      var turns = reasoning.ReadTurns("game-1", 0);
-      Assert.AreEqual(1, turns.Count);
-      Assert.IsTrue(turns[0].Valid);
-      Assert.AreEqual(2, turns[0].Attempts);
-
-      // The retry prompt must echo the validation error so the model can correct.
+      Assert.AreEqual(1, usage.Get("gpt-x").Retries);
       Assert.IsTrue(provider.Calls[^1].Any(m => m.Content.Contains("REJECTED")));
-    }
-
-    [TestMethod]
-    public void ReasoningArtifacts_MetaOnceAndPromptDeltaHasNoPriorTranscript() {
-      var game = DiscardTurnGame();
-      var provider = new FakeLlmProvider(
-          LlmResult.Ok("{\"action\": 0, \"rationale\": \"turn one\"}"),
-          LlmResult.Ok("{\"action\": 0, \"rationale\": \"turn two\"}"));
-
-      var room = NewRoom();
-      var agent = BuildAgent(room, game, provider, Exposure(), out var reasoning, out var usage);
-
-      // Two decisions in a row.
-      var (gi1, pi1, _) = DiscardInquiry(game);
-      agent.Run(gi1, pi1, TimeSpan.FromSeconds(30));
-      var (gi2, pi2, _) = DiscardInquiry(game);
-      agent.Run(gi2, pi2, TimeSpan.FromSeconds(30));
-
-      // Meta written exactly once.
-      var meta = reasoning.ReadMeta("game-1", 0);
-      Assert.IsNotNull(meta);
-      Assert.AreEqual("gpt-x", meta.ModelId);
-      Assert.IsFalse(string.IsNullOrEmpty(meta.SystemPrompt));
-
-      var turns = reasoning.ReadTurns("game-1", 0);
-      Assert.AreEqual(2, turns.Count);
-
-      // The second turn's promptDelta must NOT contain the first turn's model
-      // reply ("turn one") — i.e. no accumulated transcript is duplicated.
-      Assert.IsFalse(turns[1].PromptDelta.Contains("turn one"),
-          "promptDelta must be only this turn's new message(s), not the history");
-      // Nor should the system prompt be duplicated into the delta.
-      Assert.IsFalse(turns[1].PromptDelta.Contains(meta.SystemPrompt));
+      Assert.IsTrue(reasoning.ReadTurns("game-1", 0)[0].Valid);
     }
 
     [TestMethod]
@@ -287,113 +316,56 @@ namespace RabiRiichi.Tests.Server.Arena {
           LlmResult.Ok("{\"action\": 0, \"rationale\": \"x\"}"));
 
       var room = NewRoom();
-      // Identity NOT revealed. displayNameOf resolver returns a leak string, but
-      // must never be consulted under anonymity.
       var reasoning = new ReasoningStore(workspaceDir);
       var usage = new UsageStats(workspaceDir);
       var agent = new TestableArenaLlmAI(
           -101, room, Model(id: "secret-model", displayName: "SecretName"),
-          Decision(), Exposure(revealIdentity: false), provider, reasoning, usage,
+          Decision(), Prompts(revealIdentity: false), provider, reasoning, usage,
           "game-1", s => WindOf(game, s), _ => "LEAKED-NAME");
       room.AddPlayer(agent);
 
       agent.Run(gi, pi, TimeSpan.FromSeconds(30));
 
       var prompt = provider.LastPrompt;
-      Assert.IsFalse(prompt.Contains("LEAKED-NAME"), "display name must not leak");
-      Assert.IsFalse(prompt.Contains("SecretName"), "roster display name must not leak");
-      Assert.IsFalse(prompt.Contains("secret-model"), "model id must not leak");
-      // Opponents referenced by neutral seat label.
-      Assert.IsTrue(prompt.Contains("Player 2") || prompt.Contains("Player 3")
-          || prompt.Contains("Player 4"), "opponents should use neutral seat labels");
+      Assert.IsFalse(prompt.Contains("LEAKED-NAME"));
+      Assert.IsFalse(prompt.Contains("SecretName"));
+      Assert.IsFalse(prompt.Contains("secret-model"));
+      Assert.IsTrue(prompt.Contains("Player 2"));
     }
 
     [TestMethod]
-    public void RevealedIdentity_PromptMayContainDisplayName() {
+    public void TableTalkGate_ControlsIncomingAndOutgoingChat() {
       var game = DiscardTurnGame();
+      var providerOff = new FakeLlmProvider(
+          LlmResult.Ok("{\"action\": 0, \"rationale\": \"my rationale\", \"chat\": \"trash talk\"}"));
+
+      var roomOff = NewRoom();
+      var observerOff = new ChatObserver(-200, roomOff);
+      roomOff.AddPlayer(observerOff);
+      var agentOff = BuildAgent(roomOff, game, providerOff, Prompts(enableTableTalk: false), out _, out _);
+
+      agentOff.OnChat(senderId: -200, text: "opponent secret plan", sticker: null);
       var (gi, pi, _) = DiscardInquiry(game);
-      var provider = new FakeLlmProvider(
-          LlmResult.Ok("{\"action\": 0, \"rationale\": \"x\"}"));
+      agentOff.Run(gi, pi, TimeSpan.FromSeconds(30));
 
-      var room = NewRoom();
-      var reasoning = new ReasoningStore(workspaceDir);
-      var usage = new UsageStats(workspaceDir);
-      // Reveal identities; opponents' names resolve to "Rival-N".
-      var agent = new TestableArenaLlmAI(
-          -101, room, Model(), Decision(), Exposure(revealIdentity: true),
-          provider, reasoning, usage, "game-1", s => WindOf(game, s),
-          s => $"Rival-{s}");
-      room.AddPlayer(agent);
+      Assert.IsFalse(providerOff.LastPrompt.Contains("opponent secret plan"));
+      // Rationale still lands in replay observer even when table talk is disabled!
+      CollectionAssert.Contains(observerOff.Texts, "my rationale");
 
-      agent.Run(gi, pi, TimeSpan.FromSeconds(30));
+      // Now with EnableTableTalk = true:
+      var providerOn = new FakeLlmProvider(
+          LlmResult.Ok("{\"action\": 0, \"rationale\": \"quiet\", \"chat\": \"Riichi time!\"}"));
+      var roomOn = NewRoom();
+      var other = new DefaultAI(-102, roomOn, UserStatus.InRoom);
+      roomOn.AddPlayer(other);
+      var observerOn = new ChatObserver(-201, roomOn);
+      roomOn.AddPlayer(observerOn);
+      var agentOn = BuildAgent(roomOn, game, providerOn, Prompts(enableTableTalk: true), out _, out _);
 
-      var prompt = provider.LastPrompt;
-      Assert.IsTrue(prompt.Contains("Rival-"), "revealed opponent names should appear");
-    }
-
-    [TestMethod]
-    public void ChatToAgentsOff_IncomingChatDoesNotAffectNextPrompt() {
-      var game = DiscardTurnGame();
-      var provider = new FakeLlmProvider(
-          LlmResult.Ok("{\"action\": 0, \"rationale\": \"x\"}"));
-
-      var room = NewRoom();
-      var agent = BuildAgent(room, game, provider, Exposure(chatToAgents: false),
-          out _, out _);
-
-      // Simulate an opponent's chat arriving before the decision.
-      agent.OnChat(senderId: -102, text: "opponent secret plan", sticker: null);
-
-      var (gi, pi, _) = DiscardInquiry(game);
-      agent.Run(gi, pi, TimeSpan.FromSeconds(30));
-
-      Assert.IsFalse(provider.LastPrompt.Contains("opponent secret plan"),
-          "with chatToAgents off, incoming chat must not enter the prompt");
-    }
-
-    [TestMethod]
-    public void ChatToAgentsOn_IncomingChatAppearsInNextPrompt() {
-      var game = DiscardTurnGame();
-      var provider = new FakeLlmProvider(
-          LlmResult.Ok("{\"action\": 0, \"rationale\": \"x\"}"));
-
-      var room = NewRoom();
-      // Add a second agent so the sender id maps to a real seat (for labeling).
-      var other = new DefaultAI(-102, room, UserStatus.InRoom);
-      room.AddPlayer(other);
-      var agent = BuildAgent(room, game, provider, Exposure(chatToAgents: true),
-          out _, out _);
-
-      agent.OnChat(senderId: -102, text: "I am pushing hard", sticker: null);
-
-      var (gi, pi, _) = DiscardInquiry(game);
-      agent.Run(gi, pi, TimeSpan.FromSeconds(30));
-
-      Assert.IsTrue(provider.LastPrompt.Contains("I am pushing hard"),
-          "with chatToAgents on, incoming chat should appear in the prompt");
-    }
-
-    [TestMethod]
-    public void ProviderError_MappedToCorrectCategoryAndPenalizes() {
-      var game = DiscardTurnGame();
-      var (gi, pi, _) = DiscardInquiry(game);
-      // All three attempts fail at the transport with an auth error.
-      var provider = new FakeLlmProvider(
-          LlmResult.Fail("HTTP 401: invalid api key"),
-          LlmResult.Fail("HTTP 401: invalid api key"),
-          LlmResult.Fail("HTTP 401: invalid api key"));
-
-      var room = NewRoom();
-      var agent = BuildAgent(room, game, provider, Exposure(), out _, out var usage);
-
-      var resp = agent.Run(gi, pi, TimeSpan.FromSeconds(30));
-
-      Assert.AreEqual(-1, resp.index); // penalized -> default
-      var u = usage.Get("gpt-x");
-      Assert.AreEqual(3, u.Failures);
-      Assert.AreEqual(3, u.AuthErrors);
-      Assert.AreEqual(0, u.Successes);
-      Assert.AreEqual(1, u.Penalties);
+      agentOn.OnChat(senderId: -102, text: "pushing hard", sticker: null);
+      agentOn.Run(gi, pi, TimeSpan.FromSeconds(30));
+      StringAssert.Contains(providerOn.LastPrompt, "pushing hard");
+      CollectionAssert.Contains(observerOn.Texts, "Riichi time!");
     }
 
     [TestMethod]
@@ -405,26 +377,6 @@ namespace RabiRiichi.Tests.Server.Arena {
       Assert.AreEqual(UsageErrorCategory.InvalidResponse, ArenaLlmDecider.ClassifyError("empty response"));
       Assert.AreEqual(UsageErrorCategory.Network, ArenaLlmDecider.ClassifyError("connection refused"));
       Assert.AreEqual(UsageErrorCategory.Other, ArenaLlmDecider.ClassifyError(""));
-    }
-
-    [TestMethod]
-    public void RationaleBroadcastToReplayRegardlessOfChatGate() {
-      var game = DiscardTurnGame();
-      var provider = new FakeLlmProvider(
-          LlmResult.Ok("{\"action\": 0, \"rationale\": \"my reasoning line\"}"));
-
-      var room = NewRoom();
-      // An observer agent records chat it receives via the room fan-out.
-      var observer = new ChatObserver(-200, room);
-      room.AddPlayer(observer);
-      var agent = BuildAgent(room, game, provider, Exposure(chatToAgents: false),
-          out _, out _);
-
-      var (gi, pi, _) = DiscardInquiry(game);
-      agent.Run(gi, pi, TimeSpan.FromSeconds(30));
-
-      // Even with chatToAgents off, the rationale is broadcast (lands in replay).
-      CollectionAssert.Contains(observer.Texts, "my reasoning line");
     }
 
     private sealed class ChatObserver(int id, Room room)

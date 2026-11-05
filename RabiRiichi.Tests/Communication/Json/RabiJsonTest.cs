@@ -1,3 +1,4 @@
+using System.Numerics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Communication;
 using RabiRiichi.Communication.Json;
@@ -11,6 +12,15 @@ using System.Text.Json.Serialization;
 namespace RabiRiichi.Tests.Communication.Json {
   [TestClass]
   public class RabiJsonTest {
+    [TestMethod]
+    public void ArbitraryPrecisionScoresUseDecimalStringsAndReadLegacyNumbers() {
+      var amount = (BigInteger.One << 256) + 123;
+      var json = RabiJson.Stringify(new[] { amount, -amount }, 0);
+      Assert.AreEqual($"[\"{amount}\",\"{-amount}\"]", json);
+      CollectionAssert.AreEqual(new[] { amount, -amount }, RabiJson.Parse<BigInteger[]>(json, 0));
+      CollectionAssert.AreEqual(new BigInteger[] { 2000, -1000 }, RabiJson.Parse<BigInteger[]>("[2000,-1000]", 0));
+    }
+
     #region Test Classes
     [RabiMessage]
     private abstract class BaseRabiMessage { }

@@ -249,6 +249,108 @@ namespace RabiRiichi.Tests.Server.Agents {
           $"a win than breaking a run ({breakRun.Shanten})");
     }
 
+    #region Wildcards
+
+    private static Game RiichiAgainstUs(string freeTiles13) {
+      // Seat 1 has declared riichi, so seat 0 is under real pressure.
+      var game = BuildGame(b => b
+          .WithPlayer(0, p => p.SetFreeTiles(freeTiles13))
+          .WithPlayer(1, p => p
+              .SetFreeTiles("123456789p1234s")
+              .SetDiscarded(2, "3p")
+              .SetRiichiTile("9s")));
+      game.config.initialTiles = new Tiles(game.config.initialTiles) { Tile.Wildcard };
+      return game;
+    }
+
+    private static PlayTileAction DrawWildcard(Game game) {
+      var player = game.GetPlayer(0);
+      var draw = new GameTile(Tile.Wildcard, 999) { player = player };
+      player.hand.pendingTile = draw;
+      return new PlayTileAction(player, [.. player.hand.freeTiles, draw], draw);
+    }
+
+    [DataTestMethod]
+    [DataRow("147m258p369s1234z", DisplayName = "hopeless shape")]
+    [DataRow("19m19p19s1234567z", DisplayName = "all terminals and honors")]
+    [DataRow("123m456p78s135z99p", DisplayName = "one away from tenpai")]
+    public void ChooseDiscard_KeepsAWildcardWhileFoldingAgainstRiichi(string freeTiles13) {
+      // Nothing in the river can make a wildcard look safe: it deals into every
+      // wait, and throwing it leaves us furiten on any wait we reach later.
+      var game = RiichiAgainstUs(freeTiles13);
+      var action = DrawWildcard(game);
+
+      int idx = RuleBasedStrategy.ChooseDiscardIndex(ViewFor(game, 0), action);
+
+      Assert.IsFalse(action.options[idx].tile.tile.IsWildcard,
+          $"Discarded the wildcard from {freeTiles13}");
+    }
+
+    [DataTestMethod]
+    [DataRow("147m258p369s1234z")]
+    [DataRow("123m456p789s1122z")]
+    [DataRow("1112345678999m")]
+    public void ChooseDiscard_KeepsAWildcardWithNoThreatOnTheTable(string freeTiles) {
+      var game = BuildGame(b => b.WithPlayer(0, p => p.SetFreeTiles(freeTiles)));
+      game.config.initialTiles = new Tiles(game.config.initialTiles) { Tile.Wildcard };
+      var action = DrawWildcard(game);
+
+      int idx = RuleBasedStrategy.ChooseDiscardIndex(ViewFor(game, 0), action);
+
+      Assert.IsFalse(action.options[idx].tile.tile.IsWildcard,
+          $"Discarded the wildcard from {freeTiles}");
+    }
+
+    [TestMethod]
+    public void ChooseDiscard_ThrowsAWildcardOnlyWhenNothingElseIsLegal() {
+      // A riichi-locked hand that cannot win on its draw has to toss it.
+      var game = RiichiAgainstUs("147m258p369s1234z");
+      var player = game.GetPlayer(0);
+      var draw = new GameTile(Tile.Wildcard, 999) { player = player };
+      player.hand.pendingTile = draw;
+      var action = new PlayTileAction(player, [draw], draw);
+
+      Assert.AreEqual(0, RuleBasedStrategy.ChooseDiscardIndex(ViewFor(game, 0), action));
+    }
+
+    [TestMethod]
+    public void ChooseDiscard_DoesNotDeclareRiichiOnAWildcard() {
+      var game = BuildGame(b => b
+          .WithPlayer(0, p => p.SetFreeTiles("123456789m1122p")));
+      game.config.initialTiles = new Tiles(game.config.initialTiles) { Tile.Wildcard };
+      var player = game.GetPlayer(0);
+      var draw = new GameTile(Tile.Wildcard, 999) { player = player };
+      player.hand.pendingTile = draw;
+      var riichi = new RiichiAction(player, [.. player.hand.freeTiles, draw], draw);
+      Assert.IsTrue(riichi.options.Any(o => o.tile.tile.IsWildcard));
+
+      int idx = RuleBasedStrategy.ChooseDiscardIndex(ViewFor(game, 0), riichi);
+
+      Assert.IsFalse(riichi.options[idx].tile.tile.IsWildcard);
+    }
+
+    [TestMethod]
+    public void Safety_AWildcardIsTheMostDangerousTileAgainstRiichi() {
+      var view = ViewFor(RiichiAgainstUs("147m258p369s1234z"), 0);
+
+      Assert.AreEqual(0, RuleBasedStrategy.SafetyScore(view, Tile.Wildcard));
+      Assert.IsTrue(RuleBasedStrategy.SafetyScore(view, new Tile("5m")) > 0);
+      Assert.IsTrue(RuleBasedStrategy.SafetyScore(view, new Tile("1z")) > 0);
+    }
+
+    [TestMethod]
+    public void Safety_AWildcardInTheRiichiSeatsOwnRiverIsSafe() {
+      // Every tenpai hand waits on a wildcard too, so having thrown one leaves
+      // that seat furiten on everything.
+      var game = RiichiAgainstUs("147m258p369s1234z");
+      var riichiSeat = game.GetPlayer(1);
+      riichiSeat.hand.discarded.Add(new GameTile(Tile.Wildcard, 900) { player = riichiSeat });
+
+      Assert.AreEqual(10, RuleBasedStrategy.SafetyScore(ViewFor(game, 0), Tile.Wildcard));
+    }
+
+    #endregion
+
     private static GameTile FindTile(List<GameTile> tiles, Tile kind) {
       return tiles.First(t => t.tile.IsSame(kind));
     }

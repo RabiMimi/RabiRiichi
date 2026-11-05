@@ -84,6 +84,13 @@ namespace RabiRiichi.Server.Agents {
 
     private readonly int[,] counts = new int[SuitCount, 10];
 
+    /// <summary>
+    /// Wildcards in the holding. They are not in <see cref="counts"/>: each can
+    /// fill one tile a route is missing, but never replaces a tile a route needs
+    /// gone, so tanyao, chanta and pinfu distances do not change.
+    /// </summary>
+    private int wildcards;
+
     /// <summary> Every plausible yaku route, unsorted. </summary>
     public IReadOnlyList<YakuRoute> Routes { get; private set; }
 
@@ -115,7 +122,12 @@ namespace RabiRiichi.Server.Agents {
       void Track(GameTile tile) {
         var t = tile.tile;
         if (!t.IsValid) return;
-        if (t.IsWildcard) { plan.TileCount++; return; }
+        if (t.IsWildcard) {
+          plan.wildcards++;
+          plan.TileCount++;
+          bonus += view.CountDora(t);
+          return;
+        }
         plan.counts[(int)t.Suit, t.Num]++;
         plan.TileCount++;
         bonus += view.CountDora(t) + (t.Akadora ? 1 : 0);
@@ -385,7 +397,7 @@ namespace RabiRiichi.Server.Agents {
       // the same tile, which is what makes a dealer's East triplet worth two han
       // in an East round - so they get distinct keys and both survive dedup.
       foreach (var (key, honor) in ValueHonorSources(view)) {
-        int have = Count(TileSuit.Z, honor);
+        int have = Count(TileSuit.Z, honor) + wildcards;
         routes.Add(new YakuRoute {
           Tag = YakuTag.Yakuhai, Key = key, ClosedHan = 1, OpenHan = 1,
           // Two in hand is a live pon away; a lone honor is a long shot; none at
@@ -402,7 +414,7 @@ namespace RabiRiichi.Server.Agents {
             t => t.tile.Suit != suit && !t.tile.IsZ));
         int honitsuDistance = meldOutside
             ? Unreachable
-            : TileCount - inSuit - honors;
+            : TileCount - inSuit - honors - wildcards;
         // A half flush with no honors at all is really a full flush; require at
         // least one honor so the two routes stay distinct.
         routes.Add(new YakuRoute {
@@ -412,7 +424,7 @@ namespace RabiRiichi.Server.Agents {
         bool meldOutsideStrict = called.Any(m => m.Any(t => t.tile.Suit != suit));
         routes.Add(new YakuRoute {
           Tag = YakuTag.Chinitsu, Key = "chinitsu", ClosedHan = 6, OpenHan = 5,
-          Distance = meldOutsideStrict ? Unreachable : TileCount - inSuit,
+          Distance = meldOutsideStrict ? Unreachable : TileCount - inSuit - wildcards,
         });
       }
 
@@ -487,7 +499,7 @@ namespace RabiRiichi.Server.Agents {
       var (pairs, triplets, kinds) = Shape();
       // Triplets are dead weight for seven pairs: only one copy of each counts.
       int usablePairs = pairs + triplets;
-      int shanten = 6 - usablePairs + System.Math.Max(0, 7 - kinds);
+      int shanten = 6 - usablePairs + System.Math.Max(0, 7 - kinds) - wildcards;
       return System.Math.Max(0, shanten - 2);
     }
 
@@ -506,13 +518,13 @@ namespace RabiRiichi.Server.Agents {
         if (c > 0) kinds++;
         if (c > 1) hasPair = true;
       }
-      return 13 - kinds + (hasPair ? 0 : 1);
+      return System.Math.Max(0, 13 - kinds + (hasPair ? 0 : 1) - wildcards);
     }
 
     /// <summary> All triplets needs five pair-or-better blocks. </summary>
     private int ToitoiDistance() {
       var (pairs, triplets, _) = Shape();
-      int blocks = pairs + triplets;
+      int blocks = pairs + triplets + wildcards;
       return System.Math.Max(0, 5 - blocks) * 2;
     }
 
@@ -542,7 +554,7 @@ namespace RabiRiichi.Server.Agents {
         }
         best = System.Math.Min(best, missing);
       }
-      return best;
+      return System.Math.Max(0, best - wildcards);
     }
 
     /// <summary> Missing tiles of the closest same-numbered run in all three suits. </summary>
@@ -557,7 +569,7 @@ namespace RabiRiichi.Server.Agents {
         }
         best = System.Math.Min(best, missing);
       }
-      return best;
+      return System.Math.Max(0, best - wildcards);
     }
 
     #endregion

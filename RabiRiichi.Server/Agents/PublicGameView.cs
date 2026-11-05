@@ -1,3 +1,4 @@
+using System.Numerics;
 using RabiRiichi.Core;
 using RabiRiichi.Actions;
 using RabiRiichi.Patterns;
@@ -147,7 +148,7 @@ namespace RabiRiichi.Server.Agents {
     public bool IsRiichi(int seat) => PlayerAt(seat).hand.riichi;
     public bool IsIppatsu(int seat) => PlayerAt(seat).hand.ippatsu;
     public int JunOf(int seat) => PlayerAt(seat).hand.jun;
-    public long PointsOf(int seat) => PlayerAt(seat).points;
+    public BigInteger PointsOf(int seat) => PlayerAt(seat).points;
     public Wind WindOf(int seat) => PlayerAt(seat).Wind;
     public bool IsDealer(int seat) => PlayerAt(seat).IsDealer;
 
@@ -210,7 +211,7 @@ namespace RabiRiichi.Server.Agents {
     /// <summary>
     /// Points the viewer leads the next-best seat by (negative when trailing).
     /// </summary>
-    public long SelfPointLead {
+    public BigInteger SelfPointLead {
       get {
         var others = OpponentSeats.Select(PointsOf).ToList();
         return others.Count == 0 ? 0 : PointsOf(Seat) - others.Max();
@@ -255,11 +256,24 @@ namespace RabiRiichi.Server.Agents {
     }
 
     /// <summary>
-    /// How many copies of <paramref name="kind"/> could still be live (unseen by
-    /// the viewer), out of the four in a standard set.
+    /// Total copies of <paramref name="kind"/> (akadora-normalized) present in the
+    /// match's configured tile set, falling back to standard 4-copy counts when
+    /// <c>initialTiles</c> is unpopulated.
     /// </summary>
-    public int UnseenCount(Tile kind) => System.Math.Max(0,
-        (kind.IsWildcard ? game.config.initialTiles?.Count(t => t.IsWildcard) ?? 0 : 4) - VisibleCount(kind));
+    public int DeckCount(Tile kind) {
+      if (game.config.initialTiles is { Count: > 0 } tiles) {
+        var target = kind.WithoutDora;
+        return tiles.Count(t => t.WithoutDora == target);
+      }
+      return kind.IsWildcard ? 0 : 4;
+    }
+
+    /// <summary>
+    /// How many copies of <paramref name="kind"/> could still be live (unseen by
+    /// the viewer), out of the configured deck.
+    /// </summary>
+    public int UnseenCount(Tile kind) =>
+        System.Math.Max(0, DeckCount(kind) - VisibleCount(kind));
 
     /// <summary>
     /// Evaluates hypothetically discarding <paramref name="discard"/> from the
@@ -272,12 +286,7 @@ namespace RabiRiichi.Server.Agents {
     /// <see cref="UnseenCount(Tile)"/>, which itself only uses public info.
     /// </summary>
     /// <param name="maxShanten">
-    /// Stop searching past this shanten and report <see cref="int.MaxValue"/>
-    /// instead. The resolver's cost grows sharply with the distance it may
-    /// explore (<c>maxDist = min(13, maxShanten) + 1</c>), so a caller that only
-    /// cares about the best few discards should say so: scoring all fourteen
-    /// options uncapped costs several times as much as capping just above the
-    /// hand's current shanten.
+    /// Report <see cref="int.MaxValue"/> instead of any shanten past this.
     /// </param>
     public DiscardEval EvaluateDiscard(
         GameTile discard, IReadOnlyList<GameTile> hand14,

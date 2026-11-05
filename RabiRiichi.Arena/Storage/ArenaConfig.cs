@@ -1,264 +1,480 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
+using RabiRiichi.Arena.Config;
+using RabiRiichi.Core;
+using RabiRiichi.Core.Config;
+using RabiRiichi.Server.Setup;
 
 namespace RabiRiichi.Arena.Storage {
   /// <summary>
-  /// Strongly-typed model of the single Arena config file
-  /// (<c>arena.config.json</c>). See ARENA_DESIGN.md §13. This is the single
-  /// source of truth: provider keys, model roster, run settings, admin
-  /// password, and server/client URLs all live here. Admin-editable via the
-  /// web UI in a later milestone.
-  ///
-  /// The model is a mutable POCO (not a record) because the admin config editor
-  /// overwrites the whole document; nested blocks default to non-null instances
-  /// so partially-specified files load with sane defaults.
+  /// Complete Arena configuration covering model roster, game rules, custom/wildcard
+  /// tile sets, allowed yaku/koyaku, prompt &amp; tool-context controls, decision
+  /// limits, tournament/batch scheduling, Elo rating parameters, and URLs.
   /// </summary>
   public sealed class ArenaConfig {
-    /// <summary>Workspace dir holding replays, reasoning, matches, ratings, stats.</summary>
-    public string WorkspaceDir { get; set; } = "";
+    private static readonly Regex SafeIdRegex = new(
+        "^[A-Za-z0-9_-]{1,64}$", RegexOptions.Compiled);
 
-    /// <summary>Gate for admin endpoints (secret; redacted for display).</summary>
-    public string AdminPassword { get; set; } = "";
+    private static readonly JsonSerializerOptions JsonOpts = new() {
+      PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+      PropertyNameCaseInsensitive = true,
+      WriteIndented = true,
+      DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+    };
 
-    /// <summary>Arena HTTP base for its own pages/API.</summary>
-    public string PublicUrl { get; set; } = "";
-
-    /// <summary>
-    /// Arena <c>/ws/public</c> base used for replay fetches. Leave EMPTY (the
-    /// default) to auto-derive it from each request's own origin — the Arena
-    /// serves the WebSocket on the same port that serves its page/API, so this
-    /// "just works" regardless of the port. Set an explicit <c>ws(s)://host[:port]</c>
-    /// only to override for reverse-proxy deployments.
-    /// </summary>
+    public string WorkspaceDir { get; set; } = "./workspace";
+    public string AdminPassword { get; set; } = "changeme";
+    public string ClientUrl { get; set; } = "http://localhost:5173";
+    /// <summary> Optional explicit ws(s):// base URL; auto-derived from HTTP host when empty. </summary>
     public string WsUrl { get; set; } = "";
+    public bool ExposeReasoningPublicly { get; set; } = true;
 
-    /// <summary>Web client base used to build replay links.</summary>
-    public string ClientUrl { get; set; } = "";
-
+    public List<ModelConfig> Models { get; set; } = [];
+    public GameRulesConfig GameRules { get; set; } = new();
+    public PromptConfig Prompts { get; set; } = new();
+    public DecisionConfig Decision { get; set; } = new();
     public RunConfig Run { get; set; } = new();
     public RatingConfig Rating { get; set; } = new();
-    public DecisionConfig Decision { get; set; } = new();
-    public ExposureConfig Exposure { get; set; } = new();
-    public List<ModelConfig> Models { get; set; } = new();
 
-    // ----- Nested config blocks -------------------------------------------
+    public sealed class ModelConfig {
+      public string Id { get; set; } = "";
+      public string DisplayName { get; set; } = "";
+      /// <summary> "openai" | "gemini" | "grok" | "anthropic" | "baseline". </summary>
+      public string Provider { get; set; } = "openai";
+      public string Model { get; set; }
+      public string BaseUrl { get; set; }
+      public string ApiKey { get; set; }
+      /// <summary> Populated only on redacted responses so the UI knows whether a key is stored. </summary>
+      public bool? HasApiKey { get; set; }
+      /// <summary> Transient UI flag to explicitly clear a stored API key. </summary>
+      public bool? ClearApiKey { get; set; }
+      /// <summary> "minimal" | "low" | "medium" | "high". </summary>
+      public string ThinkingLevel { get; set; } = "minimal";
+      /// <summary> Optional per-model prompt language override: "" (inherit global) | "en" | "zhs" | "zht" | "ja". </summary>
+      public string PromptLanguage { get; set; } = "";
+      public double? Temperature { get; set; }
+      public int? MaxOutputTokens { get; set; }
+      /// <summary> Baseline profile: "balanced" | "aggressive" | "defensive" | "fast_open" | "tsumogiri". </summary>
+      public string Variant { get; set; } = "balanced";
+      public double? FrozenElo { get; set; }
+      public bool Enabled { get; set; } = true;
+      public string Notes { get; set; }
 
-    public sealed class RunConfig {
-      /// <summary>Number of Swiss rounds per run.</summary>
-      public int SwissRounds { get; set; } = 7;
+      [JsonIgnore]
+      public bool IsBaseline =>
+          string.Equals(Provider, "baseline", StringComparison.OrdinalIgnoreCase);
 
-      /// <summary>1 = 東 (tonpuusen), 2 = 東南 (hanchan). Engine accepts only 1 or 2.</summary>
-      public int TotalRound { get; set; } = 2;
-
-      /// <summary>Players per table (mahjong = 4).</summary>
-      public int PlayerCount { get; set; } = 4;
-
-      /// <summary>How many matches may run at once.</summary>
-      public int MatchConcurrency { get; set; } = 1;
-
-      /// <summary>Configurable inter-match cooldown.</summary>
-      public int CooldownSecondsBetweenMatches { get; set; } = 30;
+      public ModelConfig Clone() => new() {
+        Id = Id,
+        DisplayName = DisplayName,
+        Provider = Provider,
+        Model = Model,
+        BaseUrl = BaseUrl,
+        ApiKey = ApiKey,
+        ThinkingLevel = ThinkingLevel,
+        PromptLanguage = PromptLanguage,
+        Temperature = Temperature,
+        MaxOutputTokens = MaxOutputTokens,
+        Variant = Variant,
+        FrozenElo = FrozenElo,
+        Enabled = Enabled,
+        Notes = Notes,
+      };
     }
 
-    public sealed class RatingConfig {
-      /// <summary>Elo K-factor (default 24).</summary>
-      public double KFactor { get; set; } = 24;
+    public sealed class TileSetConfig {
+      /// <summary>
+      /// Preset id from <see cref="ArenaMetadata.TilePresets"/> (e.g. "Regular",
+      /// "Sanma", "RegularWildcards", "TwoSets", "OnlySZ", "Custom").
+      /// </summary>
+      public string Preset { get; set; } = "Regular";
+      /// <summary> Extra wildcard (*) tiles added on top of the selected preset (0..64). </summary>
+      public int ExtraWildcards { get; set; } = 0;
+      /// <summary> Used when Preset == "Custom": map of canonical tile code -> count. </summary>
+      public Dictionary<string, int> CustomCounts { get; set; } = new();
 
-      /// <summary>Elo for models with no prior rating (default 1500).</summary>
-      public double InitialElo { get; set; } = 1500;
+      public Tiles BuildTiles() =>
+          ArenaMetadata.BuildTiles(Preset, ExtraWildcards, CustomCounts);
+
+      public TileSetConfig Clone() => new() {
+        Preset = Preset,
+        ExtraWildcards = ExtraWildcards,
+        CustomCounts = CustomCounts != null
+            ? new Dictionary<string, int>(CustomCounts, StringComparer.Ordinal)
+            : new Dictionary<string, int>(StringComparer.Ordinal),
+      };
+    }
+
+    public sealed class GameRulesConfig {
+      public int PlayerCount { get; set; } = 4;
+      /// <summary> 1 = East Only (Tonpuusen), 2 = East+South (Hanchan). </summary>
+      public int TotalRound { get; set; } = 1;
+      public int MinHan { get; set; } = 1;
+
+      public long InitialPoints { get; set; } = 25000;
+      public long FinishPoints { get; set; } = 30000;
+      public long LowerPoints { get; set; } = 0;
+      public long UpperPoints { get; set; } = 1000000;
+      public long RiichiPoints { get; set; } = 1000;
+      public long HonbaPoints { get; set; } = 300;
+      public long RyuukyokuPoints0 { get; set; } = 1000;
+      public long RyuukyokuPoints1 { get; set; } = 1500;
+      public int PointsDeductionPolicy { get; set; } = (int)global::RabiRiichi.Core.Config.PointsDeductionPolicy.SufficientPoints;
+
+      public int RenchanPolicy { get; set; } = (int)global::RabiRiichi.Core.Config.RenchanPolicy.Default;
+      public int EndGamePolicy { get; set; } = (int)global::RabiRiichi.Core.Config.EndGamePolicy.Default;
+      public int KuikaePolicy { get; set; } = (int)global::RabiRiichi.Core.Config.KuikaePolicy.Default;
+      public int RiichiPolicy { get; set; } = (int)global::RabiRiichi.Core.Config.RiichiPolicy.Default;
+      public int DoraOption { get; set; } = (int)global::RabiRiichi.Core.Config.DoraOption.Default;
+      public int AgariOption { get; set; } = (int)global::RabiRiichi.Core.Config.AgariOption.Default;
+      public int ScoringOption { get; set; } = (int)(global::RabiRiichi.Core.Config.ScoringOption.Default | global::RabiRiichi.Core.Config.ScoringOption.KiriageMangan);
+      public int RyuukyokuTrigger { get; set; } = (int)global::RabiRiichi.Core.Config.RyuukyokuTrigger.Default;
+
+      public TileSetConfig TileSet { get; set; } = new();
+      public List<string> AllowedYakus { get; set; } = [.. ArenaMetadata.DefaultAllowedYakus()];
+
+      public GameConfig BuildGameConfig(double gameplayTimeoutSeconds = 60.0) {
+        var tiles = (TileSet ?? new TileSetConfig()).BuildTiles();
+        var allowed = AllowedYakus is { Count: > 0 }
+            ? AllowedYakus.ToArray()
+            : ArenaMetadata.DefaultAllowedYakus().ToArray();
+
+        var cfg = new GameConfig {
+          playerCount = PlayerCount,
+          totalRound = TotalRound,
+          minHan = MinHan,
+          initialTiles = tiles,
+          pointThreshold = new PointThreshold {
+            initialPoints = InitialPoints,
+            finishPoints = FinishPoints,
+            riichiPoints = RiichiPoints,
+            honbaPoints = HonbaPoints,
+            ryuukyokuPoints = [RyuukyokuPoints0, RyuukyokuPoints1],
+            validPointsRange = [LowerPoints, UpperPoints],
+          },
+          renchanPolicy = (RenchanPolicy)RenchanPolicy,
+          endGamePolicy = (EndGamePolicy)EndGamePolicy,
+          kuikaePolicy = (KuikaePolicy)KuikaePolicy,
+          riichiPolicy = (RiichiPolicy)RiichiPolicy,
+          doraOption = (DoraOption)DoraOption,
+          agariOption = (AgariOption)AgariOption,
+          scoringOption = (ScoringOption)ScoringOption,
+          ryuukyokuTrigger = (RyuukyokuTrigger)RyuukyokuTrigger,
+          pointsDeductionPolicy = (PointsDeductionPolicy)PointsDeductionPolicy,
+          gameplayActionTimeout = Math.Clamp(gameplayTimeoutSeconds, 5.0, 3600.0),
+          nextRoundAckTimeout = 30.0,
+          seed = null, // Engine derives fresh hidden RNG seed per match.
+          setup = new DynamicRiichiSetup(allowed),
+        };
+        cfg.Validate();
+        return cfg;
+      }
+
+      public GameRulesConfig Clone() => new() {
+        PlayerCount = PlayerCount,
+        TotalRound = TotalRound,
+        MinHan = MinHan,
+        InitialPoints = InitialPoints,
+        FinishPoints = FinishPoints,
+        LowerPoints = LowerPoints,
+        UpperPoints = UpperPoints,
+        RiichiPoints = RiichiPoints,
+        HonbaPoints = HonbaPoints,
+        RyuukyokuPoints0 = RyuukyokuPoints0,
+        RyuukyokuPoints1 = RyuukyokuPoints1,
+        PointsDeductionPolicy = PointsDeductionPolicy,
+        RenchanPolicy = RenchanPolicy,
+        EndGamePolicy = EndGamePolicy,
+        KuikaePolicy = KuikaePolicy,
+        RiichiPolicy = RiichiPolicy,
+        DoraOption = DoraOption,
+        AgariOption = AgariOption,
+        ScoringOption = ScoringOption,
+        RyuukyokuTrigger = RyuukyokuTrigger,
+        TileSet = (TileSet ?? new TileSetConfig()).Clone(),
+        AllowedYakus = AllowedYakus != null ? [.. AllowedYakus] : [.. ArenaMetadata.DefaultAllowedYakus()],
+      };
+    }
+
+    public sealed class PromptConfig {
+      /// <summary> Default prompt language: "en" | "zhs" | "zht" | "ja". </summary>
+      public string Language { get; set; } = "en";
+      /// <summary> "minimal" | "standard" | "extended". </summary>
+      public string ToolContextMode { get; set; } = "standard";
+      /// <summary> When true, LLMs decide out-of-turn chii/pon/daiminkan opportunities. </summary>
+      public bool AskLlmForCalls { get; set; } = true;
+      /// <summary> Allow optional "chat" table-talk string in JSON response. </summary>
+      public bool EnableTableTalk { get; set; } = false;
+      /// <summary> Maximum prior condensed turns retained in seat conversation history. </summary>
+      public int MaxHistoryTurns { get; set; } = 24;
+      /// <summary> Reveal real opponent DisplayNames in prompts instead of blind seat labels. </summary>
+      public bool RevealOpponentIdentity { get; set; } = false;
+      /// <summary> Optional custom instruction block appended to the system prompt. </summary>
+      public string CustomSystemAppendix { get; set; } = "";
+
+      public PromptConfig Clone() => new() {
+        Language = Language,
+        ToolContextMode = ToolContextMode,
+        AskLlmForCalls = AskLlmForCalls,
+        EnableTableTalk = EnableTableTalk,
+        MaxHistoryTurns = MaxHistoryTurns,
+        RevealOpponentIdentity = RevealOpponentIdentity,
+        CustomSystemAppendix = CustomSystemAppendix,
+      };
     }
 
     public sealed class DecisionConfig {
-      /// <summary>Long per-decision budget (seconds).</summary>
-      public int TimeoutSeconds { get; set; } = 180;
+      public int TimeoutSeconds { get; set; } = 60;
+      public int MaxRetries { get; set; } = 2;
+      public int MaxOutputTokens { get; set; } = 1024;
 
-      /// <summary>Invalid answers retried this many times, then penalized with default.</summary>
-      public int MaxRetries { get; set; } = 3;
-
-      /// <summary>Cap on model output tokens per decision.</summary>
-      public int MaxOutputTokens { get; set; } = 2048;
+      public DecisionConfig Clone() => new() {
+        TimeoutSeconds = TimeoutSeconds,
+        MaxRetries = MaxRetries,
+        MaxOutputTokens = MaxOutputTokens,
+      };
     }
 
-    /// <summary>
-    /// What agents may learn about each other. Affects ONLY what agents see in
-    /// prompts/chat; humans always see real identities on the public page and
-    /// in the replay. See §9/§9a. Both default to false.
-    /// </summary>
-    public sealed class ExposureConfig {
-      /// <summary>false = opponents fully anonymous (neutral seat labels only).</summary>
-      public bool RevealOpponentIdentity { get; set; } = false;
+    public sealed class RunConfig {
+      /// <summary> "swiss" | "balanced". </summary>
+      public string ScheduleMode { get; set; } = "swiss";
+      public int SwissRounds { get; set; } = 4;
+      public int TargetMatches { get; set; } = 8;
+      public int MatchConcurrency { get; set; } = 2;
 
-      /// <summary>false = other agents' chat hidden in-game (still kept in replay).</summary>
-      public bool ChatToAgents { get; set; } = false;
+      public RunConfig Clone() => new() {
+        ScheduleMode = ScheduleMode,
+        SwissRounds = SwissRounds,
+        TargetMatches = TargetMatches,
+        MatchConcurrency = MatchConcurrency,
+      };
     }
 
-    /// <summary>
-    /// One roster entry — an LLM model or a rule-based baseline
-    /// (<c>provider == "baseline"</c>). Baselines use <see cref="FrozenElo"/> as
-    /// a fixed anchor rating and take no LLM settings.
-    /// </summary>
-    public sealed class ModelConfig {
-      /// <summary>Allowed <see cref="ThinkingLevel"/> values (case-insensitive).</summary>
-      public static readonly IReadOnlyList<string> ThinkingLevels =
-          new[] { "minimal", "low", "medium", "high" };
+    public sealed class RatingConfig {
+      public double InitialElo { get; set; } = 1500.0;
+      public double KFactor { get; set; } = 24.0;
+      public double Scale { get; set; } = 400.0;
 
-      /// <summary>Stable unique id (used as the key in ratings/stats).</summary>
-      public string Id { get; set; } = "";
-
-      /// <summary>Human-facing name shown on the public page.</summary>
-      public string DisplayName { get; set; } = "";
-
-      /// <summary>"openai", "gemini", or "baseline".</summary>
-      public string Provider { get; set; } = "";
-
-      /// <summary>Provider API base URL (LLM providers only).</summary>
-      public string BaseUrl { get; set; } = "";
-
-      /// <summary>Provider-specific model name (LLM providers only).</summary>
-      public string Model { get; set; } = "";
-
-      /// <summary>Provider API key (secret; redacted for display).</summary>
-      public string ApiKey { get; set; } = "";
-
-      /// <summary>
-      /// Provider reasoning/thinking level: "minimal", "low", "medium", or
-      /// "high" (case-insensitive). Defaults to "high" — benchmark models should
-      /// think (ARENA_DESIGN.md §7). Baselines ignore it. See
-      /// <see cref="ThinkingLevels"/> for the allowed set.
-      /// </summary>
-      public string ThinkingLevel { get; set; } = "high";
-
-      /// <summary>Optional prompt template override.</summary>
-      public string PromptTemplate { get; set; } = "";
-
-      /// <summary>Whether this entry participates in runs.</summary>
-      public bool Enabled { get; set; } = true;
-
-      /// <summary>Strategy tier for baselines (e.g. "strong"/"default"/"weak").</summary>
-      public string Variant { get; set; } = "";
-
-      /// <summary>Fixed anchor Elo for baselines; null for rated LLMs.</summary>
-      public double? FrozenElo { get; set; }
+      public RatingConfig Clone() => new() {
+        InitialElo = InitialElo,
+        KFactor = KFactor,
+        Scale = Scale,
+      };
     }
 
-    // ----- Serialization ---------------------------------------------------
-
-    private static readonly JsonSerializerOptions JsonOptions = new() {
-      WriteIndented = true,
-      PropertyNameCaseInsensitive = true,
-      PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-      DefaultIgnoreCondition = JsonIgnoreCondition.Never,
+    public ArenaConfig Clone() => new() {
+      WorkspaceDir = WorkspaceDir,
+      AdminPassword = AdminPassword,
+      ClientUrl = ClientUrl,
+      WsUrl = WsUrl,
+      ExposeReasoningPublicly = ExposeReasoningPublicly,
+      Models = Models?.Select(m => m.Clone()).ToList() ?? [],
+      GameRules = (GameRules ?? new GameRulesConfig()).Clone(),
+      Prompts = (Prompts ?? new PromptConfig()).Clone(),
+      Decision = (Decision ?? new DecisionConfig()).Clone(),
+      Run = (Run ?? new RunConfig()).Clone(),
+      Rating = (Rating ?? new RatingConfig()).Clone(),
     };
 
     /// <summary>
-    /// Loads config from <paramref name="path"/>. Missing files yield a default
-    /// config; missing fields fall back to their type defaults. Never returns
-    /// null.
+    /// Returns a deep copy with all secrets (AdminPassword and per-model ApiKeys)
+    /// stripped so it is safe to return to admin/browser clients.
     /// </summary>
-    public static ArenaConfig Load(string path) {
-      if (string.IsNullOrEmpty(path) || !File.Exists(path)) {
-        return new ArenaConfig();
+    public ArenaConfig Redacted() {
+      var copy = Clone();
+      copy.AdminPassword = "";
+      foreach (var m in copy.Models) {
+        m.HasApiKey = !string.IsNullOrEmpty(m.ApiKey);
+        m.ApiKey = null;
+        m.ClearApiKey = null;
       }
-      var json = File.ReadAllText(path);
-      if (string.IsNullOrWhiteSpace(json)) {
-        return new ArenaConfig();
-      }
-      var cfg = JsonSerializer.Deserialize<ArenaConfig>(json, JsonOptions)
-          ?? new ArenaConfig();
-      // Guard against explicit nulls in the file.
-      cfg.Run ??= new RunConfig();
-      cfg.Rating ??= new RatingConfig();
-      cfg.Decision ??= new DecisionConfig();
-      cfg.Exposure ??= new ExposureConfig();
-      cfg.Models ??= new List<ModelConfig>();
-      return cfg;
+      return copy;
     }
 
-    /// <summary>Serializes this config to a JSON string.</summary>
-    public string ToJson() => JsonSerializer.Serialize(this, JsonOptions);
-
-    /// <summary>Atomically writes this config to <paramref name="path"/>.</summary>
-    public void Save(string path) => AtomicFile.WriteAllText(path, ToJson());
-
-    // ----- Validation ------------------------------------------------------
-
     /// <summary>
-    /// Returns a list of human-readable validation errors. Empty means valid.
+    /// Carries forward existing secrets (AdminPassword and per-model ApiKeys)
+    /// when a Web UI update omits or leaves them blank.
     /// </summary>
-    public IReadOnlyList<string> Validate() {
+    public void MergeSecretsFrom(ArenaConfig previous) {
+      if (previous == null) return;
+      if (string.IsNullOrWhiteSpace(AdminPassword)) {
+        AdminPassword = previous.AdminPassword;
+      }
+      var oldKeys = (previous.Models ?? [])
+          .Where(m => !string.IsNullOrWhiteSpace(m.Id) && !string.IsNullOrEmpty(m.ApiKey))
+          .GroupBy(m => m.Id, StringComparer.Ordinal)
+          .ToDictionary(g => g.Key, g => g.First().ApiKey, StringComparer.Ordinal);
+      foreach (var m in Models ?? []) {
+        m.HasApiKey = null;
+        if (m.ClearApiKey == true) {
+          m.ApiKey = null;
+          m.ClearApiKey = null;
+          continue;
+        }
+        m.ClearApiKey = null;
+        if (string.IsNullOrWhiteSpace(m.ApiKey) && !string.IsNullOrWhiteSpace(m.Id) &&
+            oldKeys.TryGetValue(m.Id, out var existingKey)) {
+          m.ApiKey = existingKey;
+        }
+      }
+    }
+
+    /// <summary> Validates all settings; returns human-readable errors (empty = valid). </summary>
+    public List<string> Validate() {
       var errors = new List<string>();
 
       if (string.IsNullOrWhiteSpace(WorkspaceDir)) {
         errors.Add("workspaceDir must not be empty.");
       }
-      if (string.IsNullOrWhiteSpace(AdminPassword)) {
-        errors.Add("adminPassword must not be empty.");
+      if (string.IsNullOrEmpty(AdminPassword)) {
+        errors.Add("adminPassword must be set.");
       }
 
-      if (Run.TotalRound is not (1 or 2)) {
-        errors.Add("run.totalRound must be 1 (東) or 2 (東南).");
+      if (!string.IsNullOrWhiteSpace(ClientUrl) && !IsSafeHttpOrRelativeUrl(ClientUrl)) {
+        errors.Add("clientUrl must be an http:// or https:// URL.");
       }
-      if (Run.PlayerCount != 4) {
-        errors.Add("run.playerCount must be 4.");
-      }
-      if (Run.SwissRounds < 1) {
-        errors.Add("run.swissRounds must be >= 1.");
-      }
-      if (Run.MatchConcurrency < 1) {
-        errors.Add("run.matchConcurrency must be >= 1.");
-      }
-      if (Run.CooldownSecondsBetweenMatches < 0) {
-        errors.Add("run.cooldownSecondsBetweenMatches must be >= 0.");
+      if (!string.IsNullOrWhiteSpace(WsUrl) && !IsSafeWsOrHttpUrl(WsUrl)) {
+        errors.Add("wsUrl must be a ws://, wss://, http://, or https:// URL.");
       }
 
-      if (Rating.KFactor <= 0) {
-        errors.Add("rating.kFactor must be > 0.");
-      }
-      if (Rating.InitialElo <= 0) {
-        errors.Add("rating.initialElo must be > 0.");
-      }
+      GameRules ??= new GameRulesConfig();
+      GameRules.TileSet ??= new TileSetConfig();
+      Prompts ??= new PromptConfig();
+      Decision ??= new DecisionConfig();
+      Run ??= new RunConfig();
+      Rating ??= new RatingConfig();
 
-      if (Decision.TimeoutSeconds <= 0) {
-        errors.Add("decision.timeoutSeconds must be > 0.");
+      if (GameRules.TileSet.ExtraWildcards is < 0 or > 64) {
+        errors.Add("gameRules.tileSet.extraWildcards must be in [0, 64].");
       }
-      if (Decision.MaxRetries < 0) {
-        errors.Add("decision.maxRetries must be >= 0.");
+      if (GameRules.LowerPoints > GameRules.InitialPoints || GameRules.InitialPoints > GameRules.UpperPoints) {
+        errors.Add("gameRules.initialPoints must lie within [lowerPoints, upperPoints].");
       }
-      if (Decision.MaxOutputTokens <= 0) {
-        errors.Add("decision.maxOutputTokens must be > 0.");
-      }
-
-      var seenIds = new HashSet<string>();
-      for (int i = 0; i < Models.Count; i++) {
-        var m = Models[i];
-        var where = $"models[{i}]";
-        if (string.IsNullOrWhiteSpace(m.Id)) {
-          errors.Add($"{where}.id must not be empty.");
-        } else if (!seenIds.Add(m.Id)) {
-          errors.Add($"{where}.id '{m.Id}' is duplicated.");
+      if (GameRules.AllowedYakus == null || GameRules.AllowedYakus.Count == 0) {
+        errors.Add("At least one yaku must be enabled in gameRules.allowedYakus.");
+      } else {
+        var invalidYaku = GameRules.AllowedYakus
+            .Where(y => !ArenaMetadata.YakuByName.ContainsKey(y))
+            .ToList();
+        if (invalidYaku.Count > 0) {
+          errors.Add($"Unknown yaku name(s): {string.Join(", ", invalidYaku)}.");
         }
-        if (string.IsNullOrWhiteSpace(m.Provider)) {
-          errors.Add($"{where}.provider must not be empty.");
-        } else if (m.Provider is not ("openai" or "gemini" or "baseline")) {
-          errors.Add($"{where}.provider '{m.Provider}' must be one of openai, gemini, baseline.");
+      }
+
+      try {
+        GameRules.BuildGameConfig(Math.Clamp(Decision.TimeoutSeconds, 5, 3600));
+      } catch (InvalidGameConfigException ex) {
+        errors.Add($"Invalid game rules ({ex.ErrorType}): {ex.Message}");
+      } catch (Exception ex) {
+        errors.Add($"Invalid game rules: {ex.Message}");
+      }
+
+      var validPromptLanguages = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
+        "en", "zhs", "zht", "ja",
+      };
+      if (string.IsNullOrWhiteSpace(Prompts.Language) ||
+          !validPromptLanguages.Contains(Prompts.Language.Trim())) {
+        errors.Add("prompts.language must be 'en', 'zhs', 'zht', or 'ja'.");
+      }
+
+      var validToolModes = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
+        "minimal", "standard", "extended",
+      };
+      if (!validToolModes.Contains(Prompts.ToolContextMode ?? "")) {
+        errors.Add("prompts.toolContextMode must be 'minimal', 'standard', or 'extended'.");
+      }
+      if (Prompts.MaxHistoryTurns is < 0 or > 100) {
+        errors.Add("prompts.maxHistoryTurns must be in [0, 100].");
+      }
+      if ((Prompts.CustomSystemAppendix ?? "").Length > 8000) {
+        errors.Add("prompts.customSystemAppendix must be <= 8000 characters.");
+      }
+
+      if (Decision.TimeoutSeconds is < 5 or > 600) {
+        errors.Add("decision.timeoutSeconds must be in [5, 600].");
+      }
+      if (Decision.MaxRetries is < 0 or > 5) {
+        errors.Add("decision.maxRetries must be in [0, 5].");
+      }
+      if (Decision.MaxOutputTokens is < 64 or > 16384) {
+        errors.Add("decision.maxOutputTokens must be in [64, 16384].");
+      }
+
+      var validScheduleModes = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
+        "swiss", "balanced",
+      };
+      if (!validScheduleModes.Contains(Run.ScheduleMode ?? "")) {
+        errors.Add("run.scheduleMode must be 'swiss' or 'balanced'.");
+      }
+      if (Run.SwissRounds is < 1 or > 200) {
+        errors.Add("run.swissRounds must be in [1, 200].");
+      }
+      if (Run.TargetMatches is < 1 or > 1000) {
+        errors.Add("run.targetMatches must be in [1, 1000].");
+      }
+      if (Run.MatchConcurrency is < 1 or > 16) {
+        errors.Add("run.matchConcurrency must be in [1, 16].");
+      }
+
+      if (Rating.KFactor <= 0 || Rating.KFactor > 200) {
+        errors.Add("rating.kFactor must be in (0, 200].");
+      }
+      if (Rating.Scale <= 0 || Rating.Scale > 5000) {
+        errors.Add("rating.scale must be in (0, 5000].");
+      }
+
+      Models ??= [];
+      var seen = new HashSet<string>(StringComparer.Ordinal);
+      var validProviders = ArenaMetadata.Providers.Select(p => p.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+      var validThinking = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
+        "minimal", "low", "medium", "high",
+      };
+      var validVariants = ArenaMetadata.BaselineVariants.Select(v => v.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+      foreach (var m in Models) {
+        if (string.IsNullOrWhiteSpace(m.Id) || !SafeIdRegex.IsMatch(m.Id)) {
+          errors.Add($"Model id '{m.Id}' must match [A-Za-z0-9_-]{{1,64}}.");
+          continue;
         }
-        if (m.Provider == "baseline") {
-          if (m.FrozenElo is null) {
-            errors.Add($"{where} (baseline) must set frozenElo.");
+        if (!seen.Add(m.Id)) {
+          errors.Add($"Duplicate model id '{m.Id}'.");
+        }
+        if (string.IsNullOrWhiteSpace(m.DisplayName)) {
+          errors.Add($"Model '{m.Id}' is missing displayName.");
+        }
+        if (string.IsNullOrWhiteSpace(m.Provider) || !validProviders.Contains(m.Provider)) {
+          errors.Add($"Model '{m.Id}' has unknown provider '{m.Provider}' (expected openai, gemini, grok, anthropic, or baseline).");
+          continue;
+        }
+        if (m.IsBaseline) {
+          var v = string.IsNullOrWhiteSpace(m.Variant) ? "balanced" : m.Variant;
+          if (!validVariants.Contains(v) && !string.Equals(v, "default", StringComparison.OrdinalIgnoreCase)) {
+            errors.Add($"Baseline model '{m.Id}' has unknown variant '{m.Variant}'.");
           }
-        } else if (!string.IsNullOrWhiteSpace(m.Provider)) {
-          // LLM providers need a model name to call.
+        } else {
           if (string.IsNullOrWhiteSpace(m.Model)) {
-            errors.Add($"{where}.model must not be empty for provider '{m.Provider}'.");
+            errors.Add($"Model '{m.Id}' (provider '{m.Provider}') requires model name.");
           }
-          if (!string.IsNullOrWhiteSpace(m.ThinkingLevel)
-              && !ModelConfig.ThinkingLevels.Contains(
-                  m.ThinkingLevel.Trim().ToLowerInvariant())) {
-            errors.Add(
-                $"{where}.thinkingLevel '{m.ThinkingLevel}' must be one of " +
-                "minimal, low, medium, high.");
+          if (!string.IsNullOrWhiteSpace(m.ThinkingLevel) && !validThinking.Contains(m.ThinkingLevel)) {
+            errors.Add($"Model '{m.Id}' has invalid thinkingLevel '{m.ThinkingLevel}'.");
+          }
+          if (!string.IsNullOrWhiteSpace(m.PromptLanguage) &&
+              !validPromptLanguages.Contains(m.PromptLanguage.Trim())) {
+            errors.Add($"Model '{m.Id}' has invalid promptLanguage '{m.PromptLanguage}' (expected 'en', 'zhs', 'zht', or 'ja').");
+          }
+          if (!string.IsNullOrWhiteSpace(m.BaseUrl) && !IsSafeHttpOrRelativeUrl(m.BaseUrl, allowRelative: false)) {
+            errors.Add($"Model '{m.Id}' baseUrl must be an http:// or https:// URL.");
+          }
+          if (m.MaxOutputTokens is < 64 or > 32768) {
+            errors.Add($"Model '{m.Id}' maxOutputTokens must be in [64, 32768] when set.");
+          }
+          if (m.Temperature is < 0.0 or > 2.0) {
+            errors.Add($"Model '{m.Id}' temperature must be in [0.0, 2.0] when set.");
           }
         }
       }
@@ -266,23 +482,36 @@ namespace RabiRiichi.Arena.Storage {
       return errors;
     }
 
-    // ----- Redaction -------------------------------------------------------
-
-    /// <summary>
-    /// Returns a deep copy with all secrets (adminPassword, every model apiKey)
-    /// blanked, safe to return from the admin config-display endpoint.
-    /// </summary>
-    public ArenaConfig Redacted() {
-      var copy = Clone();
-      copy.AdminPassword = "";
-      foreach (var m in copy.Models) {
-        m.ApiKey = "";
-      }
-      return copy;
+    public static bool IsSafeHttpOrRelativeUrl(string raw, bool allowRelative = false) {
+      if (string.IsNullOrWhiteSpace(raw)) return false;
+      var s = raw.Trim();
+      if (allowRelative && s.StartsWith('/') && !s.StartsWith("//")) return true;
+      return Uri.TryCreate(s, UriKind.Absolute, out var uri) &&
+             (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
     }
 
-    /// <summary>Deep copy via JSON round-trip.</summary>
-    public ArenaConfig Clone() =>
-        JsonSerializer.Deserialize<ArenaConfig>(ToJson(), JsonOptions)!;
+    public static bool IsSafeWsOrHttpUrl(string raw) {
+      if (string.IsNullOrWhiteSpace(raw)) return false;
+      return Uri.TryCreate(raw.Trim(), UriKind.Absolute, out var uri) &&
+             (uri.Scheme == "ws" || uri.Scheme == "wss" ||
+              uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+    }
+
+    public static ArenaConfig Load(string path) {
+      var json = File.ReadAllText(path);
+      return Parse(json);
+    }
+
+    public static ArenaConfig Parse(string json) =>
+        JsonSerializer.Deserialize<ArenaConfig>(json, JsonOpts) ?? new ArenaConfig();
+
+    public void Save(string path) {
+      var clean = Clone();
+      foreach (var m in clean.Models) {
+        m.HasApiKey = null;
+        m.ClearApiKey = null;
+      }
+      AtomicFile.WriteAllText(path, JsonSerializer.Serialize(clean, JsonOpts));
+    }
   }
 }

@@ -1,3 +1,4 @@
+using System.Numerics;
 ﻿namespace RabiRiichi.Core {
   public enum Wind {
     E, S, W, N
@@ -11,7 +12,7 @@
     /// <summary> 手牌 </summary>
     public Hand hand;
     /// <summary> 点数 </summary>
-    public long points = game.config.pointThreshold.initialPoints;
+    public BigInteger points = game.config.pointThreshold.initialPoints;
 
     /// <summary> 庄家连庄和了的次数，用于八连荘。跨局累计，故不在<see cref="Reset"/>中重置 </summary>
     public int agariStreak = 0;

@@ -1,3 +1,4 @@
+using System.Numerics;
 ﻿using System;
 
 namespace RabiRiichi.Utils {
@@ -8,6 +9,11 @@ namespace RabiRiichi.Utils {
 
     public static int CeilTo100(this int val) {
       return (val + 99) / 100 * 100;
+    }
+
+    public static BigInteger CeilTo100(this BigInteger val) {
+      var remainder = val % 100;
+      return remainder.IsZero ? val : val + (remainder.Sign > 0 ? 100 - remainder : -remainder);
     }
 
     public static long CeilTo100(this long val) {

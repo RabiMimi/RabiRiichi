@@ -58,28 +58,83 @@ namespace RabiRiichi.Patterns {
         return new WildcardScoreSearch(this, evaluator, hand, [incoming], mask, excluded, minHan, onlyFamily).Run()[0];
       }
       if (!evaluator.IsSupported) return ResolveMaxScoreLegacy(hand, incoming, mask, excluded, minHan, onlyFamily);
-      CompactScore best = default; bool found = false;
-      CompactMeld[] bestGroups = null; BasePattern bestFamily = null; int bestRole = 0;
-      int index = CompactMeld.Index(incoming.tile);
-      var bonus = PhysicalBonuses(hand, incoming);
+      var scorer = new NaturalScorer(evaluator, hand, incoming, mask, excluded, minHan, PhysicalBonuses(hand, incoming));
       foreach (var family in basePatterns) {
         if (onlyFamily != null && family != onlyFamily) continue;
         if (!family.Resolve(hand, incoming, out var decompositions)) continue;
         foreach (var groups in decompositions) {
-          var compact = groups.Select(ToCompact).ToArray();
           int role = groups.FindIndex(g => g.Contains(incoming));
           if (role < 0) continue;
-          var counts = CountTargets(compact);
-          var score = evaluator.Evaluate(family, hand, incoming, compact, counts, role, index,
-              mask, excluded, bonus.Aka, bonus.Dora, bonus.Ura);
-          if (!score.IsValid(minHan) || found && ScoreMath.Compare(score, best, hand.game.config.scoringOption) <= 0) continue;
-          found = true; best = score; bestGroups = compact; bestFamily = family; bestRole = role;
+          var compact = groups.Select(ToCompact).ToArray();
+          scorer.Add(family, compact, CountTargets(compact), role);
         }
       }
-      if (!found) return null;
-      evaluator.Evaluate(bestFamily, hand, incoming, bestGroups, CountTargets(bestGroups), bestRole, index,
-          mask, excluded, bonus.Aka, bonus.Dora, bonus.Ura);
-      return evaluator.Materialize(hand.game.config.scoringOption);
+      return scorer.Finish();
+    }
+
+    /// <summary>Keeps the best interpretation of a natural hand for one winning tile.</summary>
+    private sealed class NaturalScorer(CompiledScoringEvaluator evaluator, Hand hand, GameTile incoming,
+        PatternMask mask, PatternMask excluded, int minHan, (int Aka, int Dora, int Ura) bonus) {
+      private readonly int index = CompactMeld.Index(incoming.tile);
+      private CompactScore best;
+      private bool found;
+      private CompactMeld[] bestGroups;
+      private BasePattern bestFamily;
+      private int bestRole;
+
+      internal void Add(BasePattern family, CompactMeld[] groups, byte[] counts, int role) {
+        var score = evaluator.Evaluate(family, hand, incoming, groups, counts, role, index,
+            mask, excluded, bonus.Aka, bonus.Dora, bonus.Ura);
+        if (!score.IsValid(minHan) || found && ScoreMath.Compare(score, best, hand.game.config.scoringOption) <= 0) return;
+        found = true; best = score; bestGroups = groups; bestFamily = family; bestRole = role;
+      }
+
+      internal ScoreStorage Finish() {
+        if (!found) return null;
+        evaluator.Evaluate(bestFamily, hand, incoming, bestGroups, CountTargets(bestGroups), bestRole, index,
+            mask, excluded, bonus.Aka, bonus.Dora, bonus.Ura);
+        return evaluator.Materialize(hand.game.config.scoringOption);
+      }
+    }
+
+    /// <summary>
+    /// Ron and tsumo on a natural tile decompose alike, so they share one decomposition.
+    /// A ron only differs by opening the group it completes, and butsu needs a draw.
+    /// </summary>
+    private (ScoreStorage Ron, ScoreStorage Tsumo) ResolveNaturalPreview(Hand hand, Tile tile, PatternMask mask, PatternMask excluded) {
+      GameTile ronTile = PreviewTile(tile, false), tsumoTile = PreviewTile(tile, true);
+      var evaluator = GetEvaluator();
+      if (!evaluator.IsSupported || hand.Count != Game.HAND_SIZE || !basePatterns.All(HasWildcardSearch)) {
+        return (ResolveScore(hand, ronTile, mask, excluded, 0), ResolveScore(hand, tsumoTile, mask, excluded, 0));
+      }
+      var bonus = PhysicalBonuses(hand, tsumoTile);
+      var ron = new NaturalScorer(evaluator, hand, ronTile, mask, excluded, 0, bonus);
+      var tsumo = new NaturalScorer(evaluator, hand, tsumoTile, mask, excluded, 0, bonus);
+      foreach (var family in basePatterns) {
+        if (!family.Resolve(hand, tsumoTile, out var decompositions)) continue;
+        foreach (var groups in decompositions) {
+          int role = groups.FindIndex(g => g.Contains(tsumoTile));
+          if (role < 0) continue;
+          var compact = groups.Select(ToCompact).ToArray();
+          var counts = CountTargets(compact);
+          tsumo.Add(family, compact, counts, role);
+          if (family is BaseButa) continue;
+          var opened = (CompactMeld[])compact.Clone();
+          opened[role] = opened[role] with { IsClose = false };
+          ron.Add(family, opened, counts, role);
+        }
+      }
+      return (ron.Finish(), tsumo.Finish());
+    }
+
+    /// <summary>
+    /// The tiles whose discard leaves a 14-tile hand in tenpai, or null when each
+    /// discard has to be checked: a complete hand has no surplus tile to name, and
+    /// custom base patterns need not answer a 14-tile query consistently.
+    /// </summary>
+    internal Tiles ResolveTenpaiDiscards(Hand hand) {
+      if (hand.Count != Game.HAND_SIZE + 1 || !basePatterns.All(HasWildcardSearch)) return null;
+      return ResolveShanten(hand, null, out var discards, 0) switch { -1 => null, 0 => discards, _ => [] };
     }
 
     /// <summary>Share target exploration across all waits and both win sources.</summary>
@@ -91,10 +146,7 @@ namespace RabiRiichi.Patterns {
       bool wildHand = hand.freeTiles.Any(t => t.tile.IsWildcard);
       var tiles = winningTiles.Distinct().ToArray();
       var batched = tiles.Where(t => wildHand || t.IsWildcard).ToArray();
-      foreach (var tile in tiles.Except(batched)) {
-        result[tile] = (ResolveScore(hand, PreviewTile(tile, false), patternMask, excludedMask, 0),
-            ResolveScore(hand, PreviewTile(tile, true), patternMask, excludedMask, 0));
-      }
+      foreach (var tile in tiles.Except(batched)) result[tile] = ResolveNaturalPreview(hand, tile, patternMask, excludedMask);
       if (batched.Length > 0) {
         var incoming = batched.SelectMany(t => new[] { PreviewTile(t, false), PreviewTile(t, true) }).ToArray();
         var scores = new WildcardScoreSearch(this, GetEvaluator(), hand, incoming, patternMask, excludedMask, 0).Run();

@@ -11,11 +11,13 @@ namespace RabiRiichi.Server.Agents.Llm {
     };
 
     public static string Describe(TileSource source, string language) {
-      var explanation = AiLocalization.NormalizeLanguage(language) switch {
-        AiLocalization.LangJa => JapaneseExplanation(source),
-        AiLocalization.LangZhs => ChineseExplanation(source),
-        _ => EnglishExplanation(source),
-      };
+      var explanation = TileNotation.IsTraditionalChinese(language)
+          ? TraditionalChineseExplanation(source)
+          : AiLocalization.NormalizeLanguage(language) switch {
+            AiLocalization.LangJa => JapaneseExplanation(source),
+            AiLocalization.LangZhs => ChineseExplanation(source),
+            _ => EnglishExplanation(source),
+          };
       return $"{Kind(source).ToUpperInvariant()} ({explanation})";
     }
 
@@ -47,6 +49,16 @@ namespace RabiRiichi.Server.Agents.Llm {
       TileSource.Daiminkan =>
           "大明杠：用自己手里的三张相同牌，鸣取另一名玩家打出的第四张牌",
       _ => "来源不明的杠",
+    };
+
+    private static string TraditionalChineseExplanation(TileSource source) => source switch {
+      TileSource.Ankan =>
+          "暗槓：不使用他家的棄牌，只用自己隱藏手牌中的四張相同牌",
+      TileSource.Kakan =>
+          "加槓：在自己已經碰出的明刻上，用手牌或摸牌補上第四張相同牌",
+      TileSource.Daiminkan =>
+          "大明槓：用自己手裡的三張相同牌，鳴取另一名玩家打出的第四張牌",
+      _ => "來源不明的槓",
     };
   }
 }

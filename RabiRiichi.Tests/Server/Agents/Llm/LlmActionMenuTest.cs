@@ -76,6 +76,28 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
     }
 
     [TestMethod]
+    public void Build_DiscardOptionsKeepRedAndPlainCopiesApart() {
+      var game = BuildGame(b => b
+          .WithPlayer(0, p => p.SetFreeTiles("1234567m33p12s77z")));
+      var player = game.GetPlayer(0);
+      var hand14 = player.hand.freeTiles.ToList();
+      // The scenario wall only deals red fives, so paint these two by hand.
+      hand14.First(t => t.tile == new Tile("3p")).tile = new Tile("r3p");
+      hand14.First(t => t.tile == new Tile("7z")).tile = new Tile("r7z");
+      var play = new PlayTileAction(player, hand14, hand14[0]);
+
+      var descriptions = LlmActionMenu.Build(InquiryWith(0, play), annotateTenpai: false)
+          .Where(c => c.Kind == "discard")
+          .Select(c => c.Description)
+          .ToList();
+
+      CollectionAssert.Contains(descriptions, "discard r3p");
+      CollectionAssert.Contains(descriptions, "discard 3p");
+      CollectionAssert.Contains(descriptions, "discard r7z(Red dragon)");
+      CollectionAssert.Contains(descriptions, "discard 7z(Red dragon)");
+    }
+
+    [TestMethod]
     public void Build_LocalizesHonorNamesInActionDetails() {
       var game = BuildGame(b => b
           .WithPlayer(0, p => p.SetFreeTiles("123456789m1112z")));

@@ -33,6 +33,51 @@ namespace RabiRiichi.Tests.Server.Agents {
             .DefaultIfEmpty(int.MaxValue)
             .Min();
 
+    #region Wildcards
+
+    /// <summary> The plan with one copy of <paramref name="swapped"/> turned into a wildcard. </summary>
+    private static HandPlan PlanWithWildcard(string freeTiles, string swapped) {
+      var game = BuildGame(b => b.WithPlayer(0, p => p.SetFreeTiles(freeTiles)));
+      var player = game.GetPlayer(0);
+      int at = player.hand.freeTiles.FindIndex(t => t.tile == new Tile(swapped));
+      player.hand.freeTiles[at] = new GameTile(Tile.Wildcard, 999) { player = player };
+      return PlanFor(ViewOf(game));
+    }
+
+    private static HandPlan PlanWithout(string freeTiles) =>
+        PlanFor(ViewOf(BuildGame(b => b.WithPlayer(0, p => p.SetFreeTiles(freeTiles)))));
+
+    [DataTestMethod]
+    [DataRow("55z234m567m234p99p", "9p", YakuTag.Yakuhai, 2, 0)]
+    [DataRow("123456789m1233p", "3p", YakuTag.Chinitsu, 4, 3)]
+    [DataRow("123456789m77z12p", "2p", YakuTag.Honitsu, 2, 1)]
+    [DataRow("1122m3456789p12s", "2s", YakuTag.Toitoi, 6, 4)]
+    [DataRow("123456789m1234p", "4p", YakuTag.Chiitoitsu, 4, 3)]
+    [DataRow("19m19p19s123456z5m", "5m", YakuTag.Kokushi, 2, 1)]
+    [DataRow("12345678m123p12s", "2s", YakuTag.Ittsu, 1, 0)]
+    [DataRow("123m123p12s1456z9m", "9m", YakuTag.SanshokuDoujun, 1, 0)]
+    public void AWildcardFillsWhatARouteIsMissing(
+        string freeTiles, string swapped, YakuTag tag, int plain, int withWildcard) {
+      Assert.AreEqual(plain, DistanceOf(PlanWithout(freeTiles), tag), "without a wildcard");
+      Assert.AreEqual(
+          withWildcard, DistanceOf(PlanWithWildcard(freeTiles, swapped), tag), "with a wildcard");
+    }
+
+    [TestMethod]
+    public void AWildcardCountsAsDoraWhenAnIndicatorPointsAtIt() {
+      var game = BuildGame(b => b.WithPlayer(0, p => p.SetFreeTiles("234m567m234p9p555s")));
+      var player = game.GetPlayer(0);
+      int at = player.hand.freeTiles.FindIndex(t => t.tile == new Tile("9p"));
+      player.hand.freeTiles[at] = new GameTile(Tile.Wildcard, 999) { player = player };
+      game.wall.doras.Clear();
+      game.wall.doras.Add(new GameTile(Tile.Wildcard, 900));
+      game.wall.revealedDoraCount = 1;
+
+      Assert.AreEqual(1, PlanFor(ViewOf(game)).BonusHan);
+    }
+
+    #endregion
+
     #region Yakuhai
 
     [TestMethod]

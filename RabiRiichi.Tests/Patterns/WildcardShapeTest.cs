@@ -61,14 +61,22 @@ namespace RabiRiichi.Tests.Patterns {
     [TestMethod]
     public void NaturalDistanceMatchesExistingResolverIncludingCustomCopiesAndCalls() {
       var random = new Random(17);
-      var legacy = new Base33332();
+      Tiles Deal(int count) => new(Enumerable.Range(0, count).Select(_ => HandShapeAnalyzer.FromIndex(random.Next(34))));
+      void Check(string tiles, GameTile incoming, params string[] called) {
+        var hand = TestHelper.CreateHand(tiles, called);
+        foreach (int cap in new[] { 0, 1, 2, int.MaxValue }) {
+          int expected = LegacyRegularShanten.Shanten(hand, incoming, out var oldTiles, cap);
+          int actual = HandShapeAnalyzer.RegularShanten(hand, incoming, out var newTiles, cap);
+          Assert.AreEqual(expected, actual, tiles);
+          if (expected != int.MaxValue) oldTiles.AssertEquals(newTiles.ToString());
+        }
+      }
       for (int sample = 0; sample < 100; sample++) {
-        var tiles = new Tiles(Enumerable.Range(0, 13).Select(_ => HandShapeAnalyzer.FromIndex(random.Next(34))));
-        var hand = TestHelper.CreateHand(tiles.ToString());
-        int expected = legacy.Shanten(hand, null, out var oldWaits);
-        int actual = HandShapeAnalyzer.RegularShanten(hand, null, out var newWaits, int.MaxValue);
-        Assert.AreEqual(expected, actual);
-        oldWaits.AssertEquals(newWaits.ToString());
+        Check(Deal(13).ToString(), null);
+        Check(Deal(13).ToString(), new GameTile(HandShapeAnalyzer.FromIndex(random.Next(34)), -1));
+        Check(Deal(10).ToString(), null, "222p");
+        Check(Deal(7).ToString(), new GameTile(HandShapeAnalyzer.FromIndex(random.Next(34)), -1), "1111m", "345s");
+        Check(Deal(11).ToString(), null, "77z");
       }
       var repeated = TestHelper.CreateHand("6666666666666z");
       Assert.AreEqual(0, HandShapeAnalyzer.RegularShanten(repeated, null, out var waits, 0));
@@ -92,6 +100,17 @@ namespace RabiRiichi.Tests.Patterns {
       var fixedPair = TestHelper.CreateHand("19m19p19s2345z*", "11z");
       Assert.AreEqual(0, new Base13_1().Shanten(fixedPair, null, out orphanWaits, 0));
       orphanWaits.AssertEquals("67z*");
+    }
+
+    [TestMethod]
+    public void SuitAnswersAreIndependentOfTheOrderTheyWereFirstCached() {
+      // The same counts must agree whichever hand filled the shared suit cache.
+      var counts = new int[34];
+      counts[0] = counts[1] = counts[2] = counts[9] = counts[10] = 1;
+      var first = HandShapeAnalyzer.AnalyzeRegular(counts);
+      var again = HandShapeAnalyzer.AnalyzeRegular(counts);
+      Assert.AreEqual(first, again);
+      Assert.AreEqual(first, HandShapeAnalyzer.AnalyzeRegular(counts.ToArray()));
     }
 
     [TestMethod]

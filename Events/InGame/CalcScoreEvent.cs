@@ -1,6 +1,5 @@
 using RabiRiichi.Communication;
 using RabiRiichi.Generated.Events.InGame;
-using RabiRiichi.Patterns;
 using RabiRiichi.Utils;
 using System.Collections.Generic;
 using System.Numerics;
@@ -10,9 +9,9 @@ namespace RabiRiichi.Events.InGame {
   public class ScoreTransfer {
     [RabiBroadcast] public int from;
     [RabiBroadcast] public int to;
-    [RabiBroadcast] public long points;
+    [RabiBroadcast] public BigInteger points;
     [RabiBroadcast] public ScoreTransferReason reason;
-    public ScoreTransfer(int from, int to, long points, ScoreTransferReason reason, bool ceilTo100 = true) {
+    public ScoreTransfer(int from, int to, BigInteger points, ScoreTransferReason reason, bool ceilTo100 = true) {
       this.from = from;
       this.to = to;
       this.reason = reason;
@@ -23,7 +22,7 @@ namespace RabiRiichi.Events.InGame {
       return new ScoreTransferMsg {
         From = from,
         To = to,
-        Points = points,
+        Points = points.ToString(System.Globalization.CultureInfo.InvariantCulture),
         Reason = reason,
       };
     }
@@ -39,15 +38,15 @@ namespace RabiRiichi.Events.InGame {
       return result;
     }
 
-    public long DeltaScore(int playerId) {
-      return ScoreMath.Clamp(NetChange(playerId));
+    public BigInteger DeltaScore(int playerId) {
+      return NetChange(playerId);
     }
 
-    public long ExtraScoreChange(int playerId) {
-      return ScoreMath.Clamp(NetChange(playerId, true));
+    public BigInteger ExtraScoreChange(int playerId) {
+      return NetChange(playerId, true);
     }
 
-    internal long ApplyTo(int playerId, long balance) => ScoreMath.Clamp(balance + NetChange(playerId));
+    internal BigInteger ApplyTo(int playerId, BigInteger balance) => balance + NetChange(playerId);
   }
 
   public class CalcScoreEvent(EventBase parent, AgariInfoList agariInfos) : EventBase(parent) {

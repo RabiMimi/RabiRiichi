@@ -1,3 +1,4 @@
+using System.Numerics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Arena.Storage;
 using System;
@@ -53,6 +54,34 @@ namespace RabiRiichi.Tests.Server.Arena {
                   FinalPoints = 10000, Placement = 4, EloBefore = 1400, EloAfter = 1400 },
         },
       };
+    }
+
+    [TestMethod]
+    public void HugeFinalScoresSurviveStoreReloadAndIndex() {
+      var amount = (BigInteger.One << 256) + 123;
+      var record = MakeRecord("huge", 1);
+      record.Players[0].FinalPoints = amount;
+      record.Players[1].FinalPoints = -amount;
+      record.Players[0].TotalWinPoints = amount;
+      record.Players[0].MaxWinPoints = amount;
+      record.Players[1].DealInPoints = amount;
+      record.Rounds.Add(new MatchRoundSummary {
+        PointsWon = amount, ScoreDeltas = new List<BigInteger> { amount, -amount },
+      });
+      new MatchStore(workspaceDir).Append(record);
+      var reloaded = new MatchStore(workspaceDir);
+      Assert.AreEqual(amount, reloaded.Get("huge").Players[0].FinalPoints);
+      Assert.AreEqual(-amount, reloaded.Get("huge").Players[1].FinalPoints);
+      Assert.AreEqual(amount, reloaded.Get("huge").Players[0].TotalWinPoints);
+      Assert.AreEqual(amount, reloaded.Get("huge").Players[0].MaxWinPoints);
+      Assert.AreEqual(amount, reloaded.Get("huge").Players[1].DealInPoints);
+      Assert.AreEqual(amount, reloaded.Get("huge").Rounds[0].PointsWon);
+      CollectionAssert.AreEqual(new[] { amount, -amount }, reloaded.Get("huge").Rounds[0].ScoreDeltas);
+      Assert.AreEqual(amount, reloaded.List(1, 10).Items[0].Players[0].FinalPoints);
+      var json = System.Text.Json.JsonSerializer.Serialize(new global::RabiRiichi.Arena.Controllers.MatchListPlayerDto { FinalPoints = amount });
+      StringAssert.Contains(json, $"\"{amount}\"");
+      var legacy = System.Text.Json.JsonSerializer.Deserialize<MatchPlayer>("{\"FinalPoints\":2000}");
+      Assert.AreEqual(new BigInteger(2000), legacy.FinalPoints);
     }
 
     [TestMethod]

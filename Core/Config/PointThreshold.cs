@@ -1,3 +1,4 @@
+using System.Numerics;
 using RabiRiichi.Communication;
 using RabiRiichi.Generated.Core.Config;
 
@@ -23,7 +24,7 @@ namespace RabiRiichi.Core.Config {
     [RabiBroadcast] public long[] validPointsRange = [0, 1000000];
 
     #region Helper methods
-    public bool ArePointsValid(long points) {
+    public bool ArePointsValid(BigInteger points) {
       return points >= validPointsRange[0] && points <= validPointsRange[1];
     }
     #endregion

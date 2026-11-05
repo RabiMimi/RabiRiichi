@@ -16,6 +16,7 @@ namespace RabiRiichi.Communication.Json {
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
         Converters = {
                     new MessageJsonConverter(playerId),
+                    new BigIntegerJsonConverter(),
                     tileJsonConverter,
                     tilesJsonConverter,
                     // stringEnumConverter

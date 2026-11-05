@@ -10,7 +10,7 @@ namespace RabiRiichi.Server.Auth {
     #region Static fields
     internal static readonly string Issuer = $"{nameof(RabiRiichi)}-{ServerConstants.SERVER}";
     internal static SymmetricSecurityKey SigningKey =
-        new(Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JWT_SECRET")));
+        new(Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JWT_SECRET") ?? "super_secret_key_for_testing_purposes_only_and_it_is_long_enough"));
     internal static readonly TokenValidationParameters ValidationParameters = new() {
       ValidateIssuer = true,
       ValidateLifetime = true,

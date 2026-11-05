@@ -71,12 +71,14 @@ namespace RabiRiichi.Server.Services {
 
     public DbUser AuthenticateUser(string username, string passwordHash, out string error) {
       error = null;
-      if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(passwordHash)) {
-        error = "Invalid username or password";
+      if (string.IsNullOrWhiteSpace(username)) {
+        error = "Username cannot be empty";
         return null;
       }
-
-
+      if (string.IsNullOrWhiteSpace(passwordHash)) {
+        error = "Password cannot be empty";
+        return null;
+      }
 
       try {
         using var connection = new SqliteConnection(connectionString);
@@ -104,8 +106,10 @@ namespace RabiRiichi.Server.Services {
               TokenVersion = reader.GetInt32(4)
             };
           }
+          error = "Password mismatch";
+          return null;
         }
-        error = "Invalid username or password";
+        error = "User does not exist";
         return null;
       } catch (Exception ex) {
         error = ex.Message;

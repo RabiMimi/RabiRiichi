@@ -22,6 +22,7 @@ namespace RabiRiichi.Arena.Agents {
     private readonly Func<int, string> displayNameOf;
     private readonly int selfSeat;
     private readonly Func<int, Wind> windOf;
+    private readonly string lang;
 
     /// <param name="revealIdentity">The <c>exposure.revealOpponentIdentity</c> gate.</param>
     /// <param name="selfSeat">The viewer's own seat (always labeled "You").</param>
@@ -30,15 +31,18 @@ namespace RabiRiichi.Arena.Agents {
     /// Resolves a seat's real display name; only consulted when identities are
     /// revealed. May be null when anonymized.
     /// </param>
+    /// <param name="language">Prompt locale ("en", "zhs", "zht", or "ja").</param>
     public ArenaSeatLabeler(
         bool revealIdentity,
         int selfSeat,
         Func<int, Wind> windOf,
-        Func<int, string> displayNameOf = null) {
+        Func<int, string> displayNameOf = null,
+        string language = "en") {
       this.revealIdentity = revealIdentity;
       this.selfSeat = selfSeat;
       this.windOf = windOf;
       this.displayNameOf = displayNameOf;
+      this.lang = ArenaPromptBuilder.NormalizeArenaLanguage(language);
     }
 
     /// <summary>Whether real opponent identities may be surfaced to the agent.</summary>
@@ -50,8 +54,13 @@ namespace RabiRiichi.Arena.Agents {
     /// revealed as the fallback if no display name is available.
     /// </summary>
     public string NeutralLabel(int seat) {
-      var wind = WindName(windOf(seat));
-      return $"{wind} (Player {seat + 1})";
+      var wind = WindName(windOf(seat), lang);
+      return lang switch {
+        "zhs" => $"{wind}家 (玩家 {seat + 1})",
+        "zht" => $"{wind}家 (玩家 {seat + 1})",
+        "ja" => $"{wind}家 (プレイヤー {seat + 1})",
+        _ => $"{wind} (Player {seat + 1})",
+      };
     }
 
     /// <summary>
@@ -61,7 +70,11 @@ namespace RabiRiichi.Arena.Agents {
     /// </summary>
     public string Label(int seat) {
       if (seat == selfSeat) {
-        return "You";
+        return lang switch {
+          "zhs" or "zht" => "你",
+          "ja" => "あなた",
+          _ => "You",
+        };
       }
       var neutral = NeutralLabel(seat);
       if (!revealIdentity) {
@@ -77,11 +90,19 @@ namespace RabiRiichi.Arena.Agents {
     /// </summary>
     public string ChatSenderLabel(int seat) => Label(seat);
 
-    private static string WindName(Wind wind) => wind switch {
-      Wind.E => "East",
-      Wind.S => "South",
-      Wind.W => "West",
-      Wind.N => "North",
+    private static string WindName(Wind wind, string lang) => (wind, lang) switch {
+      (Wind.E, "zhs") => "东",
+      (Wind.S, "zhs") => "南",
+      (Wind.W, "zhs") => "西",
+      (Wind.N, "zhs") => "北",
+      (Wind.E, "zht" or "ja") => "東",
+      (Wind.S, "zht" or "ja") => "南",
+      (Wind.W, "zht" or "ja") => "西",
+      (Wind.N, "zht" or "ja") => "北",
+      (Wind.E, _) => "East",
+      (Wind.S, _) => "South",
+      (Wind.W, _) => "West",
+      (Wind.N, _) => "North",
       _ => wind.ToString(),
     };
   }

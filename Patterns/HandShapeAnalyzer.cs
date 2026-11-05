@@ -1,6 +1,7 @@
 using RabiRiichi.Core;
 using RabiRiichi.Patterns.Compiled;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -26,6 +27,16 @@ namespace RabiRiichi.Patterns {
     private static readonly Dictionary<State, int> indices = states
         .Select((s, i) => (s, i)).ToDictionary(x => x.s, x => x.i);
     private static readonly Edge[][] edges = [BuildEdges(true, false), BuildEdges(false, false), BuildEdges(false, true)];
+    private const ulong Orphans = TileMasks.Honor | TileMasks.Terminal;
+    // Sub-targets one suit can supply: 0..4 melds, each with or without the pair.
+    private const int SuitSlots = 10;
+    private static int Slot(int melds, int pair) => melds * 2 + pair;
+    /// <summary>
+    /// Suit answers depend only on that suit's counts, and hands share most suits
+    /// between calls. A bound keeps unusual custom hands from growing this forever.
+    /// </summary>
+    private const int MaxCachedSuits = 1 << 16;
+    private static readonly ConcurrentDictionary<ulong, uint[]> suitTables = new();
 
     public static int ToIndex(Tile tile) {
       if (!tile.IsValid || tile.IsWildcard) throw new ArgumentException("Expected a natural tile", nameof(tile));
@@ -52,24 +63,24 @@ namespace RabiRiichi.Patterns {
       return result.ToArray();
     }
 
-    public static ShapeAnalysis AnalyzeRegular(ReadOnlySpan<int> natural, int melds = 4, int pair = 1) {
-      Validate(natural);
-      if (melds is < 0 or > 4 || pair is < 0 or > 1) throw new ArgumentOutOfRangeException(nameof(melds));
+    /// <summary>
+    /// For each sub-target, the cheapest way to build it from one suit. Entries pack
+    /// the cost and the rank masks of tied draws and discards into a single value.
+    /// </summary>
+    private static uint[] BuildSuitTable(ReadOnlySpan<int> counts, bool honor) {
       Span<int> prev = stackalloc int[70], next = stackalloc int[70];
-      Span<ulong> draws = stackalloc ulong[70], nextDraws = stackalloc ulong[70];
-      Span<ulong> discards = stackalloc ulong[70], nextDiscards = stackalloc ulong[70];
+      Span<uint> draws = stackalloc uint[70], nextDraws = stackalloc uint[70];
+      Span<uint> discards = stackalloc uint[70], nextDiscards = stackalloc uint[70];
       prev.Fill(Infinity); draws.Clear(); discards.Clear();
       prev[indices[new(0, 0, 0, 0)]] = 0;
-      for (int tile = 0; tile < NaturalTileCount; tile++) {
+      for (int rank = 0; rank < counts.Length; rank++) {
         next.Fill(Infinity); nextDraws.Clear(); nextDiscards.Clear();
-        bool boundary = tile is 0 or 9 or 18 or 27;
-        foreach (var edge in edges[tile >= 27 ? 2 : tile % 9 < 7 ? 0 : 1]) {
-          var s = states[edge.From];
-          if (boundary && (s.A != 0 || s.B != 0) || prev[edge.From] == Infinity) continue;
-          int cost = prev[edge.From] + Math.Max(0, edge.Required - natural[tile]);
+        foreach (var edge in edges[honor ? 2 : rank < 7 ? 0 : 1]) {
+          if (prev[edge.From] == Infinity) continue;
+          int cost = prev[edge.From] + Math.Max(0, edge.Required - counts[rank]);
           if (cost > next[edge.To]) continue;
-          ulong d = draws[edge.From] | (edge.Required > natural[tile] ? 1UL << tile : 0);
-          ulong r = discards[edge.From] | (edge.Required < natural[tile] ? 1UL << tile : 0);
+          uint d = draws[edge.From] | (edge.Required > counts[rank] ? 1u << rank : 0);
+          uint r = discards[edge.From] | (edge.Required < counts[rank] ? 1u << rank : 0);
           if (cost < next[edge.To]) {
             next[edge.To] = cost; nextDraws[edge.To] = d; nextDiscards[edge.To] = r;
           } else { nextDraws[edge.To] |= d; nextDiscards[edge.To] |= r; }
@@ -78,8 +89,56 @@ namespace RabiRiichi.Patterns {
         var ds = draws; draws = nextDraws; nextDraws = ds;
         var rs = discards; discards = nextDiscards; nextDiscards = rs;
       }
-      int end = indices[new(0, 0, melds, pair)];
-      return new(prev[end], draws[end], discards[end]);
+      var table = new uint[SuitSlots];
+      for (int m = 0; m <= 4; m++) for (int p = 0; p <= 1; p++) {
+        int end = indices[new(0, 0, m, p)];
+        table[Slot(m, p)] = (uint)prev[end] | (draws[end] << 8) | (discards[end] << 17);
+      }
+      return table;
+    }
+
+    private static uint[] SuitTable(ReadOnlySpan<int> counts, bool honor) {
+      ulong key = honor ? 1UL << 36 : 0;
+      for (int rank = 0; rank < counts.Length; rank++) key |= (ulong)counts[rank] << (rank * 4);
+      if (suitTables.TryGetValue(key, out var table)) return table;
+      table = BuildSuitTable(counts, honor);
+      if (suitTables.Count >= MaxCachedSuits) suitTables.Clear();
+      suitTables[key] = table;
+      return table;
+    }
+
+    public static ShapeAnalysis AnalyzeRegular(ReadOnlySpan<int> natural, int melds = 4, int pair = 1) {
+      Validate(natural);
+      if (melds is < 0 or > 4 || pair is < 0 or > 1) throw new ArgumentOutOfRangeException(nameof(melds));
+      Span<int> best = stackalloc int[SuitSlots], next = stackalloc int[SuitSlots];
+      Span<ulong> draws = stackalloc ulong[SuitSlots], nextDraws = stackalloc ulong[SuitSlots];
+      Span<ulong> discards = stackalloc ulong[SuitSlots], nextDiscards = stackalloc ulong[SuitSlots];
+      best.Fill(Infinity); draws.Clear(); discards.Clear();
+      best[0] = 0;
+      for (int suit = 0; suit < 4; suit++) {
+        int shift = suit * 9;
+        var table = SuitTable(natural.Slice(shift, suit == 3 ? 7 : 9), suit == 3);
+        next.Fill(Infinity); nextDraws.Clear(); nextDiscards.Clear();
+        for (int m = 0; m <= melds; m++) for (int p = 0; p <= pair; p++) {
+          int from = Slot(m, p);
+          if (best[from] == Infinity) continue;
+          for (int dm = 0; m + dm <= melds; dm++) for (int dp = 0; p + dp <= pair; dp++) {
+            uint entry = table[Slot(dm, dp)];
+            int to = Slot(m + dm, p + dp), cost = best[from] + (int)(entry & 255);
+            if (cost > next[to]) continue;
+            ulong d = draws[from] | ((ulong)(entry >> 8 & 511) << shift);
+            ulong r = discards[from] | ((ulong)(entry >> 17 & 511) << shift);
+            if (cost < next[to]) {
+              next[to] = cost; nextDraws[to] = d; nextDiscards[to] = r;
+            } else { nextDraws[to] |= d; nextDiscards[to] |= r; }
+          }
+        }
+        var swap = best; best = next; next = swap;
+        var ds = draws; draws = nextDraws; nextDraws = ds;
+        var rs = discards; discards = nextDiscards; nextDiscards = rs;
+      }
+      int end = Slot(melds, pair);
+      return new(best[end], draws[end], discards[end]);
     }
 
     private static void Validate(ReadOnlySpan<int> natural) {
@@ -162,13 +221,14 @@ namespace RabiRiichi.Patterns {
       if (hand.called.Count > 1 || hand.called.Any(g => g is not Jantou || !g.First.tile.Is19Z
           || g.Any(t => t.tile.IsWildcard))) return Reject(out output);
       var counts = Counts(hand, incoming, out int w);
+      int fixedPair = hand.called.Count == 1 ? ToIndex(hand.called[0].First.tile) : -1;
       int best = Infinity; ulong draws = 0, discards = 0;
       for (int duplicate = 0; duplicate < NaturalTileCount; duplicate++) {
-        if (!FromIndex(duplicate).Is19Z || hand.called.Count == 1 && ToIndex(hand.called[0].First.tile) != duplicate) continue;
+        if ((Orphans >> duplicate & 1) == 0 || fixedPair >= 0 && fixedPair != duplicate) continue;
         int cost = 0; ulong dm = 0, rm = 0;
         for (int i = 0; i < NaturalTileCount; i++) {
-          int target = FromIndex(i).Is19Z ? (i == duplicate ? 2 : 1) : 0;
-          if (hand.called.Count == 1 && i == duplicate) target -= 2;
+          int target = (Orphans >> i & 1) != 0 ? (i == duplicate ? 2 : 1) : 0;
+          if (i == fixedPair) target -= 2;
           cost += Math.Max(0, target - counts[i]);
           if (target > counts[i]) dm |= 1UL << i;
           if (target < counts[i]) rm |= 1UL << i;

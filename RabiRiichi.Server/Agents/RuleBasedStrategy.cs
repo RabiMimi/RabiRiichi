@@ -130,9 +130,8 @@ namespace RabiRiichi.Server.Agents {
       /// it could matter.
       ///
       /// <see cref="Shanten"/> is already the best any discard can reach, so a
-      /// discard more than one worse is never the efficient choice; capping the
-      /// search there is what keeps a turn affordable. A capped-out option is
-      /// not removed from consideration - it reports an unreachable shanten and
+      /// discard more than one worse is never the efficient choice. A capped-out
+      /// option is not removed from consideration - it reports an unreachable shanten and
       /// is then ranked purely on safety, which is exactly what is wanted when
       /// the hand is folding.
       /// </summary>
@@ -315,7 +314,8 @@ namespace RabiRiichi.Server.Agents {
         liveTiles += unseen;
         // TenpaiInfo.points is the base score (基本点); a ron pays 4x that, 6x
         // for the dealer.
-        double value = info.points * (view.SelfIsDealer ? 6 : 4);
+        // Heuristic utility is floating point; balances and payments remain exact.
+        double value = (double)info.points * (view.SelfIsDealer ? 6 : 4);
         if (value > best) best = value;
       }
       if (liveTiles == 0) return 0;
@@ -341,9 +341,17 @@ namespace RabiRiichi.Server.Agents {
         return 0;
       }
       return ctx.ChoiceFor(action, () => {
+        // A wildcard can stand in for any tile we would keep instead, so holding
+        // it never shapes the hand worse. Throwing it deals into every tenpai
+        // opponent and leaves us furiten on any wait we reach later, since every
+        // tenpai hand also waits on a wildcard. It only goes when nothing else can.
+        bool keepWildcards = options.Any(option => !option.tile.tile.IsWildcard);
         int bestIdx = 0;
         double bestScore = double.NegativeInfinity;
         for (int i = 0; i < options.Count; i++) {
+          if (keepWildcards && options[i].tile.tile.IsWildcard) {
+            continue;
+          }
           double score = ScoreDiscard(ctx, action, options[i].tile);
           if (score > bestScore) {
             bestScore = score;

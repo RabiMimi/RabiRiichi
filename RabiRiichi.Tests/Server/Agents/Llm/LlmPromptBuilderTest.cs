@@ -1,3 +1,4 @@
+using System.Numerics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Core;
 using RabiRiichi.Server.Agents;
@@ -93,6 +94,8 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
       StringAssert.Contains(english, "seat wind");
       StringAssert.Contains(english, "prevailing round wind");
       StringAssert.Contains(english, "* marks a universal wildcard");
+      StringAssert.Contains(english, "0 marks a red five (e.g. 0p)");
+      StringAssert.Contains(english, "an r prefix marks any other red (akadora) tile (e.g. r3p, r7z)");
 
       var japanese = new LlmPromptBuilder(Settings("ja"), Names()).BuildSystemPrompt(0);
       StringAssert.Contains(japanese, "m=萬子");
@@ -100,6 +103,12 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
       StringAssert.Contains(japanese, "自風");
       StringAssert.Contains(japanese, "場風");
       StringAssert.Contains(japanese, "*は万能牌");
+      StringAssert.Contains(japanese, "0は赤五ドラ（例: 0p）");
+      StringAssert.Contains(japanese, "rはそれ以外の赤ドラ（例: r3p、r7z）");
+
+      var chinese = new LlmPromptBuilder(Settings("zhs"), Names()).BuildSystemPrompt(0);
+      StringAssert.Contains(chinese, "0表示赤五宝牌（如0p）");
+      StringAssert.Contains(chinese, "r前缀表示其他赤宝牌（如r3p、r7z）");
     }
 
     [TestMethod]
@@ -465,7 +474,7 @@ namespace RabiRiichi.Tests.Server.Agents.Llm {
       var view = new PublicGameView(game, 0);
       var builder = new LlmPromptBuilder(Settings(), Names());
 
-      var endGamePoints = new long[] { 35000, 25000, 20000, 20000 };
+      var endGamePoints = new BigInteger[] { 35000, 25000, 20000, 20000 };
       var prompt = builder.BuildEndGamePrompt(
           view,
           ["TestBot wins by tsumo"],

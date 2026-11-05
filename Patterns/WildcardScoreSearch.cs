@@ -4,6 +4,7 @@ using RabiRiichi.Patterns.Compiled;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 
 namespace RabiRiichi.Patterns {
   /// <summary>
@@ -24,6 +25,11 @@ namespace RabiRiichi.Patterns {
         .Select(i => new CompactMeld(CompactMeldKind.Triplet, i, true))
         .Concat(Enumerable.Range(0, 3).SelectMany(s => Enumerable.Range(0, 7)
             .Select(r => new CompactMeld(CompactMeldKind.Sequence, s * 9 + r, true)))).ToArray();
+    /// <summary>For each tile, the ascending <see cref="melds"/> indices of the groups containing it.</summary>
+    private static readonly int[][] meldsContaining = Enumerable.Range(0, 34)
+        .Select(tile => Enumerable.Range(0, melds.Length).Where(m => melds[m].Kind == CompactMeldKind.Triplet
+            ? melds[m].TileIndex == tile
+            : tile / 9 == melds[m].TileIndex / 9 && tile - melds[m].TileIndex is >= 0 and <= 2).ToArray()).ToArray();
     private readonly PatternResolver resolver;
     private readonly CompiledScoringEvaluator evaluator;
     private readonly Hand hand;
@@ -92,6 +98,10 @@ namespace RabiRiichi.Patterns {
       foreach (var p in resolver.stdPatterns) if ((p.type & mask) != 0) Reach(p);
       foreach (var family in resolver.basePatterns) {
         if (onlyFamily != null && family != onlyFamily) continue;
+        // Most single queries are ron checks on hands that cannot win at all. The
+        // shape solver settles those at once. Butsu has no shanten to ask about.
+        if (queries.Length == 1 && family is Base33332 or Base72 or Base13_1
+            && family.Shanten(hand, queries[0].Incoming, out _, -1) != -1) continue;
         boundPatterns = resolver.stdPatterns.Where(p => reachable.Contains(p) && p.basePatterns.Contains(family) && (p.type & excluded) == 0).ToArray();
         boundRules = boundPatterns.Select(p => p is RuleYaku ? YakuRule.Unknown : Enum.Parse<YakuRule>(p.GetType().Name)).ToArray();
         boundCustom = boundPatterns.OfType<RuleYaku>().ToArray();
@@ -143,15 +153,33 @@ namespace RabiRiichi.Patterns {
       return true;
     }
 
-    private bool CanCover(int remainingMelds, int remainingPairs, int firstMeld) {
-      int missing = 0;
-      for (int i = 0; i < 34; i++) {
-        int n = required[i] - freeTargets[i]; if (n <= 0) continue;
-        missing += n;
-        int max = firstMeld <= i ? 3 : i < 27 && firstMeld <= 34 + (i / 9) * 7 + Math.Min(6, i % 9) ? 1 : 0;
-        if (n > remainingMelds * max + remainingPairs * 2) return false;
+    /// <summary>
+    /// Whether the natural tiles not yet placed can fit in the remaining melds. A
+    /// meld holds three tiles and spans three ranks of one suit, so each suit needs
+    /// enough melds for both its tile count and how far apart its tiles lie.
+    /// </summary>
+    private bool CanCover(int remainingMelds, out int lowestMissing) {
+      lowestMissing = -1;
+      int needed = 0;
+      for (int suit = 0; suit < 3; suit++) {
+        int missing = 0; uint ranks = 0;
+        for (int rank = 0; rank < 9; rank++) {
+          int n = required[suit * 9 + rank] - freeTargets[suit * 9 + rank];
+          if (n <= 0) continue;
+          if (lowestMissing < 0) lowestMissing = suit * 9 + rank;
+          missing += n; ranks |= 1u << rank;
+        }
+        int spans = 0;
+        for (; ranks != 0; spans++) ranks &= ~(7u << BitOperations.TrailingZeroCount(ranks));
+        needed += Math.Max(spans, (missing + 2) / 3);
       }
-      return missing <= remainingMelds * 3 + remainingPairs * 2;
+      for (int i = 27; i < 34; i++) {
+        int n = required[i] - freeTargets[i];
+        if (n <= 0) continue;
+        if (lowestMissing < 0) lowestMissing = i;
+        needed += (n + 2) / 3;
+      }
+      return needed <= remainingMelds;
     }
 
     private void Regular(BasePattern family) {
@@ -160,21 +188,35 @@ namespace RabiRiichi.Patterns {
       int needed = 4 - fixedGroups.Count(g => g.Kind != CompactMeldKind.Pair);
       if (pairs > 1 || needed < 0) return;
       Seed(family);
-      if (pairs == 1) SearchMelds(family, needed, 0);
+      if (pairs == 1) SearchMelds(family, needed, 0, 0);
       else for (int pair = 0; pair < 34; pair++) {
         Push(new(CompactMeldKind.Pair, pair, true));
-        SearchMelds(family, needed, 0); Pop();
+        SearchMelds(family, needed, 0, 0); Pop();
       }
     }
 
-    private void SearchMelds(BasePattern family, int remaining, int start) {
+    /// <summary>
+    /// Visits each target once. While a natural tile is unplaced the next meld must
+    /// contain the lowest such tile, which leaves at most four choices: the choice is
+    /// the target's lowest-numbered meld containing that tile, so lower-numbered ones
+    /// are banned below it. Melds that hold no required tile come last, in order.
+    /// </summary>
+    private void SearchMelds(BasePattern family, int remaining, int start, ulong banned) {
       Span<bool> saved = stackalloc bool[activeQueries.Length];
       activeQueries.CopyTo(saved);
       try {
-        if (!CanCover(remaining, 0, start) || CanPrune(family, remaining)) return;
+        if (!CanCover(remaining, out int lowestMissing) || CanPrune(family, remaining)) return;
         if (remaining == 0) { Visit(family); return; }
+        if (lowestMissing >= 0) {
+          foreach (int i in meldsContaining[lowestMissing]) {
+            if ((banned >> i & 1) == 0) { Push(melds[i]); SearchMelds(family, remaining - 1, 0, banned); Pop(); }
+            banned |= 1UL << i;
+          }
+          return;
+        }
         for (int i = start; i < melds.Length; i++) {
-          Push(melds[i]); SearchMelds(family, remaining - 1, i); Pop();
+          if ((banned >> i & 1) != 0) continue;
+          Push(melds[i]); SearchMelds(family, remaining - 1, i, banned); Pop();
         }
       } finally {
         saved.CopyTo(activeQueries);
@@ -183,7 +225,9 @@ namespace RabiRiichi.Patterns {
 
     private void Seed(BasePattern family) {
       // Strong early incumbents for many-wildcard hands; every seed is still
-      // checked against naturals and every legal incoming-tile role.
+      // checked against naturals and every legal incoming-tile role. The seeds
+      // below hold at most five tile kinds, so a hand with more cannot use them.
+      if (required.Count(n => n > 0) > 5) return;
       for (int pair = 0; pair < 34; pair++) SeedTarget(family, pair, [27, 28, 29, 30]);
       for (int i = 0; i < 34; i++) SeedTarget(family, i, [i, i, i, i]);
       for (int i = 34; i < 55; i++) SeedTarget(family, melds[i].TileIndex + 1, [i, i, i, i]);
@@ -303,6 +347,7 @@ namespace RabiRiichi.Patterns {
     private void Visit(BasePattern family) {
       if (!Covered()) return;
       visitedTargets++;
+      evaluator.PrepareTarget(groups.AsSpan(0, count), targets);
       for (int queryIndex = 0; queryIndex < queries.Length; queryIndex++) {
         if (!activeQueries[queryIndex]) continue;
         var q = queries[queryIndex];
@@ -317,7 +362,7 @@ namespace RabiRiichi.Patterns {
             int index = g.TileIndex + pos;
             if (q.Index >= 0 ? index != q.Index : freeTargets[index] <= natural[index]) continue;
             evaluatedInterpretations++;
-            var score = evaluator.Evaluate(family, hand, q.Incoming, groups.AsSpan(0, count), targets, role, index,
+            var score = evaluator.EvaluatePrepared(family, hand, q.Incoming, groups.AsSpan(0, count), targets, role, index,
                 mask, excluded, q.Aka, q.Dora, q.Ura);
             if (!score.IsValid(minHan) || q.Found && ScoreMath.Compare(score, q.Best, hand.game.config.scoringOption) <= 0) continue;
             q.Found = true; q.Best = score; q.Family = family;

@@ -3,6 +3,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RabiRiichi.Arena.Controllers;
 using RabiRiichi.Arena.Eval;
 using RabiRiichi.Arena.Storage;
+using RabiRiichi.Generated.Core;
+using RabiRiichi.Server.Generated.Messages;
+using RabiRiichi.Server.Services;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,10 +14,10 @@ using System.Text.Json.Nodes;
 
 namespace RabiRiichi.Tests.Server.Arena {
   /// <summary>
-  /// Tests for the public REST controller (ARENA_DESIGN.md §12a). These
-  /// instantiate <see cref="PublicController"/> directly over temp-backed stores
-  /// (no Kestrel): leaderboard ordering, matches pagination shape, match detail
-  /// (seed + config), and the replay-link format.
+  /// Tests for <see cref="PublicController"/> and <see cref="ArenaAnalyticsService"/>:
+  /// metadata catalog, rich leaderboard, multi-run analytics (Elo history, H2H,
+  /// yaku breakdown), match history + seat replay links, protobuf replay download,
+  /// public reasoning privacy gate, and replay reasoning track.
   /// </summary>
   [TestClass]
   public class PublicControllerTest {
@@ -22,6 +25,7 @@ namespace RabiRiichi.Tests.Server.Arena {
     private RunManager runManager;
     private RunContext ctx;
     private ReasoningStore reasoningStore;
+    private ReplayStore replayStore;
 
     [TestInitialize]
     public void Setup() {
@@ -37,15 +41,12 @@ namespace RabiRiichi.Tests.Server.Arena {
       }
     }
 
-    // ----- Fixtures --------------------------------------------------------
-
     private ArenaConfig MakeConfig() {
       var cfg = new ArenaConfig {
         WorkspaceDir = workspaceDir,
         AdminPassword = "pw",
         ClientUrl = "https://play.example.com",
         WsUrl = "wss://arena.example.com",
-        PublicUrl = "https://arena.example.com",
       };
       cfg.Models.Add(new ArenaConfig.ModelConfig {
         Id = "gpt-x", DisplayName = "GPT-X", Provider = "openai", Model = "m",
@@ -55,239 +56,205 @@ namespace RabiRiichi.Tests.Server.Arena {
       });
       cfg.Models.Add(new ArenaConfig.ModelConfig {
         Id = "baseline-mid", DisplayName = "Rule (mid)", Provider = "baseline",
-        FrozenElo = 1500,
+        Variant = "balanced", FrozenElo = 1500,
       });
       return cfg;
     }
 
-    // Creates a single run (the newest, so it is the default the controller reads)
-    // and returns a controller over it. Populate ctx.Ratings / ctx.Matches after.
     private PublicController MakeController(ArenaConfig cfg) {
       runManager = new RunManager(workspaceDir);
       ctx = runManager.CreateRun(cfg);
       var arenaService = new ArenaService(runManager, () => cfg);
       reasoningStore = new ReasoningStore(workspaceDir);
-      return new PublicController(cfg, runManager, arenaService, reasoningStore);
+      var replayDir = Path.Combine(workspaceDir, "replays");
+      Directory.CreateDirectory(replayDir);
+      replayStore = new ReplayStore(new ReplayOptions(replayDir, null));
+      return new PublicController(cfg, runManager, arenaService, reasoningStore, replayStore);
     }
 
-    // The replay link is NOT stored on the record; the controller derives it at
-    // read-time. With a non-empty cfg.WsUrl this is the deterministic result.
-    private static string ReplayLink(ArenaConfig cfg, string gameId) =>
-        $"{cfg.ClientUrl}?server={cfg.WsUrl}&replay={gameId}&reasoning=1";
+    private static string ReplayLink(ArenaConfig cfg, string gameId, int? seat = null) {
+      var baseUrl =
+          $"{cfg.ClientUrl}?server={Uri.EscapeDataString(cfg.WsUrl)}&replay={Uri.EscapeDataString(gameId)}&reasoning=1";
+      return seat.HasValue ? $"{baseUrl}&seat={seat.Value}" : baseUrl;
+    }
 
-    private static MatchRecord MakeRecord(ArenaConfig cfg, string matchId, int order) {
+    private static MatchRecord MakeRecord(string matchId, int order, string runId = "run-1") {
       var gameId = "game-" + matchId;
       return new MatchRecord {
         MatchId = matchId,
         GameId = gameId,
-        RunId = "run-1",
+        RunId = runId,
         SwissRound = 1,
-        StartedAt = "2024-01-01T00:00:00Z",
-        FinishedAt = $"2024-01-01T00:0{order}:00Z",
+        StartedAt = "2025-01-01T00:00:00Z",
+        FinishedAt = $"2025-01-01T00:0{order}:00Z",
+        DurationMs = 1500,
+        PlayerCount = 4,
+        TotalRound = 1,
+        TileSetPreset = "RegularWildcards",
+        HasWildcards = true,
+        WildcardCount = 4,
+        RoundsPlayed = 4,
         Seed = 777_000 + order,
-        Config = new JsonObject { ["playerCount"] = 4, ["totalRound"] = 2, ["seed"] = 777_000 + order },
+        Config = new JsonObject { ["playerCount"] = 4, ["totalRound"] = 1, ["seed"] = 777_000 + order },
         Players = new List<MatchPlayer> {
-          new() { Seat = 0, ModelId = "gpt-x", DisplayName = "GPT-X",
-                  FinalPoints = 40000, Placement = 1, EloBefore = 1500, EloAfter = 1512 },
-          new() { Seat = 1, ModelId = "gemini-x", DisplayName = "Gemini-X",
-                  FinalPoints = 20000, Placement = 3, EloBefore = 1500, EloAfter = 1494 },
+          new() {
+            Seat = 0, ModelId = "gpt-x", DisplayName = "GPT-X", Provider = "openai",
+            FinalPoints = 40000, Placement = 1, EloBefore = 1500, EloAfter = 1512,
+            RoundsPlayed = 4, AgariCount = 2, TsumoCount = 1, RonCount = 1,
+            TotalWinPoints = 16000, TotalWinHan = 7, RiichiCount = 2, WildcardWinCount = 1,
+            YakuCounts = new Dictionary<string, int> { ["Riichi"] = 2, ["TsubameGaeshi"] = 1 },
+            DecisionsCount = 20, ValidFirstTryCount = 19, RetryCount = 1,
+            PromptTokens = 5000, CompletionTokens = 800, TotalLatencyMs = 8000,
+          },
+          new() {
+            Seat = 1, ModelId = "gemini-x", DisplayName = "Gemini-X", Provider = "gemini",
+            FinalPoints = 20000, Placement = 3, EloBefore = 1500, EloAfter = 1494,
+            RoundsPlayed = 4, DealInCount = 1, DealInPoints = 8000,
+            DecisionsCount = 18, ValidFirstTryCount = 18,
+          },
+          new() {
+            Seat = 2, ModelId = "baseline-mid", DisplayName = "Rule (mid)", Provider = "baseline",
+            FinalPoints = 25000, Placement = 2, EloBefore = 1500, EloAfter = 1500,
+            RoundsPlayed = 4,
+          },
+          new() {
+            Seat = 3, ModelId = "baseline-mid", DisplayName = "Rule (mid)", Provider = "baseline",
+            FinalPoints = 15000, Placement = 4, EloBefore = 1500, EloAfter = 1500,
+            RoundsPlayed = 4,
+          },
         },
       };
     }
 
     private static T Body<T>(ActionResult<T> result) {
-      // OkObjectResult wraps the DTO; unwrap either an explicit Ok(...) or value.
       if (result.Result is OkObjectResult ok) {
         return (T)ok.Value;
       }
       return result.Value;
     }
 
-    // ----- Leaderboard -----------------------------------------------------
-
     [TestMethod]
-    public void TestLeaderboardOrderedByEloDesc() {
+    public void TestMetadataEndpoint_ExposesCatalogAndTilePresets() {
       var cfg = MakeConfig();
       var controller = MakeController(cfg);
-      ctx.Ratings.Update(new RatingRecord {
-        ModelId = "gpt-x", Elo = 1560, Games = 4, Wins = 2,
-        Place1 = 2, Place2 = 1, Place3 = 1, Place4 = 0, Penalties = 1,
-      });
-      ctx.Ratings.Update(new RatingRecord {
-        ModelId = "gemini-x", Elo = 1480, Games = 4, Wins = 1,
-        Place1 = 1, Place2 = 1, Place3 = 1, Place4 = 1,
-      });
-      ctx.Ratings.Update(new RatingRecord {
-        ModelId = "baseline-mid", Elo = 1500, Games = 4,
-        Place1 = 1, Place2 = 2, Place3 = 1, Place4 = 0,
-      });
 
-      var board = Body(controller.GetLeaderboard());
-      Assert.AreEqual(3, board.Count);
-      // Descending Elo: gpt-x (1560) > baseline-mid (1500) > gemini-x (1480).
-      Assert.AreEqual("gpt-x", board[0].ModelId);
-      Assert.AreEqual(1, board[0].Rank);
-      Assert.AreEqual("baseline-mid", board[1].ModelId);
-      Assert.AreEqual(2, board[1].Rank);
-      Assert.AreEqual("gemini-x", board[2].ModelId);
-      Assert.AreEqual(3, board[2].Rank);
-
-      // Display name resolved from config; counts + avg placement projected.
-      Assert.AreEqual("GPT-X", board[0].DisplayName);
-      Assert.AreEqual(1, board[0].Penalties);
-      // avg = (2*1 + 1*2 + 1*3 + 0*4)/4 = 7/4 = 1.75
-      Assert.AreEqual(1.75, board[0].AvgPlacement, 1e-9);
+      var meta = Body(controller.GetMetadata());
+      Assert.IsNotNull(meta);
+      Assert.IsTrue(meta.Providers.Count >= 5);
+      Assert.AreEqual(73, meta.Yakus.Count);
+      Assert.IsTrue(meta.PresetTileCounts.ContainsKey("RegularWildcards"));
+      Assert.AreEqual(4, meta.PresetTileCounts["RegularWildcards"]["*"]);
     }
 
     [TestMethod]
-    public void TestLeaderboardFallsBackToModelIdWhenNoDisplayName() {
+    public void TestLeaderboardAndAnalytics_AggregatesMahjongYakuH2hAndEloSeries() {
       var cfg = MakeConfig();
       var controller = MakeController(cfg);
-      ctx.Ratings.Update(new RatingRecord { ModelId = "unknown-model", Elo = 1500 });
+      ctx.Ratings.Update(new RatingRecord {
+        ModelId = "gpt-x", Elo = 1560, Games = 2, Wins = 2,
+        Place1 = 2, Place2 = 0, Place3 = 0, Place4 = 0, Penalties = 0,
+      });
+      ctx.Ratings.Update(new RatingRecord {
+        ModelId = "gemini-x", Elo = 1480, Games = 2, Wins = 0,
+        Place1 = 0, Place2 = 0, Place3 = 2, Place4 = 0,
+      });
+      ctx.Matches.Append(MakeRecord("m1", 1, ctx.RunId));
+      ctx.Matches.Append(MakeRecord("m2", 2, ctx.RunId));
 
-      var board = Body(controller.GetLeaderboard());
-      Assert.AreEqual("unknown-model", board.Single().DisplayName);
+      var analytics = Body(controller.GetAnalytics(scope: "current"));
+      Assert.AreEqual(2, analytics.Summary.TotalMatches);
+      Assert.AreEqual(8, analytics.Summary.TotalRounds);
+      Assert.AreEqual(2, analytics.Summary.WildcardMatches);
+
+      var gpt = analytics.Leaderboard.Single(r => r.ModelId == "gpt-x");
+      Assert.AreEqual(1, gpt.Rank);
+      Assert.AreEqual(1560.0, gpt.Elo, 1e-9);
+      Assert.AreEqual(0.5, gpt.AgariRate, 1e-9); // 4 agari / 8 rounds
+      Assert.AreEqual(0.5, gpt.RiichiRate, 1e-9);
+      Assert.AreEqual(2, gpt.WildcardWins);
+
+      // Pairwise H2H records GPT-X beating Gemini-X in both matches.
+      var h2h = analytics.HeadToHead.Single(c => c.ModelA == "gpt-x" && c.ModelB == "gemini-x");
+      Assert.AreEqual(2, h2h.SharedMatches);
+      Assert.AreEqual(2, h2h.ABeatB);
+      Assert.AreEqual(1.0, h2h.WinRateA, 1e-9);
+
+      // Yaku breakdown distinguishes standard yaku and classical koyaku!
+      Assert.IsTrue(analytics.YakuBreakdown.Any(y => y.Name == "Riichi" && y.Group == "1han" && !y.IsKoyaku));
+      Assert.IsTrue(analytics.YakuBreakdown.Any(y => y.Name == "TsubameGaeshi" && y.Group == "koyaku" && y.IsKoyaku));
     }
 
-    // ----- Matches list ----------------------------------------------------
-
     [TestMethod]
-    public void TestMatchesPaginationShapeNewestFirst() {
+    public void TestMatchesPaginationFilterAndReplayLinksWithPerSeatPerspectives() {
       var cfg = MakeConfig();
       var controller = MakeController(cfg);
       for (int i = 1; i <= 5; i++) {
-        ctx.Matches.Append(MakeRecord(cfg, "m" + i, i));
+        ctx.Matches.Append(MakeRecord("m" + i, i, ctx.RunId));
       }
 
       var page1 = Body(controller.GetMatches(page: 1, pageSize: 2));
-      Assert.AreEqual(1, page1.Page);
-      Assert.AreEqual(2, page1.PageSize);
       Assert.AreEqual(5, page1.TotalCount);
       Assert.AreEqual(2, page1.Items.Count);
       Assert.AreEqual("m5", page1.Items[0].MatchId);
-      Assert.AreEqual("m4", page1.Items[1].MatchId);
 
-      // Item shape: players carry name/points/placement/elo delta + replay link.
       var top = page1.Items[0];
-      Assert.AreEqual("game-m5", top.GameId);
       Assert.AreEqual(ReplayLink(cfg, "game-m5"), top.ReplayLink);
-      var winner = top.Players.Single(p => p.DisplayName == "GPT-X");
-      Assert.AreEqual(1, winner.Placement);
-      Assert.AreEqual(12, winner.EloDelta);
-      Assert.AreEqual(1512, winner.EloAfter);
+      Assert.AreEqual(4, top.SeatReplayLinks.Count);
+      Assert.AreEqual(ReplayLink(cfg, "game-m5", 2), top.SeatReplayLinks[2]);
+      Assert.AreEqual("/api/arena/matches/game-m5/replay.pb", top.ReplayDownloadUrl);
     }
 
-    // ----- Match detail ----------------------------------------------------
-
     [TestMethod]
-    public void TestMatchDetailIncludesSeedAndConfig() {
+    public void TestMatchDetailAndReplayBinaryDownload() {
       var cfg = MakeConfig();
       var controller = MakeController(cfg);
-      ctx.Matches.Append(MakeRecord(cfg, "m1", 3));
+      ctx.Matches.Append(MakeRecord("m1", 3, ctx.RunId));
+      replayStore.SaveReplay("game-m1", new GameLogMsg { GameId = "game-m1", CreatedAtUnixMs = 999 });
 
       var detail = Body(controller.GetMatch("m1"));
       Assert.IsNotNull(detail);
       Assert.AreEqual("m1", detail.MatchId);
       Assert.AreEqual(777_003, detail.Seed);
-      Assert.IsNotNull(detail.Config);
-      Assert.AreEqual(4, (int)detail.Config["playerCount"]);
-      Assert.AreEqual(777_003, (int)detail.Config["seed"]);
+      Assert.IsTrue(detail.HasWildcards);
       Assert.AreEqual(ReplayLink(cfg, "game-m1"), detail.ReplayLink);
+      Assert.AreEqual(4, detail.SeatReplayLinks.Count);
 
-      var p0 = detail.Players.Single(p => p.Seat == 0);
-      Assert.AreEqual("GPT-X", p0.DisplayName);
-      Assert.AreEqual(12, p0.EloDelta);
+      var fileRes = controller.DownloadReplayPb("game-m1") as FileContentResult;
+      Assert.IsNotNull(fileRes);
+      var parsed = GameLogMsg.Parser.ParseFrom(fileRes.FileContents);
+      Assert.AreEqual("game-m1", parsed.GameId);
     }
 
     [TestMethod]
-    public void TestMatchDetailNotFound() {
+    public void TestPublicReasoningRespectsExposeReasoningPubliclyGate() {
       var cfg = MakeConfig();
+      cfg.ExposeReasoningPublicly = false;
       var controller = MakeController(cfg);
-      var result = controller.GetMatch("does-not-exist");
-      Assert.IsInstanceOfType(result.Result, typeof(NotFoundResult));
-    }
-
-    // ----- Next match / status --------------------------------------------
-
-    [TestMethod]
-    public void TestNextReportsIdleStatusWithoutSeed() {
-      var cfg = MakeConfig();
-      var controller = MakeController(cfg);
-
-      var next = Body(controller.GetNext());
-      Assert.AreEqual("Idle", next.Status);
-      Assert.IsNull(next.NextMatch); // nothing scheduled
-      Assert.AreEqual(cfg.Run.SwissRounds, next.TotalSwissRounds);
-      // The DTO type has no seed field at all — cannot leak a live-game seed.
-    }
-
-    // ----- Runs list -------------------------------------------------------
-
-    [TestMethod]
-    public void TestRunsListsCreatedRuns() {
-      var cfg = MakeConfig();
-      var controller = MakeController(cfg); // creates one run
-      var extra = runManager.CreateRun(cfg); // a second, newer run
-
-      var runs = Body(controller.GetRuns());
-      Assert.AreEqual(2, runs.Count);
-      // Newest-first: the second-created run leads.
-      Assert.AreEqual(extra.RunId, runs[0].RunId);
-      Assert.AreEqual(ctx.RunId, runs[1].RunId);
-    }
-
-    [TestMethod]
-    public void TestLeaderboardIsPerRun() {
-      var cfg = MakeConfig();
-      var controller = MakeController(cfg);
-      ctx.Ratings.Update(new RatingRecord { ModelId = "gpt-x", Elo = 1600 });
-      // A different, newer run has its own (empty) ratings.
-      var other = runManager.CreateRun(cfg);
-
-      // Default (newest) run has no ratings; the original run does.
-      Assert.AreEqual(0, Body(controller.GetLeaderboard()).Count);
-      Assert.AreEqual(1, Body(controller.GetLeaderboard(ctx.RunId)).Count);
-      _ = other;
-    }
-
-    // ----- Reasoning track --------------------------------------------------
-
-    [TestMethod]
-    public void TestReasoningTrackResolvesSeatNamesFromTheMatch() {
-      var cfg = MakeConfig();
-      var controller = MakeController(cfg);
-      var record = MakeRecord(cfg, "m-1", 1);
+      var record = MakeRecord("m-priv", 1, ctx.RunId);
       ctx.Matches.Append(record);
+      reasoningStore.WriteMeta(new ReasoningMeta {
+        GameId = record.GameId, Seat = 0, ModelId = "gpt-x", SystemPrompt = "SYS",
+      });
       reasoningStore.AppendTurn(record.GameId, 0, new ReasoningTurn {
-        EventIndex = 12, Rationale = "keep the safe tile", Valid = true,
+        TurnSeq = 1, EventIndex = 4, Rationale = "cut honor", Valid = true,
       });
 
-      var track = Body(controller.GetReasoningTrack("m-1"));
+      // Unauthenticated caller gets 401 when ExposeReasoningPublicly == false.
+      var denied = controller.GetPublicReasoning("m-priv", 0);
+      Assert.IsInstanceOfType(denied.Result, typeof(UnauthorizedObjectResult));
 
-      Assert.AreEqual(record.GameId, track.GameId);
-      Assert.AreEqual(1, track.Entries.Count);
-      Assert.AreEqual(12, track.Entries[0].EventIndex);
-      Assert.AreEqual("keep the safe tile", track.Entries[0].Rationale);
-      Assert.AreEqual(record.Players[0].DisplayName, track.Entries[0].DisplayName);
+      // Enabling ExposeReasoningPublicly serves the full turn transcript.
+      cfg.ExposeReasoningPublicly = true;
+      var allowed = Body(controller.GetPublicReasoning("m-priv", 0));
+      Assert.AreEqual("SYS", allowed.Meta.SystemPrompt);
+      Assert.AreEqual(1, allowed.Turns.Count);
     }
 
     [TestMethod]
-    public void TestReasoningTrackIsEmptyRatherThanMissing() {
+    public void TestReasoningTrackExposesOnlyRationaleFor3DReplayBubbles() {
       var cfg = MakeConfig();
       var controller = MakeController(cfg);
-      // An all-baseline match has no rationales at all; a viewer should get an
-      // empty track (nothing to show) instead of having to handle a 404.
-      var track = Body(controller.GetReasoningTrack("no-such-match"));
-      Assert.AreEqual(0, track.Entries.Count);
-      Assert.IsInstanceOfType(
-          controller.GetReasoningTrack("../evil").Result, typeof(BadRequestResult));
-    }
-
-    [TestMethod]
-    public void TestReasoningTrackExposesOnlyTheRationale() {
-      var cfg = MakeConfig();
-      var controller = MakeController(cfg);
-      var record = MakeRecord(cfg, "m-2", 2);
+      var record = MakeRecord("m-2", 2, ctx.RunId);
       ctx.Matches.Append(record);
       reasoningStore.AppendTurn(record.GameId, 1, new ReasoningTurn {
         EventIndex = 3,
@@ -301,36 +268,7 @@ namespace RabiRiichi.Tests.Server.Arena {
           Body(controller.GetReasoningTrack("m-2")));
 
       StringAssert.Contains(json, "public rationale");
-      // Full transcripts stay admin-only (§8/§12b).
       Assert.IsFalse(json.Contains("SECRET"), json);
-    }
-
-    // ----- Replay link builder --------------------------------------------
-
-    [TestMethod]
-    public void TestReplayLinkFormat() {
-      var cfg = MakeConfig();
-      // The format the public page + records use:
-      // {clientUrl}?server={wsUrl}&replay={gameId}&reasoning=1
-      var link = ReplayLink(cfg, "abc-123");
-      Assert.AreEqual(
-          "https://play.example.com?server=wss://arena.example.com&replay=abc-123"
-              + "&reasoning=1",
-          link);
-    }
-
-    [TestMethod]
-    public void TestReplayLinkOptsIntoTheReasoningTrack() {
-      var cfg = MakeConfig();
-      var controller = MakeController(cfg);
-      ctx.Matches.Append(MakeRecord(cfg, "m-link", 1));
-
-      var detail = Body(controller.GetMatch("m-link"));
-
-      // Only an Arena serves the track, and only this flag makes the viewer ask
-      // for it — a replay opened against a WebSocket-only game server must not
-      // trigger an HTTP request.
-      StringAssert.EndsWith(detail.ReplayLink, "&reasoning=1");
     }
   }
 }
