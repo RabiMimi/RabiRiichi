@@ -65,7 +65,10 @@ namespace RabiRiichi.Actions {
     public static List<DiscardCandidate> ComputeDiscardCandidates(
         Player player,
         List<GameTile> discardOptions,
-        GameTile incoming) {
+        GameTile incoming) => ComputeDiscardCandidates(player, discardOptions, incoming, out _);
+
+    internal static List<DiscardCandidate> ComputeDiscardCandidates(Player player, List<GameTile> discardOptions,
+        GameTile incoming, out DiscardScoreCache shared) {
       var candidates = new List<DiscardCandidate>();
       var hand = player.hand;
       var patternResolver = player.game.Get<PatternResolver>();
@@ -77,6 +80,11 @@ namespace RabiRiichi.Actions {
 
       var cache = new Dictionary<Tile, List<TenpaiInfo>>();
       bool canShare = patternResolver.CanShareScoring;
+      // Small searches and inquiries with few distinct discards do not recover
+      // cache setup costs. Broad, high-wildcard inquiries reuse promising targets.
+      shared = canShare && all14Tiles.Count(t => t.tile.IsWildcard) >= 8
+          && discardOptions.Select(t => t.tile).Distinct().Take(4).Count() >= 4
+          ? patternResolver.CreateDiscardScoreCache() : null;
       // Most turns no discard stays tenpai, and one query over all the tiles says so.
       var tenpaiDiscards = patternResolver.ResolveTenpaiDiscards(hand.WithFreeTiles(all14Tiles));
       foreach (var optionTile in discardOptions) {
@@ -100,7 +108,7 @@ namespace RabiRiichi.Actions {
         };
 
         if (shanten == 0) {
-          candidate.tenpaiInfos = ComputeTenpaiInfos(patternResolver, analysisHand, machihai);
+          candidate.tenpaiInfos = ComputeTenpaiInfos(patternResolver, analysisHand, machihai, shared);
         }
 
         candidates.Add(candidate);
@@ -118,8 +126,12 @@ namespace RabiRiichi.Actions {
         PatternResolver patternResolver, Hand hand, Tile winTile) =>
         ComputeTenpaiInfos(patternResolver, hand, [winTile])[0];
 
-    public static List<TenpaiInfo> ComputeTenpaiInfos(PatternResolver resolver, Hand hand, Tiles winningTiles) {
-      var previews = resolver.ResolveScorePreviews(hand, winningTiles, PatternMask.All, PatternMask.Luck);
+    public static List<TenpaiInfo> ComputeTenpaiInfos(PatternResolver resolver, Hand hand, Tiles winningTiles) =>
+        ComputeTenpaiInfos(resolver, hand, winningTiles, null);
+
+    private static List<TenpaiInfo> ComputeTenpaiInfos(PatternResolver resolver, Hand hand, Tiles winningTiles,
+        DiscardScoreCache shared) {
+      var previews = resolver.ResolveScorePreviews(hand, winningTiles, PatternMask.All, PatternMask.Luck, shared);
       return winningTiles.Select(tile => FromScores(tile, previews[tile].Ron?.result, previews[tile].Tsumo?.result)).ToList();
     }
 

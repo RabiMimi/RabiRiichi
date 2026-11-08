@@ -187,6 +187,72 @@ namespace RabiRiichi.Tests.Patterns {
     }
 
     [TestMethod]
+    public void AotenjouTripletSeedsMatchTwoWildcardSubstitutionOracle() {
+      var game = WildcardFixture.Game(true);
+      game.config.scoringOption = ScoringOption.Aotenjou;
+      var hand = WildcardFixture.Hand(game, "11122233344m5p*");
+      var incoming = WildcardFixture.Incoming("*", false);
+      var resolver = game.Get<PatternResolver>();
+      var free = hand.freeTiles.Select(t => new GameTile(t.tile, t.traceId)).ToList();
+      var wild = free.Single(t => t.tile.IsWildcard);
+      var draw = WildcardFixture.Incoming("*", false);
+      ScoreStorage best = null;
+      foreach (var a in Tiles.AllDistinct) foreach (var b in Tiles.AllDistinct) {
+        wild.tile = a; draw.tile = b;
+        var candidate = resolver.ResolveMaxScoreLegacy(hand.WithFreeTiles(free), draw, PatternMask.All);
+        if (candidate != null && (best == null || candidate.CompareTo(best) > 0)) best = candidate;
+      }
+      var actual = resolver.ResolveMaxScore(hand, incoming, PatternMask.All);
+      Assert.IsNotNull(best);
+      Assert.IsNotNull(actual);
+      Assert.AreEqual(0, best.CompareTo(actual));
+      Assert.AreEqual(14, actual.resolution.Groups.SelectMany(g => g.Tiles).Select(t => t.Physical).Distinct().Count());
+    }
+
+    [TestMethod]
+    public void AotenjouManyWildcardsBeatConcreteDragonCandidate() {
+      var game = WildcardFixture.Game(true);
+      game.config.scoringOption = ScoringOption.Aotenjou;
+      var resolver = game.Get<PatternResolver>();
+      var hand = WildcardFixture.Hand(game, "1m" + new string('*', 12));
+      var incoming = WildcardFixture.Incoming("*", false);
+      var concrete = hand.WithFreeTiles(new Tiles("111m555666777z1p").ToGameTileList());
+      var candidate = resolver.ResolveMaxScoreLegacy(concrete, WildcardFixture.Incoming("1p", false), PatternMask.All);
+      var actual = resolver.ResolveMaxScore(hand, incoming, PatternMask.All);
+      Assert.IsNotNull(candidate);
+      Assert.IsNotNull(actual);
+      Assert.IsTrue(actual.CompareTo(candidate) >= 0);
+      var tiles = actual.resolution.Groups.SelectMany(g => g.Tiles).ToArray();
+      Assert.AreEqual(14, tiles.Select(t => t.Physical).Distinct().Count());
+      Assert.AreEqual(13, tiles.Count(t => t.Physical.tile.IsWildcard));
+    }
+
+    [TestMethod]
+    public void AotenjouSeedsRespectCalledQuadAndNaturalTiles() {
+      var game = WildcardFixture.Game(true);
+      game.config.scoringOption = ScoringOption.Aotenjou;
+      var hand = WildcardFixture.Hand(game, "11m2m666777z*");
+      var kanTiles = new Tiles("5555z").ToGameTileList();
+      kanTiles[0].discardInfo = new(game.players[1], DiscardReason.Draw, 0);
+      hand.called = [new Kan(kanTiles)];
+      hand.menzen = false;
+      var incoming = WildcardFixture.Incoming("2m", false);
+      var resolver = game.Get<PatternResolver>();
+      ScoreStorage best = null;
+      foreach (var tile in Tiles.AllDistinct) {
+        var free = hand.freeTiles.Select(t => new GameTile(t.tile.IsWildcard ? tile : t.tile, t.traceId)).ToList();
+        var candidate = resolver.ResolveMaxScoreLegacy(hand.WithFreeTiles(free), incoming, PatternMask.All);
+        if (candidate != null && (best == null || candidate.CompareTo(best) > 0)) best = candidate;
+      }
+      var actual = resolver.ResolveMaxScore(hand, incoming, PatternMask.All);
+      Assert.IsNotNull(best);
+      Assert.IsNotNull(actual);
+      Assert.AreEqual(0, best.CompareTo(actual));
+      var fixedGroup = actual.resolution.Groups.Single(g => g.Kind == CompactMeldKind.Quad);
+      CollectionAssert.AreEqual(kanTiles.ToArray(), fixedGroup.Tiles.Select(t => t.Physical).ToArray());
+    }
+
+    [TestMethod]
     public void NaturalCalledMeldsRemainFixedAndBonusCannotQualifyAWin() {
       var game = WildcardFixture.Game(true);
       var hand = WildcardFixture.Hand(game, "111m222p33s4z*");

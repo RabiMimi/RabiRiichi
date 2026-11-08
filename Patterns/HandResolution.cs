@@ -14,6 +14,8 @@ namespace RabiRiichi.Patterns {
     /// <summary>Diagnostics for bounded target search, independent of wildcard permutations.</summary>
     public long VisitedTargets { get; internal set; }
     public long EvaluatedInterpretations { get; internal set; }
+    public long VisitedNodes { get; internal set; }
+    public long BoundCalculations { get; internal set; }
 
     internal HandResolution(Hand hand, GameTile incoming, IReadOnlyList<CompactMeld> groups,
         int incomingGroup, int incomingIndex) {

@@ -17,6 +17,7 @@ namespace RabiRiichi.Patterns {
       internal int Index, Aka, Dora, Ura, Context;
       internal bool Found;
       internal CompactScore Best;
+      internal CompactScore BoundOffset;
       internal BasePattern Family;
       internal CompactMeld[] Groups;
       internal int Role, EffectiveIndex;
@@ -31,6 +32,7 @@ namespace RabiRiichi.Patterns {
             ? melds[m].TileIndex == tile
             : tile / 9 == melds[m].TileIndex / 9 && tile - melds[m].TileIndex is >= 0 and <= 2).ToArray()).ToArray();
     private readonly PatternResolver resolver;
+    private readonly DiscardScoreCache shared;
     private readonly CompiledScoringEvaluator evaluator;
     private readonly Hand hand;
     private readonly Query[] queries;
@@ -46,19 +48,23 @@ namespace RabiRiichi.Patterns {
     private readonly CompactMeld[] groups = new CompactMeld[14];
     private readonly CompactMeld[] fixedGroups;
     private readonly byte[] lockedCounts;
+    private readonly byte[] pairAndWaitFu = new byte[34];
+    private readonly ulong mandatoryMask;
+    private readonly UInt128 lockedQuadCopies;
+    private readonly Partial[] partials = new Partial[15];
     private StdPattern[] boundPatterns;
     private YakuRule[] boundRules;
     private RuleYaku[] boundCustom;
     private readonly PartialView partialView = new();
     private int akaFactor, doraFactor, uraFactor, nukiFactor;
     private int count;
-    private long visitedTargets, evaluatedInterpretations;
+    private long visitedTargets, evaluatedInterpretations, visitedNodes, boundCalculations;
 
     internal WildcardScoreSearch(PatternResolver resolver, CompiledScoringEvaluator evaluator, Hand hand,
-        GameTile[] incoming, PatternMask mask, PatternMask excluded, int minHan, BasePattern onlyFamily = null) {
+        GameTile[] incoming, PatternMask mask, PatternMask excluded, int minHan, BasePattern onlyFamily = null, DiscardScoreCache shared = null) {
       this.resolver = resolver; this.evaluator = evaluator; this.hand = hand;
       this.mask = mask; this.excluded = excluded; this.minHan = minHan;
-      this.onlyFamily = onlyFamily;
+      this.onlyFamily = onlyFamily; this.shared = shared;
       foreach (var tile in hand.freeTiles) if (!tile.tile.IsWildcard) natural[CompactMeld.Index(tile.tile)]++;
       natural.CopyTo(required, 0);
       if (incoming.Select(t => t.tile.WithoutDora).Distinct().Count() == 1 && !incoming[0].tile.IsWildcard)
@@ -81,6 +87,14 @@ namespace RabiRiichi.Patterns {
       fixedGroups = hand.called.Select(g => PatternResolver.ToCompact(g) with { IsCalled = true }).ToArray();
       activeQueries = new bool[queries.Length];
       lockedCounts = PatternResolver.CountTargets(fixedGroups);
+      for (int i = 0; i < 34; i++) {
+        if (required[i] != 0 || lockedCounts[i] != 0) mandatoryMask |= 1UL << i;
+        var tile = CompactMeld.TileAt(i);
+        pairAndWaitFu[i] = (byte)(2 + (hand.game.IsYaku(tile) ? 2 : 0)
+            + (tile.IsSame(Tile.From(hand.player.Wind)) ? 2 : 0));
+      }
+      foreach (var g in fixedGroups) if (g.Kind == CompactMeldKind.Quad)
+        lockedQuadCopies += (UInt128)1 << (g.TileIndex * 3);
     }
 
     internal ScoreStorage[] Run() {
@@ -109,7 +123,9 @@ namespace RabiRiichi.Patterns {
         doraFactor = boundRules.Count(r => r == YakuRule.Dora);
         uraFactor = hand.riichi ? boundRules.Count(r => r == YakuRule.Uradora) : 0;
         nukiFactor = boundRules.Count(r => r == YakuRule.NukiDora);
+        PrepareBoundContexts();
         Reset();
+        SeedShared(family);
         switch (family) {
           case Base33332: Regular(family); break;
           case Base72: SevenPairs(family); break;
@@ -121,21 +137,47 @@ namespace RabiRiichi.Patterns {
       var result = new ScoreStorage[queries.Length];
       for (int i = 0; i < queries.Length; i++) {
         var q = queries[i]; if (!q.Found) continue;
+        shared?.Remember(q.Family, q.Groups);
+        if (shared?.ReuseScores == true)
+          shared.Add(CacheKey(q.Family, DiscardScoreCache.Key(q.Groups, q.Role), q.EffectiveIndex, q), q.Best);
         evaluator.Evaluate(q.Family, hand, q.Incoming, q.Groups, PatternResolver.CountTargets(q.Groups),
             q.Role, q.EffectiveIndex, mask, excluded, q.Aka, q.Dora, q.Ura);
         var scores = evaluator.Materialize(hand.game.config.scoringOption);
         scores.resolution = new HandResolution(hand, q.Incoming, q.Groups, q.Role, q.EffectiveIndex) {
           VisitedTargets = visitedTargets, EvaluatedInterpretations = evaluatedInterpretations,
+          VisitedNodes = visitedNodes, BoundCalculations = boundCalculations,
         };
         result[i] = scores;
+      }
+      if (shared != null) {
+        shared.VisitedNodes += visitedNodes; shared.BoundCalculations += boundCalculations;
+        shared.VisitedTargets += visitedTargets; shared.EvaluatedInterpretations += evaluatedInterpretations;
       }
       return result;
     }
 
+    private void SeedShared(BasePattern family) {
+      if (shared == null) return;
+      foreach (var witness in shared.Witnesses) {
+        if (witness.Family != family || witness.Groups.Length < fixedGroups.Length) continue;
+        bool sameCalls = true;
+        for (int i = 0; i < fixedGroups.Length; i++) sameCalls &= witness.Groups[i] == fixedGroups[i];
+        if (!sameCalls) continue;
+        for (int i = fixedGroups.Length; i < witness.Groups.Length; i++) Push(witness.Groups[i]);
+        Visit(family, seed: true);
+        while (count > fixedGroups.Length) Pop();
+      }
+    }
+
     private void Reset() {
       count = 0; Array.Clear(targets); Array.Clear(freeTargets);
+      partials[0] = new Partial { Pair = -1, EveryGroup19 = true, AllSequenceOrPair = true };
+      for (int i = 0; i < required.Length; i++) if (required[i] > 0) partials[0].Present |= 1UL << i;
       Array.Fill(activeQueries, true);
-      foreach (var g in fixedGroups) { groups[count++] = g; Change(g, 1, false); }
+      foreach (var g in fixedGroups) {
+        groups[count++] = g; Change(g, 1, false);
+        partials[count] = ExtendPartial(partials[count - 1], g);
+      }
     }
 
     private void Change(CompactMeld g, int amount, bool free = true) {
@@ -145,7 +187,10 @@ namespace RabiRiichi.Patterns {
         if (free) freeTargets[i] = (byte)(freeTargets[i] + amount);
       }
     }
-    private void Push(CompactMeld g) { groups[count++] = g; Change(g, 1); }
+    private void Push(CompactMeld g) {
+      groups[count++] = g; Change(g, 1);
+      partials[count] = ExtendPartial(partials[count - 1], g);
+    }
     private void Pop() { var g = groups[--count]; Change(g, -1); }
 
     private bool Covered() {
@@ -160,6 +205,8 @@ namespace RabiRiichi.Patterns {
     /// </summary>
     private bool CanCover(int remainingMelds, out int lowestMissing) {
       lowestMissing = -1;
+      // Fully wild holdings have no mandatory identities to place.
+      if (mandatoryMask == 0) return true;
       int needed = 0;
       for (int suit = 0; suit < 3; suit++) {
         int missing = 0; uint ranks = 0;
@@ -223,56 +270,6 @@ namespace RabiRiichi.Patterns {
       }
     }
 
-    private void Seed(BasePattern family) {
-      // Strong early incumbents for many-wildcard hands; every seed is still
-      // checked against naturals and every legal incoming-tile role. The seeds
-      // below hold at most five tile kinds, so a hand with more cannot use them.
-      if (required.Count(n => n > 0) > 5) return;
-      for (int pair = 0; pair < 34; pair++) SeedTarget(family, pair, [27, 28, 29, 30]);
-      for (int i = 0; i < 34; i++) SeedTarget(family, i, [i, i, i, i]);
-      for (int i = 34; i < 55; i++) SeedTarget(family, melds[i].TileIndex + 1, [i, i, i, i]);
-      if ((hand.game.config.scoringOption & (ScoringOption.Yakuman | ScoringOption.MultipleYakuman)) == ScoringOption.Yakuman) {
-        // With a single-yakuman cap, han breaks many ties. Repeated value
-        // triplets with a suited pair establish a much stronger incumbent than
-        // all-honor yakuman targets (whose yaku suppress several han awards).
-        int honor = 27, bestWeight = -1;
-        for (int i = 27; i < 34; i++) {
-          int weight = 0;
-          foreach (var rule in boundRules) weight += rule switch {
-            YakuRule.YakuhaiBakaze when i == 27 + (int)hand.game.info.wind => 1,
-            YakuRule.YakuhaiJikaze when i == 27 + (int)hand.player.Wind => 1,
-            YakuRule.YakuhaiHaku when i == 31 => 1,
-            YakuRule.YakuhaiHatsu when i == 32 => 1,
-            YakuRule.YakuhaiChun when i == 33 => 1,
-            _ => 0,
-          };
-          if (weight > bestWeight) { bestWeight = weight; honor = i; }
-        }
-        for (int pair = 0; pair < 34; pair++) {
-          for (int i = 0; i < 34; i++) SeedTarget(family, pair, [i, i, i, i]);
-          for (int other = 0; other < 34; other++) SeedTarget(family, pair, [honor, honor, honor, other]);
-        }
-      }
-    }
-
-    private void SeedTarget(BasePattern family, int pair, int[] ids) {
-      int start = count;
-      var available = ids.Select(i => melds[i]).ToList();
-      bool hasPair = false;
-      foreach (var g in fixedGroups) {
-        if (g.Kind == CompactMeldKind.Pair) { if (g.TileIndex != pair) return; hasPair = true; }
-        else {
-          int i = available.FindIndex(m => m.TileIndex == g.TileIndex && (m.Kind == g.Kind || g.Kind == CompactMeldKind.Quad && m.Kind == CompactMeldKind.Triplet));
-          if (i < 0) return;
-          available.RemoveAt(i);
-        }
-      }
-      if (!hasPair) Push(new(CompactMeldKind.Pair, pair, true));
-      foreach (var g in available) Push(g);
-      if (Covered()) Visit(family);
-      while (count > start) Pop();
-    }
-
     private void SevenPairs(BasePattern family) {
       if (fixedGroups.Any(g => g.Kind != CompactMeldKind.Pair) || fixedGroups.Select(g => g.TileIndex).Distinct().Count() != fixedGroups.Length) return;
       if (required.Any(n => n > 2)) return;
@@ -290,7 +287,7 @@ namespace RabiRiichi.Patterns {
       if (fixedGroups.Any(g => !indices.Contains(g.TileIndex))) return;
       int start = count;
       foreach (int i in indices) if (!fixedGroups.Any(g => g.TileIndex == i)) Push(new(CompactMeldKind.Pair, i, true));
-      if (Covered()) Visit(family);
+      if (Covered()) Visit(family, seed: true);
       while (count > start) Pop();
     }
 
@@ -344,10 +341,19 @@ namespace RabiRiichi.Patterns {
       }
     }
 
-    private void Visit(BasePattern family) {
+    private static DiscardScoreCache.ScoreKey CacheKey(BasePattern family, DiscardScoreCache.GroupKey groups,
+        int index, Query q) => new(family, groups, index, q.Incoming.source, q.Incoming.discardInfo?.reason,
+            q.Incoming.discardInfo?.isRiichiDeclaration, q.Incoming.IsTsumo, q.Aka, q.Dora, q.Ura);
+
+    private void Visit(BasePattern family, bool seed = false) {
       if (!Covered()) return;
       visitedTargets++;
       evaluator.PrepareTarget(groups.AsSpan(0, count), targets);
+      // The ordinary tree mostly visits targets once. Cache the starting targets
+      // reused across holdings, rather than hashing every speculative leaf.
+      bool reuse = seed && shared?.ReuseScores == true;
+      Span<DiscardScoreCache.GroupKey> roleKeys = stackalloc DiscardScoreCache.GroupKey[reuse ? count : 0];
+      uint keyedRoles = 0;
       for (int queryIndex = 0; queryIndex < queries.Length; queryIndex++) {
         if (!activeQueries[queryIndex]) continue;
         var q = queries[queryIndex];
@@ -361,9 +367,24 @@ namespace RabiRiichi.Patterns {
           for (int pos = 0; pos < positions; pos++) {
             int index = g.TileIndex + pos;
             if (q.Index >= 0 ? index != q.Index : freeTargets[index] <= natural[index]) continue;
-            evaluatedInterpretations++;
-            var score = evaluator.EvaluatePrepared(family, hand, q.Incoming, groups.AsSpan(0, count), targets, role, index,
-                mask, excluded, q.Aka, q.Dora, q.Ura);
+            CompactScore score;
+            if (reuse) {
+              if ((keyedRoles & (1u << role)) == 0) {
+                roleKeys[role] = DiscardScoreCache.Key(groups.AsSpan(0, count), role);
+                keyedRoles |= 1u << role;
+              }
+              var key = CacheKey(family, roleKeys[role], index, q);
+              if (!shared.TryGet(key, out score)) {
+                evaluatedInterpretations++;
+                score = evaluator.EvaluatePrepared(family, hand, q.Incoming, groups.AsSpan(0, count), targets, role, index,
+                    mask, excluded, q.Aka, q.Dora, q.Ura);
+                shared.Add(key, score);
+              }
+            } else {
+              evaluatedInterpretations++;
+              score = evaluator.EvaluatePrepared(family, hand, q.Incoming, groups.AsSpan(0, count), targets, role, index,
+                  mask, excluded, q.Aka, q.Dora, q.Ura);
+            }
             if (!score.IsValid(minHan) || q.Found && ScoreMath.Compare(score, q.Best, hand.game.config.scoringOption) <= 0) continue;
             q.Found = true; q.Best = score; q.Family = family;
             floorDirty = true;

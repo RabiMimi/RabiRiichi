@@ -17,20 +17,31 @@ namespace RabiRiichi.Benchmarks {
       var result = new List<Scenario>();
       result.AddRange(Natural(seed, cases));
       foreach (int wildcards in WildcardCounts) {
-        result.AddRange(Wildcard($"wild{wildcards}", new BenchTable(8), wildcards, seed, cases));
+        result.AddRange(Wildcard($"wild{wildcards}", new BenchTable(8, seed: seed), wildcards, seed, cases));
       }
       // Optional yaku enlarge both the evaluated graph and the bound, and calls
       // shrink the target space; both shift the cost relative to the plain table.
       foreach (int wildcards in new[] { 2, 4 }) {
-        result.AddRange(Wildcard($"wild{wildcards}-koyaku", new BenchTable(8, koyaku: true), wildcards, seed, cases));
-        result.AddRange(Wildcard($"wild{wildcards}-open", new BenchTable(8), wildcards, seed, cases, calledMelds: 1));
+        result.AddRange(Wildcard($"wild{wildcards}-koyaku", new BenchTable(8, koyaku: true, seed: seed), wildcards, seed, cases));
+        result.AddRange(Wildcard($"wild{wildcards}-open", new BenchTable(8, seed: seed), wildcards, seed, cases, calledMelds: 1));
       }
+      foreach (int wildcards in new[] { 8, 10, 12, 13 })
+        result.AddRange(Wildcard($"aotenjou-koyaku/wild{wildcards}",
+            new BenchTable(14, koyaku: true, seed: seed, aotenjou: true), wildcards, seed, cases));
+      result.AddRange(HardCases(seed));
       foreach (int wall in new[] { 0, 4, 8, 16 }) result.Add(SelfPlay(wall, seed));
       return result;
     }
 
     private static BenchWork Work(ScoreStorage score) => score?.resolution == null ? BenchWork.None
-        : new(score.resolution.VisitedTargets, score.resolution.EvaluatedInterpretations);
+        : new(score.resolution.VisitedTargets, score.resolution.EvaluatedInterpretations,
+            score.resolution.VisitedNodes, score.resolution.BoundCalculations);
+
+    private static BenchWork DiscardWork(BenchTable table, List<GameTile> tiles) {
+      PlayTileAction.ComputeDiscardCandidates(table.player, tiles, tiles[^1], out var shared);
+      return shared == null ? BenchWork.None : new(shared.VisitedTargets, shared.EvaluatedInterpretations,
+          shared.VisitedNodes, shared.BoundCalculations, shared.Hits);
+    }
 
     /// <summary>Everything the engine works out for the drawing seat before it can act.</summary>
     private static BenchWork DrawInquiry(BenchTable table, List<GameTile> tiles) {
@@ -44,7 +55,7 @@ namespace RabiRiichi.Benchmarks {
 
     private static IEnumerable<Scenario> Natural(int seed, int cases) {
       var fixtures = new Fixtures(seed);
-      var table = new BenchTable(0);
+      var table = new BenchTable(0, seed: seed);
       var dealt13 = Enumerable.Range(0, cases).Select(_ => fixtures.Dealt(13)).ToList();
       var dealt14 = Enumerable.Range(0, cases).Select(_ => fixtures.Dealt(14)).ToList();
       var wins = Enumerable.Range(0, cases).Select(_ => fixtures.Complete()).ToList();
@@ -61,8 +72,7 @@ namespace RabiRiichi.Benchmarks {
       }
       BenchWork Discard(List<GameTile> tiles) {
         table.Holding(tiles.Take(13));
-        PlayTileAction.ComputeDiscardCandidates(table.player, tiles, tiles[13]);
-        return BenchWork.None;
+        return DiscardWork(table, tiles);
       }
 
       yield return new("natural/shanten/cap0", i => Shanten(At(dealt13, i), 0));
@@ -130,8 +140,7 @@ namespace RabiRiichi.Benchmarks {
       }
       BenchWork Discard(List<GameTile> tiles, int i) {
         Holding(tiles, i);
-        PlayTileAction.ComputeDiscardCandidates(table.player, tiles, tiles[free - 1]);
-        return BenchWork.None;
+        return DiscardWork(table, tiles);
       }
 
       yield return new($"{prefix}/shanten/cap0", i => {
@@ -158,6 +167,35 @@ namespace RabiRiichi.Benchmarks {
         Holding(At(nearWin, i), i);
         return DrawInquiry(table, At(nearWin, i));
       });
+    }
+
+    // Fixed examples from the wildcard performance investigation. The last tile
+    // of a discard fixture is the incoming tile; previews use a 13-tile holding.
+    private static IEnumerable<Scenario> HardCases(int seed) {
+      var table = new BenchTable(14, koyaku: true, seed: seed, aotenjou: true);
+      foreach (var (name, notation) in new[] {
+        ("1m-12wild", "1m" + new string('*', 12)),
+        ("allwild", new string('*', 13)),
+      }) {
+        var tiles = new Tiles(notation).Select((tile, i) => new GameTile(tile, 1000 + i)).ToList();
+        yield return new($"aotenjou-koyaku/hard/previews/{name}", _ => {
+          var hand = table.Holding(tiles);
+          var scores = table.resolver.ResolveScorePreviews(hand, hand.Tenpai, PatternMask.All, PatternMask.Luck);
+          return Work(scores.Values.Select(p => p.Ron ?? p.Tsumo).FirstOrDefault(s => s?.resolution != null));
+        });
+      }
+      foreach (var (name, notation) in new[] {
+        ("1m-2p-12wild", "1m2p" + new string('*', 12)),
+        ("1z-7z-12wild", "1z7z" + new string('*', 12)),
+        ("1m-13wild", "1m" + new string('*', 13)),
+        ("123m-11z-9wild", "123m11z" + new string('*', 9)),
+      }) {
+        var tiles = new Tiles(notation).Select((tile, i) => new GameTile(tile, 1000 + i)).ToList();
+        yield return new($"aotenjou-koyaku/hard/discard/{name}", _ => {
+          table.Holding(tiles.Take(13));
+          return DiscardWork(table, tiles);
+        });
+      }
     }
 
     /// <summary>A whole east-only game between four rule-based bots, on one of several fixed walls.</summary>

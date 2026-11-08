@@ -58,6 +58,9 @@ namespace RabiRiichi.Patterns.Compiled {
     private Features target, features;
     private int akadora, dora, uradora;
     public bool IsSupported { get; }
+    // RuleYaku conditions can inspect the physical holding. Built-ins only use
+    // resolved groups, the invariant hand context and explicit physical bonuses.
+    internal bool CanReuseAcrossDiscards => IsSupported && !hasCustom;
     /// <summary>Registered or dependency patterns without a compiled rule.</summary>
     public IReadOnlyList<StdPattern> UnsupportedPatterns { get; }
 

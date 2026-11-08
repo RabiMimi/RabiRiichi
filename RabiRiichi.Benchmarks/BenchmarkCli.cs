@@ -46,7 +46,7 @@ namespace RabiRiichi.Benchmarks {
 
       var previous = baseline == null ? []
           : JsonSerializer.Deserialize<List<Measurement>>(File.ReadAllText(baseline)).ToDictionary(m => m.Name);
-      Console.WriteLine($"{"scenario",-34} {"mean",11} {"p50",11} {"p95",11} {"max",11} {"KB/op",10} {"ops",6} {"targets",11} {"evals",11}{(baseline == null ? "" : $" {"vs base",9}")}");
+      Console.WriteLine($"{"scenario",-34} {"mean",11} {"p50",11} {"p95",11} {"max",11} {"KB/op",10} {"ops",6} {"targets",11} {"evals",11} {"nodes",11} {"bounds",11} {"cache hits",11}{(baseline == null ? "" : $" {"vs base",9}")}");
       var results = new List<Measurement>();
       foreach (var scenario in scenarios) {
         var m = BenchmarkRunner.Run(scenario, budgetMs);
@@ -54,7 +54,7 @@ namespace RabiRiichi.Benchmarks {
         string ratio = previous.TryGetValue(m.Name, out var old) ? $" {m.MeanUs / old.MeanUs,8:F2}x" : "";
         Console.WriteLine($"{m.Name,-34} {BenchmarkRunner.FormatTime(m.MeanUs),11} {BenchmarkRunner.FormatTime(m.P50Us),11} "
             + $"{BenchmarkRunner.FormatTime(m.P95Us),11} {BenchmarkRunner.FormatTime(m.MaxUs),11} {m.AllocKb,10:F1} {m.Ops,6} "
-            + $"{m.Targets,11:F0} {m.Interpretations,11:F0}{ratio}");
+            + $"{m.Targets,11:F0} {m.Interpretations,11:F0} {m.VisitedNodes,11:F0} {m.BoundCalculations,11:F0} {m.CacheHits,11:F0}{ratio}");
       }
       if (json != null) File.WriteAllText(json, JsonSerializer.Serialize(results, new JsonSerializerOptions { WriteIndented = true }));
       return 0;

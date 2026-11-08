@@ -2,7 +2,7 @@ using System.Diagnostics;
 
 namespace RabiRiichi.Benchmarks {
   /// <summary>Search effort reported by a scenario; zero when it ran no wildcard search.</summary>
-  internal readonly record struct BenchWork(long Targets, long Interpretations) {
+  internal readonly record struct BenchWork(long Targets, long Interpretations, long VisitedNodes = 0, long BoundCalculations = 0, long CacheHits = 0) {
     public static readonly BenchWork None = new(0, 0);
   }
 
@@ -11,7 +11,7 @@ namespace RabiRiichi.Benchmarks {
   internal sealed record Scenario(string Name, Func<int, BenchWork> Op, int MinOps = 3, int MaxOps = 20000);
 
   internal sealed record Measurement(string Name, int Ops, double MeanUs, double P50Us, double P95Us, double MaxUs,
-      double AllocKb, double Targets, double Interpretations);
+      double AllocKb, double Targets, double Interpretations, double VisitedNodes = 0, double BoundCalculations = 0, double CacheHits = 0);
 
   internal static class BenchmarkRunner {
     /// <summary>
@@ -27,7 +27,7 @@ namespace RabiRiichi.Benchmarks {
       GC.Collect();
       GC.WaitForPendingFinalizers();
       var samples = new List<double>();
-      long targets = 0, interpretations = 0;
+      long targets = 0, interpretations = 0, nodes = 0, bounds = 0, hits = 0;
       long budgetTicks = (long)(budgetMs / 1000.0 * Stopwatch.Frequency);
       long allocated = GC.GetTotalAllocatedBytes(true);
       long start = Stopwatch.GetTimestamp();
@@ -37,13 +37,14 @@ namespace RabiRiichi.Benchmarks {
         var work = scenario.Op(samples.Count);
         samples.Add((Stopwatch.GetTimestamp() - before) * 1e6 / Stopwatch.Frequency);
         targets += work.Targets; interpretations += work.Interpretations;
+        nodes += work.VisitedNodes; bounds += work.BoundCalculations; hits += work.CacheHits;
       }
       allocated = GC.GetTotalAllocatedBytes(true) - allocated;
 
       samples.Sort();
       int n = samples.Count;
       return new(scenario.Name, n, samples.Sum() / n, samples[n / 2], samples[Math.Min(n - 1, n * 95 / 100)], samples[n - 1],
-          allocated / 1024.0 / n, (double)targets / n, (double)interpretations / n);
+          allocated / 1024.0 / n, (double)targets / n, (double)interpretations / n, (double)nodes / n, (double)bounds / n, (double)hits / n);
     }
 
     internal static string FormatTime(double us) => us switch {

@@ -3,49 +3,66 @@ using RabiRiichi.Core.Config;
 using RabiRiichi.Generated.Core;
 using RabiRiichi.Patterns.Compiled;
 using System;
+using System.Linq;
 using System.Numerics;
 
 namespace RabiRiichi.Patterns {
   internal sealed partial class WildcardScoreSearch {
     private struct Partial {
       internal ulong Present, Sequences, Triplets;
-      internal UInt128 TripletCopies;
+      internal UInt128 TripletCopies, SequenceCopies;
       internal int MeldCount, SequenceCount, ClosedTriplets, Quads, ClosedQuads, MeldFu;
       internal int WindMelds, DragonMelds, Pair, MaxSequenceCopies;
       internal bool EveryGroup19, AllSequenceOrPair;
     }
 
-    private Partial Summarize() {
-      var s = new Partial { Pair = -1, EveryGroup19 = true, AllSequenceOrPair = true };
-      UInt128 sequences = 0;
-      for (int i = 0; i < 34; i++) if (targets[i] != 0 || required[i] != 0) s.Present |= 1UL << i;
-      for (int n = 0; n < count; n++) {
-        var g = groups[n]; int i = g.TileIndex;
-        bool honorOrTerminal = (1UL << i & (TileMasks.Honor | TileMasks.Terminal)) != 0;
-        s.EveryGroup19 &= honorOrTerminal || g.Kind == CompactMeldKind.Sequence && i % 9 == 6;
-        s.AllSequenceOrPair &= g.Kind is CompactMeldKind.Sequence or CompactMeldKind.Pair;
-        if (g.Kind == CompactMeldKind.Pair) s.Pair = i;
-        else if (g.Kind != CompactMeldKind.Single) {
-          s.MeldCount++;
-          if (i is >= 27 and <= 30) s.WindMelds++;
-          if (i >= 31) s.DragonMelds++;
-        }
-        if (g.Kind == CompactMeldKind.Sequence) {
-          s.SequenceCount++; s.Sequences |= 1UL << i;
-          sequences += (UInt128)1 << (i * 3);
-          s.MaxSequenceCopies = Math.Max(s.MaxSequenceCopies, (int)((sequences >> (i * 3)) & 7));
-        }
-        if (g.Kind is CompactMeldKind.Triplet or CompactMeldKind.Quad) {
-          s.Triplets |= 1UL << i; s.TripletCopies += (UInt128)1 << (i * 3);
-          if (g.IsClose) s.ClosedTriplets++;
-          s.MeldFu += (honorOrTerminal ? 4 : 2) * (g.IsClose ? 2 : 1) * (g.Kind == CompactMeldKind.Quad ? 4 : 1);
-          if (g.Kind == CompactMeldKind.Quad) { s.Quads++; if (g.IsClose) s.ClosedQuads++; }
-        }
+    // One snapshot per search depth: siblings restore their parent's features in
+    // O(1), instead of rescanning 34 counts and every placed group at each bound.
+    private static Partial ExtendPartial(Partial s, CompactMeld g) {
+      int i = g.TileIndex;
+      s.Present |= (g.Kind == CompactMeldKind.Sequence ? 7UL : 1UL) << i;
+      bool honorOrTerminal = (1UL << i & (TileMasks.Honor | TileMasks.Terminal)) != 0;
+      s.EveryGroup19 &= honorOrTerminal || g.Kind == CompactMeldKind.Sequence && i % 9 == 6;
+      s.AllSequenceOrPair &= g.Kind is CompactMeldKind.Sequence or CompactMeldKind.Pair;
+      if (g.Kind == CompactMeldKind.Pair) s.Pair = i;
+      else if (g.Kind != CompactMeldKind.Single) {
+        s.MeldCount++;
+        if (i is >= 27 and <= 30) s.WindMelds++;
+        if (i >= 31) s.DragonMelds++;
+      }
+      if (g.Kind == CompactMeldKind.Sequence) {
+        s.SequenceCount++; s.Sequences |= 1UL << i;
+        s.SequenceCopies += (UInt128)1 << (i * 3);
+        s.MaxSequenceCopies = Math.Max(s.MaxSequenceCopies, (int)((s.SequenceCopies >> (i * 3)) & 7));
+      }
+      if (g.Kind is CompactMeldKind.Triplet or CompactMeldKind.Quad) {
+        s.Triplets |= 1UL << i; s.TripletCopies += (UInt128)1 << (i * 3);
+        if (g.IsClose) s.ClosedTriplets++;
+        s.MeldFu += (honorOrTerminal ? 4 : 2) * (g.IsClose ? 2 : 1) * (g.Kind == CompactMeldKind.Quad ? 4 : 1);
+        if (g.Kind == CompactMeldKind.Quad) { s.Quads++; if (g.IsClose) s.ClosedQuads++; }
       }
       return s;
     }
 
+    // Feasibility depends on the incoming identity, not ron/tsumo or bonuses.
+    // These caches live only for one node; recursive children reset them.
+    private UInt128 specialKnown, specialFits, tripletKnown, tripletFits;
+    private readonly CompactScore[] structuralBounds = new CompactScore[35];
+    private ulong structuralKnown;
+    private YakuRule[] structuralRules;
+    private int meldFuRules, pinfuRules;
+    private static readonly ulong[] fourConsecutiveTriplets = BuildConsecutiveTriplets();
+    private static ulong[] BuildConsecutiveTriplets() {
+      var result = new ulong[18];
+      for (int suit = 0; suit < 3; suit++) for (int rank = 0; rank < 6; rank++)
+        result[suit * 6 + rank] = 15UL << (suit * 9 + rank);
+      return result;
+    }
+
     private bool CanPrune(BasePattern family, int remainingMelds) {
+      visitedNodes++;
+      specialKnown = specialFits = tripletKnown = tripletFits = 0;
+      structuralKnown = 0;
       // Built-in bonus-only rules depend solely on physical tiles and context;
       // all their interpretations have the same score and no qualifying yaku.
       // A RuleYaku may be typed Bonus yet depend on the interpretation.
@@ -56,7 +73,7 @@ namespace RabiRiichi.Patterns {
         if (allFound) return true;
       }
       if (boundPatterns.Length == 0) return minHan > 0;
-      var partial = Summarize();
+      var partial = partials[count];
       Span<CompactScore> contextBounds = stackalloc CompactScore[optimisticQueries.Length];
       for (int i = 0; i < optimisticQueries.Length; i++)
         contextBounds[i] = UpperBound(family, partial, remainingMelds, optimisticQueries[i]);
@@ -112,7 +129,78 @@ namespace RabiRiichi.Patterns {
       return !anyActive;
     }
 
+    private void PrepareBoundContexts() {
+      structuralRules = boundRules.Where(r => !ContextBound(r, optimisticQueries[0], out _, out _)).ToArray();
+      meldFuRules = boundRules.Count(r => r == YakuRule.Fu33332);
+      pinfuRules = boundRules.Count(r => r == YakuRule.Pinfu);
+      foreach (var q in optimisticQueries) {
+        int han = 0, yakuman = 0;
+        foreach (var rule in boundRules) {
+          ContextBound(rule, q, out int h, out int y);
+          han += h; yakuman += y;
+        }
+        q.BoundOffset = new(han + Bonus(q), han, 0, yakuman, 0);
+      }
+      foreach (var q in queries) {
+        var context = optimisticQueries[q.Context];
+        q.BoundOffset = context.BoundOffset with { Han = context.BoundOffset.Han - Bonus(context) + Bonus(q) };
+      }
+    }
+
+    // These terms depend on the win source or physical bonuses, never the
+    // partial target. Separate them before sharing structure between contexts.
+    private bool ContextBound(YakuRule rule, Query q, out int han, out int yakuman) {
+      han = yakuman = 0;
+      bool possible;
+      switch (rule) {
+        case YakuRule.Chankan: possible = q.Incoming.discardInfo?.reason == DiscardReason.Chankan; han = possible ? 1 : 0; break;
+        case YakuRule.HaiteiRaoyue: possible = q.Incoming.IsTsumo && hand.game.wall.IsHaitei && q.Incoming.source == TileSource.Wall; han = possible ? 1 : 0; break;
+        case YakuRule.HouteiRaoyui: possible = !q.Incoming.IsTsumo && hand.game.wall.IsHaitei; han = possible ? 1 : 0; break;
+        case YakuRule.MenzenchinTsumohou: han = hand.menzen && q.Incoming.IsTsumo ? 1 : 0; break;
+        case YakuRule.RinshanKaihou: han = q.Incoming.source == TileSource.Wanpai ? 1 : 0; break;
+        case YakuRule.Chiihou: possible = q.Incoming.IsTsumo && hand.game.IsFirstJun && !hand.player.IsDealer; yakuman = possible ? 1 : 0; break;
+        case YakuRule.Tenhou: possible = q.Incoming.IsTsumo && hand.jun == 1 && hand.player.IsDealer; yakuman = possible ? 1 : 0; break;
+        case YakuRule.Kanburi: han = q.Incoming.discardInfo?.reason == DiscardReason.DrawRinshan ? 1 : 0; break;
+        case YakuRule.Katengecchi: yakuman = hand.game.wall.IsHaitei && q.Incoming.source == TileSource.Wanpai ? 1 : 0; break;
+        case YakuRule.Renhou: possible = !q.Incoming.IsTsumo && !hand.player.IsDealer && hand.jun == 0 && hand.game.IsFirstJun; yakuman = possible ? 1 : 0; break;
+        case YakuRule.TsubameGaeshi: han = q.Incoming.discardInfo?.isRiichiDeclaration == true ? 1 : 0; break;
+        // Fu is adjusted after retrieving the structural bound; bonuses are
+        // already included by Bonus(q), including dependency-only bonus rules.
+        case YakuRule.Fu33332:
+        case YakuRule.Akadora: case YakuRule.Dora: case YakuRule.Uradora: case YakuRule.NukiDora: break;
+        default: return false;
+      }
+      return true;
+    }
+
     private CompactScore UpperBound(BasePattern family, Partial s, int remaining, Query q) {
+      int index = q.Index + 1;
+      ulong bit = 1UL << index;
+      CompactScore structural;
+      // A custom condition may inspect the incoming source in PartialView, so
+      // only built-in structural bounds are reusable across ron/tsumo contexts.
+      if (boundCustom.Length == 0 && (structuralKnown & bit) != 0) structural = structuralBounds[index];
+      else {
+        structural = StructuralUpperBound(family, s, remaining, q);
+        structuralBounds[index] = structural;
+        structuralKnown |= bit;
+      }
+      int fu = 0;
+      if (meldFuRules > 0)
+        fu = meldFuRules * ((Math.Max(30, 20 + s.MeldFu + remaining * 8 + PairAndWaitFu(s.Pair)
+            + (q.Incoming.IsTsumo ? 2 : hand.menzen ? 10 : 0)) + 9) / 10 * 10);
+      if (pinfuRules > 0 && hand.menzen && s.AllSequenceOrPair
+          && (s.Pair < 0 || !hand.player.IsYaku(CompactMeld.TileAt(s.Pair))))
+        fu += pinfuRules * (q.Incoming.IsTsumo ? 20 : 30);
+      var offset = q.BoundOffset;
+      return new(structural.Han + offset.Han, structural.Yaku + offset.Yaku, structural.Fu + fu,
+          structural.Yakuman + offset.Yakuman, structural.BonusYakuman);
+    }
+
+    // With built-in rules this must depend on q.Index only. Source-dependent
+    // terms belong in ContextBound or the fu adjustment in UpperBound.
+    private CompactScore StructuralUpperBound(BasePattern family, Partial s, int remaining, Query q) {
+      boundCalculations++;
       ulong present = s.Present | (q.Index >= 0 ? 1UL << q.Index : 0);
       bool closed = hand.menzen;
       int suits = ((present & 511) != 0 ? 1 : 0) | ((present >> 9 & 511) != 0 ? 2 : 0) | ((present >> 18 & 511) != 0 ? 4 : 0);
@@ -126,22 +214,14 @@ namespace RabiRiichi.Patterns {
       int flushHan = 0, reachHan = 0, outsideHan = 0, repeatedSequenceHan = 0;
       int honorFlushHan = 0, honorOutsideHan = 0, simplesHan = 0;
       Span<int> honorWeights = stackalloc int[34]; honorWeights.Clear();
-      foreach (var rule in boundRules) {
+      foreach (var rule in structuralRules) {
         bool possible = true; int h = 0, y = 0, by = 0;
         switch (rule) {
-          case YakuRule.Fu33332:
-            fu += (Math.Max(30, 20 + s.MeldFu + remaining * 8 + 6 + (q.Incoming.IsTsumo ? 2 : closed ? 10 : 0)) + 9) / 10 * 10;
-            break;
           case YakuRule.Fu72: case YakuRule.Fu13_1: fu += 25; break;
-          case YakuRule.Chankan: possible = q.Incoming.discardInfo?.reason == DiscardReason.Chankan; h = 1; break;
-          case YakuRule.HaiteiRaoyue: possible = q.Incoming.IsTsumo && hand.game.wall.IsHaitei && q.Incoming.source == TileSource.Wall; h = 1; break;
-          case YakuRule.HouteiRaoyui: possible = !q.Incoming.IsTsumo && hand.game.wall.IsHaitei; h = 1; break;
           case YakuRule.Iipeikou: possible = closed && s.MaxSequenceCopies + remaining >= 2; h = 1; break;
           case YakuRule.Ippatsu: possible = hand.ippatsu; h = 1; break;
-          case YakuRule.MenzenchinTsumohou: possible = closed && q.Incoming.IsTsumo; h = 1; break;
-          case YakuRule.Pinfu: possible = closed && allSequence && (s.Pair < 0 || !hand.player.IsYaku(CompactMeld.TileAt(s.Pair))); h = 1; if (possible) fu += q.Incoming.IsTsumo ? 20 : 30; break;
+          case YakuRule.Pinfu: possible = closed && allSequence && (s.Pair < 0 || !hand.player.IsYaku(CompactMeld.TileAt(s.Pair))); h = 1; break;
           case YakuRule.Riichi: possible = hand.riichi; h = 1; break;
-          case YakuRule.RinshanKaihou: possible = q.Incoming.source == TileSource.Wanpai; h = 1; break;
           case YakuRule.Tanyao: possible = (present & (TileMasks.Honor | TileMasks.Terminal)) == 0 && (closed || (hand.game.config.agariOption & AgariOption.Kuitan) != 0); h = 1; break;
           case YakuRule.YakuhaiBakaze: honorWeights[27 + (int)hand.game.info.wind]++; break;
           case YakuRule.YakuhaiJikaze: honorWeights[27 + (int)hand.player.Wind]++; break;
@@ -163,13 +243,12 @@ namespace RabiRiichi.Patterns {
           case YakuRule.JunchanTaiyao: possible = s.EveryGroup19 && !honors; h = closed ? 3 : 2; break;
           case YakuRule.Ryanpeikou: possible = closed && s.SequenceCount + remaining >= 4 && BitOperations.PopCount(s.Sequences) <= 2; h = 3; break;
           case YakuRule.Chinitsu: possible = oneSuit && !honors; h = closed ? 6 : 5; break;
-          case YakuRule.Chiihou: possible = q.Incoming.IsTsumo && hand.game.IsFirstJun && !hand.player.IsDealer; y = 1; break;
           case YakuRule.Chinroutou: possible = (present & ~TileMasks.Terminal) == 0; y = 1; break;
           case YakuRule.ChuurenPoutou: possible = closed && !honors && oneSuit && s.Quads == 0 && FitsSpecial(q, false); y = 1; break;
           case YakuRule.JunseiChuurenPoutou: possible = closed && !honors && oneSuit && s.Quads == 0 && hand.called.Count == 0 && FitsSpecial(q, false); y = 2; break;
           case YakuRule.HelloWorld: possible = closed && !honors && oneSuit && FitsSpecial(q, true); y = 3; break;
           case YakuRule.Daisangen: possible = s.MeldCount - s.DragonMelds <= 1 && BitOperations.PopCount(s.Triplets & (7UL << 31)) + remaining >= 3; y = 1; break;
-          case YakuRule.Daisuushii: possible = s.MeldCount == s.WindMelds && BitOperations.PopCount(s.Triplets & (15UL << 27)) + remaining >= 4; y = 2; break;
+          case YakuRule.Daisuushii: possible = s.MeldCount == s.WindMelds && BitOperations.PopCount(s.Triplets & (15UL << 27)) + remaining >= 4 && FitsFourTriplets(s, remaining, q, true); y = 2; break;
           case YakuRule.Shousuushii: possible = (s.Pair < 0 || s.Pair is >= 27 and <= 30) && s.MeldCount - s.WindMelds <= 1 && BitOperations.PopCount(s.Triplets & (15UL << 27)) + remaining >= 3; y = 1; break;
           case YakuRule.KokushiMusou: y = 1; break;
           case YakuRule.KokushiMusouJuusanmenMachi: y = 2; break;
@@ -177,14 +256,13 @@ namespace RabiRiichi.Patterns {
           case YakuRule.Suuankou: possible = s.SequenceCount == 0 && closedTrips >= 4; y = 1; break;
           case YakuRule.SuuankouTanki: possible = s.SequenceCount == 0 && closedTrips >= 4 && (q.Index < 0 || s.Pair < 0 || q.Index == s.Pair); y = 2; break;
           case YakuRule.Suukantsu: possible = s.Quads == 4; y = 1; break;
-          case YakuRule.Tenhou: possible = q.Incoming.IsTsumo && hand.jun == 1 && hand.player.IsDealer; y = 1; break;
           case YakuRule.Tsuuiisou: possible = suits == 0; y = 1; break;
           case YakuRule.Benikujaku: possible = (present & ~TileMasks.Red) == 0; y = 1; break;
           case YakuRule.Heiiisou: possible = (present & ~TileMasks.Black) == 0; y = 1; break;
           case YakuRule.Chaopaikou: possible = PossibleKouSeries(s.Triplets, remaining, 3, 2); h = 2; break;
           case YakuRule.Chinpaikou: possible = PossibleKouSeries(s.Triplets, remaining, 3, 3); h = 2; break;
           case YakuRule.Sanrenkou: possible = PossibleKouSeries(s.Triplets, remaining, 3, 1); h = 2; break;
-          case YakuRule.Suurenkou: possible = PossibleKouSeries(s.Triplets, remaining, 4, 1); y = 1; break;
+          case YakuRule.Suurenkou: possible = FitsFourTriplets(s, remaining, q, false); y = 1; break;
           case YakuRule.Chinpeikou:
             possible = closed && s.SequenceCount + remaining >= 4 && BitOperations.PopCount(s.Sequences) <= 2
                 && PossibleSameRankSequences(s.Sequences); h = 3; break;
@@ -195,10 +273,7 @@ namespace RabiRiichi.Patterns {
           case YakuRule.IshiNoUeNiMoSannen: possible = hand.riichi && hand.wRiichi && hand.game.wall.IsHaitei; y = 1; break;
           case YakuRule.IsshokuSandoujun: possible = s.MaxSequenceCopies + remaining >= 3; h = closed ? 3 : 2; break;
           case YakuRule.IsshokuYondoujun: possible = s.MaxSequenceCopies + remaining >= 4; y = 1; break;
-          case YakuRule.Kanburi: possible = q.Incoming.discardInfo?.reason == DiscardReason.DrawRinshan; h = 1; break;
-          case YakuRule.Katengecchi: possible = hand.game.wall.IsHaitei && q.Incoming.source == TileSource.Wanpai; y = 1; break;
           case YakuRule.Paarenchan: possible = hand.player.IsDealer && hand.player.agariStreak + 1 >= Paarenchan.REQUIRED_STREAK; by = 1; break;
-          case YakuRule.Renhou: possible = !q.Incoming.IsTsumo && !hand.player.IsDealer && hand.jun == 0 && hand.game.IsFirstJun; y = 1; break;
           case YakuRule.Ryanankan: possible = s.ClosedQuads >= 2; h = 2; break;
           case YakuRule.Sanankan: possible = s.ClosedQuads >= 3; y = 1; break;
           case YakuRule.Sanfonkou: possible = s.WindMelds + remaining >= 3; h = 2; break;
@@ -206,12 +281,10 @@ namespace RabiRiichi.Patterns {
           case YakuRule.Shiisanputa: possible = true; y = 1; break;
           case YakuRule.Shiisuuputa: possible = s.Pair < 0; y = 1; break;
           case YakuRule.Shousanfon: possible = (s.Pair < 0 || s.Pair is >= 27 and <= 30) && s.WindMelds + remaining >= 2; h = 1; break;
-          case YakuRule.TsubameGaeshi: possible = q.Incoming.discardInfo?.isRiichiDeclaration == true; h = 1; break;
           case YakuRule.Uumensai:
             int missingFamilies = 3 - BitOperations.PopCount((uint)suits)
                 + ((present & (15UL << 27)) == 0 ? 1 : 0) + ((present & (7UL << 31)) == 0 ? 1 : 0);
             possible = family is not Base33332 || missingFamilies <= remaining; h = 2; break;
-          case YakuRule.Akadora: case YakuRule.Dora: case YakuRule.Uradora: case YakuRule.NukiDora: break;
         }
         if (possible) {
           // These replacement families cannot contribute both scores together.
@@ -266,9 +339,7 @@ namespace RabiRiichi.Patterns {
           yakuman += v.Yakuman; bonusYakuman += v.BonusYakuman;
         }
       }
-      // Count only active bonus rules; dependency-only registered bonus rules may
-      // also be reached, hence the intentionally broad registered-pattern set.
-      return new(han + customBonus + Bonus(q), han, fu, yakuman, bonusYakuman);
+      return new(han + customBonus, han, fu, yakuman, bonusYakuman);
     }
 
     private void PreparePartial(BasePattern family, ulong present, int remainingMelds, Query q) {
@@ -318,7 +389,48 @@ namespace RabiRiichi.Patterns {
       return false;
     }
 
+    private int PairAndWaitFu(int pair) => pair < 0 ? 6 : pairAndWaitFu[pair];
+
+    private bool FitsFourTriplets(Partial s, int remaining, Query q, bool winds) {
+      int key = (q.Index + 1) * 2 + (winds ? 1 : 0);
+      UInt128 bit = (UInt128)1 << key;
+      if ((tripletKnown & bit) != 0) return (tripletFits & bit) != 0;
+      tripletKnown |= bit;
+      bool fits = false;
+      if (s.SequenceCount == 0) {
+        if (winds) fits = Fits(15UL << 27);
+        else foreach (ulong mask in fourConsecutiveTriplets) if (Fits(mask)) { fits = true; break; }
+      }
+      if (fits) tripletFits |= bit;
+      return fits;
+
+      bool Fits(ulong mask) {
+        if (BitOperations.PopCount(mask & ~s.Triplets) > remaining || (s.Triplets & ~mask) != 0) return false;
+        // Regular search chooses its pair before its melds. With a missing pair,
+        // retain the conservative answer for any future caller of the bound.
+        if (s.Pair < 0) return true;
+        ulong mandatory = mandatoryMask | (q.Index < 0 ? 0 : 1UL << q.Index);
+        for (; mandatory != 0; mandatory &= mandatory - 1) {
+          int i = BitOperations.TrailingZeroCount(mandatory);
+          int capacity = ((mask >> i & 1) != 0 ? 3 : 0) + (s.Pair == i ? 2 : 0)
+              + (int)((lockedQuadCopies >> (i * 3)) & 7);
+          int needed = Math.Max(required[i], natural[i] + (q.Index == i ? 1 : 0)) + lockedCounts[i];
+          if (needed > capacity) return false;
+        }
+        return true;
+      }
+    }
+
     private bool FitsSpecial(Query q, bool hello) {
+      UInt128 bit = (UInt128)1 << ((q.Index + 1) * 2 + (hello ? 1 : 0));
+      if ((specialKnown & bit) != 0) return (specialFits & bit) != 0;
+      specialKnown |= bit;
+      if (!FitsSpecialUncached(q, hello)) return false;
+      specialFits |= bit;
+      return true;
+    }
+
+    private bool FitsSpecialUncached(Query q, bool hello) {
       for (int suit = 0; suit < 3; suit++) {
         bool fits = true; int excess = 0;
         for (int i = 0; i < 34; i++) {

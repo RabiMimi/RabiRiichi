@@ -22,6 +22,7 @@ namespace RabiRiichi.Patterns {
     // The plan is shared; each query gets its own scratch state.
     private CompiledScoringEvaluator GetEvaluator() => GetPlan().Fork();
     internal bool CanShareScoring => GetPlan().IsSupported;
+    internal DiscardScoreCache CreateDiscardScoreCache() => new(GetPlan().CanReuseAcrossDiscards);
 
     private static bool HasWildcardSearch(BasePattern family) => family is Base33332 or Base72 or Base13_1 or BaseButa;
 
@@ -139,7 +140,11 @@ namespace RabiRiichi.Patterns {
 
     /// <summary>Share target exploration across all waits and both win sources.</summary>
     public Dictionary<Tile, (ScoreStorage Ron, ScoreStorage Tsumo)> ResolveScorePreviews(
-        Hand hand, Tiles winningTiles, PatternMask patternMask, PatternMask excludedMask = PatternMask.None) {
+        Hand hand, Tiles winningTiles, PatternMask patternMask, PatternMask excludedMask = PatternMask.None) =>
+        ResolveScorePreviews(hand, winningTiles, patternMask, excludedMask, null);
+
+    internal Dictionary<Tile, (ScoreStorage Ron, ScoreStorage Tsumo)> ResolveScorePreviews(
+        Hand hand, Tiles winningTiles, PatternMask patternMask, PatternMask excludedMask, DiscardScoreCache shared) {
       var result = new Dictionary<Tile, (ScoreStorage Ron, ScoreStorage Tsumo)>();
       // A natural hand scores natural waits on the ordinary path (including the
       // custom-rule fallback); only wildcard holdings or waits need the batch search.
@@ -149,7 +154,7 @@ namespace RabiRiichi.Patterns {
       foreach (var tile in tiles.Except(batched)) result[tile] = ResolveNaturalPreview(hand, tile, patternMask, excludedMask);
       if (batched.Length > 0) {
         var incoming = batched.SelectMany(t => new[] { PreviewTile(t, false), PreviewTile(t, true) }).ToArray();
-        var scores = new WildcardScoreSearch(this, GetEvaluator(), hand, incoming, patternMask, excludedMask, 0).Run();
+        var scores = new WildcardScoreSearch(this, GetEvaluator(), hand, incoming, patternMask, excludedMask, 0, shared: shared).Run();
         for (int i = 0; i < batched.Length; i++) result[batched[i]] = (scores[i * 2], scores[i * 2 + 1]);
       }
       return result;

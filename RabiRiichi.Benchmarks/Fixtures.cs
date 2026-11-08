@@ -22,8 +22,10 @@ namespace RabiRiichi.Benchmarks {
     internal readonly PatternResolver resolver;
 
     /// <param name="wildcardsInWall">Zero leaves the default wall and its natural-only code paths.</param>
-    internal BenchTable(int wildcardsInWall, bool koyaku = false) {
+    internal BenchTable(int wildcardsInWall, bool koyaku = false, int seed = 12345, bool aotenjou = false) {
       var config = new GameConfig {
+        seed = unchecked((ulong)seed),
+        scoringOption = aotenjou ? ScoringOption.Aotenjou : ScoringOption.Default,
         actionCenter = new JsonStringActionCenter(null),
         setup = koyaku ? new AllKoyakuSetup() : new RiichiSetup(),
       };

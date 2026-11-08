@@ -19,13 +19,28 @@ dotnet run -c Release --project RabiRiichi.Benchmarks -- --json dev/local/before
 dotnet run -c Release --project RabiRiichi.Benchmarks -- --baseline dev/local/before.json
 ```
 
-A full run takes several minutes. `dev/local/` is ignored by Git.
+For a machine with the .NET 10 runtime but no .NET 9 runtime, build normally and
+run the compiled benchmark with major-version roll-forward (PowerShell):
+
+```powershell
+dotnet build -c Release RabiRiichi.Benchmarks/RabiRiichi.Benchmarks.csproj
+dotnet --roll-forward Major RabiRiichi.Benchmarks/bin/Release/net9.0/RabiRiichi.Benchmarks.dll --filter aotenjou-koyaku/hard --cases 3 --budget-ms 500
+```
+
+Use `--list --filter aotenjou-koyaku` to choose workloads; `--filter` accepts
+comma-separated substrings. Run matching `--seed` and `--cases` values when
+comparing versions. The seed controls the table's shuffled wall as well as the
+fixture generator. A full run takes several minutes. `dev/local/` is ignored by Git.
 
 ## Scenarios
 
 - `natural/*`: the default wall, which uses the natural-only code paths.
 - `wild<W>/*`: a wildcard-enabled table with `W` wildcards in the hand.
   `-koyaku` turns on every optional yaku and `-open` adds a called pon.
+- `aotenjou-koyaku/wild<W>/*`: uncapped scoring with all optional yaku,
+  for 8, 10, 12, and 13 generated wildcards.
+- `aotenjou-koyaku/hard/*`: fixed high-wildcard preview and discard holdings;
+  these provide stable comparisons independent of the generated fixtures.
 - `selfplay/wall<N>`: a whole east-only game between four rule-based bots, with
   `N` wildcards added to the wall. This shows what the numbers above add up to.
 
@@ -42,7 +57,16 @@ from a random hand (most turns).
 
 ## Reading the output
 
-`targets` and `evals` are `WildcardScoreSearch` effort: complete hand targets
-visited, and yaku evaluations of those targets. They are zero when no search ran.
+`targets`, `evals`, `nodes`, and `bounds` are mean `WildcardScoreSearch` effort:
+complete targets visited, yaku evaluations, search nodes, and structural bound
+calculations. Reusing a structural bound for another win context does not count
+as another calculation.
+Score and preview scenarios report their search counters. Discard scenarios
+report counters when a shared discard cache is active; `cache hits` counts reused
+candidate evaluations. Sharing is enabled for at least eight wildcards and four
+distinct discard values, where the larger searches repay its setup cost. Zero
+counters on other discard scenarios mean diagnostics were unavailable, not that
+the search did no work. Older baseline JSON files remain readable; new counters
+default to zero when absent.
 Costs are heavy-tailed, so look at `p95` and `max` as well as the mean. Each
 scenario runs at least three operations, so the slowest ones can overrun the budget.
